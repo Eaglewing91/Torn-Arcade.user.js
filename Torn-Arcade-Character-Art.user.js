@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade - Character Art
 // @namespace    https://github.com/Eaglewing91
-// @version      1.1.0
+// @version      1.1.1
 // @description  Optional art pack for the Torn Arcade script: the illustrated portraits of the gym leaders, story characters, trainers and player outfits. Needs Torn Arcade installed. Makes no requests of any kind: it only hands its pictures to Torn Arcade on the page you are viewing.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -37,12 +37,22 @@
  * LICENCE - ALL RIGHTS RESERVED - FOR USE ON TORN ONLY
  * Copyright (c) 2026 Eaglewing [571041]. All rights reserved.
  *
- * Torn Arcade and its optional Art Packs (Torn Arcade - Tornies Art and
- * Torn Arcade - Character Art), and everything in them (code, games,
- * characters, artwork, music, text and data), belong to Eaglewing [571041].
+ * This licence covers the author's own work in Torn Arcade and its optional
+ * Art Packs (Torn Arcade - Tornies Art and Torn Arcade - Character Art): the
+ * code, the games and their design, the original characters and creatures
+ * (including the Tornies), the artwork, the music and the original text
+ * ("the Author's Work"). The Author's Work belongs to Eaglewing [571041].
+ *
+ * TORN'S OWN MATERIAL IS NOT CLAIMED
+ * Torn, Torn City, and Torn's names, places, items, characters and other
+ * content belong to Torn's owners. They appear in these scripts only as fan
+ * references, inside scripts made solely for use on Torn. The author claims no
+ * ownership of or rights over them, and this licence does not apply to them.
+ * Player usernames are used with respect and belong to those players. Anything
+ * will be removed or changed on request from Torn's staff or the player.
  *
  * 1. TORN ONLY
- *    These scripts are made for, and licensed only for use on, the Torn
+ *    The scripts are made for, and licensed only for use on, the Torn
  *    website (https://www.torn.com), in your own web browser through a
  *    userscript manager such as Tampermonkey. Any use outside Torn is
  *    unauthorised. That includes running, hosting, embedding or using any part
@@ -55,14 +65,15 @@
  *    - Read the code to check that it is safe and follows Torn's rules.
  *
  * 3. WHAT YOU MAY NOT DO (without the author's prior written permission)
- *    - Use them, or any part of them, anywhere other than Torn (see 1).
- *    - Copy, reproduce or republish them, in whole or in part.
+ *    - Use them, or any part of the Author's Work, anywhere other than Torn
+ *      (see 1).
+ *    - Copy, reproduce or republish the Author's Work, in whole or in part.
  *    - Modify, adapt, translate or make derivative works from them.
  *    - Redistribute, share, sell, rent, sublicense or host them anywhere else
  *      (including other script sites, gists, repositories or file shares).
- *    - Extract or reuse any of their code, artwork, characters, music or other
- *      content in other projects, products or media, including to train or
- *      build AI models.
+ *    - Extract or reuse any of the Author's Work (code, artwork, original
+ *      characters, music or text) in other projects, products or media,
+ *      including to train or build AI models.
  *    - Use them commercially in any way.
  *    - Remove or change this notice.
  *
@@ -75,8 +86,8 @@
  *    The scripts are provided "as is", without warranty of any kind. The author
  *    is not liable for any loss or damage arising from their use.
  *
- * Torn is owned by its respective owners. Torn Arcade is an unofficial fan
- * project and is not affiliated with or endorsed by Torn.
+ * Torn Arcade is an unofficial fan project. It is not affiliated with, endorsed
+ * by or sponsored by Torn or its owners.
  */
 
 (function () {

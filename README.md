@@ -104,7 +104,7 @@ If you add a **Limited** access API key in Settings, the phone checks the offici
 **All rights reserved. For use on Torn only.**
 
 - ✅ **You may:** install Torn Arcade and its Art Packs from the official links on this page, use them **on Torn (torn.com)** for your own personal play, and read the code to check that it's safe and follows Torn's rules.
-- ❌ **You may not** (without the author's written permission):
+- ❌ **You may not** (without the author's written permission), for the author's own work:
   - use them, or any part of them, **anywhere other than Torn**: other websites, apps, games, servers, emulators, launchers, app stores or standalone software;
   - copy, republish, modify, adapt or make derivative works from them;
   - redistribute, share, sell, sublicense or host them anywhere else, including other script sites, gists, repositories or file shares;
@@ -112,9 +112,11 @@ If you add a **Limited** access API key in Settings, the phone checks the offici
   - use them commercially, or remove the licence notice.
 - Permission is personal, limited to Torn, and ends automatically if these terms are broken.
 
+**Torn's own material isn't claimed.** The licence covers only the author's own work: the code, the games, the original characters and creatures (including the Tornies), the artwork, the music and the original text. Torn, Torn City, and Torn's names, places, items and characters belong to Torn's owners. They appear only as fan references, inside scripts made solely for use on Torn, and no rights are claimed over them. Player usernames belong to those players. Anything will be removed or changed on request from Torn's staff or the player.
+
 See [LICENSE](LICENSE) for the full terms. The same licence is at the top of every script.
 
-Torn is owned by its respective owners. Torn Arcade is an unofficial fan project and isn't affiliated with or endorsed by Torn.
+Torn Arcade is an unofficial fan project. It isn't affiliated with, endorsed by or sponsored by Torn or its owners.
 
 ---
 
