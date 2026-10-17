@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.20.2
+// @version      2.20.3
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with five game apps: Tornies (a creature-collecting RPG), Torn Invasion (a Doom-style alien shooter), Angry Bogies (a slingshot physics game), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -7547,7 +7547,7 @@
      with a 'ta-art-pack' event whose detail is a JSON string { pack, ver, items }. Nothing is downloaded and no
      request is made. Every item is checked before it is used: only known names, and only base64 WebP images of a
      sensible size. Anything else is ignored. */
-  const ART_WANT = { tornies: 1, chars: 1 };   // newest pack versions this script knows about
+  const ART_WANT = { tornies: 1, chars: 2 };   // newest pack versions this script knows about
   const ARTP = {};                              // packs received: { ver, n }
   const ART_KEYS = {
     tornies: function (k) { return /^\d{1,3}$/.test(k) && +k >= 1 && +k <= DEX_SIZE; },
@@ -10063,7 +10063,9 @@
 
   /* ================= Extra characters ================= */
   // Pawl: a long-haired coder who still works in the Old TornTech Offices (2F, the old research floor).
-  PAL.pawl = { h: '#6a4a2a', c: '#2e3440', p: '#3a4a6a', style: 'long', glasses: 1 };
+  // Pawl's look (2.20.3, his own description): long wavy brown hair, clean shaven, black leather biker jacket over a
+  // black rock t-shirt, green camo army combats, brown leather walking boots.
+  PAL.pawl = { h: '#5a3a22', c: '#1c1c22', p: '#56663a', style: 'long', x: ['jacket'], q: '#121216' };
   (function () {
     const m = MAPS.in_midtown_33_10_1;
     if (!m) return;
@@ -10940,7 +10942,7 @@
    ['castaway', { x: ['beard'], style: 'long' }], ['biker', { x: ['beard', 'jacket'], q: '#1a1a1e' }], ['sailor', { x: ['beard'] }],
    ['reef', { x: ['beard'], c: '#f4f4f4' }], ['scientist', { glasses: 1, x: ['beard', 'tie'], q: '#2a2a34' }],
    ['scholar', { glasses: 1, style: 'bun', c: '#f0e8d0', p: '#2a3a6a', x: [] }], ['graves', { glasses: 1 }],
-   ['pawl', { x: ['beard'] }], ['eagle', { x: ['beard'] }], ['dealer', { x: ['beard'] }], ['thug', { x: ['beard'] }],
+   ['eagle', { x: ['beard'] }], ['dealer', { x: ['beard'] }], ['thug', { x: ['beard'] }],
    ['rookie', { style: 'spiky', h: '#8a4a2a', c: '#f0c030', p: '#2a3a5a', x: ['beard', 'jacket'], q: '#2a3450' }],
    ['nurse', { style: 'bun', c: '#f4b0c8', p: '#f4b0c8' }], ['cloud', { style: 'spiky', h: '#7ac8e8', x: ['beard'] }],
    ['swimmer', { style: 'bun', c: '#7ad0e0', p: '#7ad0e0' }], ['sporty', { x: ['beard'] }], ['warden', { x: ['beard'] }],
