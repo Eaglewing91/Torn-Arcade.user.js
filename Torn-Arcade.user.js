@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.19.1
+// @version      2.20.0
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with five game apps: Tornies (a creature-collecting RPG), Torn Invasion (a Doom-style alien shooter), Angry Bogies (a slingshot physics game), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -390,7 +390,7 @@
     { id: 'artC', pack: 'chars', name: 'Character Art', title: 'Character Art Pack', icon: '🖌️', bg: ['#c39bff', '#5a3ab8'], size: '0.5 MB', what: 'illustrated portraits for the gym leaders, story characters, trainers and your outfits' }
   ];
   const LAND_APPS = { pocket: 1, flappy: 1, invasion: 1, bogies: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.1';
+  const VERSION = '2.2';
 
   GM_addStyle([
     /* The phone */
@@ -1640,7 +1640,7 @@
     '<button type="button" class="ta-btn ta-btn-alt ta-pt-padbtn">🎮 Touch pad</button>',
     [],
     '<div class="ta-pt"><div class="ta-pt-screen"><canvas class="ta-pt-cv" tabindex="-1"></canvas><div class="ta-pt-name" hidden></div></div>' + PAD + '</div>',
-    '<span class="ta-kbd">←↑↓→</span> or <span class="ta-kbd">WASD</span> move · <span class="ta-kbd">Z</span>/<span class="ta-kbd">Space</span> A · <span class="ta-kbd">X</span> B · <span class="ta-kbd">Enter</span> menu · hold <span class="ta-kbd">Shift</span> or B to run');
+    '<span class="ta-kbd">←↑↓→</span> or <span class="ta-kbd">WASD</span> move · <span class="ta-kbd">Z</span>/<span class="ta-kbd">Space</span> A · <span class="ta-kbd">X</span> B · <span class="ta-kbd">Enter</span> menu · hold <span class="ta-kbd">Shift</span> or B to run (with Running Shoes)');
   const ptWrap = $(panel, '.ta-pt'), cv = $(panel, '.ta-pt-cv'), nameBox = $(panel, '.ta-pt-name'), padBtn = $(panel, '.ta-pt-padbtn');
   let ctx = null, built = false, active = false, raf = 0, last = 0, T = 0;
   let G = null;                 // the saved game
@@ -2133,6 +2133,7 @@
     awakening:    { name: 'Smelling Salts', price: 250, kind: 'cure', cure: 'slp', desc: 'Jolts a sleeping Tornie awake.' },
     ice_heal:     { name: 'Hand Warmer',   price: 250, kind: 'cure', cure: 'frz', desc: 'Thaws out a frozen Tornie.' },
     energy_bar:   { name: 'Energy Bar',    price: 4000, kind: 'level', desc: 'A dense, high-energy bar. Gives one Tornie a whole level. Not sold in shops.' },
+    running_shoes: { name: 'Running Shoes', price: 10000, kind: 'shoes', desc: 'Lightweight trainers. Hold B (or Shift) to run. Yours to keep.' },
     repel:        { name: 'Scent Spray',   price: 350, kind: 'repel', steps: 100, desc: 'Masks your scent so wild Tornies leave you alone for 100 steps.' }
   };
   const ITEM_ORDER = ['capsule', 'potion', 'super_potion', 'antidote', 'parlyz_heal', 'burn_heal', 'awakening', 'ice_heal', 'energy_bar', 'repel'];
@@ -7764,18 +7765,21 @@
     for (const k of ['sand', 'snow']) {
       const test = function (kd) { return kd === k || (under === k && ((IW_MADE[kd] && kd !== 'board') || kd === 'path' || kd === 'spath' || kd === 'water')); };
       const feather = iwMask(B, test, 22, 6); if (!feather) continue;
-      const tex = iwPaint(B, k);
+      yield 21; const tex = iwPaint(B, k);
       g.save(); g.globalAlpha = 0.45; g.drawImage(iwClip(tex, feather), 0, 0); g.restore(); yield 2;
-      g.drawImage(iwClip(tex, iwMask(B, test, 12, 0)), 0, 0); yield 3;
+      const solid = iwMask(B, test, 12, 0); yield 22; g.drawImage(iwClip(tex, solid), 0, 0); yield 3;
     }
     // Dirt paths and packed-snow paths: a darker verge, the path, soft inner shading, then grass tufts over the edge.
     const sandy = mostly('sand');
     for (const k of ['path', 'spath']) {
       const test = function (kd) { return kd === k; }, mask = iwMask(B, test, 10, 0); if (!mask) continue;
+      yield 23;
       if (sandy && k === 'path') { g.drawImage(iwClip(iwPaint(B, k), mask), 0, 0); continue; }   // a packed-sand track: no verge on a beach
-      g.save(); g.globalAlpha = k === 'path' ? 0.45 : 0.35; g.drawImage(iwClip(iwFill(k === 'path' ? '#7a6440' : '#8a9ab0'), iwMask(B, test, 10, 4)), 0, 2); g.restore();
+      const verge = iwMask(B, test, 10, 4); yield 24;
+      g.save(); g.globalAlpha = k === 'path' ? 0.45 : 0.35; g.drawImage(iwClip(iwFill(k === 'path' ? '#7a6440' : '#8a9ab0'), verge), 0, 2); g.restore(); yield 25;
       g.drawImage(iwClip(iwPaint(B, k), mask), 0, 0); yield 4;
-      g.save(); g.globalAlpha = 0.3; g.drawImage(iwClip(iwFill(k === 'path' ? '#a07a48' : '#9aaabe'), iwEdge(mask, iwMask(B, test, 10, -6))), 0, 0); g.restore();
+      const inner = iwMask(B, test, 10, -6); yield 26;
+      g.save(); g.globalAlpha = 0.3; g.drawImage(iwClip(iwFill(k === 'path' ? '#a07a48' : '#9aaabe'), iwEdge(mask, inner)), 0, 0); g.restore(); yield 27;
       if (k === 'path') for (let y = 0; y < IW_N; y++) for (let x = 0; x < IW_N; x++) if (B.kd[y][x] === 'path') {
         const r = iwRng(B.ox + x, B.oy + y, 5);
         [[0, -1], [0, 1], [-1, 0], [1, 0]].forEach(function (d) {
@@ -7787,9 +7791,10 @@
     }
     iwT('sandsnowpath', t0); yield 6; t0 = performance.now(); yield* iwWater(B, snowy); iwT('water', t0); yield 7; t0 = performance.now();
     // Man-made ground is drawn tile by tile with crisp edges: paving, roads, boardwalks and walls.
-    for (let y = 0; y < IW_N; y++) for (let x = 0; x < IW_N; x++) { const k = B.kd[y][x]; if (k === 'road') iwRoad(B, x, y); }
-    for (let y = 0; y < IW_N; y++) for (let x = 0; x < IW_N; x++) { const k = B.kd[y][x]; if (k === 'pave') iwPave(B, x, y); else if (k === 'board') iwBoard(B, x, y); }
+    for (let y = 0; y < IW_N; y++) { for (let x = 0; x < IW_N; x++) { const k = B.kd[y][x]; if (k === 'road') iwRoad(B, x, y); } if (y % 4 === 3) yield 28; }
+    for (let y = 0; y < IW_N; y++) { for (let x = 0; x < IW_N; x++) { const k = B.kd[y][x]; if (k === 'pave') iwPave(B, x, y); else if (k === 'board') iwBoard(B, x, y); } if (y % 4 === 3) yield 29; }
     for (let y = 0; y < IW_N; y++) for (let x = 0; x < IW_N; x++) if (B.kd[y][x] === 'wall') iwWall(B, x, y);
+    yield 30;
     for (let y = 0; y < IW_N; y++) for (let x = 0; x < IW_N; x++) {
       const c = B.ch[y][x];
       if (c === 'o') iwManhole(g, x * IW_TP, y * IW_TP);
@@ -7800,7 +7805,8 @@
     // Tall grass: a darker clump under the blades (the blades themselves are drawn live, so they can sway and rustle).
     const tall = iwMask(B, function (kd, c) { return c === ','; }, 8, 2);
     if (tall) {
-      g.save(); g.globalAlpha = 0.3; g.drawImage(iwClip(iwFill('#1e4422'), iwMask(B, function (kd, c) { return c === ','; }, 8, 4)), 3, 6); g.restore();
+      yield 31; const tall2 = iwMask(B, function (kd, c) { return c === ','; }, 8, 4); yield 32;
+      g.save(); g.globalAlpha = 0.3; g.drawImage(iwClip(iwFill('#1e4422'), tall2), 3, 6); g.restore(); yield 33;
       g.drawImage(iwClip(iwLay(B, snowy ? iwBlotTex('tallS', '#9cc0b4', ['#b8d4ca'], 0.6, 16, 30) : iwBlotTex('tall', '#4e9a44', ['#3e8838'], 0.6, 16, 30)), tall), 0, 0);
     }
     iwT('tall', t0);
@@ -7814,14 +7820,16 @@
     // Boardwalks over water count as water here, so the water runs on underneath them.
     const g = B.g, test = function (kd, c, x, y) { return kd === 'water' || (kd === 'board' && [[0, -1], [0, 1], [-1, 0], [1, 0]].some(function (d) { return (B.kd[y + d[1]] || [])[x + d[0]] === 'water'; })); };
     const water = iwMask(B, test, 14, -1); if (!water) return;
-    const bank = iwMask(B, test, 16, 10), wet = iwMask(B, test, 14, 5); yield 9;
-    g.drawImage(iwClip(snowy ? iwPaint(B, 'snow') : iwPaint(B, 'sand'), bank), 0, 0);
+    yield 34; const bank = iwMask(B, test, 16, 10); yield 35; const wet = iwMask(B, test, 14, 5); yield 9;
+    g.drawImage(iwClip(snowy ? iwPaint(B, 'snow') : iwPaint(B, 'sand'), bank), 0, 0); yield 36;
     g.save(); g.globalAlpha = 0.5; g.drawImage(iwClip(iwFill(snowy ? '#a8bcd0' : '#b49a68'), iwEdge(wet, water)), 0, 0); g.restore();
-    const body = iwLay(B, snowy ? iwBlotTex('wsnow', '#6cb8da', ['#86d0ec', '#4e9ac6'], 0.35, 30, 60) : iwBlotTex('water', '#54b6e0', ['#70ccec', '#3f9fd2'], 0.35, 30, 60));
+    yield 37; const body = iwLay(B, snowy ? iwBlotTex('wsnow', '#6cb8da', ['#86d0ec', '#4e9ac6'], 0.35, 30, 60) : iwBlotTex('water', '#54b6e0', ['#70ccec', '#3f9fd2'], 0.35, 30, 60));
     g.drawImage(iwClip(body, water), 0, 0); yield 10;
-    for (const d of [[-12, 0.28], [-24, 0.28], [-40, 0.25]]) { const m2 = iwMask(B, test, 18, d[0]); if (m2) { g.save(); g.globalAlpha = d[1]; g.drawImage(iwClip(iwFill('#1f6fa8'), m2), 0, 0); g.restore(); } yield 11; }
-    g.save(); g.globalAlpha = 0.65; g.drawImage(iwClip(iwFill('#ffffff'), iwEdge(water, iwMask(B, test, 14, -5))), 0, 0); g.restore();
-    const f2 = iwMask(B, test, 14, -11); if (f2) { g.save(); g.globalAlpha = 0.22; g.drawImage(iwClip(iwFill('#ffffff'), iwEdge(f2, iwMask(B, test, 14, -14))), 0, 0); g.restore(); }
+    for (const d of [[-12, 0.28], [-24, 0.28], [-40, 0.25]]) { const m2 = iwMask(B, test, 18, d[0]); yield 38; if (m2) { g.save(); g.globalAlpha = d[1]; g.drawImage(iwClip(iwFill('#1f6fa8'), m2), 0, 0); g.restore(); } yield 11; }
+    const foam = iwMask(B, test, 14, -5); yield 39;
+    g.save(); g.globalAlpha = 0.65; g.drawImage(iwClip(iwFill('#ffffff'), iwEdge(water, foam)), 0, 0); g.restore(); yield 40;
+    const f2 = iwMask(B, test, 14, -11); yield 41; if (f2) { const f3 = iwMask(B, test, 14, -14); yield 42; g.save(); g.globalAlpha = 0.22; g.drawImage(iwClip(iwFill('#ffffff'), iwEdge(f2, f3)), 0, 0); g.restore(); }
+    yield 43;
     for (let y = 1; y < IW_N - 1; y++) for (let x = 1; x < IW_N - 1; x++) {
       if (B.kd[y][x] !== 'water') continue;
       const open = B.kd[y - 1][x] === 'water' && B.kd[y + 1][x] === 'water' && B.kd[y][x - 1] === 'water' && B.kd[y][x + 1] === 'water', r = iwRng(B.ox + x, B.oy + y, 17);
@@ -8338,7 +8346,7 @@
     yield* iwGround(B); yield 12;
     const ops = iwOps(B);
     function draw(g, o) { if (o.bld) g.drawImage(o.bld.c, o.x, o.by); else iwStamp(g, o.sp, o.x, o.ay); }
-    for (let i = 0; i < ops.length; i++) { draw(B.g, ops[i]); if (ops[i].bld && i < ops.length - 1) yield 13; }
+    for (let i = 0; i < ops.length; i++) { draw(B.g, ops[i]); if ((ops[i].bld || i % 6 === 5) && i < ops.length - 1) yield 13; }
     yield 14;
     const tall = iwTallList(ops);
     const cs = IW_CH * IW_TP, base = iwChunkCv(); base.getContext('2d').drawImage(full, IW_PAD * IW_TP, IW_PAD * IW_TP, cs, cs, 0, 0, cs, cs);
@@ -8378,6 +8386,7 @@
     }
   }
   function iwClassic(m, cx, cy, camX, camY) {
+    IW_PROF.classicT = T;
     const set = m.indoor ? 'in' : 'out', floor = m.indoor ? (m.tiles || 'o') : (m.bg || 'grass');
     for (let ty = cy * IW_CH; ty < (cy + 1) * IW_CH; ty++) for (let tx = cx * IW_CH; tx < (cx + 1) * IW_CH; tx++) {
       if (tx * 16 - camX > VW || ty * 16 - camY > VH || tx * 16 - camX < -16 || ty * 16 - camY < -16) continue;
@@ -8399,9 +8408,10 @@
       IWC.cap = (maxX + 2) * (maxY + 2) + 30;
       {
         // Only what is on screen is needed before the fade in; the rest follows in the background.
-        const v = iwView(camX, camY, 0), todo = [], pcx = (camX + VW / 2) / IW_CS - 0.5, pcy = (camY + VH / 2) / IW_CS - 0.5;
+        const v = iwView(camX, camY, 1), v0 = iwView(camX, camY, 0), todo = [], pcx = (camX + VW / 2) / IW_CS - 0.5, pcy = (camY + VH / 2) / IW_CS - 0.5;
         for (let cy = Math.max(-1, v[1]); cy <= Math.min(maxY, v[3]); cy++) for (let cx = Math.max(-1, v[0]); cx <= Math.min(maxX, v[2]); cx++) if (!IWC.chunks[iwKey(m, cx, cy)]) todo.push([cx, cy]);
-        todo.sort(function (a, b) { return Math.hypot(a[0] - pcx, a[1] - pcy) - Math.hypot(b[0] - pcx, b[1] - pcy); });
+        todo.forEach(function (c) { c.need = c[0] >= v0[0] && c[0] <= v0[2] && c[1] >= v0[1] && c[1] <= v0[3]; });
+        todo.sort(function (a, b) { return (b.need - a.need) || Math.hypot(a[0] - pcx, a[1] - pcy) - Math.hypot(b[0] - pcx, b[1] - pcy); });
         if (todo.length) IWC.load = { m: m, todo: todo, total: todo.length, done: 0, it: null, t0: performance.now() };
       }
     }
@@ -8420,11 +8430,12 @@
     }
     L.todo = L.todo.filter(function (c) { return !IWC.chunks[iwKey(m, c[0], c[1])]; });
     L.done = L.total - L.todo.length;
-    if (!L.todo.length) { IWC.load = null; IWC.arrive = T; return false; }
+    // Ready once everything on screen is there, and either the ring around it is done too or 0.35 s have passed.
+    if (!L.todo.length || (!L.todo.some(function (c) { return c.need; }) && performance.now() - L.t0 > 350)) { IWC.load = null; IWC.arrive = T; return false; }
     IWC.drawnAt = performance.now();
     // Usually this takes a moment and is hidden by the normal fade between maps. Only on a slow device does a
     // loading bar appear.
-    if (performance.now() - L.t0 < 900) { fr(0, 0, VW, VH, '#000'); return true; }
+    if (performance.now() - L.t0 < 900 || !L.todo.some(function (c) { return c.need; })) { fr(0, 0, VW, VH, '#000'); return true; }
     fr(0, 0, VW, VH, '#0e1626');
     const k = L.done / L.total, w = 140, x = (VW - w) / 2, y = VH / 2 + 6;
     text(fillNames(m.name), VW / 2, y - 26, '#e6ecff', { sz: 10, al: 'center', light: true });
@@ -8474,14 +8485,37 @@
     for (let cy = Math.max(-1, v[1]); cy <= Math.min(maxY, v[3]); cy++) for (let cx = Math.max(-1, v[0]); cx <= Math.min(maxX, v[2]); cx++) if (!IWC.chunks[iwKey(m, cx, cy)]) return true;
     return false;
   }
-  // Bakes chunks a little at a time (one small step per frame): anything on screen first, then the nearest ones around it.
+  /* Quiet moments: map pieces are only ever drawn when the player won't notice the work - in battles, menus and
+     dialogue, during fades, during scripted moments, and while standing still. While the player is walking, nothing
+     is drawn (pieces saved on the device can still be read back, which costs nothing noticeable); a piece that comes
+     on screen before it is ready shows the classic pixel tiles until the next quiet moment. */
+  function iwQuiet() {
+    if (scene !== worldScene || modals.length || fade > 0 || W.busy) return true;
+    if (W.p.moving || held.up || held.down || held.left || held.right) IWC.moveT = T;
+    return T - (IWC.moveT || 0) > 0.3;
+  }
+  // Bakes chunks a little at a time (one step per frame, quiet moments only): anything on screen first, then the
+  // nearest ones around it, then the next map if the player is near an exit, then the rest of this map.
   function iwPrebake(m, camX, camY) {
     if (IWC.id !== m) return;
+    // Quiet moments get several small steps per frame (about 8 ms of work); walking gets at most one.
+    const t0 = performance.now(), quiet = iwQuiet();
+    let n = 0;
+    do { iwPrebakeStep(m, camX, camY, quiet); n++; } while (quiet && n < 40 && IWC.pending && performance.now() - t0 < 8);
+  }
+  function iwPrebakeStep(m, camX, camY, quiet) {
+    IWC.camX = camX; IWC.camY = camY;
+    if (!quiet) {
+      // walking: read back pieces saved on the device (cheap). Drawing only carries on if this device has shown that
+      // its drawing steps are tiny (a fast computer); otherwise it waits for the next quiet moment.
+      const v = iwView(camX, camY, 1), maxX = Math.floor((m.w + 7) / IW_CH), maxY = Math.floor((m.h + 7) / IW_CH);
+      for (let cy = Math.max(-1, v[1]); cy <= Math.min(maxY, v[3]); cy++) for (let cx = Math.max(-1, v[0]); cx <= Math.min(maxX, v[2]); cx++) if (!IWC.chunks[iwKey(m, cx, cy)]) iwDbRead(m, cx, cy);
+      if (!(IWC.stepPeak < 5) || !iwRingMissing(m, camX, camY)) return;
+    }
     const P = IWC.pending;
     if (P) {
       if (IWC.chunks[P.k]) { IWC.pending = null; return; }
-      const r = P.it.next(); IW_PROF.stepCount = (IW_PROF.stepCount || 0) + 1;
-      if (r.done) { IWC.pending = null; iwStore(P.k, r.value); }
+      const t0s = performance.now(), r = P.it.next(); IW_PROF.stepCount = (IW_PROF.stepCount || 0) + 1; const ds = performance.now() - t0s; IWC.stepPeak = Math.max(ds, (IWC.stepPeak === undefined ? ds : IWC.stepPeak) * 0.97); if (ds > (IW_PROF.stepMax || 0)) IW_PROF.stepMax = ds; if (ds > 16) IW_PROF.stepOver16 = (IW_PROF.stepOver16 || 0) + 1;       if (r.done) { IWC.pending = null; iwStore(P.k, r.value); }
       return;
     }
     IWC.pending = null;
@@ -8492,6 +8526,7 @@
       const maxX = Math.floor((m.w + 7) / IW_CH), maxY = Math.floor((m.h + 7) / IW_CH);
       // the view and the ring around it first; with pre-load on, then the rest of the map, nearest first
       const ring = iwRingMissing(m, camX, camY);
+      if (!ring && !quiet) return;
       if (!ring) { const nd = iwNextDoor(m); if (nd) { iwQueue(nd[0], nd[1], nd[2]); return; } }
       const v = !ring ? [-1, -1, maxX, maxY] : iwView(camX, camY, 1);
       for (let cy = Math.max(-1, v[1]); cy <= Math.min(maxY, v[3]); cy++) for (let cx = Math.max(-1, v[0]); cx <= Math.min(maxX, v[2]); cx++) if (!IWC.chunks[iwKey(m, cx, cy)] && !IWDB.reading[iwKey(m, cx, cy)]) { const d = (cx - mx) * (cx - mx) + (cy - my) * (cy - my); if (d < bd) { bd = d; best = [cx, cy]; } }
@@ -8809,14 +8844,14 @@
       if (!blob) { if (done) done(); return; }
       try {
         const tx = IWDB.db.transaction('chunks', 'readwrite'); tx.objectStore('chunks').put(blob, dk);
-        tx.oncomplete = function () { IWDB.keys[dk] = 1; const st = store.get('mapCache', { n: 0, b: 0 }); store.set('mapCache', { n: st.n + 1, b: st.b + blob.size }); if (done) done(); };
+        tx.oncomplete = function () { IWDB.keys[dk] = 1; if (done) done(); };
         tx.onerror = function () { if (done) done(); };
       } catch (e) { if (done) done(); }
     };
     try { canvas.toBlob(function (b) { if (b && b.type === 'image/webp') put(b); else canvas.toBlob(put, 'image/jpeg', 0.88); }, 'image/webp', 0.86); } catch (e) { if (done) done(); }
   }
   function iwDbClear(cb) {
-    IWDB.keys = {}; store.set('mapCache', { n: 0, b: 0 });
+    IWDB.keys = {};
     if (!IWDB.db) { try { const r = indexedDB.deleteDatabase('torn-arcade-maps'); r.onsuccess = r.onerror = function () { if (cb) cb(); }; } catch (e) { if (cb) cb(); } return; }
     try { const tx = IWDB.db.transaction('chunks', 'readwrite'); tx.objectStore('chunks').clear(); tx.oncomplete = tx.onerror = function () { if (cb) cb(); }; } catch (e) { if (cb) cb(); }
   }
@@ -8837,7 +8872,9 @@
       if (!IW_PREP.on) return;
       if (IWDB.state === 1 || IWDB.state === 0) { IW_PREP.timer = setTimeout(tick, 200); return; }
       if (IWDB.state === 3 || !iwDbOn()) { IW_PREP.on = false; if (IW_PREP.cb) IW_PREP.cb({ error: true }); return; }
-      const playing = active && scene === worldScene, budget = playing ? 4 : 18, t0 = performance.now();
+      const playing = active && scene === worldScene;
+      if (playing && !iwQuiet()) { IW_PREP.timer = setTimeout(tick, 120); return; }   // never while walking
+      const budget = playing ? 4 : 18, t0 = performance.now();
       while (IW_PREP.i < IW_PREP.list.length && performance.now() - t0 < budget) {
         if (IWC.pending || IWC.load) {   // the game is drawing a map: wait, unless Tornies is closed (then take over)
           if (performance.now() - (IWC.drawnAt || 0) < 500) break;
@@ -8855,7 +8892,7 @@
     tick();
   }
   function iwPrepStop() { IW_PREP.on = false; IW_PREP.it = null; clearTimeout(IW_PREP.timer); }
-  function iwPrepInfo() { const st = store.get('mapCache', { n: 0, b: 0 }); return { running: IW_PREP.on, done: IW_PREP.i, total: IW_PREP.list ? IW_PREP.list.length : iwPrepList().length, saved: Object.keys(IWDB.keys).length || st.n, mb: st.b / 1048576, on: iwDbOn(), ready: IWDB.state === 2 }; }
+  function iwPrepInfo() { const nk = Object.keys(IWDB.keys).length; return { running: IW_PREP.on, done: IW_PREP.i, total: IW_PREP.list ? IW_PREP.list.length : iwPrepList().length, saved: nk, mb: nk * 0.024, on: iwDbOn(), ready: IWDB.state === 2 }; }
 
   /* ================= World rebuild: Red-scale maps ================= */
   // Outdoor maps are rebuilt here at Pokémon Red-like sizes, keeping every NPC, trainer, item, sign and script from the
@@ -12091,6 +12128,7 @@
       pxEllipse(ctx, x + 8, y + 8, 7, 7, function (xx, yy, d) { fr(xx, yy, 1, 1, d > 0.8 ? (it.kind === 'field' ? '#d0a030' : '#2a2a34') : d < 0.06 ? '#2a2a34' : TYPE_COL[MOVES[it.move].type] || '#888'); });
       fr(x + 5, y + 4, 3, 1, 'rgba(255,255,255,.6)'); return;
     }
+    if (it.kind === 'shoes') { fr(x + 3, y + 8, 8, 4, '#d84a3a'); fr(x + 2, y + 11, 12, 3, '#d84a3a'); fr(x + 2, y + 13, 12, 2, '#f4f4f8'); fr(x + 5, y + 8, 4, 1, '#f4f4f8'); fr(x + 4, y + 10, 5, 1, '#f4f4f8'); return; }
     if (it.kind === 'key') { fr(x + 3, y + 6, 10, 5, '#d0a030'); fr(x + 3, y + 6, 4, 5, '#f0d070'); fr(x + 11, y + 4, 3, 9, '#a07818'); return; }
     if (it.kind === 'level') { fr(x + 2, y + 5, 12, 7, '#3a2a1a'); fr(x + 3, y + 6, 10, 5, '#e0a040'); fr(x + 3, y + 6, 4, 5, '#f0d080'); fr(x + 8, y + 6, 1, 5, '#8a5a20'); return; }
     const c = it.kind === 'revive' ? '#f0c030' : it.cure === 'all' ? '#40c0c0' : it.kind === 'heal' ? (id === 'super_potion' ? '#e060c0' : id === 'hyper_potion' ? '#e04040' : '#a060e0') : it.kind === 'repel' ? '#40a060' : ({ psn: '#a050b0', par: '#d8b020', brn: '#e0602e', slp: '#8a8a9a', frz: '#58b8d8' })[it.cure];
@@ -12522,6 +12560,8 @@
   }
   async function martTalk(stock) {
     stock = stock.filter(function (id) { return ITEMS[id] && !(ITEMS[id].kind === 'disc' && !ITEMS[id].price); });   // prize-only discs (price 0) are never sold
+    // Running Shoes: every Tornie Supplies shop sells them once you have three medals (until you own a pair).
+    if (stock.indexOf('potion') >= 0 && hasMedals(3) && !G.flags.shoes) stock = ['running_shoes'].concat(stock);
     let first = true;
     while (true) {
       const c = await ask(first ? 'CLERK: Welcome to Tornie Supplies! What do you need?' : 'CLERK: Anything else?', ['BUY', 'SELL', 'QUIT']);
@@ -12537,6 +12577,14 @@
       const items = stock.map(function (id) { return { label: ITEMS[id].name, right: '$' + ITEMS[id].price }; }).concat(['CANCEL']);
       const i = await menu(items, { x: 4, y: 4, w: 150, visible: 8, onMove: function (k) { sel = k; }, draw: function () { moneyBox(); descBox(stock[sel]); } });
       if (i < 0 || i >= stock.length) return;
+      if (stock[i] === 'running_shoes') {
+        const price = ITEMS.running_shoes.price;
+        if (G.money < price) { await say('CLERK: Those are $' + price + '. You\'re a bit short, sorry.'); continue; }
+        if (!(await yesno('CLERK: Running Shoes, $' + price + '. Deal?'))) continue;
+        G.money -= price; G.flags.shoes = 1; stock.splice(i, 1); jingle('item');
+        await say('You got the Running Shoes!|Hold B (or Shift on a keyboard) while walking to run.');
+        continue;
+      }
       const id = stock[i], price = ITEMS[id].price, maxQ = Math.min(99, Math.floor(G.money / price));
       if (maxQ < 1) { await say('CLERK: You\'re a bit short for that one, sorry.'); continue; }
       const q = await qtyPicker(price, maxQ);
@@ -12746,7 +12794,7 @@
   }
   function tryMove(dir) {
     const p = W.p, m = W.map, d = DV[dir], nx = p.x + d[0], ny = p.y + d[1];
-    p.run = !!(held.run || held.b);
+    p.run = !!(G && G.flags.shoes && (held.run || held.b));   // running needs the Running Shoes (sold in shops after the third medal)
     if (nx < 0 || ny < 0 || nx >= m.w || ny >= m.h) { edgeExit(dir, nx, ny); return; }
     if (!m.indoor && tileAt(m, nx, ny) === 'v' && dir === 'down') {
       if (!blocked(m, nx, ny + 1)) { startMove(nx, ny + 1, true); tone(330, 0.16, 'triangle', 0.05, 660); return; }
@@ -14283,6 +14331,8 @@
     ctx.setTransform(SC, 0, 0, SC, 0, 0); ctx.imageSmoothingEnabled = false;
     fr(0, 0, VW, VH, '#000');
     if (scene) scene.draw();
+    // Battles and other screens are quiet moments: carry on drawing the current map in the background.
+    if (scene !== worldScene && W.map && !W.map.indoor && IWC.id === W.map && IWC.camX !== undefined && iwOn && store.get('detailMaps', true) !== false) iwPrebake(W.map, IWC.camX, IWC.camY);
     modals.forEach(function (m) { if (m.draw) m.draw(); });
     if (flash > 0) fr(0, 0, VW, VH, 'rgba(255,255,255,' + Math.min(1, flash) + ')');
     if (fade > 0) fr(0, 0, VW, VH, 'rgba(0,0,0,' + Math.min(1, fade) + ')');
