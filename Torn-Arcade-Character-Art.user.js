@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         Torn Arcade - Character Art
 // @namespace    https://github.com/Eaglewing91
-// @version      1.0.0
+// @version      1.0.1
 // @description  Optional art pack for the Torn Arcade script: the illustrated portraits of the gym leaders, story characters, trainers and player outfits. Needs Torn Arcade installed. Makes no requests of any kind: it only hands its pictures to Torn Arcade on the page you are viewing.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
-// @license      All Rights Reserved - no copying, modifying or redistribution
+// @license      All Rights Reserved - for use on Torn (torn.com) only; no copying, modifying, redistribution or use elsewhere
 // @homepageURL  https://github.com/Eaglewing91/Torn-Arcade.user.js
 // @updateURL    https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade-Character-Art.user.js
 // @downloadURL  https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade-Character-Art.user.js
@@ -24,6 +24,7 @@
  *   'ta-art-pack' event on the same page. That is all it does. Torn Arcade checks every picture before using it.
  * - It makes no network requests, never reads or changes Torn's page, stores nothing and needs no API key.
  * - Without it, Torn Arcade still works and uses its pixel-art versions instead.
+ * - For use on Torn (www.torn.com) only, together with Torn Arcade. See the licence below.
  *
  * TERMS OF SERVICE
  * - Data Storage:          No (nothing is stored)
@@ -31,10 +32,51 @@
  * - Purpose of Use:        Public amusement (artwork for the Torn Arcade games)
  * - Key Storage & Sharing: Not stored / Not shared (no key is used)
  * - Key Access Level:      None (no API key needed)
+ * - Where it may be used:  Torn (www.torn.com) only, with Torn Arcade. See the licence below.
  *
- * LICENCE
- * All rights reserved. You may install and use this script as published. Copying, modifying, re-uploading or
- * redistributing it, in whole or in part, is not allowed without written permission from Eaglewing [571041].
+ * LICENCE - ALL RIGHTS RESERVED - FOR USE ON TORN ONLY
+ * Copyright (c) 2026 Eaglewing [571041]. All rights reserved.
+ *
+ * Torn Arcade and its optional Art Packs (Torn Arcade - Tornies Art and
+ * Torn Arcade - Character Art), and everything in them (code, games,
+ * characters, artwork, music, text and data), belong to Eaglewing [571041].
+ *
+ * 1. TORN ONLY
+ *    These scripts are made for, and licensed only for use on, the Torn
+ *    website (https://www.torn.com), in your own web browser through a
+ *    userscript manager such as Tampermonkey. Any use outside Torn is
+ *    unauthorised. That includes running, hosting, embedding or using any part
+ *    of them on any other website, app, game, server, emulator, launcher or
+ *    app store, or as standalone software.
+ *
+ * 2. WHAT YOU MAY DO
+ *    - Install them from the official links published by the author and use
+ *      them on Torn for your own personal play.
+ *    - Read the code to check that it is safe and follows Torn's rules.
+ *
+ * 3. WHAT YOU MAY NOT DO (without the author's prior written permission)
+ *    - Use them, or any part of them, anywhere other than Torn (see 1).
+ *    - Copy, reproduce or republish them, in whole or in part.
+ *    - Modify, adapt, translate or make derivative works from them.
+ *    - Redistribute, share, sell, rent, sublicense or host them anywhere else
+ *      (including other script sites, gists, repositories or file shares).
+ *    - Extract or reuse any of their code, artwork, characters, music or other
+ *      content in other projects, products or media, including to train or
+ *      build AI models.
+ *    - Use them commercially in any way.
+ *    - Remove or change this notice.
+ *
+ * 4. PERMISSION
+ *    Permission to use the scripts is personal, non-exclusive,
+ *    non-transferable and limited to Torn. It can be withdrawn at any time
+ *    and ends automatically if any of these terms are broken.
+ *
+ * 5. NO WARRANTY
+ *    The scripts are provided "as is", without warranty of any kind. The author
+ *    is not liable for any loss or damage arising from their use.
+ *
+ * Torn is owned by its respective owners. Torn Arcade is an unofficial fan
+ * project and is not affiliated with or endorsed by Torn.
  */
 
 (function () {

@@ -2,6 +2,8 @@
 
 **A phone full of games for [Torn](https://www.torn.com), by Eaglewing [571041].**
 
+> ⚠️ **For use on Torn only.** Torn Arcade and its Art Packs are licensed solely for use on [torn.com](https://www.torn.com) through a userscript manager. Using, hosting or embedding any part of them anywhere else, or copying, modifying, redistributing or reusing them, is not allowed without written permission from the author. See [Licence](#-licence).
+
 Torn Arcade is a Tampermonkey userscript that adds a **Mobile Phone** link to Torn's sidebar. Click it and a phone opens on top of the page with five games, a scores screen and settings. Everything runs inside the phone, and every image, sound and piece of music is built into the script or its two optional Art Packs.
 
 ---
@@ -86,6 +88,7 @@ If you add a **Limited** access API key in Settings, the phone checks the offici
 
 - **Data Storage:** settings, wallpaper, best scores, your Tornies save, Torn Invasion progress, Angry Bogies stars and your API key are kept in Tampermonkey storage on your device. Events are shown on the phone but never saved. With **Save maps on this device** on (Settings → Tornies), pictures of the Tornies maps the game has drawn are also kept in your browser's own storage for torn.com (IndexedDB, `torn-arcade-maps`). They are drawn by the script on your device, contain no personal data, are never uploaded or shared, and **Clear saved maps** deletes them.
 - **Data Sharing:** nothing is sent anywhere except event requests to `api.torn.com`.
+- **Where it may be used:** Torn (torn.com) only. See [Licence](#-licence).
 - The same table is shown next to the API key box in Settings and at the top of the script.
 
 **Art Packs** (Tornies Art and Character Art):
@@ -98,7 +101,18 @@ If you add a **Limited** access API key in Settings, the phone checks the offici
 
 ## 📝 Licence
 
-**All rights reserved.** You may install and use Torn Arcade for your own personal play from this official link. You may also read the code to check that it's safe and follows Torn's rules. You may not copy, modify, redistribute or reuse it or any part of it without written permission. See [LICENSE](LICENSE) for the full terms.
+**All rights reserved. For use on Torn only.**
+
+- ✅ **You may:** install Torn Arcade and its Art Packs from the official links on this page, use them **on Torn (torn.com)** for your own personal play, and read the code to check that it's safe and follows Torn's rules.
+- ❌ **You may not** (without the author's written permission):
+  - use them, or any part of them, **anywhere other than Torn**: other websites, apps, games, servers, emulators, launchers, app stores or standalone software;
+  - copy, republish, modify, adapt or make derivative works from them;
+  - redistribute, share, sell, sublicense or host them anywhere else, including other script sites, gists, repositories or file shares;
+  - extract or reuse their code, artwork, characters, music or other content in other projects or media, including to train AI models;
+  - use them commercially, or remove the licence notice.
+- Permission is personal, limited to Torn, and ends automatically if these terms are broken.
+
+See [LICENSE](LICENSE) for the full terms. The same licence is at the top of every script.
 
 Torn is owned by its respective owners. Torn Arcade is an unofficial fan project and isn't affiliated with or endorsed by Torn.
 

@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.20.0
+// @version      2.20.1
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with five game apps: Tornies (a creature-collecting RPG), Torn Invasion (a Doom-style alien shooter), Angry Bogies (a slingshot physics game), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
-// @license      All Rights Reserved - no copying, modifying or redistribution (see LICENCE below)
+// @license      All Rights Reserved - for use on Torn (torn.com) only; no copying, modifying, redistribution or use elsewhere (see LICENCE below)
 // @homepageURL  https://github.com/Eaglewing91/Torn-Arcade.user.js
 // @updateURL    https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js
 // @downloadURL  https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js
@@ -19,32 +19,49 @@
 // ==/UserScript==
 
 /*
- * LICENCE - ALL RIGHTS RESERVED
+ * LICENCE - ALL RIGHTS RESERVED - FOR USE ON TORN ONLY
  * Copyright (c) 2026 Eaglewing [571041]. All rights reserved.
  *
- * This script and everything in it (code, games, characters, artwork, music,
- * text and data) belongs to Eaglewing [571041].
+ * Torn Arcade and its optional Art Packs (Torn Arcade - Tornies Art and
+ * Torn Arcade - Character Art), and everything in them (code, games,
+ * characters, artwork, music, text and data), belong to Eaglewing [571041].
  *
- * You may install and use it for your own personal play, from the official
- * link published by the author. Reading the code to check that it is safe and
- * follows Torn's rules is allowed.
+ * 1. TORN ONLY
+ *    These scripts are made for, and licensed only for use on, the Torn
+ *    website (https://www.torn.com), in your own web browser through a
+ *    userscript manager such as Tampermonkey. Any use outside Torn is
+ *    unauthorised. That includes running, hosting, embedding or using any part
+ *    of them on any other website, app, game, server, emulator, launcher or
+ *    app store, or as standalone software.
  *
- * Without the author's prior written permission you may NOT:
- *   - copy, reproduce or republish the script or any part of it;
- *   - modify, adapt, translate or make derivative works from it;
- *   - redistribute, share, sell, sublicense or host it anywhere else
- *     (including other script sites, gists or repositories);
- *   - reuse any of its code, assets or content in other projects;
- *   - remove or change this notice.
+ * 2. WHAT YOU MAY DO
+ *    - Install them from the official links published by the author and use
+ *      them on Torn for your own personal play.
+ *    - Read the code to check that it is safe and follows Torn's rules.
  *
- * Permission to use the script is personal, non-exclusive, non-transferable and
- * can be withdrawn at any time. It ends automatically if these terms are broken.
+ * 3. WHAT YOU MAY NOT DO (without the author's prior written permission)
+ *    - Use them, or any part of them, anywhere other than Torn (see 1).
+ *    - Copy, reproduce or republish them, in whole or in part.
+ *    - Modify, adapt, translate or make derivative works from them.
+ *    - Redistribute, share, sell, rent, sublicense or host them anywhere else
+ *      (including other script sites, gists, repositories or file shares).
+ *    - Extract or reuse any of their code, artwork, characters, music or other
+ *      content in other projects, products or media, including to train or
+ *      build AI models.
+ *    - Use them commercially in any way.
+ *    - Remove or change this notice.
  *
- * The script is provided "as is", without warranty of any kind. The author is
- * not liable for any loss or damage arising from its use.
+ * 4. PERMISSION
+ *    Permission to use the scripts is personal, non-exclusive,
+ *    non-transferable and limited to Torn. It can be withdrawn at any time
+ *    and ends automatically if any of these terms are broken.
  *
- * Torn is owned by its respective owners. This is an unofficial fan project and
- * is not affiliated with or endorsed by Torn.
+ * 5. NO WARRANTY
+ *    The scripts are provided "as is", without warranty of any kind. The author
+ *    is not liable for any loss or damage arising from their use.
+ *
+ * Torn is owned by its respective owners. Torn Arcade is an unofficial fan
+ * project and is not affiliated with or endorsed by Torn.
  */
 
 /*
@@ -98,6 +115,7 @@
  *                          checks while the phone is open). Never shared.
  * - Key Access Level:      Limited (user > events). Optional: only needed
  *                          for event notifications.
+ * - Where it may be used:  Torn (www.torn.com) only. See the LICENCE above.
  */
 
 (function () {
@@ -866,7 +884,7 @@
             '<tr><td>Key storage &amp; sharing</td><td>Stored locally / Used only for automation (event checks while the phone is open). Never shared.</td></tr>' +
             '<tr><td>Key access level</td><td>Limited (user → events)</td></tr>' +
           '</tbody></table>' +
-          '<small>Your key stays on this device and is only sent to api.torn.com. Nothing is shared. See the top of the script for the full Terms of Service. <a class="ta-evlink" href="https://www.torn.com/api.html" target="_blank" rel="noopener">Torn API terms</a></small>' +
+          '<small>Your key stays on this device and is only sent to api.torn.com. Nothing is shared. See the top of the script for the full Terms of Service. Licensed for use on Torn only. <a class="ta-evlink" href="https://www.torn.com/api.html" target="_blank" rel="noopener">Torn API terms</a></small>' +
         '</div></div>' +
       '</div></div>' +
       '<div class="ta-group"><h3>Games</h3><div class="ta-list">' +

@@ -1,27 +1,43 @@
-LICENCE - ALL RIGHTS RESERVED
-
+LICENCE - ALL RIGHTS RESERVED - FOR USE ON TORN ONLY
 Copyright (c) 2026 Eaglewing [571041]. All rights reserved.
 
-This script and everything in it (code, games, characters, artwork, music,
-text and data) belongs to Eaglewing [571041].
+Torn Arcade and its optional Art Packs (Torn Arcade - Tornies Art and
+Torn Arcade - Character Art), and everything in them (code, games,
+characters, artwork, music, text and data), belong to Eaglewing [571041].
 
-You may install and use it for your own personal play, from the official
-link published by the author. Reading the code to check that it is safe and
-follows Torn's rules is allowed.
+1. TORN ONLY
+   These scripts are made for, and licensed only for use on, the Torn
+   website (https://www.torn.com), in your own web browser through a
+   userscript manager such as Tampermonkey. Any use outside Torn is
+   unauthorised. That includes running, hosting, embedding or using any part
+   of them on any other website, app, game, server, emulator, launcher or
+   app store, or as standalone software.
 
-Without the author's prior written permission you may NOT:
-  - copy, reproduce or republish the script or any part of it;
-  - modify, adapt, translate or make derivative works from it;
-  - redistribute, share, sell, sublicense or host it anywhere else
-    (including other script sites, gists or repositories);
-  - reuse any of its code, assets or content in other projects;
-  - remove or change this notice.
+2. WHAT YOU MAY DO
+   - Install them from the official links published by the author and use
+     them on Torn for your own personal play.
+   - Read the code to check that it is safe and follows Torn's rules.
 
-Permission to use the script is personal, non-exclusive, non-transferable and
-can be withdrawn at any time. It ends automatically if these terms are broken.
+3. WHAT YOU MAY NOT DO (without the author's prior written permission)
+   - Use them, or any part of them, anywhere other than Torn (see 1).
+   - Copy, reproduce or republish them, in whole or in part.
+   - Modify, adapt, translate or make derivative works from them.
+   - Redistribute, share, sell, rent, sublicense or host them anywhere else
+     (including other script sites, gists, repositories or file shares).
+   - Extract or reuse any of their code, artwork, characters, music or other
+     content in other projects, products or media, including to train or
+     build AI models.
+   - Use them commercially in any way.
+   - Remove or change this notice.
 
-The script is provided "as is", without warranty of any kind. The author is
-not liable for any loss or damage arising from its use.
+4. PERMISSION
+   Permission to use the scripts is personal, non-exclusive,
+   non-transferable and limited to Torn. It can be withdrawn at any time
+   and ends automatically if any of these terms are broken.
 
-Torn is owned by its respective owners. This is an unofficial fan project and
-is not affiliated with or endorsed by Torn.
+5. NO WARRANTY
+   The scripts are provided "as is", without warranty of any kind. The author
+   is not liable for any loss or damage arising from their use.
+
+Torn is owned by its respective owners. Torn Arcade is an unofficial fan
+project and is not affiliated with or endorsed by Torn.
