@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.19.0
+// @version      2.19.1
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with five game apps: Tornies (a creature-collecting RPG), Torn Invasion (a Doom-style alien shooter), Angry Bogies (a slingshot physics game), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -874,7 +874,6 @@
       '</div></div>' +
       '<div class="ta-group"><h3>Tornies</h3><div class="ta-list">' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#3a9a5a">🗺️</span><div class="ta-rtext"><b>Detailed maps</b><small>Illustrated towns and routes. Turn off for classic pixel maps on slower devices.</small></div><button type="button" class="ta-switch' + (store.get('detailMaps', true) ? ' ta-on' : '') + '" data-set="detailMaps"></button></div>' +
-        '<div class="ta-row"><span class="ta-ricon" style="background:#2f7bd1">⏳</span><div class="ta-rtext"><b>Pre-load maps</b><small>Draws the area around you first (during the normal fade), then the rest of the map in the background, and gets the next map ready as you walk towards an exit, so walking stays smooth. Off: maps draw as you walk, with no wait.</small></div><button type="button" class="ta-switch' + (store.get('preloadMaps', true) ? ' ta-on' : '') + '" data-set="preloadMaps"></button></div>' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#6a5acd">💾</span><div class="ta-rtext"><b>Save maps on this device</b><small>Keeps each map you have visited as images in this browser\'s storage, so it opens instantly next time with no loading. Stays on this device only; nothing is uploaded or shared.</small></div><button type="button" class="ta-switch' + (store.get('saveMaps', true) ? ' ta-on' : '') + '" data-set="saveMaps"></button></div>' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#8a4ad0">🧭</span><div class="ta-rtext"><b>Prepare all maps</b><small class="ta-mapmsg">' + mapMsg() + '</small></div><button type="button" class="ta-btn ta-mapbtn" data-set="mapPrep">' + (mapInfo() && mapInfo().running ? 'Stop' : 'Prepare') + '</button></div>' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#7a7f8a">🧹</span><div class="ta-rtext"><b>Clear saved maps</b><small>Deletes the map images saved on this device (your game save is not touched). Maps are drawn again as you visit them.</small></div><button type="button" class="ta-danger" data-set="mapClear">Clear</button></div>' +
@@ -937,7 +936,6 @@
     if (k === 'cheat') { tryCheat(); return; }
     if (k === 'keySave') { saveKey(); return; }
     if (k === 'keyDel') { store.set('apiKey', ''); evState = { msg: 'Key removed. Event notifications are off.' }; evStop(); sfx.click(); renderSettings(); return; }
-    if (k === 'preloadMaps') { const on = !store.get('preloadMaps', true); store.set('preloadMaps', on); t.classList.toggle('ta-on', on); sfx.click(); return; }
     if (k === 'saveMaps') { const on = !store.get('saveMaps', true); store.set('saveMaps', on); t.classList.toggle('ta-on', on); sfx.click(); if (on && games.pocket && games.pocket.maps) games.pocket.maps.open(); else if (games.pocket && games.pocket.maps) games.pocket.maps.stop(); mapProgress(); return; }
     if (k === 'mapPrep') {
       const mp = games.pocket && games.pocket.maps; if (!mp) return;
@@ -8390,18 +8388,17 @@
     }
     m.buildings.forEach(function (b) { if (b.x + b.w > cx * IW_CH && b.x < (cx + 1) * IW_CH && b.y + b.h > cy * IW_CH && b.y < (cy + 1) * IW_CH) { ctx.save(); ctx.beginPath(); ctx.rect(cx * IW_CS - camX, cy * IW_CS - camY, IW_CS, IW_CS); ctx.clip(); ctx.drawImage(bldImg(b), b.x * 16 - camX, b.y * 16 - camY); ctx.restore(); } });
   }
-  /* Arriving on a map. With "Pre-load maps" on (the default), the part of the map on screen is drawn while the screen
+  /* Arriving on a map. The part of the map on screen is drawn while the screen
      is still dark from the fade between maps, and the rest follows in the background. Maps next door are drawn ahead
      of time when the player walks near an exit, so moving between maps is usually instant. Chunks saved on this device are read back
-     instead of drawn. With pre-load off, chunks are drawn a step at a time while walking. Returns true while the
-     loading screen is showing. */
+     instead of drawn. Returns true while the screen is waiting for them. */
   function iwLoading(m, camX, camY) {
     if (IWC.id !== m) {
       IWC.id = m; IWC.arrive = T; IWC.pending = null; IWC.load = null; iwDbOpen();
       const maxX = Math.floor((m.w + 7) / IW_CH), maxY = Math.floor((m.h + 7) / IW_CH);
       IWC.cap = (maxX + 2) * (maxY + 2) + 30;
-      if (store.get('preloadMaps', true) !== false) {
-        // Only the area around the player is drawn behind the loading bar; the rest follows in the background.
+      {
+        // Only what is on screen is needed before the fade in; the rest follows in the background.
         const v = iwView(camX, camY, 0), todo = [], pcx = (camX + VW / 2) / IW_CS - 0.5, pcy = (camY + VH / 2) / IW_CS - 0.5;
         for (let cy = Math.max(-1, v[1]); cy <= Math.min(maxY, v[3]); cy++) for (let cx = Math.max(-1, v[0]); cx <= Math.min(maxX, v[2]); cx++) if (!IWC.chunks[iwKey(m, cx, cy)]) todo.push([cx, cy]);
         todo.sort(function (a, b) { return Math.hypot(a[0] - pcx, a[1] - pcy) - Math.hypot(b[0] - pcx, b[1] - pcy); });
@@ -8495,8 +8492,8 @@
       const maxX = Math.floor((m.w + 7) / IW_CH), maxY = Math.floor((m.h + 7) / IW_CH);
       // the view and the ring around it first; with pre-load on, then the rest of the map, nearest first
       const ring = iwRingMissing(m, camX, camY);
-      if (!ring && store.get('preloadMaps', true) !== false) { const nd = iwNextDoor(m); if (nd) { iwQueue(nd[0], nd[1], nd[2]); return; } }
-      const v = store.get('preloadMaps', true) !== false && !ring ? [-1, -1, maxX, maxY] : iwView(camX, camY, 1);
+      if (!ring) { const nd = iwNextDoor(m); if (nd) { iwQueue(nd[0], nd[1], nd[2]); return; } }
+      const v = !ring ? [-1, -1, maxX, maxY] : iwView(camX, camY, 1);
       for (let cy = Math.max(-1, v[1]); cy <= Math.min(maxY, v[3]); cy++) for (let cx = Math.max(-1, v[0]); cx <= Math.min(maxX, v[2]); cx++) if (!IWC.chunks[iwKey(m, cx, cy)] && !IWDB.reading[iwKey(m, cx, cy)]) { const d = (cx - mx) * (cx - mx) + (cy - my) * (cy - my); if (d < bd) { bd = d; best = [cx, cy]; } }
     }
     IWC.want = null;

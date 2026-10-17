@@ -43,7 +43,7 @@ A creature-collecting RPG set in Torn City. You start in Maple Hollow with one o
 - Trade Tornies with friends using trade codes. No server is involved.
 - Custom illustrated artwork for every Tornie and character, made specifically for Torn Arcade (from the optional Art Packs; pixel art without them), plus an animated title screen and an original soundtrack.
 - Illustrated towns and routes: soft shorelines, sandy beaches, snowy mountains, city streets and a neon casino strip, with swaying tall grass and lights that come on at night.
-- Map options in Settings → Tornies: **Pre-load maps** (draws what is on screen during the normal fade, the rest in the background, and readies the next map as you walk towards an exit), **Save maps on this device** (maps you have visited open instantly next time), **Prepare all maps** (a one-off that draws and saves every outdoor map; about 40–100 MB of browser storage and a few minutes) and **Clear saved maps**.
+- Smooth map changes: what is on screen is drawn during the normal fade, the rest fills in while you walk, and the next map is readied as you head for an exit. Map options in Settings → Tornies: **Detailed maps** (off for classic pixel maps on slower phones), **Save maps on this device** (maps you have visited open instantly next time), **Prepare all maps** (a one-off that draws and saves every outdoor map; about 40–100 MB of browser storage and a few minutes) and **Clear saved maps**.
 
 ### 👽 Torn Invasion
 A Doom-style first-person shooter. Aliens have overrun Torn City, and you fight through infested levels with a **pistol, shotgun and plasma rifle**. Unlock levels as you clear them, beat your best times and scores, and collect achievements.
