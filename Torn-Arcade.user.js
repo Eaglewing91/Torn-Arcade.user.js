@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.21.1
+// @version      2.22.0
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with five game apps: Tornies (a creature-collecting RPG), Torn Invasion (a Doom-style alien shooter), Angry Bogies (a slingshot physics game), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -88,6 +88,14 @@
  *   changes anything on Torn's page. It never loads Torn pages and never
  *   talks to any other website. Every image and sound is built into the
  *   script or comes from the optional Art Packs below.
+ * - GIFT CODES: the developer can send players signed gift codes (Tornies,
+ *   items or money), redeemed in Settings > Cheat code. Each code is for one
+ *   Torn ID and works once. They are checked in your browser with the
+ *   developer's public key (Web Crypto); nothing is requested. Your Torn ID
+ *   is read from the Torn page you are viewing, never requested.
+ * - DEV APP: only visible to the developer (Torn ID 571041). It makes the
+ *   gift codes with a passphrase-locked key kept in the developer's own
+ *   browser. It makes no requests.
  * - ART PACKS (optional): the illustrated Tornie and character artwork is in
  *   two separate scripts, "Torn Arcade - Tornies Art" and "Torn Arcade -
  *   Character Art", so this script stays small. They talk to this script
@@ -426,8 +434,9 @@
     { id: 'artT', pack: 'tornies', name: 'Tornies Art', title: 'Tornies Art Pack', icon: '🎨', bg: ['#7ad8a8', '#1f7a5a'], size: '1.4 MB', what: 'the illustrated artwork for all 179 Tornies' },
     { id: 'artC', pack: 'chars', name: 'Character Art', title: 'Character Art Pack', icon: '🖌️', bg: ['#c39bff', '#5a3ab8'], size: '0.5 MB', what: 'illustrated portraits for the gym leaders, story characters, trainers and your outfits' }
   ];
+  const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gift codes', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, invasion: 1, bogies: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.21';
+  const VERSION = '2.22';
 
   GM_addStyle([
     /* The phone */
@@ -505,6 +514,18 @@
     '.ta-artgal .ta-unk img{filter:brightness(0);opacity:.35}',
     '.ta-artinst{display:flex;flex-direction:column;align-items:center;gap:8px;padding:4px 12px 14px;text-align:center}',
     '.ta-artinst .ta-btn{text-decoration:none;display:inline-block}',
+    '.ta-devform{display:flex;flex-direction:column;gap:9px;padding:12px}',
+    '.ta-devform p{margin:0;color:var(--muted);font-size:12px;line-height:1.4}',
+    '.ta-devform label{display:flex;flex-direction:column;gap:4px;font-size:11.5px;color:var(--muted)}',
+    '.ta-devin{width:100%;min-width:0;padding:7px 9px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:#fff;font:inherit;font-size:13px}',
+    '.ta-devbtns{display:flex;flex-wrap:wrap;gap:6px}', '.ta-devbtns .ta-btn,.ta-devbtns .ta-danger{padding:7px 12px;font-size:12.5px}',
+    '.ta-devline{display:grid;grid-template-columns:1fr 56px 22px;gap:6px;align-items:center;padding:6px;border:1px solid var(--line);border-radius:10px;margin-bottom:6px}',
+    '.ta-devmons .ta-devline{grid-template-columns:52px auto auto 1fr 22px}', '.ta-devmons .ta-devline select{grid-column:1/-1}',
+    '.ta-appbtn[hidden]{display:none}', '.ta-devchk{display:flex !important;flex-direction:row !important;align-items:center;gap:4px;font-size:12px !important;color:#fff !important}',
+    '.ta-devx{border:0;background:none;color:var(--muted);font-size:14px;cursor:pointer}',
+    '.ta-devsub{font-weight:700;color:#ffd65a;font-size:12px;margin-top:4px}',
+    '.ta-devcode{word-break:break-all;font:11px/1.35 ui-monospace,Consolas,monospace;background:#0b111a;border:1px dashed var(--line);border-radius:8px;padding:8px;color:#dfe6ef;user-select:all}',
+    '.ta-devmsg{color:#ffd65a !important}', '.ta-devnote{margin:4px 0 0 !important}',
     '.ta-artinst small{color:var(--muted);font-size:11px;line-height:1.35}',
     /* Apps */
     '.ta-app{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;padding-top:48px;background:var(--bg)}',
@@ -641,7 +662,7 @@
           '<div class="ta-widget"><button type="button" class="ta-lock" data-act="close" title="Lock phone (Esc)">🔒</button><b class="ta-wclock">00:00</b><span class="ta-wdate"></span><em>Torn City Time</em></div>' +
           '<div class="ta-note" hidden><span class="ta-noteicon">👋</span><div class="ta-notetext"><b>Welcome to Torn Arcade v' + VERSION + '!</b><small>Five games in your pocket. Start with Tornies, and grab the free Art Packs on the bottom row for illustrated artwork. Bugs or ideas? Message Eaglewing [571041].</small></div><button type="button" class="ta-notex" title="Dismiss">✕</button></div>' +
           '<div class="ta-grid">' + GAMES.map(appButton).join('') + '</div>' +
-          '<div class="ta-grid ta-artrow">' + ART_APPS.map(appButton).join('') + '</div>' +
+          '<div class="ta-grid ta-artrow">' + ART_APPS.map(appButton).join('') + appButton(DEV_APP).replace('<button ', '<button hidden ') + '</div>' +
           '<div class="ta-dock">' + SYS_APPS.map(appButton).join('') + '</div>' +
           '<div class="ta-homebar" data-act="close" title="Lock phone"><i></i></div>' +
         '</div>' +
@@ -885,6 +906,165 @@
     });
   });
 
+  /* ================= Dev app (Eaglewing [571041] only) =================
+     Makes signed gift codes for Tornies. It only shows when the Torn ID on the page you're viewing is the developer's
+     (that just keeps it out of sight; it isn't the security). The security is the developer's private signing key:
+     - it is created in this browser and saved only in this browser's Tampermonkey storage, locked with a passphrase
+       (PBKDF2-SHA256, 600,000 rounds, then AES-256-GCM). The passphrase itself is never stored;
+     - it is unlocked into memory only while the Dev app is in use, and locks itself after 10 minutes, when the phone
+       is closed or when the page is reloaded;
+     - Torn Arcade holds only the matching PUBLIC key, which can check codes but can't make them.
+     Every code is for one Torn ID and works once. Nothing here makes any request. */
+  const DEV_ID = 571041, DEV_ITER = 600000;
+  const DEV = { priv: null, timer: 0, msg: '', code: '' };
+  function devB64(u) { return btoa(String.fromCharCode.apply(null, Array.from(new Uint8Array(u)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
+  function devUnB64(s) { s = s.replace(/-/g, '+').replace(/_/g, '/'); while (s.length % 4) s += '='; return Uint8Array.from(atob(s), function (c) { return c.charCodeAt(0); }); }
+  function devIsMe() { try { return !!(games.pocket && games.pocket.myId && games.pocket.myId() === DEV_ID); } catch (e) { return false; } }
+  async function devWrapKey(pass, salt) {
+    const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pass), 'PBKDF2', false, ['deriveKey']);
+    return crypto.subtle.deriveKey({ name: 'PBKDF2', hash: 'SHA-256', salt: salt, iterations: DEV_ITER }, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+  }
+  // Locks a private key (JWK) with a passphrase. Returns the saved form (no secrets in the clear).
+  async function devLock(jwk, pass) {
+    const salt = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
+    const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, await devWrapKey(pass, salt), new TextEncoder().encode(JSON.stringify(jwk)));
+    return { type: 'torn-arcade-dev-key', v: 1, iter: DEV_ITER, salt: devB64(salt), iv: devB64(iv), ct: devB64(ct), x: jwk.x, y: jwk.y };
+  }
+  async function devUnlockJwk(saved, pass) {
+    const k = await devWrapKey(pass, devUnB64(saved.salt));
+    const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: devUnB64(saved.iv) }, k, devUnB64(saved.ct));   // throws if the passphrase is wrong
+    return JSON.parse(new TextDecoder().decode(pt));
+  }
+  function devArm() { clearTimeout(DEV.timer); DEV.timer = setTimeout(devLockNow, 10 * 60 * 1000); }
+  function devLockNow() { DEV.priv = null; DEV.code = ''; clearTimeout(DEV.timer); if (current === 'dev') renderDev(); }
+  function devPassOk(p) { return typeof p === 'string' && p.length >= 14 && !/^(.)\1+$/.test(p); }
+  function devDownload(name, text) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: 'application/json' })); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 3000); }
+  function devRid() { const al = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', r = crypto.getRandomValues(new Uint8Array(10)); return Array.from(r, function (x) { return al[x % al.length]; }).join(''); }
+  function devData() { return games.pocket && games.pocket.devData ? games.pocket.devData() : { sp: [], items: [] }; }
+  function devProfileId() { const m = /[?&]XID=(\d+)/.exec(location.search); return m && /profiles\.php/.test(location.pathname) ? m[1] : ''; }
+  function renderDev() {
+    const box = devBox, saved = store.get('devKey', null), msg = DEV.msg ? '<p class="ta-devmsg">' + esc(DEV.msg) + '</p>' : '';
+    DEV.msg = '';
+    if (!devIsMe()) { box.innerHTML = '<div class="ta-group"><div class="ta-list"><div class="ta-row"><div class="ta-rtext"><b>Developer only</b><small>This app is only for the Torn Arcade developer.</small></div></div></div></div>'; return; }
+    const pubLine = saved ? 'TA-PUBKEY:' + saved.x + '.' + saved.y : '';
+    if (!saved) {
+      box.innerHTML = '<div class="ta-group"><h3>Set up your signing key</h3><div class="ta-list"><div class="ta-devform">' + msg +
+        '<p>Creates your private signing key in this browser, locked with a passphrase. Use 4–5 random words or a long random password (at least 14 characters). It can\'t be recovered if you forget it.</p>' +
+        '<label>Passphrase<input type="password" class="ta-devin" data-f="p1" autocomplete="new-password"></label><label>Passphrase again<input type="password" class="ta-devin" data-f="p2" autocomplete="new-password"></label>' +
+        '<div class="ta-devbtns"><button type="button" class="ta-btn" data-dev="create">Create signing key</button><button type="button" class="ta-btn ta-btn-alt" data-dev="restore">Restore from backup…</button></div>' +
+        '<input type="file" class="ta-devfile" accept=".json,application/json" hidden></div></div></div>';
+      return;
+    }
+    if (!DEV.priv) {
+      box.innerHTML = '<div class="ta-group"><h3>Unlock</h3><div class="ta-list"><div class="ta-devform">' + msg +
+        '<label>Passphrase<input type="password" class="ta-devin" data-f="pass" autocomplete="current-password"></label>' +
+        '<div class="ta-devbtns"><button type="button" class="ta-btn" data-dev="unlock">Unlock</button></div>' +
+        '<p class="ta-devnote">Your public key (safe to share):</p><div class="ta-devcode">' + esc(pubLine) + '</div><div class="ta-devbtns"><button type="button" class="ta-btn ta-btn-alt" data-dev="copypub">Copy public key</button></div></div></div></div>' +
+        '<div class="ta-group"><h3>Key</h3><div class="ta-list"><div class="ta-devform"><div class="ta-devbtns"><button type="button" class="ta-btn ta-btn-alt" data-dev="backup">Download encrypted backup</button><button type="button" class="ta-btn ta-btn-alt" data-dev="restore">Restore from backup…</button><button type="button" class="ta-danger" data-dev="remove">Remove key</button></div><input type="file" class="ta-devfile" accept=".json,application/json" hidden></div></div></div>';
+      return;
+    }
+    const D = devData(), log = store.get('devLog', []) || [];
+    const spOpts = D.sp.map(function (s) { return '<option value="' + s[0] + '">#' + s[0] + ' ' + esc(s[1]) + '</option>'; }).join('');
+    const itOpts = D.items.map(function (i) { return '<option value="' + i[0] + '">' + esc(i[1]) + '</option>'; }).join('');
+    box.innerHTML = '<div class="ta-group"><h3>Make a gift code</h3><div class="ta-list"><div class="ta-devform">' + msg +
+      '<label>For Torn ID (required: each code works once, for this player only)<input class="ta-devin" data-f="to" inputmode="numeric" value="' + esc(devProfileId()) + '"></label>' +
+      '<label>Works until (optional)<input class="ta-devin" data-f="exp" type="date"></label>' +
+      '<label>Message shown when redeemed (optional)<input class="ta-devin" data-f="note" maxlength="120"></label>' +
+      '<div class="ta-devsub">Tornies</div><div class="ta-devmons"></div><button type="button" class="ta-btn ta-btn-alt" data-dev="addmon">+ Tornie</button>' +
+      '<div class="ta-devsub">Items</div><div class="ta-devitems"></div><button type="button" class="ta-btn ta-btn-alt" data-dev="additem">+ Item</button>' +
+      '<label>Money ($, optional)<input class="ta-devin" data-f="money" inputmode="numeric"></label>' +
+      '<div class="ta-devbtns"><button type="button" class="ta-btn" data-dev="make">Make code</button><button type="button" class="ta-btn ta-btn-alt" data-dev="lock">Lock</button></div>' +
+      (DEV.code ? '<p class="ta-devnote">Gift code (players paste it into Settings → Cheat code):</p><div class="ta-devcode ta-devgift">' + esc(DEV.code) + '</div><div class="ta-devbtns"><button type="button" class="ta-btn" data-dev="copycode">Copy code</button></div>' : '') +
+      '</div></div></div>' +
+      '<div class="ta-group"><h3>Codes made (' + log.length + ')</h3><div class="ta-list">' + (log.slice(0, 30).map(function (e, k) { return '<div class="ta-row"><div class="ta-rtext"><b>' + esc(e.id) + ' · for ' + esc(e.to) + '</b><small>' + esc(e.when) + ' · ' + esc(e.what) + '</small></div><button type="button" class="ta-btn ta-btn-alt ta-mapbtn" data-dev="copylog" data-k="' + k + '">Copy</button></div>'; }).join('') || '<div class="ta-row"><div class="ta-rtext"><small>No codes yet.</small></div></div>') + '</div></div>' +
+      '<div class="ta-group"><h3>Key</h3><div class="ta-list"><div class="ta-devform"><div class="ta-devbtns"><button type="button" class="ta-btn ta-btn-alt" data-dev="copypub">Copy public key</button><button type="button" class="ta-btn ta-btn-alt" data-dev="backup">Download encrypted backup</button><button type="button" class="ta-btn ta-btn-alt" data-dev="chpass">Change passphrase</button></div>' +
+      '<div class="ta-devchpass" hidden><label>Current passphrase<input type="password" class="ta-devin" data-f="old"></label><label>New passphrase<input type="password" class="ta-devin" data-f="n1"></label><label>New passphrase again<input type="password" class="ta-devin" data-f="n2"></label><div class="ta-devbtns"><button type="button" class="ta-btn" data-dev="dochpass">Save new passphrase</button></div></div></div></div></div>';
+    devBox._mon = function () {
+      const d = document.createElement('div'); d.className = 'ta-devline';
+      d.innerHTML = '<select class="ta-devin" data-f="sp">' + spOpts + '</select><input class="ta-devin" data-f="lv" type="number" min="1" max="100" value="5" title="Level"><label class="ta-devchk"><input type="checkbox" data-f="rk"> Golden</label><label class="ta-devchk"><input type="checkbox" data-f="pf"> Perfect</label><input class="ta-devin" data-f="nk" maxlength="10" placeholder="Nickname"><button type="button" class="ta-devx" data-dev="rm">✕</button>';
+      $(devBox, '.ta-devmons').appendChild(d);
+    };
+    devBox._item = function () {
+      const d = document.createElement('div'); d.className = 'ta-devline';
+      d.innerHTML = '<select class="ta-devin" data-f="it">' + itOpts + '</select><input class="ta-devin" data-f="q" type="number" min="1" max="99" value="1" title="Quantity"><button type="button" class="ta-devx" data-dev="rm">✕</button>';
+      $(devBox, '.ta-devitems').appendChild(d);
+    };
+  }
+  function devVal(sel, scope) { const e = $(scope || devBox, '[data-f="' + sel + '"]'); return e ? (e.type === 'checkbox' ? e.checked : e.value.trim()) : ''; }
+  function devDescribe(p) {
+    const D = devData(), out = [];
+    (p.m || []).forEach(function (e) { const s = D.sp.find(function (x) { return x[0] === e[0]; }); out.push((e[2] ? 'golden ' : '') + 'Lv ' + e[1] + ' ' + (s ? s[1] : '#' + e[0]) + (e[3] ? ' (perfect)' : '') + (e[4] ? ' "' + e[4] + '"' : '')); });
+    Object.keys(p.it || {}).forEach(function (k) { const it = D.items.find(function (x) { return x[0] === k; }); out.push(p.it[k] + ' × ' + (it ? it[1] : k)); });
+    if (p.mo) out.push('$' + p.mo.toLocaleString('en-GB'));
+    return out.join(', ');
+  }
+  async function devAction(t) {
+    const a = t.dataset.dev, saved = store.get('devKey', null);
+    try {
+      if (a === 'create') {
+        const p1 = devVal('p1'), p2 = devVal('p2');
+        if (p1 !== p2) throw 'The two passphrases don\'t match.';
+        if (!devPassOk(p1)) throw 'Use at least 14 characters (4–5 random words works well).';
+        t.disabled = true; t.textContent = 'Creating…';
+        const kp = await crypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, true, ['sign', 'verify']);
+        const jwk = await crypto.subtle.exportKey('jwk', kp.privateKey), locked = await devLock(jwk, p1);
+        store.set('devKey', locked); devDownload('torn-arcade-dev-key-backup.json', JSON.stringify(locked));
+        DEV.priv = await crypto.subtle.importKey('jwk', jwk, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign']); devArm();
+        DEV.msg = 'Key created and unlocked. An encrypted backup was downloaded: keep it with your passphrase in a password manager. Then copy your public key and send it to be built into Torn Arcade.';
+      } else if (a === 'unlock') {
+        t.disabled = true; t.textContent = 'Unlocking…';
+        let jwk; try { jwk = await devUnlockJwk(saved, devVal('pass')); } catch (e) { throw 'Wrong passphrase.'; }
+        DEV.priv = await crypto.subtle.importKey('jwk', jwk, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign']); devArm();
+      } else if (a === 'lock') { devLockNow(); return; }
+      else if (a === 'copypub') { await navigator.clipboard.writeText('TA-PUBKEY:' + saved.x + '.' + saved.y); DEV.msg = 'Public key copied.'; }
+      else if (a === 'backup') { devDownload('torn-arcade-dev-key-backup.json', JSON.stringify(saved)); DEV.msg = 'Encrypted backup downloaded. It still needs your passphrase to use.'; }
+      else if (a === 'restore') { $(devBox, '.ta-devfile').click(); return; }
+      else if (a === 'remove') {
+        if (!t.classList.contains('ta-sure')) { t.classList.add('ta-sure'); t.textContent = 'Tap again'; return; }
+        store.set('devKey', null); devLockNow(); DEV.msg = 'Key removed from this browser. Restore it from your backup to use it again.';
+      } else if (a === 'addmon') { devBox._mon(); return; }
+      else if (a === 'additem') { devBox._item(); return; }
+      else if (a === 'rm') { t.parentNode.remove(); return; }
+      else if (a === 'chpass') { const c = $(devBox, '.ta-devchpass'); c.hidden = !c.hidden; return; }
+      else if (a === 'dochpass') {
+        const n1 = devVal('n1'), n2 = devVal('n2');
+        if (n1 !== n2) throw 'The new passphrases don\'t match.'; if (!devPassOk(n1)) throw 'Use at least 14 characters for the new passphrase.';
+        let jwk; try { jwk = await devUnlockJwk(saved, devVal('old')); } catch (e) { throw 'Current passphrase is wrong.'; }
+        const locked = await devLock(jwk, n1); store.set('devKey', locked); devDownload('torn-arcade-dev-key-backup.json', JSON.stringify(locked));
+        DEV.msg = 'Passphrase changed. A new encrypted backup was downloaded; old backups still use the old passphrase.';
+      } else if (a === 'copycode') { await navigator.clipboard.writeText(DEV.code); DEV.msg = 'Code copied.'; }
+      else if (a === 'copylog') { const log = store.get('devLog', []) || []; await navigator.clipboard.writeText(log[+t.dataset.k].code); DEV.msg = 'Code copied.'; }
+      else if (a === 'make') {
+        if (!DEV.priv) { devLockNow(); return; }
+        const to = parseInt(devVal('to'), 10); if (!(to > 0)) throw 'Enter the Torn ID of the player the code is for.';
+        const p = { i: devRid(), t: to }, ex = devVal('exp'), note = devVal('note');
+        if (ex) p.x = parseInt(ex.replace(/-/g, ''), 10); if (note) p.n = note;
+        const mons = Array.from(devBox.querySelectorAll('.ta-devmons .ta-devline')).map(function (r) { const lv = parseInt(devVal('lv', r), 10); if (!(lv >= 1 && lv <= 100)) throw 'Levels must be 1 to 100.'; const e = [parseInt(devVal('sp', r), 10), lv, devVal('rk', r) ? 1 : 0, devVal('pf', r) ? 1 : 0]; const nk = devVal('nk', r); if (nk) e.push(nk); return e; });
+        if (mons.length > 6) throw 'Up to 6 Tornies per code.'; if (mons.length) p.m = mons;
+        const it = {}; Array.from(devBox.querySelectorAll('.ta-devitems .ta-devline')).forEach(function (r) { const q = parseInt(devVal('q', r), 10); if (!(q >= 1 && q <= 99)) throw 'Quantities must be 1 to 99.'; const k = devVal('it', r); it[k] = Math.min(99, (it[k] || 0) + q); });
+        if (Object.keys(it).length) p.it = it;
+        const mo = parseInt(devVal('money') || '0', 10); if (mo) { if (!(mo > 0 && mo <= 10000000)) throw 'Money must be up to $10,000,000.'; p.mo = mo; }
+        if (!p.m && !p.it && !p.mo) throw 'Add at least one Tornie, item or some money.';
+        const data = new TextEncoder().encode(JSON.stringify(p)), sig = await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, DEV.priv, data);
+        DEV.code = 'GIFT-' + devB64(data) + '.' + devB64(sig);
+        const what = devDescribe(p), log = store.get('devLog', []) || [];
+        log.unshift({ when: new Date().toISOString().slice(0, 16).replace('T', ' '), id: p.i, to: to, what: what, code: DEV.code }); store.set('devLog', log.slice(0, 500));
+        DEV.msg = 'Code made for Torn ID ' + to + ': ' + what + '.'; devArm();
+      }
+    } catch (e) { DEV.msg = typeof e === 'string' ? e : 'Something went wrong.'; }
+    renderDev();
+  }
+  const devBox = sysPanel('dev');
+  devBox.addEventListener('click', function (e) { const t = e.target.closest && e.target.closest('[data-dev]'); if (t) devAction(t); });
+  devBox.addEventListener('change', async function (e) {
+    if (!e.target.classList.contains('ta-devfile') || !e.target.files[0]) return;
+    try { const s = JSON.parse(await e.target.files[0].text()); if (!s || s.type !== 'torn-arcade-dev-key' || !s.ct) throw 0; store.set('devKey', s); devLockNow(); DEV.msg = 'Backup restored. Unlock it with its passphrase.'; }
+    catch (er) { DEV.msg = 'That file isn\'t a Torn Arcade Dev key backup.'; }
+    renderDev();
+  });
+  devBox.addEventListener('keydown', function (e) { if (e.key === 'Enter' && e.target.dataset && e.target.dataset.f === 'pass') { const b = $(devBox, '[data-dev="unlock"]'); if (b) devAction(b); } });
+  function refreshDevIcon() { const b = $(root, '.ta-artrow [data-app="dev"]'); if (b) b.hidden = !devIsMe(); }
+
   function renderSettings() {
     const wall = store.get('wallpaper', 'night');
     settingsBox.innerHTML =
@@ -917,8 +1097,8 @@
         '<div class="ta-row"><span class="ta-ricon" style="background:#6a5acd">💾</span><div class="ta-rtext"><b>Save maps on this device</b><small>Keeps each map you have visited as images in this browser\'s storage, so it opens instantly next time with no loading. Stays on this device only; nothing is uploaded or shared.</small></div><button type="button" class="ta-switch' + (store.get('saveMaps', true) ? ' ta-on' : '') + '" data-set="saveMaps"></button></div>' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#8a4ad0">🧭</span><div class="ta-rtext"><b>Prepare all maps</b><small class="ta-mapmsg">' + mapMsg() + '</small></div><button type="button" class="ta-btn ta-mapbtn" data-set="mapPrep">' + (mapInfo() && mapInfo().running ? 'Stop' : 'Prepare') + '</button></div>' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#7a7f8a">🧹</span><div class="ta-rtext"><b>Clear saved maps</b><small>Deletes the map images saved on this device (your game save is not touched). Maps are drawn again as you visit them.</small></div><button type="button" class="ta-danger" data-set="mapClear">Clear</button></div>' +
-        '<div class="ta-row"><span class="ta-ricon" style="background:#1c9a8a">🔑</span><div class="ta-rtext"><b>Cheat code</b><small class="ta-cheatmsg">Know a secret word? Type it here.</small>' +
-          '<div class="ta-cheat"><input type="text" class="ta-cheatin" autocomplete="off" spellcheck="false" maxlength="40" placeholder="Enter code"><button type="button" class="ta-btn" data-set="cheat">Enter</button></div></div></div>' +
+        '<div class="ta-row"><span class="ta-ricon" style="background:#1c9a8a">🔑</span><div class="ta-rtext"><b>Cheat code</b><small class="ta-cheatmsg">Know a secret word, or got a gift code? Enter it here.</small>' +
+          '<div class="ta-cheat"><input type="text" class="ta-cheatin" autocomplete="off" spellcheck="false" maxlength="600" placeholder="Enter code"><button type="button" class="ta-btn" data-set="cheat">Enter</button></div></div></div>' +
       '</div></div>' +
       '<div class="ta-group"><h3>Data</h3><div class="ta-list">' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#d08a10">🏆</span><div class="ta-rtext"><b>Reset best scores</b><small>Clears the scores for every mini-game</small></div><button type="button" class="ta-danger" data-set="resetBest">Reset</button></div>' +
@@ -941,9 +1121,16 @@
   async function tryCheat() {
     const input = $(settingsBox, '.ta-cheatin:not(.ta-keyin)'), msg = $(settingsBox, '.ta-cheatmsg');
     if (!input) return;
-    const code = input.value.trim().toLowerCase();
+    const raw = input.value.trim(), code = raw.toLowerCase();
     input.value = '';
     if (!code) return;
+    // Signed gift codes from the developer (checked inside Tornies with the developer's public key).
+    if (/^gift-/i.test(raw) && games.pocket && games.pocket.gift) {
+      msg.textContent = 'Checking gift code…';
+      const g = await games.pocket.gift(raw);
+      msg.textContent = g.msg; if (g.ok) sfx.win(); else sfx.miss();
+      return;
+    }
     let h = '';
     try { h = await sha256(code); } catch (e) {}
     const c = CHEATS[h];
@@ -1029,7 +1216,7 @@
     refreshArtIcons();
     if (current === 'scores') renderScores();
   }
-  function appInfo(id) { return GAMES.concat(SYS_APPS, ART_APPS).find(function (a) { return a.id === id; }); }
+  function appInfo(id) { return GAMES.concat(SYS_APPS, ART_APPS, [DEV_APP]).find(function (a) { return a.id === id; }); }
   function openApp(id) {
     const a = appInfo(id);
     if (!a) return;
@@ -1038,6 +1225,7 @@
     if (id === 'scores') renderScores();
     if (id === 'settings') renderSettings();
     if (id === 'artT' || id === 'artC') renderArt(id);
+    if (id === 'dev') renderDev();
     appTitle.textContent = a.title || a.name;
     main.querySelectorAll('.ta-panel').forEach(function (p) { p.classList.toggle('ta-on', p.dataset.game === id); });
     appEl.hidden = false; appEl.classList.remove('ta-opening'); void appEl.offsetWidth; appEl.classList.add('ta-opening');
@@ -1053,6 +1241,7 @@
   }
   function openArcade() {
     if (isOpen) return;
+    refreshDevIcon();
     isOpen = true; root.hidden = false;
     savedOverflow = document.documentElement.style.overflow;
     document.documentElement.style.overflow = 'hidden';
@@ -1070,6 +1259,7 @@
   }
   function closeArcade() {
     if (!isOpen) return;
+    devLockNow();   // the Dev app locks whenever the phone is closed
     if (current && games[current]) games[current].leave();
     isOpen = false; root.hidden = true; clearInterval(clockTimer);
     evStop();
@@ -12201,6 +12391,84 @@
     }
   })();
 
+  /* ================= Developer gift codes (signed) =================
+     Gift codes are made only by the developer, in the Dev app (shown only to the developer; see the phone shell). Each code is
+     signed with the developer's private key (ECDSA P-256), which is never in this script. This script holds only the
+     matching PUBLIC key, which can check a signature but cannot make one, so a code can't be forged or changed, even
+     by someone who reads this script. Checking uses the browser's own Web Crypto; nothing is requested from anywhere.
+
+     Code format:  GIFT-<payload>.<signature>   (both base64url)
+     Payload (JSON):  i  code id            t  Torn ID it is for (required)     x  last day it works (YYYYMMDD, 0 = never)
+                      n  note shown         m  Tornies: [species, level, golden 0/1, perfect stats 0/1, nickname]
+                      it items {id: qty}    mo money
+     Each code is for one Torn ID and works once: it is remembered in this browser's Torn Arcade storage and in the save. */
+  const GIFT_PUBLIC_KEY = null;   // { x: '...', y: '...' } from the Code Maker (public key only; safe to publish)
+  const GIFT_MAX = { mons: 6, lv: 100, qty: 99, money: 10000000 };
+  function giftB64(s) { s = s.replace(/-/g, '+').replace(/_/g, '/'); while (s.length % 4) s += '='; const bin = atob(s), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return u; }
+  let giftKeyP = null;
+  function giftKey() {
+    if (!GIFT_PUBLIC_KEY || !window.crypto || !crypto.subtle) return Promise.resolve(null);
+    if (!giftKeyP) giftKeyP = crypto.subtle.importKey('jwk', { kty: 'EC', crv: 'P-256', x: GIFT_PUBLIC_KEY.x, y: GIFT_PUBLIC_KEY.y, ext: true }, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['verify']).catch(function () { return null; });
+    return giftKeyP;
+  }
+  function isGiftCode(code) { return /^GIFT-[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(String(code || '').trim()); }
+  // Checks a code. Resolves to { p: payload } or { err: 'reason the player can understand' }.
+  async function giftCheck(code) {
+    code = String(code || '').trim();
+    if (!isGiftCode(code)) return { err: 'That isn\'t a gift code.' };
+    const key = await giftKey();
+    if (!key) return { err: 'Gift codes aren\'t available in this version.' };
+    const parts = code.slice(5).split('.');
+    let data, sig, p;
+    try { data = giftB64(parts[0]); sig = giftB64(parts[1]); } catch (e) { return { err: 'That gift code isn\'t valid.' }; }
+    let ok = false;
+    try { ok = await crypto.subtle.verify({ name: 'ECDSA', hash: 'SHA-256' }, key, sig, data); } catch (e) { ok = false; }
+    if (!ok) return { err: 'That gift code isn\'t valid.' };
+    try { p = JSON.parse(new TextDecoder().decode(data)); } catch (e) { return { err: 'That gift code isn\'t valid.' }; }
+    if (!p || typeof p.i !== 'string' || !/^[A-Za-z0-9]{4,16}$/.test(p.i)) return { err: 'That gift code isn\'t valid.' };
+    // The signature proves the developer made it; these checks only guard against mistakes in the code itself.
+    const mons = Array.isArray(p.m) ? p.m : [], items = p.it && typeof p.it === 'object' ? p.it : {};
+    if (mons.length > GIFT_MAX.mons) return { err: 'That gift code isn\'t valid.' };
+    for (const e of mons) if (!Array.isArray(e) || !SP[e[0]] || !(e[1] >= 1 && e[1] <= GIFT_MAX.lv)) return { err: 'This gift needs a newer version of Torn Arcade.' };
+    for (const k of Object.keys(items)) if (!ITEMS[k] || !(items[k] >= 1 && items[k] <= GIFT_MAX.qty)) return { err: 'This gift needs a newer version of Torn Arcade.' };
+    if (p.mo && !(p.mo > 0 && p.mo <= GIFT_MAX.money)) return { err: 'That gift code isn\'t valid.' };
+    if (p.x) { const d = new Date(), today = d.getUTCFullYear() * 10000 + (d.getUTCMonth() + 1) * 100 + d.getUTCDate(); if (today > p.x) return { err: 'That gift code has expired.' }; }
+    if (!(p.t > 0)) return { err: 'That gift code isn\'t valid.' };   // every code is for one player
+    { const me = tornId(); if (!me) return { err: 'Open this on a Torn page where you are logged in, then try again.' }; if (me !== p.t) return { err: 'That gift code is for another player.' }; }
+    return { p: p };
+  }
+  // Checks and claims a code into the Tornies save. Resolves to { msg, ok }.
+  async function giftRedeem(code) {
+    const r = await giftCheck(code);
+    if (r.err) return { msg: r.err };
+    const p = r.p, used = store.get('giftsUsed', {}) || {};
+    let live = !!G;
+    const d = G || loadSave();
+    if (!d) return { msg: 'Start a Tornies adventure first.' };
+    d.flags = d.flags || {};
+    if (used[p.i] || d.flags['gift_' + p.i]) return { msg: 'That gift code has already been used.' };
+    const keep = G; if (!live) G = d;
+    const got = [];
+    try {
+      (p.m || []).forEach(function (e) {
+        const mon = makeMon(e[0], e[1]);
+        if (e[2]) mon.rk = true;
+        if (e[3]) mon.iv = [31, 31, 31, 31, 31, 31];
+        if (e[4]) mon.nick = String(e[4]).replace(/[^\x20-\x7e]/g, '').slice(0, 10);
+        mon.hp = maxHp(mon);
+        G.seen[mon.sp] = 1;
+        addMon(mon);
+        got.push((e[2] ? 'golden ' : '') + 'Lv ' + e[1] + ' ' + SP[e[0]].name);
+      });
+      Object.keys(p.it || {}).forEach(function (k) { addItem(k, p.it[k]); got.push(p.it[k] + ' × ' + ITEMS[k].name); });
+      if (p.mo) { G.money = (G.money || 0) + p.mo; got.push('$' + p.mo.toLocaleString('en-GB')); }
+      G.flags['gift_' + p.i] = 1;
+      if (live) saveGame(); else store.set('pocket', G);
+    } finally { if (!live) G = keep; }
+    used[p.i] = 1; store.set('giftsUsed', used);
+    return { ok: true, msg: (p.n ? String(p.n).slice(0, 120) + ' ' : '') + 'You received: ' + got.join(', ') + '. Tornies are in your team, or in the Tornie Locker if your team is full.' };
+  }
+
   /* ---------- Tornie logic ---------- */
   let uidN = 1;
   function expFor(gr, n) {
@@ -14577,6 +14845,9 @@
   $(root, '.ta-appbar').insertBefore(padBtn, muteBtn);
   games.pocket = {
     relayout: fit,
+    gift: giftRedeem, isGift: isGiftCode, myId: tornId,
+    // For the developer's Dev app: Tornies and the items a gift code may contain (not key or story items).
+    devData: function () { const sp = []; for (let n = 1; n <= DEX_SIZE; n++) if (SP[n]) sp.push([n, SP[n].name]); return { sp: sp, items: Object.keys(ITEMS).filter(function (k) { return ['key', 'field', 'shoes'].indexOf(ITEMS[k].kind) < 0; }).map(function (k) { return [k, ITEMS[k].name]; }) }; },   // developer gift codes (2zd-gifts.js)
     art: artApi,   // the optional Art Pack scripts (3h-artpacks.js)
     // Saved maps on this device (Settings → Tornies). All local: nothing is uploaded.
     maps: {
@@ -18044,6 +18315,7 @@
 
   /* ================= Wiring ================= */
   if (games.pocket && games.pocket.art) games.pocket.art.onChange(function () { refreshNav(); });
+  refreshDevIcon();
   refreshArtIcons();
   root.querySelectorAll('.ta-appbtn').forEach(function (b) {
     b.addEventListener('click', function () { openApp(b.dataset.app); sfx.click(); });
