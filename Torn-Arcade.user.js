@@ -1,11 +1,14 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.15.1
+// @version      2.15.2
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with nine game apps: Tornies (a creature-collecting RPG), Torn Invasion (a Doom-style alien shooter), Angry Bogies (a slingshot physics game), Snake, Whack-a-Mole, Card Match, Dirty Bombs, Shooting Range and Flappy Torn. Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
 // @license      All Rights Reserved - no copying, modifying or redistribution (see LICENCE below)
+// @homepageURL  https://github.com/Eaglewing91/Torn-Arcade.user.js
+// @updateURL    https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js
+// @downloadURL  https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js
 // @match        https://www.torn.com/*
 // @icon         data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%232f7bd1'/%3E%3Ctext x='32' y='45' font-family='Arial' font-weight='900' font-size='38' text-anchor='middle' fill='%23fff'%3ET%3C/text%3E%3C/svg%3E
 // @grant        GM_addStyle

@@ -15,6 +15,9 @@ Torn Arcade is a Tampermonkey userscript that adds a **Mobile Phone** link to To
 
 Your progress is saved in Tampermonkey's storage on your device. Updating the script keeps your saves.
 
+### 🔄 Automatic updates
+From version 2.15.2, Tampermonkey checks this link for new versions (about once a day by default) and updates the script for you. If you installed an older version from somewhere else, reinstall once from the link above. After that, updates are automatic. This check is made by Tampermonkey to GitHub only. It isn't a request to Torn and sends no data.
+
 ---
 
 ## 🎮 The games
