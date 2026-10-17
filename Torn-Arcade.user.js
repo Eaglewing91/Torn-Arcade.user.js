@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.18.1
+// @version      2.18.2
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with five game apps: Tornies (a creature-collecting RPG), Torn Invasion (a Doom-style alien shooter), Angry Bogies (a slingshot physics game), Dirty Bombs and Flappy Torn. Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -793,7 +793,7 @@
       '</div></div>' +
       '<div class="ta-group"><h3>Tornies</h3><div class="ta-list">' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#3a9a5a">🗺️</span><div class="ta-rtext"><b>Detailed maps</b><small>Illustrated towns and routes. Turn off for classic pixel maps on slower devices.</small></div><button type="button" class="ta-switch' + (store.get('detailMaps', true) ? ' ta-on' : '') + '" data-set="detailMaps"></button></div>' +
-        '<div class="ta-row"><span class="ta-ricon" style="background:#2f7bd1">⏳</span><div class="ta-rtext"><b>Pre-load maps</b><small>Draws the area around you first (short loading bar), then the rest of the map in the background, so walking stays smooth. Off: maps draw as you walk, with no wait.</small></div><button type="button" class="ta-switch' + (store.get('preloadMaps', true) ? ' ta-on' : '') + '" data-set="preloadMaps"></button></div>' +
+        '<div class="ta-row"><span class="ta-ricon" style="background:#2f7bd1">⏳</span><div class="ta-rtext"><b>Pre-load maps</b><small>Draws the area around you first (during the normal fade), then the rest of the map in the background, and gets the next map ready as you walk towards an exit, so walking stays smooth. Off: maps draw as you walk, with no wait.</small></div><button type="button" class="ta-switch' + (store.get('preloadMaps', true) ? ' ta-on' : '') + '" data-set="preloadMaps"></button></div>' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#6a5acd">💾</span><div class="ta-rtext"><b>Save maps on this device</b><small>Keeps each map you have visited as images in this browser\'s storage, so it opens instantly next time with no loading. Stays on this device only; nothing is uploaded or shared.</small></div><button type="button" class="ta-switch' + (store.get('saveMaps', true) ? ' ta-on' : '') + '" data-set="saveMaps"></button></div>' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#8a4ad0">🧭</span><div class="ta-rtext"><b>Prepare all maps</b><small class="ta-mapmsg">' + mapMsg() + '</small></div><button type="button" class="ta-btn ta-mapbtn" data-set="mapPrep">' + (mapInfo() && mapInfo().running ? 'Stop' : 'Prepare') + '</button></div>' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#7a7f8a">🧹</span><div class="ta-rtext"><b>Clear saved maps</b><small>Deletes the map images saved on this device (your game save is not touched). Maps are drawn again as you visit them.</small></div><button type="button" class="ta-danger" data-set="mapClear">Clear</button></div>' +
@@ -1704,7 +1704,12 @@
     });
   }
   function fadeOut(d) { return tween(d || 0.2, function (k) { fade = k; }); }
-  function fadeIn(d) { return tween(d || 0.2, function (k) { fade = 1 - k; }); }
+  // Before fading in, wait (screen still dark, up to about a second) while a newly entered map draws what is on
+  // screen. On a slow device the loading bar then shows.
+  async function fadeIn(d) {
+    for (let n = 0; n < 30 && typeof iwIsLoading === 'function' && iwIsLoading() && scene === worldScene; n++) await wait(0.03);
+    return tween(d || 0.2, function (k) { fade = 1 - k; });
+  }
 
   /* ---------- Modals: dialog boxes and menus ---------- */
   function push(m) { modals.push(m); }
@@ -8442,6 +8447,7 @@
   const IW_CS = IW_CH * 16;   // chunk size on screen, in game pixels
   function iwView(camX, camY, pad) { return [Math.floor(camX / IW_CS) - pad, Math.floor(camY / IW_CS) - pad, Math.floor((camX + VW - 1) / IW_CS) + pad, Math.floor((camY + VH - 1) / IW_CS) + pad]; }
   function iwDrawBase(m, camX, camY) {
+    IWC.drawnAt = performance.now();
     const v = iwView(camX, camY, 0), sync = T - IWC.arrive < 0.35;
     for (let cy = v[1]; cy <= v[3]; cy++) for (let cx = v[0]; cx <= v[2]; cx++) {
       const k = iwKey(m, cx, cy); let c = IWC.chunks[k];
@@ -8461,21 +8467,22 @@
     }
     m.buildings.forEach(function (b) { if (b.x + b.w > cx * IW_CH && b.x < (cx + 1) * IW_CH && b.y + b.h > cy * IW_CH && b.y < (cy + 1) * IW_CH) { ctx.save(); ctx.beginPath(); ctx.rect(cx * IW_CS - camX, cy * IW_CS - camY, IW_CS, IW_CS); ctx.clip(); ctx.drawImage(bldImg(b), b.x * 16 - camX, b.y * 16 - camY); ctx.restore(); } });
   }
-  /* Arriving on a map. With "Pre-load maps" on (the default), the area around the player is drawn first behind a
-     short loading bar and the rest of the map follows in the background. Chunks saved on this device are read back
+  /* Arriving on a map. With "Pre-load maps" on (the default), the part of the map on screen is drawn while the screen
+     is still dark from the fade between maps, and the rest follows in the background. Maps next door are drawn ahead
+     of time when the player walks near an exit, so moving between maps is usually instant. Chunks saved on this device are read back
      instead of drawn. With pre-load off, chunks are drawn a step at a time while walking. Returns true while the
      loading screen is showing. */
   function iwLoading(m, camX, camY) {
     if (IWC.id !== m) {
       IWC.id = m; IWC.arrive = T; IWC.pending = null; IWC.load = null; iwDbOpen();
       const maxX = Math.floor((m.w + 7) / IW_CH), maxY = Math.floor((m.h + 7) / IW_CH);
-      IWC.cap = (maxX + 2) * (maxY + 2) + 12;
+      IWC.cap = (maxX + 2) * (maxY + 2) + 30;
       if (store.get('preloadMaps', true) !== false) {
         // Only the area around the player is drawn behind the loading bar; the rest follows in the background.
-        const v = iwView(camX, camY, 1), todo = [], pcx = (camX + VW / 2) / IW_CS - 0.5, pcy = (camY + VH / 2) / IW_CS - 0.5;
+        const v = iwView(camX, camY, 0), todo = [], pcx = (camX + VW / 2) / IW_CS - 0.5, pcy = (camY + VH / 2) / IW_CS - 0.5;
         for (let cy = Math.max(-1, v[1]); cy <= Math.min(maxY, v[3]); cy++) for (let cx = Math.max(-1, v[0]); cx <= Math.min(maxX, v[2]); cx++) if (!IWC.chunks[iwKey(m, cx, cy)]) todo.push([cx, cy]);
         todo.sort(function (a, b) { return Math.hypot(a[0] - pcx, a[1] - pcy) - Math.hypot(b[0] - pcx, b[1] - pcy); });
-        if (todo.length) IWC.load = { m: m, todo: todo, total: todo.length, done: 0, it: null };
+        if (todo.length) IWC.load = { m: m, todo: todo, total: todo.length, done: 0, it: null, t0: performance.now() };
       }
     }
     const L = IWC.load; if (!L || L.m !== m) return false;
@@ -8494,6 +8501,10 @@
     L.todo = L.todo.filter(function (c) { return !IWC.chunks[iwKey(m, c[0], c[1])]; });
     L.done = L.total - L.todo.length;
     if (!L.todo.length) { IWC.load = null; IWC.arrive = T; return false; }
+    IWC.drawnAt = performance.now();
+    // Usually this takes a moment and is hidden by the normal fade between maps. Only on a slow device does a
+    // loading bar appear.
+    if (performance.now() - L.t0 < 900) { fr(0, 0, VW, VH, '#000'); return true; }
     fr(0, 0, VW, VH, '#0e1626');
     const k = L.done / L.total, w = 140, x = (VW - w) / 2, y = VH / 2 + 6;
     text(fillNames(m.name), VW / 2, y - 26, '#e6ecff', { sz: 10, al: 'center', light: true });
@@ -8547,7 +8558,7 @@
   function iwPrebake(m, camX, camY) {
     if (IWC.id !== m) return;
     const P = IWC.pending;
-    if (P && P.m === m) {
+    if (P) {
       if (IWC.chunks[P.k]) { IWC.pending = null; return; }
       const r = P.it.next(); IW_PROF.stepCount = (IW_PROF.stepCount || 0) + 1;
       if (r.done) { IWC.pending = null; iwStore(P.k, r.value); }
@@ -8560,14 +8571,50 @@
       const mx = (camX + VW / 2) / IW_CS - 0.5, my = (camY + VH / 2) / IW_CS - 0.5;
       const maxX = Math.floor((m.w + 7) / IW_CH), maxY = Math.floor((m.h + 7) / IW_CH);
       // the view and the ring around it first; with pre-load on, then the rest of the map, nearest first
-      const v = store.get('preloadMaps', true) !== false && !iwRingMissing(m, camX, camY) ? [-1, -1, maxX, maxY] : iwView(camX, camY, 1);
+      const ring = iwRingMissing(m, camX, camY);
+      if (!ring && store.get('preloadMaps', true) !== false) { const nd = iwNextDoor(m); if (nd) { iwQueue(nd[0], nd[1], nd[2]); return; } }
+      const v = store.get('preloadMaps', true) !== false && !ring ? [-1, -1, maxX, maxY] : iwView(camX, camY, 1);
       for (let cy = Math.max(-1, v[1]); cy <= Math.min(maxY, v[3]); cy++) for (let cx = Math.max(-1, v[0]); cx <= Math.min(maxX, v[2]); cx++) if (!IWC.chunks[iwKey(m, cx, cy)] && !IWDB.reading[iwKey(m, cx, cy)]) { const d = (cx - mx) * (cx - mx) + (cy - my) * (cy - my); if (d < bd) { bd = d; best = [cx, cy]; } }
     }
     IWC.want = null;
     if (!best) return;
-    if (iwDbHas(m, best[0], best[1])) { iwDbRead(m, best[0], best[1]); return; }   // saved on the device: read it back
+    iwQueue(m, best[0], best[1]);
+  }
+
+  // Read a chunk back from the device, or start drawing it in the background.
+  function iwQueue(m, cx, cy) {
+    if (iwDbHas(m, cx, cy)) { iwDbRead(m, cx, cy); return; }
     IW_PREP.it = null;
-    IWC.pending = { m: m, k: iwKey(m, best[0], best[1]), it: iwBakeGen(m, best[0], best[1]) };
+    IWC.pending = { m: m, k: iwKey(m, cx, cy), it: iwBakeGen(m, cx, cy) };
+  }
+  /* Maps next door: when the player is near an exit to another outdoor map, the part of that map they will arrive
+     in is drawn ahead of time, so the change of map is instant. Returns [map, cx, cy] of a chunk still to do. */
+  function iwNextDoor(m) {
+    const p = W.p; if (!p) return null;
+    const goals = [];
+    const DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
+    if (m.conn) Object.keys(m.conn).forEach(function (dir) {
+      const c = m.conn[dir], tm = MAPS[c.map]; if (!c || !tm || tm.indoor || !DIRS[dir]) return;
+      const dist = dir === 'up' ? p.y : dir === 'down' ? m.h - 1 - p.y : dir === 'left' ? p.x : m.w - 1 - p.x;
+      if (dist > 10) return;
+      const tx = dir === 'left' ? tm.w - 1 : dir === 'right' ? 0 : p.x + c.d, ty = dir === 'up' ? tm.h - 1 : dir === 'down' ? 0 : p.y + c.d;
+      goals.push([tm, tx, ty, dist]);
+    });
+    (m.warps || []).forEach(function (w) {
+      const tm = MAPS[w.to]; if (!tm || tm.indoor || tm === m) return;
+      const dist = Math.abs(w.x - p.x) + Math.abs(w.y - p.y); if (dist > 8) return;
+      goals.push([tm, w.tx, w.ty, dist]);
+    });
+    goals.sort(function (a, b) { return a[3] - b[3]; });
+    for (let i = 0; i < goals.length; i++) {
+      const tm = goals[i][0]; if (!tm.grid) buildGrid(tm);
+      const v = iwView(goals[i][1] * 16 + 8 - VW / 2, goals[i][2] * 16 + 8 - VH / 2, 0);
+      const maxX = Math.floor((tm.w + 7) / IW_CH), maxY = Math.floor((tm.h + 7) / IW_CH);
+      for (let cy = Math.max(-1, v[1]); cy <= Math.min(maxY, v[3]); cy++) for (let cx = Math.max(-1, v[0]); cx <= Math.min(maxX, v[2]); cx++) {
+        const k = iwKey(tm, cx, cy); if (!IWC.chunks[k] && !IWDB.reading[k]) return [tm, cx, cy];
+      }
+    }
+    return null;
   }
 
   /* ---------- Live layer: tall grass, water, fences, boulders, neon ---------- */
@@ -8872,7 +8919,10 @@
       if (IWDB.state === 3 || !iwDbOn()) { IW_PREP.on = false; if (IW_PREP.cb) IW_PREP.cb({ error: true }); return; }
       const playing = active && scene === worldScene, budget = playing ? 4 : 18, t0 = performance.now();
       while (IW_PREP.i < IW_PREP.list.length && performance.now() - t0 < budget) {
-        if (IWC.pending || IWC.load) break;   // the game is drawing: wait
+        if (IWC.pending || IWC.load) {   // the game is drawing a map: wait, unless Tornies is closed (then take over)
+          if (performance.now() - (IWC.drawnAt || 0) < 500) break;
+          IWC.pending = null;
+        }
         const e = IW_PREP.list[IW_PREP.i], k = iwKey(e[0], e[1], e[2]);
         if (!IW_PREP.it) { if (IWDB.keys[iwDbKey(k)]) { IW_PREP.i++; continue; } IW_PREP.it = iwBakeGen(e[0], e[1], e[2]); }
         const r = IW_PREP.it.next();
