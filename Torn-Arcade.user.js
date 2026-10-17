@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.22.0
+// @version      2.22.1
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with five game apps: Tornies (a creature-collecting RPG), Torn Invasion (a Doom-style alien shooter), Angry Bogies (a slingshot physics game), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -662,8 +662,8 @@
           '<div class="ta-widget"><button type="button" class="ta-lock" data-act="close" title="Lock phone (Esc)">🔒</button><b class="ta-wclock">00:00</b><span class="ta-wdate"></span><em>Torn City Time</em></div>' +
           '<div class="ta-note" hidden><span class="ta-noteicon">👋</span><div class="ta-notetext"><b>Welcome to Torn Arcade v' + VERSION + '!</b><small>Five games in your pocket. Start with Tornies, and grab the free Art Packs on the bottom row for illustrated artwork. Bugs or ideas? Message Eaglewing [571041].</small></div><button type="button" class="ta-notex" title="Dismiss">✕</button></div>' +
           '<div class="ta-grid">' + GAMES.map(appButton).join('') + '</div>' +
-          '<div class="ta-grid ta-artrow">' + ART_APPS.map(appButton).join('') + appButton(DEV_APP).replace('<button ', '<button hidden ') + '</div>' +
-          '<div class="ta-dock">' + SYS_APPS.map(appButton).join('') + '</div>' +
+          '<div class="ta-grid ta-artrow">' + ART_APPS.map(appButton).join('') + '</div>' +
+          '<div class="ta-dock">' + SYS_APPS.map(function (a) { return (a.id === 'settings' ? appButton(DEV_APP).replace('<button ', '<button hidden ') : '') + appButton(a); }).join('') + '</div>' +
           '<div class="ta-homebar" data-act="close" title="Lock phone"><i></i></div>' +
         '</div>' +
         '<div class="ta-app" hidden>' +
@@ -1063,7 +1063,7 @@
     renderDev();
   });
   devBox.addEventListener('keydown', function (e) { if (e.key === 'Enter' && e.target.dataset && e.target.dataset.f === 'pass') { const b = $(devBox, '[data-dev="unlock"]'); if (b) devAction(b); } });
-  function refreshDevIcon() { const b = $(root, '.ta-artrow [data-app="dev"]'); if (b) b.hidden = !devIsMe(); }
+  function refreshDevIcon() { const b = $(root, '.ta-dock [data-app="dev"]'); if (b) b.hidden = !devIsMe(); }
 
   function renderSettings() {
     const wall = store.get('wallpaper', 'night');
