@@ -30,6 +30,7 @@ A creature-collecting RPG set in Torn City. You start in Maple Hollow with one o
 - Day and night, live weather, fishing, a Day Care with eggs to hatch, rare golden Tornies, merits to earn and a Battle Tower.
 - Trade Tornies with friends using trade codes. No server is involved.
 - Custom illustrated artwork for every Tornie and character, made specifically for Torn Arcade, plus an animated title screen and an original soundtrack.
+- Illustrated towns and routes: soft shorelines, sandy beaches, snowy mountains, city streets and a neon casino strip, with swaying tall grass and lights that come on at night.
 
 ### 👽 Torn Invasion
 A Doom-style first-person shooter. Aliens have overrun Torn City, and you fight through infested levels with a **pistol, shotgun and plasma rifle**. Unlock levels as you clear them, beat your best times and scores, and collect achievements.
