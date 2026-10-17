@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.21.0
+// @version      2.21.1
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with five game apps: Tornies (a creature-collecting RPG), Torn Invasion (a Doom-style alien shooter), Angry Bogies (a slingshot physics game), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -427,7 +427,7 @@
     { id: 'artC', pack: 'chars', name: 'Character Art', title: 'Character Art Pack', icon: '🖌️', bg: ['#c39bff', '#5a3ab8'], size: '0.5 MB', what: 'illustrated portraits for the gym leaders, story characters, trainers and your outfits' }
   ];
   const LAND_APPS = { pocket: 1, flappy: 1, invasion: 1, bogies: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.2';
+  const VERSION = '2.21';
 
   GM_addStyle([
     /* The phone */
@@ -639,7 +639,7 @@
           '<span class="ta-sicons"><span class="ta-bars"><i style="height:4px"></i><i style="height:6px"></i><i style="height:8.5px"></i><i style="height:11px"></i></span><span>TornTel</span><span class="ta-batt"><i></i></span></span></div>' +
         '<div class="ta-home">' +
           '<div class="ta-widget"><button type="button" class="ta-lock" data-act="close" title="Lock phone (Esc)">🔒</button><b class="ta-wclock">00:00</b><span class="ta-wdate"></span><em>Torn City Time</em></div>' +
-          '<div class="ta-note" hidden><span class="ta-noteicon">🧪</span><div class="ta-notetext"><b>BETA · Torn Arcade v' + VERSION + '</b><small>You\'re testing an early version. Things may break. Please report bugs to Eaglewing [571041].</small></div><button type="button" class="ta-notex" title="Dismiss">✕</button></div>' +
+          '<div class="ta-note" hidden><span class="ta-noteicon">👋</span><div class="ta-notetext"><b>Welcome to Torn Arcade v' + VERSION + '!</b><small>Five games in your pocket. Start with Tornies, and grab the free Art Packs on the bottom row for illustrated artwork. Bugs or ideas? Message Eaglewing [571041].</small></div><button type="button" class="ta-notex" title="Dismiss">✕</button></div>' +
           '<div class="ta-grid">' + GAMES.map(appButton).join('') + '</div>' +
           '<div class="ta-grid ta-artrow">' + ART_APPS.map(appButton).join('') + '</div>' +
           '<div class="ta-dock">' + SYS_APPS.map(appButton).join('') + '</div>' +
@@ -654,10 +654,11 @@
     '</div>';
   const win = $(root, '.ta-phone'), main = $(root, '.ta-main'), muteBtn = $(root, '[data-act="mute"]');
   const homeEl = $(root, '.ta-home'), appEl = $(root, '.ta-app'), appTitle = $(root, '.ta-apptitle'), gridEl = $(root, '.ta-grid');
-  // Beta notice: shown on the home screen until dismissed (comes back for each new version).
+  // Welcome note: shown once, to people using Torn Arcade for the first time, until they close it.
+  // (Anyone who already used the beta has a saved setting such as betaSeen, so they don't see it.)
   const noteEl = $(root, '.ta-note');
-  if (store.get('betaSeen', '') !== VERSION) noteEl.hidden = false;
-  $(noteEl, '.ta-notex').addEventListener('click', function (e) { e.stopPropagation(); noteEl.hidden = true; store.set('betaSeen', VERSION); try { sfx.click(); } catch (e2) {} });
+  if (!store.get('welcomed', false) && !store.get('betaSeen', '')) noteEl.hidden = false;
+  $(noteEl, '.ta-notex').addEventListener('click', function (e) { e.stopPropagation(); noteEl.hidden = true; store.set('welcomed', true); try { sfx.click(); } catch (e2) {} });
 
   const launcher = document.createElement('button');
   launcher.type = 'button'; launcher.className = 'ta-launch'; launcher.innerHTML = '<span>📱</span><span>Phone</span>';
@@ -924,7 +925,7 @@
         '<div class="ta-row"><span class="ta-ricon" style="background:#1c9a8a">🐾</span><div class="ta-rtext"><b>Delete Tornies save</b><small>Your team, medals and Tornie Log</small></div><button type="button" class="ta-danger" data-set="resetPocket">Delete</button></div>' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#1c6a32">👽</span><div class="ta-rtext"><b>Delete Invasion progress</b><small>Unlocked levels, best scores and achievements</small></div><button type="button" class="ta-danger" data-set="resetInvasion">Delete</button></div>' +
       '</div></div>' +
-      '<div class="ta-group"><h3>About</h3><div class="ta-list"><div class="ta-about"><b>Torn Arcade · Mobile Phone</b> <span style="color:#ffd65a;font-weight:800">BETA</span><br>Version ' + VERSION + ' by Eaglewing [571041]<br>' +
+      '<div class="ta-group"><h3>About</h3><div class="ta-list"><div class="ta-about"><b>Torn Arcade · Mobile Phone</b><br>Version ' + VERSION + ' by Eaglewing [571041]<br>' +
         'Everything runs on your device. The phone never loads Torn pages and talks to no other websites. If you add an API key, it only asks the official Torn API for your new events while the phone is open.<br><br>&copy; 2026 Eaglewing [571041]. All rights reserved. This script may not be copied, modified or redistributed without permission.</div></div></div>';
   }
   /* Cheat codes. Only a SHA-256 fingerprint of each code is stored here, never the code itself.
@@ -13219,15 +13220,17 @@
   }
 
   /* Start menu */
-  // Beta thank-you, round 2 (2.15.0): a Lv 5 Mossfawn and 3 Energy Bars, once per save. Uses a new flag so
-  // players who claimed the first gift (Lv 10 Binkit, flag betaGift) can claim this one too. No network involved.
+  // Welcome gift (2.21.1, formerly the beta gift): a Lv 5 Mossfawn and 3 Energy Bars. One per player: it is marked
+  // both in the save (flag betaGift2, kept so beta testers who claimed it don't get it twice) and in Torn Arcade's own
+  // storage, so starting a new save doesn't offer it again. No network involved.
+  function giftClaimed() { return !!(G.flags.betaGift2 || store.get('welcomeGift', false)); }
   async function betaGift() {
     const pop = showMon(63);
-    const yes = await yesno('Thanks for beta testing Tornies! Claim your new gift: a Lv 5 Mossfawn and 3 Energy Bars?');
+    const yes = await yesno('Welcome to Tornies! Claim your welcome gift: a Lv 5 Mossfawn and 3 Energy Bars? (One per player.)');
     closeModal(pop);
-    if (!yes || G.flags.betaGift2) return;
+    if (!yes || giftClaimed()) return;
     const mon = makeMon(63, 5);
-    G.flags.betaGift2 = 1; jingle('get');
+    G.flags.betaGift2 = 1; store.set('welcomeGift', true); jingle('get');
     await say('{P} received a Mossfawn!|A shy fawn with moss on its back. It only trusts people who walk quietly through the forest.');
     await offerNickname(mon);
     const where = addMon(mon);
@@ -13246,7 +13249,7 @@
       if (G.party.length) { items.push('TEAM'); acts.push(function () { return partyScreen({}); }); }
       items.push('ITEMS'); acts.push(function () { return bagScreen({}); });
       if (Object.keys(FIELD).some(function (id) { return G.bag[id]; })) { items.push('FIELD MOVES'); acts.push(fieldMenu); }
-      if (G.flags.starter && !G.flags.betaGift2) { items.push('BETA GIFT'); acts.push(betaGift); }
+      if (G.flags.starter && !giftClaimed()) { items.push('WELCOME GIFT'); acts.push(betaGift); }
       items.push(G.name.toUpperCase()); acts.push(trainerCard);
       items.push('SAVE'); acts.push(saveMenu);
       items.push('OPTIONS'); acts.push(optionsMenu);
