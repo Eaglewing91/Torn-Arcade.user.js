@@ -34,6 +34,19 @@ From version 2.15.2, Tampermonkey checks this link for new versions (about once 
 
 ---
 
+## 📸 Screenshots
+
+| | |
+|---|---|
+| ![Phone home screen](screenshots/phone-home.png) | ![Tornies title screen](screenshots/tornies-title.png) |
+| ![Route 1](screenshots/tornies-route.png) | ![A Tornies battle](screenshots/tornies-battle.png) |
+| ![Westgate](screenshots/tornies-town.png) | ![The beach](screenshots/tornies-beach.png) |
+| ![Tornie Clinic](screenshots/tornies-clinic.png) | ![Golden Torn Casino](screenshots/tornies-casino.png) |
+| ![Frostbite Cave](screenshots/tornies-ice-cave.png) | ![Torn Invasion](screenshots/torn-invasion.png) |
+| ![Angry Bogies](screenshots/angry-bogies.png) | ![Flappy Torn](screenshots/flappy-torn.png) |
+
+---
+
 ## 🎮 The games
 
 ### 🐾 Tornies
