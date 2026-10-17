@@ -2,7 +2,7 @@
 
 **A phone full of games for [Torn](https://www.torn.com), by Eaglewing [571041].**
 
-Torn Arcade is a Tampermonkey userscript that adds a **Mobile Phone** link to Torn's sidebar. Click it and a phone opens on top of the page with nine games, a scores screen and settings. Everything runs inside the phone, and every image, sound and piece of music is built into the script.
+Torn Arcade is a Tampermonkey userscript that adds a **Mobile Phone** link to Torn's sidebar. Click it and a phone opens on top of the page with five games, a scores screen and settings. Everything runs inside the phone, and every image, sound and piece of music is built into the script.
 
 ---
 
@@ -39,20 +39,8 @@ A Doom-style first-person shooter. Aliens have overrun Torn City, and you fight 
 ### 🐦 Angry Bogies
 Bogie versus the Racket. Pull back the slingshot, fling Bogies into the gang's hideouts, smash the structures and knock out every thug. **Ten levels with three stars each**, scored on how efficiently you clear them.
 
-### 🐍 Snake
-The classic, Torn-style. Eat Torn badges to grow longer and grab cash bags for bonus points. Don't bite your own tail.
-
-### 🔨 Whack-a-Mole
-Hamsters pop out of their holes, so whack them before they duck back down. Golden hamsters are worth 3 points.
-
-### 🃏 Card Match
-A memory game. Flip two cards at a time and find every matching pair in as few moves as you can.
-
 ### 💣 Dirty Bombs
 A minesweeper-style puzzle. Clear the city block by block without setting off a dirty bomb. Numbers show how many bombs are hidden next to each block.
-
-### 🎯 Shooting Range
-Test your aim. Shoot the targets before they flip away. Gold-rimmed targets and bullseyes score extra.
 
 ### 🐤 Flappy Torn
 Tap to fly through the gaps in the pipes over the Torn City skyline. Every pipe you pass is a point.
