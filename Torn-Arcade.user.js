@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.17.1
+// @version      2.18.0
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with nine game apps: Tornies (a creature-collecting RPG), Torn Invasion (a Doom-style alien shooter), Angry Bogies (a slingshot physics game), Snake, Whack-a-Mole, Card Match, Dirty Bombs, Shooting Range and Flappy Torn. Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -75,7 +75,13 @@
  *                          Tornies save, Torn Invasion progress, Angry Bogies
  *                          stars and your API
  *                          key, in Tampermonkey storage). Events are only
- *                          shown, never saved.
+ *                          shown, never saved. With "Save maps on this
+ *                          device" on (Settings > Tornies), pictures of the
+ *                          Tornies maps the game has drawn are kept in this
+ *                          browser's own storage for torn.com (IndexedDB,
+ *                          "torn-arcade-maps"), so maps open without
+ *                          loading. They contain no personal data, are never
+ *                          uploaded, and "Clear saved maps" deletes them.
  * - Data Sharing:          Nobody
  * - Purpose of Use:        Public amusement (games) and event notifications
  *                          on the phone
@@ -541,6 +547,7 @@
     '.ta-wall.ta-on{border-color:#5aa3ef;box-shadow:0 0 0 2px rgba(90,163,239,.3)}',
     '.ta-danger{border:0;margin:0;border-radius:9px;padding:7px 12px;font:700 12.5px system-ui,Arial,sans-serif;color:#fff;background:#8a2a32;cursor:pointer;flex:none}',
     '.ta-danger.ta-sure{background:#e0453a}',
+    '.ta-btn.ta-mapbtn{padding:6px 12px;font-size:12.5px;flex:none}', '.ta-btn.ta-sure{background:#e0453a;box-shadow:0 2px 0 #9a2a22}',
     '.ta-cheat{display:flex;gap:6px;margin-top:7px}',
     '.ta-cheatin{flex:1;min-width:0;font:600 13px system-ui,Arial,sans-serif;color:#fff;background:#0b1622;border:1px solid var(--line2);border-radius:8px;padding:6px 9px;outline:none}',
     '.ta-cheatin:focus{border-color:var(--accent)}',
@@ -814,7 +821,7 @@
         '<div class="ta-row"><span class="ta-ricon" style="background:#2f7bd1">🗝️</span><div class="ta-rtext"><b>Torn API key</b><small class="ta-evmsg' + (evState.ok === true ? ' ta-good' : evState.ok === false ? ' ta-bad' : '') + '">' + esc(evState.msg || (store.get('apiKey', '') ? 'Key saved.' : 'Needs a Limited access key. Make one in Torn under Settings → API Keys.')) + '</small>' +
           '<div class="ta-cheat"><input type="password" class="ta-cheatin ta-keyin" autocomplete="off" spellcheck="false" maxlength="16" placeholder="' + (store.get('apiKey', '') ? '••••••••••••••••' : 'Paste your API key') + '"><button type="button" class="ta-btn" data-set="keySave">Save</button>' + (store.get('apiKey', '') ? '<button type="button" class="ta-danger" data-set="keyDel">Remove</button>' : '') + '</div>' +
           '<table class="ta-tos"><tbody>' +
-            '<tr><td>Data storage</td><td>Only locally (events are shown, never saved)</td></tr>' +
+            '<tr><td>Data storage</td><td>Only locally (events are shown, never saved; Tornies map images can be saved in this browser\'s storage)</td></tr>' +
             '<tr><td>Data sharing</td><td>Nobody</td></tr>' +
             '<tr><td>Purpose of use</td><td>Public amusement (games) and event notifications on the phone</td></tr>' +
             '<tr><td>Key storage &amp; sharing</td><td>Stored locally / Used only for automation (event checks while the phone is open). Never shared.</td></tr>' +
@@ -828,7 +835,10 @@
       '</div></div>' +
       '<div class="ta-group"><h3>Tornies</h3><div class="ta-list">' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#3a9a5a">🗺️</span><div class="ta-rtext"><b>Detailed maps</b><small>Illustrated towns and routes. Turn off for classic pixel maps on slower devices.</small></div><button type="button" class="ta-switch' + (store.get('detailMaps', true) ? ' ta-on' : '') + '" data-set="detailMaps"></button></div>' +
-        '<div class="ta-row"><span class="ta-ricon" style="background:#2f7bd1">⏳</span><div class="ta-rtext"><b>Pre-load maps</b><small>Draws each map in full when you arrive (short loading bar), so walking is perfectly smooth. Off: maps draw as you walk, with no wait.</small></div><button type="button" class="ta-switch' + (store.get('preloadMaps', true) ? ' ta-on' : '') + '" data-set="preloadMaps"></button></div>' +
+        '<div class="ta-row"><span class="ta-ricon" style="background:#2f7bd1">⏳</span><div class="ta-rtext"><b>Pre-load maps</b><small>Draws the area around you first (short loading bar), then the rest of the map in the background, so walking stays smooth. Off: maps draw as you walk, with no wait.</small></div><button type="button" class="ta-switch' + (store.get('preloadMaps', true) ? ' ta-on' : '') + '" data-set="preloadMaps"></button></div>' +
+        '<div class="ta-row"><span class="ta-ricon" style="background:#6a5acd">💾</span><div class="ta-rtext"><b>Save maps on this device</b><small>Keeps each map you have visited as images in this browser\'s storage, so it opens instantly next time with no loading. Stays on this device only; nothing is uploaded or shared.</small></div><button type="button" class="ta-switch' + (store.get('saveMaps', true) ? ' ta-on' : '') + '" data-set="saveMaps"></button></div>' +
+        '<div class="ta-row"><span class="ta-ricon" style="background:#8a4ad0">🧭</span><div class="ta-rtext"><b>Prepare all maps</b><small class="ta-mapmsg">' + mapMsg() + '</small></div><button type="button" class="ta-btn ta-mapbtn" data-set="mapPrep">' + (mapInfo() && mapInfo().running ? 'Stop' : 'Prepare') + '</button></div>' +
+        '<div class="ta-row"><span class="ta-ricon" style="background:#7a7f8a">🧹</span><div class="ta-rtext"><b>Clear saved maps</b><small>Deletes the map images saved on this device (your game save is not touched). Maps are drawn again as you visit them.</small></div><button type="button" class="ta-danger" data-set="mapClear">Clear</button></div>' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#1c9a8a">🔑</span><div class="ta-rtext"><b>Cheat code</b><small class="ta-cheatmsg">Know a secret word? Type it here.</small>' +
           '<div class="ta-cheat"><input type="text" class="ta-cheatin" autocomplete="off" spellcheck="false" maxlength="40" placeholder="Enter code"><button type="button" class="ta-btn" data-set="cheat">Enter</button></div></div></div>' +
       '</div></div>' +
@@ -889,6 +899,26 @@
     if (k === 'keySave') { saveKey(); return; }
     if (k === 'keyDel') { store.set('apiKey', ''); evState = { msg: 'Key removed. Event notifications are off.' }; evStop(); sfx.click(); renderSettings(); return; }
     if (k === 'preloadMaps') { const on = !store.get('preloadMaps', true); store.set('preloadMaps', on); t.classList.toggle('ta-on', on); sfx.click(); return; }
+    if (k === 'saveMaps') { const on = !store.get('saveMaps', true); store.set('saveMaps', on); t.classList.toggle('ta-on', on); sfx.click(); if (on && games.pocket && games.pocket.maps) games.pocket.maps.open(); else if (games.pocket && games.pocket.maps) games.pocket.maps.stop(); mapProgress(); return; }
+    if (k === 'mapPrep') {
+      const mp = games.pocket && games.pocket.maps; if (!mp) return;
+      const i = mp.info();
+      if (i && i.running) { mp.stop(); sfx.click(); mapProgress(); return; }
+      if (store.get('saveMaps', true) === false) { const el = root.querySelector('.ta-mapmsg'); if (el) el.textContent = 'Turn on "Save maps on this device" first.'; return; }
+      if (!t.classList.contains('ta-sure')) {
+        t.classList.add('ta-sure'); t.textContent = 'Tap again';
+        const el = root.querySelector('.ta-mapmsg'); if (el) el.textContent = 'Heads up: this uses about 40–100 MB of storage on this device and takes a few minutes (longer on slower phones). Keep the phone open; you can keep playing. Tap again to start.';
+        setTimeout(function () { if (t.isConnected && t.classList.contains('ta-sure')) { t.classList.remove('ta-sure'); mapProgress(); } }, 6000);
+        return;
+      }
+      t.classList.remove('ta-sure'); sfx.click(); mp.prepare(mapProgress); mapProgress(); return;
+    }
+    if (k === 'mapClear') {
+      if (!t.classList.contains('ta-sure')) { t.classList.add('ta-sure'); t.textContent = 'Tap again'; setTimeout(function () { if (t.isConnected) { t.classList.remove('ta-sure'); t.textContent = 'Clear'; } }, 3000); return; }
+      t.classList.remove('ta-sure'); t.disabled = true; sfx.click();
+      if (games.pocket && games.pocket.maps) games.pocket.maps.clear(function () { t.textContent = 'Cleared'; mapProgress(); }); else t.textContent = 'Cleared';
+      return;
+    }
     if (k === 'detailMaps') { const on = !store.get('detailMaps', true); store.set('detailMaps', on); t.classList.toggle('ta-on', on); sfx.click(); return; }
     if (k === 'evNotify') { const on = !store.get('evNotify', true); store.set('evNotify', on); t.classList.toggle('ta-on', on); sfx.click(); if (on) evStart(); else evStop(); return; }
     if (k === 'sound') { setMuted(!muted); t.classList.toggle('ta-on', !muted); if (!muted) sfx.click(); return; }
@@ -900,6 +930,22 @@
       t.classList.remove('ta-sure'); t.disabled = true; sfx.click(); refreshNav();
     }
   });
+
+  /* Saved maps (Tornies). Everything happens on this device; the game draws the maps itself, nothing is downloaded. */
+  function mapInfo() { try { return games.pocket && games.pocket.maps ? games.pocket.maps.info() : null; } catch (e) { return null; } }
+  function mapMsg(p) {
+    const i = mapInfo();
+    if (p && p.error) return 'Saving maps is not available in this browser.';
+    if (i && i.running) return 'Preparing maps: ' + Math.floor(i.done / Math.max(1, i.total) * 100) + '% (' + i.done + ' of ' + i.total + ' pieces). You can keep playing; keep the phone open.';
+    const saved = i && i.saved ? ' Saved now: ' + i.saved + ' pieces, about ' + Math.max(1, Math.round(i.mb)) + ' MB.' : '';
+    return 'Draws and saves every outdoor map now, so no map ever needs loading. One-off: uses about 40–100 MB of this device\'s storage and takes a few minutes.' + saved;
+  }
+  function mapProgress(p) {
+    const el = root.querySelector('.ta-mapmsg'), btn = root.querySelector('.ta-mapbtn');
+    const i = mapInfo();
+    if (el) el.textContent = p && p.total && p.done >= p.total ? 'All maps are prepared and saved on this device (about ' + Math.max(1, Math.round(i ? i.mb : 0)) + ' MB). Clear them below at any time.' : mapMsg(p);
+    if (btn) btn.textContent = i && i.running ? 'Stop' : 'Prepare';
+  }
 
   /* Opening apps */
   function refreshNav() {
@@ -9008,7 +9054,7 @@
 
   /* ---------- Baking a chunk ---------- */
   function iwBake(m, cx, cy) { const it = iwBakeGen(m, cx, cy); let r; while (!(r = it.next()).done); return r.value; }
-  function* iwBakeGen(m, cx, cy) {
+  function iwGrid(m, cx, cy) {
     const ox = cx * IW_CH - IW_PAD, oy = cy * IW_CH - IW_PAD, B = { m: m, ox: ox, oy: oy, ch: [], fl: [], kd: [] };
     for (let y = 0; y < IW_N; y++) {
       B.ch.push([]); B.fl.push([]); B.kd.push([]);
@@ -9018,10 +9064,11 @@
         B.kd[y].push(iwKind(c === 'F' || c === 'R' ? '.' : c, t[1]));   // fences and boulders are drawn live, on their floor
       }
     }
-    const full = IW_POOL.bake || (IW_POOL.bake = iwCv(IW_S, IW_S)); B.g = full.getContext('2d'); B.g.setTransform(1, 0, 0, 1, 0, 0); B.g.globalAlpha = 1; B.g.globalCompositeOperation = 'source-over'; B.g.clearRect(0, 0, IW_S, IW_S);
-    yield* iwGround(B); yield 12; let t1 = performance.now();
-    // Everything standing up, in order of where it touches the ground.
-    const ops = [];
+    return B;
+  }
+  // Everything standing up, in order of where it touches the ground.
+  function iwOps(B) {
+    const m = B.m, ox = B.ox, oy = B.oy, ops = [];
     for (let y = 0; y < IW_N; y++) for (let x = 0; x < IW_N; x++) {
       const c = B.ch[y][x], fl = B.fl[y][x], r = iwRng(ox + x, oy + y, 51), v = Math.floor(r() * 6), style = fl === 'snow' ? 'snow' : fl === 'spooky' ? 'spooky' : 'grass';
       let sp = null, jx = 0;
@@ -9046,17 +9093,25 @@
       ops.push({ y: (b.y + b.h - oy) * IW_TP, top: (b.y - oy) * IW_TP, bld: bd, x: (b.x - ox) * IW_TP - IW_BLEFT, by: (b.y - oy) * IW_TP - IW_BTOP });
     });
     ops.sort(function (a, b) { return a.y - b.y; });
+    return ops;
+  }
+  // The parts of trees, lamps and chimneys that rise above their own tile (redrawn over characters behind them).
+  function iwTallList(ops) {
+    const tall = [];
+    ops.forEach(function (o) { const t0 = o.bld ? o.by : o.ay - o.sp.ay; if (t0 < o.top) tall.push({ o: o, x0: (o.bld ? o.x : o.x - o.sp.ax) - IW_PAD * IW_TP, y0: t0 - IW_PAD * IW_TP, w: o.bld ? o.bld.c.width : o.sp.c.width, top: o.top - IW_PAD * IW_TP }); });
+    return tall;
+  }
+  function* iwBakeGen(m, cx, cy) {
+    const B = iwGrid(m, cx, cy);
+    const full = IW_POOL.bake || (IW_POOL.bake = iwCv(IW_S, IW_S)); B.g = full.getContext('2d'); B.g.setTransform(1, 0, 0, 1, 0, 0); B.g.globalAlpha = 1; B.g.globalCompositeOperation = 'source-over'; B.g.clearRect(0, 0, IW_S, IW_S);
+    yield* iwGround(B); yield 12;
+    const ops = iwOps(B);
     function draw(g, o) { if (o.bld) g.drawImage(o.bld.c, o.x, o.by); else iwStamp(g, o.sp, o.x, o.ay); }
     for (let i = 0; i < ops.length; i++) { draw(B.g, ops[i]); if (ops[i].bld && i < ops.length - 1) yield 13; }
     yield 14;
-    // The parts of trees, lamps and chimneys that rise above their own tile are redrawn over any character
-    // standing just behind them (see iwDrawOver), so someone behind a tree is partly hidden by it.
-    // Only a short list is kept (no second full-size layer), in chunk pixels.
-    const tall = [];
-    ops.forEach(function (o) { const t0 = o.bld ? o.by : o.ay - o.sp.ay; if (t0 < o.top) tall.push({ o: o, x0: (o.bld ? o.x : o.x - o.sp.ax) - IW_PAD * IW_TP, y0: t0 - IW_PAD * IW_TP, w: o.bld ? o.bld.c.width : o.sp.c.width, top: o.top - IW_PAD * IW_TP }); });
-    yield 99;
+    const tall = iwTallList(ops);
     const cs = IW_CH * IW_TP, base = iwChunkCv(); base.getContext('2d').drawImage(full, IW_PAD * IW_TP, IW_PAD * IW_TP, cs, cs, 0, 0, cs, cs);
-    return { base: base, tall: tall, used: 0 };
+    return { base: base, tall: tall, used: 0, fresh: true };
   }
   // Chunk canvases are recycled when old chunks are dropped. Chunks are kept per map, so going back somewhere is instant.
   const IW_FREE = [];
@@ -9068,15 +9123,15 @@
       let old = null, ok = null;
       Object.keys(IWC.chunks).forEach(function (q) { if (q === keep) return; const c = IWC.chunks[q], other = q.indexOf(cur) !== 0; if (!old || (other && !old.other) || (other === old.other && c.used < old.c.used)) { old = { c: c, other: other }; ok = q; } });
       if (!ok) return;
-      IW_FREE.push(old.c.base); delete IWC.chunks[ok]; IWC.n--;
+      if (old.c.base.close) old.c.base.close(); else IW_FREE.push(old.c.base); delete IWC.chunks[ok]; IWC.n--;
     }
   }
   function iwKey(m, cx, cy) { return m.id + ':' + cx + ',' + cy; }
-  function iwStore(k, c) { IWC.chunks[k] = c; c.used = T; IWC.n++; iwEvict(k); }
+  function iwStore(k, c) { if (IWC.chunks[k]) { if (c.base.close) c.base.close(); else IW_FREE.push(c.base); return; } IWC.chunks[k] = c; c.used = T; IWC.n++; if (c.fresh) { c.fresh = false; iwDbSave(k, c.base); } iwEvict(k); }
   // Bake a chunk right now (only used just after arriving on a map, while the screen is fading in).
   function iwChunk(m, cx, cy) {
     const k = iwKey(m, cx, cy); let c = IWC.chunks[k];
-    if (!c) { if (IWC.pending) IWC.pending = null; c = iwBake(m, cx, cy); iwStore(k, c); }
+    if (!c) { if (IWC.pending) IWC.pending = null; IW_PREP.it = null; c = iwBake(m, cx, cy); iwStore(k, c); }
     c.used = T; return c;
   }
   const IW_CS = IW_CH * 16;   // chunk size on screen, in game pixels
@@ -9101,30 +9156,39 @@
     }
     m.buildings.forEach(function (b) { if (b.x + b.w > cx * IW_CH && b.x < (cx + 1) * IW_CH && b.y + b.h > cy * IW_CH && b.y < (cy + 1) * IW_CH) { ctx.save(); ctx.beginPath(); ctx.rect(cx * IW_CS - camX, cy * IW_CS - camY, IW_CS, IW_CS); ctx.clip(); ctx.drawImage(bldImg(b), b.x * 16 - camX, b.y * 16 - camY); ctx.restore(); } });
   }
-  /* Arriving on a map. With "Pre-load maps" on (the default), the whole map plus a ring around it is drawn first,
-     behind a short loading bar, so walking afterwards never has to draw anything new. With it off, chunks are drawn
-     a step at a time while walking. Returns true while the loading screen is showing. */
+  /* Arriving on a map. With "Pre-load maps" on (the default), the area around the player is drawn first behind a
+     short loading bar and the rest of the map follows in the background. Chunks saved on this device are read back
+     instead of drawn. With pre-load off, chunks are drawn a step at a time while walking. Returns true while the
+     loading screen is showing. */
   function iwLoading(m, camX, camY) {
     if (IWC.id !== m) {
-      IWC.id = m; IWC.arrive = T; IWC.pending = null; IWC.load = null; IWC.cap = 0;
+      IWC.id = m; IWC.arrive = T; IWC.pending = null; IWC.load = null; iwDbOpen();
+      const maxX = Math.floor((m.w + 7) / IW_CH), maxY = Math.floor((m.h + 7) / IW_CH);
+      IWC.cap = (maxX + 2) * (maxY + 2) + 12;
       if (store.get('preloadMaps', true) !== false) {
-        const pcx = Math.floor(W.p.x / IW_CH), pcy = Math.floor(W.p.y / IW_CH), list = [];
-        for (let cy = -1; cy <= Math.floor((m.h + 7) / IW_CH); cy++) for (let cx = -1; cx <= Math.floor((m.w + 7) / IW_CH); cx++) list.push([cx, cy]);
-        IWC.cap = list.length + 12;
-        const todo = list.filter(function (c) { return !IWC.chunks[iwKey(m, c[0], c[1])]; }).sort(function (a, b) { return (Math.abs(a[0] - pcx) + Math.abs(a[1] - pcy)) - (Math.abs(b[0] - pcx) + Math.abs(b[1] - pcy)); });
-        if (todo.length) IWC.load = { m: m, todo: todo, total: todo.length, done: 0, it: null, shown: T };
+        // Only the area around the player is drawn behind the loading bar; the rest follows in the background.
+        const v = iwView(camX, camY, 1), todo = [], pcx = (camX + VW / 2) / IW_CS - 0.5, pcy = (camY + VH / 2) / IW_CS - 0.5;
+        for (let cy = Math.max(-1, v[1]); cy <= Math.min(maxY, v[3]); cy++) for (let cx = Math.max(-1, v[0]); cx <= Math.min(maxX, v[2]); cx++) if (!IWC.chunks[iwKey(m, cx, cy)]) todo.push([cx, cy]);
+        todo.sort(function (a, b) { return Math.hypot(a[0] - pcx, a[1] - pcy) - Math.hypot(b[0] - pcx, b[1] - pcy); });
+        if (todo.length) IWC.load = { m: m, todo: todo, total: todo.length, done: 0, it: null };
       }
     }
     const L = IWC.load; if (!L || L.m !== m) return false;
-    // Work for up to ~12 ms per frame, so the loading bar keeps moving.
+    // Nothing else is happening behind the loading bar, so use most of each frame. Saved chunks are read back from
+    // the device (a few at a time, in the background); the rest are drawn.
+    IW_PREP.it = null;
+    L.todo = L.todo.filter(function (c) { return !IWC.chunks[iwKey(m, c[0], c[1])]; });
+    L.done = L.total - L.todo.length;
+    L.todo.forEach(function (c) { iwDbRead(m, c[0], c[1]); });
     const t0 = performance.now();
-    while (L.todo.length && performance.now() - t0 < 12) {
-      if (!L.it) { const c = L.todo[0]; if (IWC.chunks[iwKey(m, c[0], c[1])]) { L.todo.shift(); L.done++; continue; } L.it = iwBakeGen(m, c[0], c[1]); }
+    while (performance.now() - t0 < 24) {
+      if (!L.it) { const c = L.todo.find(function (q) { return !iwDbHas(m, q[0], q[1]) && !IWC.chunks[iwKey(m, q[0], q[1])]; }); if (!c) break; L.it = iwBakeGen(m, c[0], c[1]); L.cur = c; }
       const r = L.it.next();
-      if (r.done) { const c = L.todo.shift(); iwStore(iwKey(m, c[0], c[1]), r.value); L.it = null; L.done++; }
+      if (r.done) { iwStore(iwKey(m, L.cur[0], L.cur[1]), r.value); L.it = null; }
     }
+    L.todo = L.todo.filter(function (c) { return !IWC.chunks[iwKey(m, c[0], c[1])]; });
+    L.done = L.total - L.todo.length;
     if (!L.todo.length) { IWC.load = null; IWC.arrive = T; return false; }
-    // loading screen
     fr(0, 0, VW, VH, '#0e1626');
     const k = L.done / L.total, w = 140, x = (VW - w) / 2, y = VH / 2 + 6;
     text(fillNames(m.name), VW / 2, y - 26, '#e6ecff', { sz: 10, al: 'center', light: true });
@@ -9134,6 +9198,18 @@
     return true;
   }
   function iwIsLoading() { return !!IWC.load; }
+  // Make the shared textures and common sprites ahead of time (on the title screen and indoors),
+  // a little per frame, so the first outdoor map loads faster.
+  const IW_WARM = [
+    function () { iwGroundTex('grass'); }, function () { iwGroundTex('path'); }, function () { iwGroundTex('sand'); }, function () { iwGroundTex('snow'); },
+    function () { iwGroundTex('spath'); }, function () { iwGroundTex('spooky'); },
+    function () { iwBlotTex('water', '#54b6e0', ['#70ccec', '#3f9fd2'], 0.35, 30, 60); }, function () { iwBlotTex('tall', '#4e9a44', ['#3e8838'], 0.6, 16, 30); },
+    function () { for (let v = 0; v < 6; v++) iwTree(v, 'grass'); }, function () { for (let v = 0; v < 4; v++) { iwPine(v, 'snow'); iwPalm(v); } },
+    function () { for (let v = 0; v < 6; v++) for (let f = 0; f < 2; f++) iwTallSpr(v, f, false); },
+    function () { iwSign(); iwLamp(); iwPlanter(); iwHydrant(); iwBench(0, 0); iwBench(1, 1); iwBarrier(); for (let v = 0; v < 6; v++) iwCrate(v); }
+  ];
+  let iwWarmI = 0;
+  function iwWarmStep() { if (iwWarmI < IW_WARM.length && iwOn && store.get('detailMaps', true) !== false) IW_WARM[iwWarmI++](); }
   // Redraw tree tops, lamp heads and chimneys over characters standing just behind them.
   function iwDrawOver(m, camX, camY, ents) {
     const v = iwView(camX, camY, 0);
@@ -9157,6 +9233,11 @@
     }
     ctx.restore();
   }
+  function iwRingMissing(m, camX, camY) {
+    const v = iwView(camX, camY, 1), maxX = Math.floor((m.w + 7) / IW_CH), maxY = Math.floor((m.h + 7) / IW_CH);
+    for (let cy = Math.max(-1, v[1]); cy <= Math.min(maxY, v[3]); cy++) for (let cx = Math.max(-1, v[0]); cx <= Math.min(maxX, v[2]); cx++) if (!IWC.chunks[iwKey(m, cx, cy)]) return true;
+    return false;
+  }
   // Bakes chunks a little at a time (one small step per frame): anything on screen first, then the nearest ones around it.
   function iwPrebake(m, camX, camY) {
     if (IWC.id !== m) return;
@@ -9171,12 +9252,17 @@
     let best = null, bd = 1e9;
     if (IWC.want && !IWC.chunks[IWC.want] && IWC.want.indexOf(m.id + ':') === 0) best = IWC.wantAt;
     else {
-      const v = iwView(camX, camY, 1), mx = (camX + VW / 2) / IW_CS - 0.5, my = (camY + VH / 2) / IW_CS - 0.5;
+      const mx = (camX + VW / 2) / IW_CS - 0.5, my = (camY + VH / 2) / IW_CS - 0.5;
       const maxX = Math.floor((m.w + 7) / IW_CH), maxY = Math.floor((m.h + 7) / IW_CH);
-      for (let cy = Math.max(-1, v[1]); cy <= Math.min(maxY, v[3]); cy++) for (let cx = Math.max(-1, v[0]); cx <= Math.min(maxX, v[2]); cx++) if (!IWC.chunks[iwKey(m, cx, cy)]) { const d = (cx - mx) * (cx - mx) + (cy - my) * (cy - my); if (d < bd) { bd = d; best = [cx, cy]; } }
+      // the view and the ring around it first; with pre-load on, then the rest of the map, nearest first
+      const v = store.get('preloadMaps', true) !== false && !iwRingMissing(m, camX, camY) ? [-1, -1, maxX, maxY] : iwView(camX, camY, 1);
+      for (let cy = Math.max(-1, v[1]); cy <= Math.min(maxY, v[3]); cy++) for (let cx = Math.max(-1, v[0]); cx <= Math.min(maxX, v[2]); cx++) if (!IWC.chunks[iwKey(m, cx, cy)] && !IWDB.reading[iwKey(m, cx, cy)]) { const d = (cx - mx) * (cx - mx) + (cy - my) * (cy - my); if (d < bd) { bd = d; best = [cx, cy]; } }
     }
     IWC.want = null;
-    if (best) IWC.pending = { m: m, k: iwKey(m, best[0], best[1]), it: iwBakeGen(m, best[0], best[1]) };
+    if (!best) return;
+    if (iwDbHas(m, best[0], best[1])) { iwDbRead(m, best[0], best[1]); return; }   // saved on the device: read it back
+    IW_PREP.it = null;
+    IWC.pending = { m: m, k: iwKey(m, best[0], best[1]), it: iwBakeGen(m, best[0], best[1]) };
   }
 
   /* ---------- Live layer: tall grass, water, fences, boulders, neon ---------- */
@@ -9399,6 +9485,102 @@
       else if (c === 'U' || c === 'V') iwLadder(B, x, y, c === 'V');
     }
   }
+
+
+  /* ================= Saved maps (on this device) =================
+     With "Save maps on this device" on, every chunk that gets drawn is also saved as a compressed image in this
+     browser's own storage (IndexedDB, on this device only), so it loads instantly next time, even after closing the
+     browser. Nothing is ever uploaded or sent anywhere. Saved chunks are tagged with the art version and are replaced
+     automatically when an update changes how maps look. "Clear saved maps" in Settings deletes them all. */
+  const IW_ART = 'a1';   // bump when map art changes, so old saved chunks are replaced
+  const IWDB = { db: null, state: 0, keys: {}, reading: {}, queue: [] };
+  function iwDbOn() { return store.get('saveMaps', true) !== false && typeof indexedDB !== 'undefined'; }
+  function iwDbKey(k) { return IW_ART + '|' + k; }
+  function iwDbOpen() {
+    if (IWDB.state || !iwDbOn()) return; IWDB.state = 1;
+    try {
+      const r = indexedDB.open('torn-arcade-maps', 1);
+      r.onupgradeneeded = function () { r.result.createObjectStore('chunks'); };
+      r.onerror = function () { IWDB.state = 3; };
+      r.onsuccess = function () {
+        IWDB.db = r.result;
+        const tx = IWDB.db.transaction('chunks', 'readwrite'), os = tx.objectStore('chunks'), q = os.getAllKeys();
+        q.onsuccess = function () { (q.result || []).forEach(function (k) { if (String(k).indexOf(IW_ART + '|') === 0) IWDB.keys[k] = 1; else os.delete(k); }); IWDB.state = 2; };
+        q.onerror = function () { IWDB.state = 2; };
+      };
+    } catch (e) { IWDB.state = 3; }
+  }
+  function iwDbHas(m, cx, cy) { return IWDB.state === 2 && iwDbOn() && !!IWDB.keys[iwDbKey(iwKey(m, cx, cy))]; }
+  function iwDbRead(m, cx, cy) {
+    const k = iwKey(m, cx, cy), dk = iwDbKey(k);
+    if (!iwDbHas(m, cx, cy) || IWDB.reading[k] || IWC.chunks[k]) return;
+    IWDB.reading[k] = 1;
+    const fail = function () { delete IWDB.reading[k]; delete IWDB.keys[dk]; };
+    try {
+      const q = IWDB.db.transaction('chunks', 'readonly').objectStore('chunks').get(dk);
+      q.onerror = fail;
+      q.onsuccess = function () {
+        const blob = q.result; if (!blob) { fail(); return; }
+        createImageBitmap(blob).then(function (bmp) {
+          delete IWDB.reading[k];
+          if (IWC.chunks[k]) { bmp.close(); return; }
+          iwStore(k, { base: bmp, tall: iwTallList(iwOps(iwGrid(m, cx, cy))), used: T });
+        }, fail);
+      };
+    } catch (e) { fail(); }
+  }
+  // Save a chunk (WebP where the browser can make it, JPEG otherwise). The canvas is copied at once, so it can be reused.
+  function iwDbSave(k, canvas, done) {
+    if (IWDB.state !== 2 || !iwDbOn() || !canvas.toBlob) { if (done) done(); return; }
+    const dk = iwDbKey(k);
+    const put = function (blob) {
+      if (!blob) { if (done) done(); return; }
+      try {
+        const tx = IWDB.db.transaction('chunks', 'readwrite'); tx.objectStore('chunks').put(blob, dk);
+        tx.oncomplete = function () { IWDB.keys[dk] = 1; const st = store.get('mapCache', { n: 0, b: 0 }); store.set('mapCache', { n: st.n + 1, b: st.b + blob.size }); if (done) done(); };
+        tx.onerror = function () { if (done) done(); };
+      } catch (e) { if (done) done(); }
+    };
+    try { canvas.toBlob(function (b) { if (b && b.type === 'image/webp') put(b); else canvas.toBlob(put, 'image/jpeg', 0.88); }, 'image/webp', 0.86); } catch (e) { if (done) done(); }
+  }
+  function iwDbClear(cb) {
+    IWDB.keys = {}; store.set('mapCache', { n: 0, b: 0 });
+    if (!IWDB.db) { try { const r = indexedDB.deleteDatabase('torn-arcade-maps'); r.onsuccess = r.onerror = function () { if (cb) cb(); }; } catch (e) { if (cb) cb(); } return; }
+    try { const tx = IWDB.db.transaction('chunks', 'readwrite'); tx.objectStore('chunks').clear(); tx.oncomplete = tx.onerror = function () { if (cb) cb(); }; } catch (e) { if (cb) cb(); }
+  }
+
+  /* "Prepare all maps": draws and saves every chunk of every outdoor map, a little at a time. It gives way to the
+     game: it pauses while Tornies is drawing anything itself, and works more gently while Tornies is being played. */
+  const IW_PREP = { on: false, list: null, i: 0, it: null, cb: null, timer: 0 };
+  function iwPrepList() {
+    const out = [];
+    Object.keys(MAPS).forEach(function (id) { const m = MAPS[id]; if (!m.rows || m.indoor) return; if (!m.grid) buildGrid(m); const mx = Math.floor((m.w + 7) / IW_CH), my = Math.floor((m.h + 7) / IW_CH); for (let cy = -1; cy <= my; cy++) for (let cx = -1; cx <= mx; cx++) out.push([m, cx, cy]); });
+    return out;
+  }
+  function iwPrepStart(cb) {
+    iwDbOpen(); IW_PREP.cb = cb;
+    if (IW_PREP.on) return;
+    IW_PREP.on = true; IW_PREP.list = iwPrepList(); IW_PREP.i = 0; IW_PREP.it = null;
+    const tick = function () {
+      if (!IW_PREP.on) return;
+      if (IWDB.state === 1 || IWDB.state === 0) { IW_PREP.timer = setTimeout(tick, 200); return; }
+      if (IWDB.state === 3 || !iwDbOn()) { IW_PREP.on = false; if (IW_PREP.cb) IW_PREP.cb({ error: true }); return; }
+      const playing = active && scene === worldScene, budget = playing ? 4 : 18, t0 = performance.now();
+      while (IW_PREP.i < IW_PREP.list.length && performance.now() - t0 < budget) {
+        if (IWC.pending || IWC.load) break;   // the game is drawing: wait
+        const e = IW_PREP.list[IW_PREP.i], k = iwKey(e[0], e[1], e[2]);
+        if (!IW_PREP.it) { if (IWDB.keys[iwDbKey(k)]) { IW_PREP.i++; continue; } IW_PREP.it = iwBakeGen(e[0], e[1], e[2]); }
+        const r = IW_PREP.it.next();
+        if (r.done) { IW_PREP.it = null; IW_PREP.i++; const c = r.value; iwDbSave(k, c.base, function () { IW_FREE.push(c.base); }); }
+      }
+      if (IW_PREP.cb) IW_PREP.cb({ done: IW_PREP.i, total: IW_PREP.list.length });
+      if (IW_PREP.i >= IW_PREP.list.length) { IW_PREP.on = false; return; }
+      IW_PREP.timer = setTimeout(tick, playing ? 40 : 0);
+    };
+    tick();
+  }
+  function iwPrepStop() { IW_PREP.on = false; IW_PREP.it = null; clearTimeout(IW_PREP.timer); }
+  function iwPrepInfo() { const st = store.get('mapCache', { n: 0, b: 0 }); return { running: IW_PREP.on, done: IW_PREP.i, total: IW_PREP.list ? IW_PREP.list.length : iwPrepList().length, saved: Object.keys(IWDB.keys).length || st.n, mb: st.b / 1048576, on: iwDbOn(), ready: IWDB.state === 2 }; }
 
   /* ================= World rebuild: Red-scale maps ================= */
   // Outdoor maps are rebuilt here at Pokémon Red-like sizes, keeping every NPC, trainer, item, sign and script from the
@@ -13594,6 +13776,7 @@
     if (m.indoor) fr(0, 0, VW, VH, '#000');
     const iw = !m.indoor && iwOn && store.get('detailMaps', true) !== false;   // outdoor maps use the illustrated renderer (3g-iworld.js), unless switched off in Settings
     if (iw && iwLoading(m, camX, camY)) return;
+    if (!iw) iwWarmStep();
     if (iw) { iwDrawBase(m, camX, camY); iwDrawLive(m, camX, camY, fr2); }
     else for (let ty = y0; ty <= y0 + 10; ty++) for (let tx = x0; tx <= x0 + 15; tx++) {
       const inside = tx >= 0 && ty >= 0 && tx < m.w && ty < m.h;
@@ -14707,6 +14890,7 @@
   }
   const titleScene = {
     draw: function () {
+      iwWarmStep();
       if (TITLE_IMG) drawTitleArt();
       else {
         ctx.drawImage(titleBg(), 0, 0);
@@ -14873,6 +15057,14 @@
   $(root, '.ta-appbar').insertBefore(padBtn, muteBtn);
   games.pocket = {
     relayout: fit,
+    // Saved maps on this device (Settings → Tornies). All local: nothing is uploaded.
+    maps: {
+      prepare: function (cb) { if (!built) build(); if (!iwOn) { cb({ error: true }); return; } iwPrepStart(cb); },
+      stop: function () { iwPrepStop(); },
+      clear: function (cb) { iwPrepStop(); iwDbClear(cb); },
+      open: function () { if (iwOn) iwDbOpen(); },
+      info: function () { return iwOn ? iwPrepInfo() : null; }
+    },
     // Used by cheat codes: gives items once per save. Returns 'ok', 'used' or 'nosave'.
     redeem: function (flag, id, n) {
       const d = G || loadSave();

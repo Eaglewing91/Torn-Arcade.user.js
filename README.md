@@ -31,6 +31,7 @@ A creature-collecting RPG set in Torn City. You start in Maple Hollow with one o
 - Trade Tornies with friends using trade codes. No server is involved.
 - Custom illustrated artwork for every Tornie and character, made specifically for Torn Arcade, plus an animated title screen and an original soundtrack.
 - Illustrated towns and routes: soft shorelines, sandy beaches, snowy mountains, city streets and a neon casino strip, with swaying tall grass and lights that come on at night.
+- Map options in Settings → Tornies: **Pre-load maps** (draws the area around you first, then the rest in the background), **Save maps on this device** (maps you have visited open instantly next time), **Prepare all maps** (a one-off that draws and saves every outdoor map; about 40–100 MB of browser storage and a few minutes) and **Clear saved maps**.
 
 ### 👽 Torn Invasion
 A Doom-style first-person shooter. Aliens have overrun Torn City, and you fight through infested levels with a **pistol, shotgun and plasma rifle**. Unlock levels as you clear them, beat your best times and scores, and collect achievements.
@@ -81,7 +82,7 @@ If you add a **Limited** access API key in Settings, the phone checks the offici
 |---|---|---|---|---|
 | Only locally | Nobody | Public amusement (games) and event notifications on the phone | Stored locally / Used only for automation (event checks while the phone is open). Never shared. | Limited (user → events). Optional: only needed for event notifications |
 
-- **Data Storage:** settings, wallpaper, best scores, your Tornies save, Torn Invasion progress, Angry Bogies stars and your API key are kept in Tampermonkey storage on your device. Events are shown on the phone but never saved.
+- **Data Storage:** settings, wallpaper, best scores, your Tornies save, Torn Invasion progress, Angry Bogies stars and your API key are kept in Tampermonkey storage on your device. Events are shown on the phone but never saved. With **Save maps on this device** on (Settings → Tornies), pictures of the Tornies maps the game has drawn are also kept in your browser's own storage for torn.com (IndexedDB, `torn-arcade-maps`). They are drawn by the script on your device, contain no personal data, are never uploaded or shared, and **Clear saved maps** deletes them.
 - **Data Sharing:** nothing is sent anywhere except event requests to `api.torn.com`.
 - The same table is shown next to the API key box in Settings and at the top of the script.
 
