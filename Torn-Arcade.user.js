@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.20.4
+// @version      2.21.0
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with five game apps: Tornies (a creature-collecting RPG), Torn Invasion (a Doom-style alien shooter), Angry Bogies (a slingshot physics game), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -912,7 +912,7 @@
         GAMES.map(function (g) { return '<div class="ta-row">' + iconSmall(g) + '<div class="ta-rtext"><b>' + (g.title || g.name) + '</b><small>' + g.desc + '</small></div></div>'; }).join('') +
       '</div></div>' +
       '<div class="ta-group"><h3>Tornies</h3><div class="ta-list">' +
-        '<div class="ta-row"><span class="ta-ricon" style="background:#3a9a5a">🗺️</span><div class="ta-rtext"><b>Detailed maps</b><small>Illustrated towns and routes. Turn off for classic pixel maps on slower devices.</small></div><button type="button" class="ta-switch' + (store.get('detailMaps', true) ? ' ta-on' : '') + '" data-set="detailMaps"></button></div>' +
+        '<div class="ta-row"><span class="ta-ricon" style="background:#3a9a5a">🗺️</span><div class="ta-rtext"><b>Detailed maps</b><small>Illustrated towns, routes, buildings and caves. Turn off for classic pixel maps on slower devices.</small></div><button type="button" class="ta-switch' + (store.get('detailMaps', true) ? ' ta-on' : '') + '" data-set="detailMaps"></button></div>' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#6a5acd">💾</span><div class="ta-rtext"><b>Save maps on this device</b><small>Keeps each map you have visited as images in this browser\'s storage, so it opens instantly next time with no loading. Stays on this device only; nothing is uploaded or shared.</small></div><button type="button" class="ta-switch' + (store.get('saveMaps', true) ? ' ta-on' : '') + '" data-set="saveMaps"></button></div>' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#8a4ad0">🧭</span><div class="ta-rtext"><b>Prepare all maps</b><small class="ta-mapmsg">' + mapMsg() + '</small></div><button type="button" class="ta-btn ta-mapbtn" data-set="mapPrep">' + (mapInfo() && mapInfo().running ? 'Stop' : 'Prepare') + '</button></div>' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#7a7f8a">🧹</span><div class="ta-rtext"><b>Clear saved maps</b><small>Deletes the map images saved on this device (your game save is not touched). Maps are drawn again as you visit them.</small></div><button type="button" class="ta-danger" data-set="mapClear">Clear</button></div>' +
@@ -1014,7 +1014,7 @@
     if (p && p.error) return 'Saving maps is not available in this browser.';
     if (i && i.running) return 'Preparing maps: ' + Math.floor(i.done / Math.max(1, i.total) * 100) + '% (' + i.done + ' of ' + i.total + ' pieces). You can keep playing; keep the phone open.';
     const saved = i && i.saved ? ' Saved now: ' + i.saved + ' pieces, about ' + Math.max(1, Math.round(i.mb)) + ' MB.' : '';
-    return 'Draws and saves every outdoor map now, so no map ever needs loading. One-off: uses about 40–100 MB of this device\'s storage and takes a few minutes.' + saved;
+    return 'Draws and saves every map now (towns, routes, buildings and caves), so no map ever needs loading. One-off: uses about 40–100 MB of this device\'s storage and takes a few minutes.' + saved;
   }
   function mapProgress(p) {
     const el = root.querySelector('.ta-mapmsg'), btn = root.querySelector('.ta-mapbtn');
@@ -7680,6 +7680,7 @@
   /* ---------- What is on each tile ---------- */
   // The map's own layout (not live changes), and the neighbouring map past the edges.
   function iwRaw(m, tx, ty) {
+    if (m.indoor) return tx >= 0 && ty >= 0 && tx < m.w && ty < m.h ? [m.rows[ty][tx], m.tiles || 'o'] : [' ', m.tiles || 'o'];   // indoors: nothing outside the room
     if (tx >= 0 && ty >= 0 && tx < m.w && ty < m.h) return [m.rows[ty][tx], m.bg || 'grass'];
     const nb = neighbourTile(m, tx, ty);
     return nb ? [nb[0], nb[1] || 'grass'] : [m.border, m.bg || 'grass'];
@@ -8334,8 +8335,12 @@
       for (let x = 0; x < IW_N; x++) {
         const t = iwRaw(m, ox + x, oy + y), c = t[0];
         B.ch[y].push(c); B.fl[y].push(t[1]);
-        B.kd[y].push(iwKind(c === 'F' || c === 'R' ? '.' : c, t[1]));   // fences and boulders are drawn live, on their floor
+        if (m.indoor) B.kd[y].push(iwKindIn(c, t[1]));   // boulders (R) are drawn live, on their floor
+        else B.kd[y].push(iwKind(c === 'F' || c === 'R' ? '.' : c, t[1]));   // fences and boulders are drawn live, on their floor
       }
+    }
+    if (m.indoor) for (let y = 0; y < IW_N; y++) for (let x = 0; x < IW_N; x++) if ('RUV'.indexOf(B.ch[y][x]) >= 0) {   // boulders and ladders sit on the floor around them
+      for (const d of [[0, 1], [0, -1], [-1, 0], [1, 0]]) { const c2 = (B.ch[y + d[1]] || [])[x + d[0]], k2 = (B.kd[y + d[1]] || [])[x + d[0]]; if (c2 && 'RUV'.indexOf(c2) < 0 && k2 && k2[0] === 'f') { B.kd[y][x] = k2; break; } }
     }
     return B;
   }
@@ -8377,8 +8382,9 @@
   function* iwBakeGen(m, cx, cy) {
     const B = iwGrid(m, cx, cy);
     const full = IW_POOL.bake || (IW_POOL.bake = iwCv(IW_S, IW_S)); B.g = full.getContext('2d'); B.g.setTransform(1, 0, 0, 1, 0, 0); B.g.globalAlpha = 1; B.g.globalCompositeOperation = 'source-over'; B.g.clearRect(0, 0, IW_S, IW_S);
-    yield* iwGround(B); yield 12;
-    const ops = iwOps(B);
+    if (B.m.indoor) yield* iwGroundIn(B); else yield* iwGround(B);
+    yield 12;
+    const ops = B.m.indoor ? iwOpsIn(B) : iwOps(B);
     function draw(g, o) { if (o.bld) g.drawImage(o.bld.c, o.x, o.by); else iwStamp(g, o.sp, o.x, o.ay); }
     for (let i = 0; i < ops.length; i++) { draw(B.g, ops[i]); if ((ops[i].bld || i % 6 === 5) && i < ops.length - 1) yield 13; }
     yield 14;
@@ -8439,7 +8445,8 @@
     if (IWC.id !== m) {
       IWC.id = m; IWC.arrive = T; IWC.pending = null; IWC.load = null; iwDbOpen();
       const maxX = Math.floor((m.w + 7) / IW_CH), maxY = Math.floor((m.h + 7) / IW_CH);
-      IWC.cap = (maxX + 2) * (maxY + 2) + 30;
+      const own = (maxX + 2) * (maxY + 2) + 30;
+      IWC.cap = m.indoor ? Math.max(IWC.cap || 0, own + 20) : own;   // indoors, keep the town outside in memory too, so stepping back out is instant
       {
         // Only what is on screen is needed before the fade in; the rest follows in the background.
         const v = iwView(camX, camY, 1), v0 = iwView(camX, camY, 0), todo = [], pcx = (camX + VW / 2) / IW_CS - 0.5, pcy = (camY + VH / 2) / IW_CS - 0.5;
@@ -8583,14 +8590,19 @@
     const goals = [];
     const DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
     if (m.conn) Object.keys(m.conn).forEach(function (dir) {
-      const c = m.conn[dir], tm = MAPS[c.map]; if (!c || !tm || tm.indoor || !DIRS[dir]) return;
+      const c = m.conn[dir], tm = MAPS[c.map]; if (!c || !tm || !iwMapOn(tm) || !DIRS[dir]) return;
       const dist = dir === 'up' ? p.y : dir === 'down' ? m.h - 1 - p.y : dir === 'left' ? p.x : m.w - 1 - p.x;
       if (dist > 10) return;
       const tx = dir === 'left' ? tm.w - 1 : dir === 'right' ? 0 : p.x + c.d, ty = dir === 'up' ? tm.h - 1 : dir === 'down' ? 0 : p.y + c.d;
       goals.push([tm, tx, ty, dist]);
     });
+    Object.keys(m.doors || {}).forEach(function (k) {
+      const d = m.doors[k], tm = d && MAPS[d.to]; if (!tm || tm === m || !iwMapOn(tm)) return;
+      const xy = k.split(','), dist = Math.abs(+xy[0] - p.x) + Math.abs(+xy[1] - p.y); if (dist > 6) return;
+      goals.push([tm, d.tx, d.ty, dist]);
+    });
     (m.warps || []).forEach(function (w) {
-      const tm = MAPS[w.to]; if (!tm || tm.indoor || tm === m) return;
+      const tm = MAPS[w.to]; if (!tm || tm === m || !iwMapOn(tm)) return;
       const dist = Math.abs(w.x - p.x) + Math.abs(w.y - p.y); if (dist > 8) return;
       goals.push([tm, w.tx, w.ty, dist]);
     });
@@ -8645,7 +8657,7 @@
         const v = Math.floor(h * 6), rr = rustleOn(tx, ty);
         if (rr) { ctx.save(); ctx.translate(tx * 16 - camX, ty * 16 - camY); ctx.scale(1 / 3, 1 / 3); iwBlades(ctx, v, fr ? 2 : -1.5, rustleAmp(rr) * 2.2, snow); ctx.restore(); }
         else iwPut(iwTallSpr(v, fr, snow), tx, ty, camX, camY);
-      } else if (c === 'F') {
+      } else if (c === 'F' && !m.indoor) {
         const f = function (dx, dy) { return iwLiveTile(m, tx + dx, ty + dy)[0] === 'F' ? 1 : 0; };
         iwPut(iwFence(f(0, -1), f(0, 1), f(-1, 0), f(1, 0)), tx, ty, camX, camY);
       } else if (c === 'R') iwPut(iwBoulder(Math.floor(h * 4), snow), tx, ty, camX, camY);
@@ -8800,7 +8812,8 @@
     if (fm && cave) {
       // dirt floor, with a dark band where it meets the rock (the rock wall casting a shadow)
       const ft = iwLay(B, iwBlotTex('cavefloor', '#7a6650', ['#8a7660', '#665440'], 0.4, 20, 46, function (fg, wrap, x, y, r) { for (let i = 0; i < 6; i++) { const px = x * IW_TP + r() * 48, py = y * IW_TP + r() * 48, a = 1 + r() * 2, b2 = 0.8 + r() * 1.4, rot = r() * 3, col = r() < 0.5 ? 'rgba(50,38,26,0.45)' : 'rgba(190,170,140,0.45)'; wrap(px, py, 4, function (X, Y) { fg.fillStyle = col; fg.beginPath(); fg.ellipse(X, Y, a, b2, rot, 0, 7); fg.fill(); }); } }));
-      if (st === 'C') g.drawImage(iwClip(ft, fm), 0, 0);
+      const cm = st === 'C' ? fm : iwMask(B, function (kd) { return kd === 'fC'; }, 10, -2);   // dirt wherever the cave floor is dirt
+      if (cm) g.drawImage(iwClip(ft, cm), 0, 0);
       g.save(); g.globalAlpha = 0.45; g.drawImage(iwClip(iwFill('#1a1210'), iwEdge(fm, iwMask(B, function (kd) { return isFloor(kd); }, 10, -12))), 0, 0); g.restore();
       // a lighter lip along the rock above each floor edge
       for (let y = 1; y < IW_N; y++) for (let x = 0; x < IW_N; x++) if (B.kd[y][x] === 'rock' && isFloor(B.kd[y + 1] && B.kd[y + 1][x])) { const X = x * IW_TP, Y = y * IW_TP, sg = g.createLinearGradient(0, Y + 26, 0, Y + 48); sg.addColorStop(0, 'rgba(120,100,104,0)'); sg.addColorStop(1, 'rgba(120,100,104,0.55)'); g.fillStyle = sg; g.fillRect(X, Y + 26, IW_TP, 20); }
@@ -8825,6 +8838,149 @@
       else if (c === '<' || c === '>') iwStairs(B, x, y, c === '>');
       else if (c === 'U' || c === 'V') iwLadder(B, x, y, c === 'V');
     }
+  }
+
+  /* ---------- Indoor furniture ----------
+     Each piece is drawn once into a sprite 56 x 84: the tile it stands on is the box (4, 32)-(52, 80), and tall pieces
+     rise into the 32 px above it. Pieces that sit side by side (counters, tables, card tables, grates, beds) join up. */
+  function iwSh(g, x, y, rx, ry, a) { g.fillStyle = 'rgba(30,18,10,' + (a || 0.28) + ')'; g.beginPath(); g.ellipse(x, y, rx, ry, 0, 0, 7); g.fill(); }
+  function iwRR(g, x, y, w, h, r, fill) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); if (fill) { g.fillStyle = fill; g.fill(); } }
+  function iwVG(g, y0, y1, a, b) { const gr = g.createLinearGradient(0, y0, 0, y1); gr.addColorStop(0, a); gr.addColorStop(1, b); return gr; }
+  function iwFurnSpr(key, fn) { return iwSpr('fu' + key, 56, 84, 28, 82, function (g) { g.translate(4, 32); fn(g); }); }
+  // L/R/U/D: whether the same piece continues on that side.
+  function iwFurn(c, L, R, U, D, v) {
+    const key = c + L + R + U + D + v;
+    if (c === 'B') return iwFurnSpr(key, function (g) {   // bookshelf
+      iwSh(g, 24, 46, 24, 4, 0.3);
+      g.fillStyle = '#5a3418'; g.fillRect(2, -22, 44, 68); g.fillStyle = '#7a4a26'; g.fillRect(2, -22, 44, 5); g.fillStyle = '#8e5a30'; g.fillRect(2, -22, 44, 2);
+      g.fillStyle = '#3e2410'; g.fillRect(6, -15, 36, 58);
+      const cols = ['#c84a4a', '#3a7ac8', '#e0b040', '#4aa05a', '#8a5ab0', '#e07a3a', '#2a8a8a', '#d8d0c0'], r = iwRng(v, 3, 131);
+      for (let s = 0; s < 3; s++) {
+        const by = -13 + s * 19; let x = 7;
+        while (x < 40) { const w = 3 + Math.floor(r() * 3), h = 12 + Math.floor(r() * 5); if (x + w > 41) break; if (r() < 0.12) { x += w; continue; }
+          g.fillStyle = cols[Math.floor(r() * cols.length)]; g.fillRect(x, by + 17 - h, w, h); g.fillStyle = 'rgba(255,255,255,0.25)'; g.fillRect(x, by + 17 - h, 1, h); g.fillStyle = 'rgba(0,0,0,0.25)'; g.fillRect(x + w - 0.8, by + 17 - h, 0.8, h); x += w + 0.4; }
+        g.fillStyle = '#7a4a26'; g.fillRect(4, by + 17, 40, 2.5); g.fillStyle = '#a06a3a'; g.fillRect(4, by + 17, 40, 1);
+      }
+      g.fillStyle = '#4a2c14'; g.fillRect(2, -22, 4, 68); g.fillRect(42, -22, 4, 68);
+    });
+    if (c === 'T') return iwFurnSpr(key, function (g) {   // television on a low unit
+      iwSh(g, 24, 45, 22, 4);
+      g.fillStyle = '#6a4228'; g.fillRect(4, 26, 40, 18); g.fillStyle = '#8a5a36'; g.fillRect(4, 26, 40, 3); g.fillStyle = '#4a2c18'; g.fillRect(22, 30, 1.5, 12);
+      g.fillStyle = '#3a2416'; g.fillRect(8, 31, 11, 9); g.fillRect(27, 31, 11, 9);
+      iwRR(g, 3, -6, 42, 30, 3, '#1c1c24'); g.fillStyle = iwVG(g, -3, 20, '#3a8ad0', '#1a4a8a'); g.fillRect(6, -3, 36, 23);
+      g.fillStyle = 'rgba(255,255,255,0.25)'; g.beginPath(); g.moveTo(6, -3); g.lineTo(24, -3); g.lineTo(10, 20); g.lineTo(6, 20); g.fill();
+      g.fillStyle = '#2a2a32'; g.fillRect(20, 24, 8, 3);
+    });
+    if (c === 't' || c === 'L' || c === 'k') {   // tables, card tables and counters: one surface across neighbours
+      const top = c === 't' ? ['#c8884e', '#dca06a', '#a86a3a'] : c === 'L' ? ['#2a8a5a', '#3aa06a', '#1a5a3a'] : ['#eef0f6', '#ffffff', '#b8bccc'];
+      const front = c === 't' ? '#8a5430' : c === 'L' ? '#7a5a30' : '#4a6a9a', hT = c === 'k' ? 30 : 20;
+      return iwFurnSpr(key, function (g) {
+        const x0 = L ? -1 : 4, x1 = R ? 49 : 44;
+        if (!D) iwSh(g, 24, 46, R && L ? 30 : 22, 4, 0.25);
+        if (c === 't' && !D) { g.fillStyle = '#6a3e20'; if (!L) g.fillRect(x0 + 2, 30, 4, 15); if (!R) g.fillRect(x1 - 6, 30, 4, 15); g.fillStyle = '#8a5430'; g.fillRect(x0, 30, x1 - x0, 4); }
+        if (c !== 't' && !D) { g.fillStyle = front; g.fillRect(x0, 46 - hT, x1 - x0, hT); g.fillStyle = 'rgba(255,255,255,0.15)'; g.fillRect(x0, 46 - hT, x1 - x0, 1.5); if (c === 'k') { g.fillStyle = 'rgba(0,0,0,0.15)'; for (let px = (L ? 0 : 12); px < 48; px += 24) g.fillRect(x0 + px, 46 - hT + 4, 1.2, hT - 6); } if (c === 'L') { g.fillStyle = '#c8a060'; g.fillRect(x0, 46 - hT, x1 - x0, 2); } }
+        const ty0 = U ? -1 : (c === 'k' ? 6 : 4), ty1 = D ? 49 : 46 - (c === 't' ? 16 : hT);
+        g.fillStyle = c === 'L' ? '#7a5a30' : top[2]; g.fillRect(x0, ty0, x1 - x0, ty1 - ty0 + 3);
+        g.fillStyle = top[0]; g.fillRect(x0 + (L ? 0 : 2), ty0 + (U ? 0 : 2), x1 - x0 - (L ? 0 : 2) - (R ? 0 : 2), ty1 - ty0 - (U ? 0 : 2) - (D ? 0 : 1));
+        if (!U) { g.fillStyle = top[1]; g.fillRect(x0 + (L ? 0 : 2), ty0 + 2, x1 - x0 - (L ? 0 : 2) - (R ? 0 : 2), 2); }
+        if (c === 't') { g.strokeStyle = 'rgba(120,70,30,0.25)'; g.lineWidth = 0.8; for (let k = 0; k < 3; k++) { const yy = ty0 + 6 + k * 7; if (yy < ty1 - 2) { g.beginPath(); g.moveTo(x0 + 3, yy); g.bezierCurveTo(x0 + 16, yy - 2, x0 + 30, yy + 2, x1 - 3, yy); g.stroke(); } } }
+        if (c === 'L' && !U && !L) { g.fillStyle = '#ffffff'; g.fillRect(14, ty0 + 8, 7, 10); g.fillRect(24, ty0 + 9, 7, 10); g.fillStyle = '#d02020'; g.fillRect(16, ty0 + 10, 2, 2); g.fillStyle = '#202020'; g.fillRect(27, ty0 + 14, 2, 2); g.fillStyle = '#e0b040'; g.beginPath(); g.arc(37, ty0 + 14, 3, 0, 7); g.fill(); }
+        if (c === 'k' && !U) { g.fillStyle = 'rgba(80,100,140,0.2)'; g.fillRect(x0, ty1 - 1, x1 - x0, 2); }
+      });
+    }
+    if (c === 'D') return iwFurnSpr(key, function (g) {   // bed (head at the top; two tiles tall when D sits above D)
+      const y0 = U ? -1 : 2, y1 = D ? 49 : 44;
+      if (!D) iwSh(g, 24, 46, 22, 4);
+      if (!U) { g.fillStyle = '#6a3e20'; iwRR(g, 4, -10, 40, 18, 4, '#7a4a26'); g.fillStyle = '#9a6036'; g.fillRect(7, -7, 34, 3); }
+      g.fillStyle = '#5a3418'; g.fillRect(5, y0, 38, y1 - y0);
+      g.fillStyle = '#f4f2ee'; g.fillRect(7, y0, 34, y1 - y0 - 2);
+      if (!U) { iwRR(g, 10, 4, 28, 12, 5, '#ffffff'); g.fillStyle = 'rgba(160,170,190,0.4)'; g.fillRect(12, 13, 24, 2); }
+      const by = U ? y0 : 18; g.fillStyle = '#4a8ad8'; g.fillRect(7, by, 34, y1 - by - 2); g.fillStyle = '#6aa6ec'; if (!U) g.fillRect(7, by, 34, 4);
+      g.fillStyle = 'rgba(30,60,120,0.25)'; for (let k = by + 8; k < y1 - 4; k += 8) g.fillRect(7, k, 34, 1);
+      if (!D) { g.fillStyle = '#3a6ab0'; g.fillRect(7, y1 - 4, 34, 2); }
+    });
+    if (c === 'P' || c === 'E') return iwFurnSpr(key, function (g) {   // PC on a desk, or a big terminal
+      iwSh(g, 24, 46, 22, 4);
+      if (c === 'P') {
+        g.fillStyle = '#7a5a3a'; g.fillRect(3, 20, 42, 6); g.fillStyle = '#5a3e26'; g.fillRect(5, 26, 4, 18); g.fillRect(39, 26, 4, 18); g.fillStyle = '#9a7a54'; g.fillRect(3, 20, 42, 2);
+        iwRR(g, 9, -10, 30, 24, 3, '#c8ccd6'); g.fillStyle = iwVG(g, -7, 10, '#3aa86a', '#1a6a3a'); g.fillRect(12, -7, 24, 17);
+        g.fillStyle = '#9ef0c0'; g.fillRect(14, -4, 12, 1.5); g.fillRect(14, -1, 17, 1.5); g.fillRect(14, 2, 9, 1.5);
+        g.fillStyle = '#9aa0ac'; g.fillRect(21, 14, 6, 6); g.fillStyle = '#e0e2ea'; g.fillRect(12, 21, 22, 4); g.fillStyle = '#b8bcc8'; for (let k = 13; k < 33; k += 3) g.fillRect(k, 22, 2, 1);
+      } else {
+        g.fillStyle = '#2e2e38'; iwRR(g, 4, -16, 40, 62, 4, '#3a3a46'); g.fillStyle = '#4a4a58'; g.fillRect(6, -14, 36, 3);
+        g.fillStyle = iwVG(g, -10, 14, '#9af6ff', '#2ab0d0'); g.fillRect(9, -10, 30, 22); g.fillStyle = 'rgba(255,255,255,0.35)'; g.fillRect(9, -10, 30, 3);
+        g.fillStyle = 'rgba(10,60,80,0.5)'; for (let k = -5; k < 10; k += 4) g.fillRect(12, k, 10 + ((k * 7) & 15), 1.5);
+        g.fillStyle = '#24242c'; g.fillRect(9, 18, 30, 12); g.fillStyle = '#ff4a4a'; g.beginPath(); g.arc(16, 24, 2.5, 0, 7); g.fill(); g.fillStyle = '#4aff8a'; g.beginPath(); g.arc(24, 24, 2.5, 0, 7); g.fill(); g.fillStyle = '#ffd23a'; g.beginPath(); g.arc(32, 24, 2.5, 0, 7); g.fill();
+      }
+    });
+    if (c === 'H') return iwFurnSpr(key, function (g) {   // clinic healing machine
+      iwSh(g, 24, 46, 24, 4);
+      iwRR(g, 2, -8, 44, 54, 6, '#c8ccd8'); g.fillStyle = '#eef0f6'; g.fillRect(4, -6, 40, 8); g.fillStyle = '#7a8090'; g.fillRect(2, 42, 44, 4);
+      g.fillStyle = '#2a3040'; iwRR(g, 6, 6, 36, 20, 4, '#2a3040');
+      for (let i = 0; i < 3; i++) { const cx = 13 + i * 11; g.fillStyle = '#d84a4a'; g.beginPath(); g.arc(cx, 16, 4.5, Math.PI, 0); g.fill(); g.fillStyle = '#ffffff'; g.beginPath(); g.arc(cx, 16, 4.5, 0, Math.PI); g.fill(); g.fillStyle = '#2a3040'; g.fillRect(cx - 4.5, 15.4, 9, 1.2); }
+      g.fillStyle = '#4aff8a'; g.fillRect(8, 32, 6, 3); g.fillStyle = '#e04050'; g.fillRect(34, 30, 6, 2); g.fillRect(36, 28, 2, 6);
+    });
+    if (c === 'g') return iwFurnSpr(key, function (g) {   // potted plant
+      iwSh(g, 24, 46, 14, 3.5);
+      g.fillStyle = '#a8582c'; g.beginPath(); g.moveTo(13, 26); g.lineTo(35, 26); g.lineTo(32, 45); g.lineTo(16, 45); g.closePath(); g.fill(); g.fillStyle = '#c8784a'; g.fillRect(12, 24, 24, 5); g.fillStyle = 'rgba(255,255,255,0.2)'; g.fillRect(16, 30, 3, 13);
+      const r = iwRng(v, 5, 133);
+      for (let i = 0; i < 9; i++) { const a = -Math.PI / 2 + (i - 4) * 0.36 + (r() - 0.5) * 0.2, L2 = 20 + r() * 10, ex = 24 + Math.cos(a) * L2 * 0.9, ey = 22 + Math.sin(a) * L2; g.fillStyle = i % 2 ? '#3f9a44' : '#2e7a36'; g.beginPath(); g.moveTo(24, 24); g.quadraticCurveTo((24 + ex) / 2 + Math.sin(a) * 6, (24 + ey) / 2 - Math.cos(a) * 6, ex, ey); g.quadraticCurveTo((24 + ex) / 2 - Math.sin(a) * 6, (24 + ey) / 2 + Math.cos(a) * 6, 24, 24); g.fill(); }
+      g.fillStyle = 'rgba(160,230,140,0.4)'; g.beginPath(); g.ellipse(20, 4, 4, 2, -0.5, 0, 7); g.fill();
+    });
+    if (c === 'x') return iwFurnSpr(key, function (g) {   // stone statue on a plinth
+      iwSh(g, 24, 46, 16, 4);
+      g.fillStyle = '#7a7a84'; g.fillRect(10, 30, 28, 15); g.fillStyle = '#a8a8b2'; g.fillRect(8, 26, 32, 6); g.fillStyle = '#c8c8d2'; g.fillRect(8, 26, 32, 1.5);
+      const gr = g.createRadialGradient(20, -4, 2, 24, 4, 20); gr.addColorStop(0, '#e4e4ec'); gr.addColorStop(1, '#8a8a94'); g.fillStyle = gr;
+      g.beginPath(); g.ellipse(24, 16, 12, 10, 0, Math.PI, 0); g.lineTo(36, 26); g.lineTo(12, 26); g.closePath(); g.fill();
+      g.beginPath(); g.ellipse(24, -2, 8, 9, 0, 0, 7); g.fill(); g.fillStyle = 'rgba(60,60,70,0.35)'; g.fillRect(21, 7, 6, 4);
+    });
+    if (c === 'S') return iwFurnSpr(key, function (g) {   // slot machine
+      iwSh(g, 24, 46, 20, 4);
+      iwRR(g, 6, -22, 36, 68, 6, '#5a2a6a'); g.fillStyle = '#7a3a8a'; g.fillRect(8, -20, 32, 4);
+      g.fillStyle = '#ffd23a'; iwRR(g, 10, -18, 28, 9, 3, '#ffd23a'); g.fillStyle = '#c02a2a'; g.fillRect(14, -16, 20, 5);
+      g.fillStyle = '#1a0a20'; g.fillRect(10, -4, 28, 20); [['#ffd23a', 13], ['#ff5a5a', 21], ['#5af07a', 29]].forEach(function (s) { g.fillStyle = '#f4f2ea'; g.fillRect(s[1], -2, 7, 16); g.fillStyle = s[0]; g.beginPath(); g.arc(s[1] + 3.5, 6, 2.6, 0, 7); g.fill(); });
+      g.fillStyle = '#3a1a48'; g.fillRect(10, 20, 28, 10); g.fillStyle = '#ffd23a'; g.fillRect(14, 23, 20, 3);
+      g.fillStyle = '#c0c0c8'; g.fillRect(41, -6, 3, 16); g.fillStyle = '#e03030'; g.beginPath(); g.arc(42.5, -8, 3.5, 0, 7); g.fill();
+    });
+    if (c === 'Q') return iwCrate(v % 2);
+    if (c === 'Z') return iwFurnSpr(key, function (g) {   // vault door wheel
+      iwRR(g, 2, -6, 44, 50, 4, '#5a606c'); g.fillStyle = '#7a808c'; g.fillRect(4, -4, 40, 3);
+      const gr = g.createRadialGradient(20, 14, 2, 24, 19, 19); gr.addColorStop(0, '#c8ced8'); gr.addColorStop(1, '#6a707c'); g.fillStyle = gr; g.beginPath(); g.arc(24, 19, 17, 0, 7); g.fill();
+      g.strokeStyle = '#3a404c'; g.lineWidth = 3; for (let k = 0; k < 4; k++) { const a = k * Math.PI / 4; g.beginPath(); g.moveTo(24 + Math.cos(a) * 13, 19 + Math.sin(a) * 13); g.lineTo(24 - Math.cos(a) * 13, 19 - Math.sin(a) * 13); g.stroke(); }
+      g.fillStyle = '#ffd23a'; g.beginPath(); g.arc(24, 19, 4, 0, 7); g.fill();
+    });
+    if (c === 'F') return iwFurnSpr(key, function (g) {   // metal grate / security fence
+      const x0 = L ? -1 : 4, x1 = R ? 49 : 44;
+      iwSh(g, 24, 46, 22, 3, 0.2);
+      g.fillStyle = '#5a6270'; if (!L) g.fillRect(3, -6, 4, 52); if (!R) g.fillRect(41, -6, 4, 52);
+      g.fillStyle = '#7a8494'; g.fillRect(x0, -4, x1 - x0, 3); g.fillRect(x0, 40, x1 - x0, 3);
+      g.strokeStyle = 'rgba(168,176,188,0.85)'; g.lineWidth = 1; g.save(); g.beginPath(); g.rect(x0, -1, x1 - x0, 41); g.clip();
+      for (let k = -48; k < 96; k += 7) { g.beginPath(); g.moveTo(k, -1); g.lineTo(k + 41, 40); g.stroke(); g.beginPath(); g.moveTo(k + 41, -1); g.lineTo(k, 40); g.stroke(); } g.restore();
+    });
+    if (c === 'A') return iwFurnSpr(key, function (g) {   // notice board on a stand
+      iwSh(g, 24, 46, 18, 3.5);
+      g.fillStyle = '#5a3a24'; g.fillRect(10, 26, 4, 20); g.fillRect(34, 26, 4, 20);
+      iwRR(g, 3, -10, 42, 38, 3, '#6a2a2a'); g.fillStyle = '#9a4a3a'; g.fillRect(6, -7, 36, 32);
+      g.fillStyle = '#f2e8d0'; g.fillRect(9, -4, 13, 16); g.fillRect(25, -2, 14, 11); g.fillStyle = '#ffffff'; g.fillRect(12, 14, 16, 8);
+      g.fillStyle = '#8a6a40'; for (let k = 0; k < 3; k++) { g.fillRect(11, k * 4, 9, 1.2); g.fillRect(27, 1 + k * 3, 10, 1.2); }
+      g.fillStyle = '#d04040'; g.beginPath(); g.arc(15.5, -3, 1.5, 0, 7); g.arc(32, -1, 1.5, 0, 7); g.fill();
+    });
+    return null;
+  }
+  const IW_FURN = 'BTtDPEHgxSQZFLkA';
+  // Maps drawn by this renderer: everything outdoors, and every interior and cave.
+  function iwMapOn(m) { return !!(m && m.rows); }
+  function iwOpsIn(B) {
+    const ops = [];
+    for (let y = 0; y < IW_N; y++) for (let x = 0; x < IW_N; x++) {
+      const c = B.ch[y][x]; if (IW_FURN.indexOf(c) < 0) continue;
+      const same = function (dx, dy) { return ((B.ch[y + dy] || [])[x + dx]) === c ? 1 : 0; };
+      const vert = c === 'D' || c === 't' || c === 'k' || c === 'L';
+      const sp = iwFurn(c, same(-1, 0), same(1, 0), vert ? same(0, -1) : 0, vert ? same(0, 1) : 0, Math.floor(iwRng(B.ox + x, B.oy + y, 141)() * 4));
+      if (sp) ops.push({ y: (y + 1) * IW_TP, top: y * IW_TP, sp: sp, x: x * IW_TP + IW_TP / 2, ay: (y + 1) * IW_TP - 2 });
+    }
+    ops.sort(function (a, b) { return a.y - b.y; });
+    return ops;
   }
 
 
@@ -8890,12 +9046,12 @@
     try { const tx = IWDB.db.transaction('chunks', 'readwrite'); tx.objectStore('chunks').clear(); tx.oncomplete = tx.onerror = function () { if (cb) cb(); }; } catch (e) { if (cb) cb(); }
   }
 
-  /* "Prepare all maps": draws and saves every chunk of every outdoor map, a little at a time. It gives way to the
+  /* "Prepare all maps": draws and saves every chunk of every map (outdoors, interiors and caves), a little at a time. It gives way to the
      game: it pauses while Tornies is drawing anything itself, and works more gently while Tornies is being played. */
   const IW_PREP = { on: false, list: null, i: 0, it: null, cb: null, timer: 0 };
   function iwPrepList() {
     const out = [];
-    Object.keys(MAPS).forEach(function (id) { const m = MAPS[id]; if (!m.rows || m.indoor) return; if (!m.grid) buildGrid(m); const mx = Math.floor((m.w + 7) / IW_CH), my = Math.floor((m.h + 7) / IW_CH); for (let cy = -1; cy <= my; cy++) for (let cx = -1; cx <= mx; cx++) out.push([m, cx, cy]); });
+    Object.keys(MAPS).forEach(function (id) { const m = MAPS[id]; if (!m.rows || !iwMapOn(m)) return; if (!m.grid) buildGrid(m); const mx = Math.floor((m.w + 7) / IW_CH), my = Math.floor((m.h + 7) / IW_CH); for (let cy = -1; cy <= my; cy++) for (let cx = -1; cx <= mx; cx++) out.push([m, cx, cy]); });
     return out;
   }
   function iwPrepStart(cb) {
@@ -13133,7 +13289,7 @@
     const x0 = Math.floor(camX / 16), y0 = Math.floor(camY / 16), fr2 = Math.floor(T * 1.6) % 2;
     const set = m.indoor ? 'in' : 'out', floor = m.indoor ? (m.tiles || 'o') : (m.bg || 'grass');
     if (m.indoor) fr(0, 0, VW, VH, '#000');
-    const iw = !m.indoor && iwOn && store.get('detailMaps', true) !== false;   // outdoor maps use the illustrated renderer (3g-iworld.js), unless switched off in Settings
+    const iw = iwOn && store.get('detailMaps', true) !== false;   // outdoor maps, interiors and caves all use the illustrated renderer (3g-iworld.js) unless switched off in Settings   // outdoor maps use the illustrated renderer (3g-iworld.js), unless switched off in Settings
     if (iw && iwLoading(m, camX, camY)) return;
     if (!iw) iwWarmStep();
     if (iw) { iwDrawBase(m, camX, camY); iwDrawLive(m, camX, camY, fr2); }
@@ -14368,7 +14524,7 @@
     fr(0, 0, VW, VH, '#000');
     if (scene) scene.draw();
     // Battles and other screens are quiet moments: carry on drawing the current map in the background.
-    if (scene !== worldScene && W.map && !W.map.indoor && IWC.id === W.map && IWC.camX !== undefined && iwOn && store.get('detailMaps', true) !== false) iwPrebake(W.map, IWC.camX, IWC.camY);
+    if (scene !== worldScene && W.map && IWC.id === W.map && IWC.camX !== undefined && iwOn && store.get('detailMaps', true) !== false) iwPrebake(W.map, IWC.camX, IWC.camY);
     modals.forEach(function (m) { if (m.draw) m.draw(); });
     if (flash > 0) fr(0, 0, VW, VH, 'rgba(255,255,255,' + Math.min(1, flash) + ')');
     if (fade > 0) fr(0, 0, VW, VH, 'rgba(0,0,0,' + Math.min(1, fade) + ')');
