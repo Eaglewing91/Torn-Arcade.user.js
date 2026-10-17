@@ -9071,7 +9071,7 @@
   }
   // Bakes one chunk just outside the view each frame, so walking never has to wait for one.
   // Bakes chunks just outside the view a little at a time (one step per frame), so walking never stutters.
-  function iwPrefetch(m, camX, camY) {
+  function iwPrebake(m, camX, camY) {
     if (IWC.id !== m) return;
     const P = IWC.pending;
     if (P && P.m === m) {
@@ -13409,7 +13409,7 @@
     });
     if (iw) iwDrawOver(m, camX, camY);
     drawLighting(m, camX, camY);
-    if (iw) iwPrefetch(m, camX, camY);
+    if (iw) iwPrebake(m, camX, camY);
     if (W.banner) {
       const b = W.banner, k = b.t < 0.3 ? b.t / 0.3 : b.t > 2.2 ? Math.max(0, 1 - (b.t - 2.2) / 0.3) : 1;
       const w = tw(b.name, 9) + 20;
