@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.17.0
+// @version      2.17.1
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with nine game apps: Tornies (a creature-collecting RPG), Torn Invasion (a Doom-style alien shooter), Angry Bogies (a slingshot physics game), Snake, Whack-a-Mole, Card Match, Dirty Bombs, Shooting Range and Flappy Torn. Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -827,6 +827,8 @@
         GAMES.map(function (g) { return '<div class="ta-row"><span class="ta-ricon" style="background:linear-gradient(160deg,' + g.bg[0] + ',' + g.bg[1] + ')">' + g.icon + '</span><div class="ta-rtext"><b>' + (g.title || g.name) + '</b><small>' + g.desc + '</small></div></div>'; }).join('') +
       '</div></div>' +
       '<div class="ta-group"><h3>Tornies</h3><div class="ta-list">' +
+        '<div class="ta-row"><span class="ta-ricon" style="background:#3a9a5a">🗺️</span><div class="ta-rtext"><b>Detailed maps</b><small>Illustrated towns and routes. Turn off for classic pixel maps on slower devices.</small></div><button type="button" class="ta-switch' + (store.get('detailMaps', true) ? ' ta-on' : '') + '" data-set="detailMaps"></button></div>' +
+        '<div class="ta-row"><span class="ta-ricon" style="background:#2f7bd1">⏳</span><div class="ta-rtext"><b>Pre-load maps</b><small>Draws each map in full when you arrive (short loading bar), so walking is perfectly smooth. Off: maps draw as you walk, with no wait.</small></div><button type="button" class="ta-switch' + (store.get('preloadMaps', true) ? ' ta-on' : '') + '" data-set="preloadMaps"></button></div>' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#1c9a8a">🔑</span><div class="ta-rtext"><b>Cheat code</b><small class="ta-cheatmsg">Know a secret word? Type it here.</small>' +
           '<div class="ta-cheat"><input type="text" class="ta-cheatin" autocomplete="off" spellcheck="false" maxlength="40" placeholder="Enter code"><button type="button" class="ta-btn" data-set="cheat">Enter</button></div></div></div>' +
       '</div></div>' +
@@ -886,6 +888,8 @@
     if (k === 'cheat') { tryCheat(); return; }
     if (k === 'keySave') { saveKey(); return; }
     if (k === 'keyDel') { store.set('apiKey', ''); evState = { msg: 'Key removed. Event notifications are off.' }; evStop(); sfx.click(); renderSettings(); return; }
+    if (k === 'preloadMaps') { const on = !store.get('preloadMaps', true); store.set('preloadMaps', on); t.classList.toggle('ta-on', on); sfx.click(); return; }
+    if (k === 'detailMaps') { const on = !store.get('detailMaps', true); store.set('detailMaps', on); t.classList.toggle('ta-on', on); sfx.click(); return; }
     if (k === 'evNotify') { const on = !store.get('evNotify', true); store.set('evNotify', on); t.classList.toggle('ta-on', on); sfx.click(); if (on) evStart(); else evStop(); return; }
     if (k === 'sound') { setMuted(!muted); t.classList.toggle('ta-on', !muted); if (!muted) sfx.click(); return; }
     if (k === 'resetBest' || k === 'resetPocket' || k === 'resetInvasion') {
@@ -3578,7 +3582,7 @@
     }
     if (!m.indoor && isNight()) {
       fr(0, 0, VW, VH, 'rgba(12,16,58,0.55)');
-      if (iwOn) iwNightWindows(m, camX, camY);
+      if (iwOn && store.get('detailMaps', true) !== false) iwNightWindows(m, camX, camY);
       ctx.save(); ctx.globalCompositeOperation = 'lighter';
       const x0 = Math.floor(camX / 16), y0 = Math.floor(camY / 16);
       for (let ty = y0 - 1; ty <= y0 + 11; ty++) for (let tx = x0 - 1; tx <= x0 + 16; tx++) {
@@ -8337,14 +8341,24 @@
      Things that change or move (tall grass, fences, boulders, neon, water ripples) are drawn live on top each frame.
      Purely visual: nothing here changes the map data, collisions or game state, and nothing is fetched. */
   const IW_TP = 48, IW_CH = 8, IW_PAD = 2, IW_N = IW_CH + 2 * IW_PAD, IW_S = IW_N * IW_TP, IW_LO = 12;
-  const IWC = { id: null, chunks: {}, n: 0 };
-  let iwOn = true;   // false = classic pixel tiles (tests compare the two)
+  const IWC = { id: null, chunks: {}, n: 0, pending: null, want: null, arrive: 0 };
+  let iwOn = true;   // false = classic pixel tiles (the 'Detailed maps' setting; tests compare the two)
   const IW_PROF = {}; function iwT(k, t0) { IW_PROF[k] = (IW_PROF[k] || 0) + performance.now() - t0; }
   function iwRng(x, y, s) {
     let st = (Math.imul(x | 0, 73856093) ^ Math.imul(y | 0, 19349663) ^ Math.imul((s | 0) + 1, 83492791)) >>> 0;
     return function () { st = (st + 0x6D2B79F5) >>> 0; let t = st; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
   }
   function iwCv(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d'); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high'; return c; }
+  // Scratch canvases are reused (a ring of each size) instead of being created and thrown away,
+  // which keeps memory steady and avoids stutter on phones.
+  const IW_POOL = { full: [], half: [], fi: 0, hi: 0, img: null };
+  function iwTmp(big) {
+    const list = big ? IW_POOL.full : IW_POOL.half, n = big ? 12 : 22, size = big ? IW_S : IW_N * IW_LO;
+    const i = big ? (IW_POOL.fi = (IW_POOL.fi + 1) % n) : (IW_POOL.hi = (IW_POOL.hi + 1) % n);
+    if (!list[i]) list[i] = iwCv(size, size);
+    const c = list[i], g = c.getContext('2d'); g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1; g.clearRect(0, 0, size, size);
+    return c;
+  }
   function iwHex(h) { const n = parseInt(h.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
   function iwMix(a, b, t) { const A = iwHex(a), B = iwHex(b); return 'rgb(' + A.map(function (v, i) { return Math.round(v + (B[i] - v) * t); }).join(',') + ')'; }
   function iwRgba(h, a) { const c = iwHex(h); return 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + a + ')'; }
@@ -8392,34 +8406,17 @@
       for (let y = 0; y < L; y++) { let s = 0; const row = y * L; for (let x = -r; x <= r; x++) s += a[row + Math.min(L - 1, Math.max(0, x))]; for (let x = 0; x < L; x++) { tmp[row + x] = s / (2 * r + 1); s += a[row + Math.min(L - 1, x + r + 1)] - a[row + Math.max(0, x - r)]; } }
       for (let x = 0; x < L; x++) { let s = 0; for (let y = -r; y <= r; y++) s += tmp[Math.min(L - 1, Math.max(0, y)) * L + x]; for (let y = 0; y < L; y++) { a[y * L + x] = s / (2 * r + 1); s += tmp[Math.min(L - 1, y + r + 1) * L + x] - tmp[Math.max(0, y - r) * L + x]; } }
     }
-    // Scale up with bilinear sampling and sharpen into a smooth edge, all in code (no reading pixels back from a canvas).
-    // Made at half resolution; drawing it scaled up softens the edge by a pixel, which suits the art.
-    const HS = IW_S / 2, hi = iwCv(HS, HS), hg = hi.getContext('2d'), id = hg.createImageData(HS, HS), p = id.data, sc = HS / L;
-    for (let cy = 0; cy < L; cy++) for (let cx = 0; cx < L; cx++) {
-      // Whole cell clearly outside or inside: skip or fill it in one go.
-      let lo = 1, hiv = 0;
-      for (let yy = Math.max(0, cy - 1); yy <= Math.min(L - 1, cy + 1); yy++) for (let xx = Math.max(0, cx - 1); xx <= Math.min(L - 1, cx + 1); xx++) { const v = a[yy * L + xx]; if (v < lo) lo = v; if (v > hiv) hiv = v; }
-      if (hiv <= 0.42) continue;
-      const px0 = cx * sc, py0 = cy * sc;
-      if (lo >= 0.58) { for (let y = py0; y < py0 + sc; y++) for (let x = px0; x < px0 + sc; x++) { const i = (y * HS + x) * 4; p[i] = p[i + 1] = p[i + 2] = p[i + 3] = 255; } continue; }
-      for (let y = py0; y < py0 + sc; y++) {
-        const fy = Math.min(L - 1.001, Math.max(0, (y + 0.5) / sc - 0.5)), y0 = Math.floor(fy), wy = fy - y0, r0 = y0 * L, r1 = Math.min(L - 1, y0 + 1) * L;
-        for (let x = px0; x < px0 + sc; x++) {
-          const fx = Math.min(L - 1.001, Math.max(0, (x + 0.5) / sc - 0.5)), x0 = Math.floor(fx), wx = fx - x0, x1 = Math.min(L - 1, x0 + 1);
-          const v = (a[r0 + x0] * (1 - wx) + a[r0 + x1] * wx) * (1 - wy) + (a[r1 + x0] * (1 - wx) + a[r1 + x1] * wx) * wy;
-          if (v <= 0.42) continue;
-          const i = (y * HS + x) * 4, t = Math.min(1, (v - 0.42) / 0.16);
-          p[i] = p[i + 1] = p[i + 2] = 255; p[i + 3] = Math.round(t * t * (3 - 2 * t) * 255);
-        }
-      }
-    }
+    // Sharpen the blurred field into a smooth edge at 12 px per tile; drawing it scaled up (4x, smoothed) gives
+    // soft anti-aliased edges. Done in code, no reading pixels back from a canvas.
+    const HS = L, hi = iwTmp(false), hg = hi.getContext('2d'), id = IW_POOL.img || (IW_POOL.img = hg.createImageData(HS, HS)), p = id.data;
+    for (let i = 0; i < L * L; i++) { const v = a[i], o = i * 4; if (v <= 0.38) { p[o + 3] = 0; continue; } const t = Math.min(1, (v - 0.38) / 0.24); p[o] = p[o + 1] = p[o + 2] = 255; p[o + 3] = Math.round(t * t * (3 - 2 * t) * 255); }
     hg.putImageData(id, 0, 0);
     return hi;
   }
-  function iwClip(src, mask) { const c = iwCv(IW_S, IW_S), g = c.getContext('2d'); g.drawImage(src, 0, 0); g.globalCompositeOperation = 'destination-in'; g.drawImage(mask, 0, 0, IW_S, IW_S); return c; }
-  function iwFill(col) { const c = iwCv(IW_S, IW_S), g = c.getContext('2d'); g.fillStyle = col; g.fillRect(0, 0, IW_S, IW_S); return c; }
+  function iwClip(src, mask) { const c = iwTmp(true), g = c.getContext('2d'); g.drawImage(src, 0, 0); g.globalCompositeOperation = 'destination-in'; g.drawImage(mask, 0, 0, IW_S, IW_S); return c; }
+  function iwFill(col) { const c = iwTmp(true), g = c.getContext('2d'); g.fillStyle = col; g.fillRect(0, 0, IW_S, IW_S); return c; }
   // The thin band just inside a mask's edge (for shorelines and verges).
-  function iwEdge(mask, inner) { const c = iwCv(mask.width, mask.height), g = c.getContext('2d'); g.drawImage(mask, 0, 0); g.globalCompositeOperation = 'destination-out'; g.drawImage(inner, 0, 0); return c; }
+  function iwEdge(mask, inner) { const c = iwTmp(mask.width === IW_S), g = c.getContext('2d'); g.imageSmoothingEnabled = true; g.drawImage(mask, 0, 0); g.globalCompositeOperation = 'destination-out'; g.drawImage(inner, 0, 0); return c; }
 
   /* ---------- Ground textures ---------- */
   const IW_GROUND = {
@@ -8447,19 +8444,34 @@
     }
     return (IW_DET[key] = c);
   }
-  function iwPaint(B, kind, test) {
-    const c = iwCv(IW_S, IW_S), g = c.getContext('2d'), P = IW_GROUND[kind];
-    g.fillStyle = P.base; g.fillRect(0, 0, IW_S, IW_S);
-    for (let y = 0; y < IW_N; y++) for (let x = 0; x < IW_N; x++) {
-      if (test && !test(x, y)) continue;
-      const r = iwRng(B.ox + x, B.oy + y, kind.length * 7), X = x * IW_TP, Y = y * IW_TP;
-      for (let i = 0; i < 2; i++) iwBlot(g, X + r() * IW_TP, Y + r() * IW_TP, 26 + r() * 40, P.blot[Math.floor(r() * P.blot.length)], kind === 'grass' || kind === 'spooky' ? 0.3 : 0.4);
-    }
-    for (let y = 0; y < IW_N; y++) for (let x = 0; x < IW_N; x++) {
-      if (test && !test(x, y)) continue;
-      g.drawImage(iwDetail(kind, Math.floor(hash(B.ox + x, B.oy + y, 33) * 8)), x * IW_TP - 6, y * IW_TP - 6);
-    }
+  // Seamless textures (12 x 12 tiles, wrapping at the edges), made once per ground type and then just copied.
+  const IW_TEX = {}, IW_TP12 = 12 * IW_TP;
+  function iwTex(kind, paint) {
+    if (IW_TEX[kind]) return IW_TEX[kind];
+    const c = iwCv(IW_TP12, IW_TP12), g = c.getContext('2d');
+    // draw(fn) calls fn at the spot and again wrapped around each edge, so the texture tiles without seams
+    paint(g, function (x, y, reach, fn) { for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const X = x + dx * IW_TP12, Y = y + dy * IW_TP12; if (X + reach < 0 || Y + reach < 0 || X - reach > IW_TP12 || Y - reach > IW_TP12) continue; fn(X, Y); } });
+    return (IW_TEX[kind] = c);
+  }
+  function iwGroundTex(kind) {
+    return iwTex('g' + kind, function (g, wrap) {
+      const P = IW_GROUND[kind]; g.fillStyle = P.base; g.fillRect(0, 0, IW_TP12, IW_TP12);
+      for (let y = 0; y < 12; y++) for (let x = 0; x < 12; x++) { const r = iwRng(x, y, kind.length * 7); for (let i = 0; i < 2; i++) { const px = x * IW_TP + r() * IW_TP, py = y * IW_TP + r() * IW_TP, rr = 26 + r() * 40, col = P.blot[Math.floor(r() * P.blot.length)]; wrap(px, py, rr, function (X, Y) { iwBlot(g, X, Y, rr, col, kind === 'grass' || kind === 'spooky' ? 0.3 : 0.4); }); } }
+      for (let y = 0; y < 12; y++) for (let x = 0; x < 12; x++) { const d = iwDetail(kind, Math.floor(hash(x, y, 33) * 8)); wrap(x * IW_TP - 6, y * IW_TP - 6, 60, function (X, Y) { g.drawImage(d, X, Y); }); }
+    });
+  }
+  // Copies a seamless texture into a scratch canvas, lined up with the chunk's place in the world.
+  function iwLay(B, tex) {
+    const c = iwTmp(true), g = c.getContext('2d'), ox = (((B.ox % 12) + 12) % 12) * IW_TP, oy = (((B.oy % 12) + 12) % 12) * IW_TP;
+    for (let dy = 0; dy <= 1; dy++) for (let dx = 0; dx <= 1; dx++) g.drawImage(tex, dx * IW_TP12 - ox, dy * IW_TP12 - oy);
     return c;
+  }
+  function iwPaint(B, kind) { return iwLay(B, iwGroundTex(kind)); }
+  function iwBlotTex(key, base, cols, a, rmin, rmax, extra) {
+    return iwTex(key, function (g, wrap) {
+      g.fillStyle = base; g.fillRect(0, 0, IW_TP12, IW_TP12);
+      for (let y = 0; y < 12; y++) for (let x = 0; x < 12; x++) { const r = iwRng(x, y, key.length * 13); const px = x * IW_TP + r() * IW_TP, py = y * IW_TP + r() * IW_TP, rr = rmin + r() * (rmax - rmin), col = cols[Math.floor(r() * cols.length)]; wrap(px, py, rr, function (X, Y) { iwBlot(g, X, Y, rr, col, a); }); if (extra) extra(g, wrap, x, y, r); }
+    });
   }
 
   /* ---------- Ground layers ---------- */
@@ -8470,22 +8482,22 @@
     g.drawImage(iwPaint(B, mostly('spooky') ? 'spooky' : 'grass'), 0, 0); iwT('grass', t0); t0 = performance.now();
     // Sand and snow: a wide soft dusting first, then the solid area, so they blend into the grass around them.
     // On a sandy or snowy map the sand/snow also runs under paths, water and paving, so no grass peeks through their edges.
-    yield;
+    yield 1;
     const under = mostly('sand') || mostly('sea') ? 'sand' : snowy ? 'snow' : 'grass';
-    ['sand', 'snow'].forEach(function (k) {
+    for (const k of ['sand', 'snow']) {
       const test = function (kd) { return kd === k || (under === k && ((IW_MADE[kd] && kd !== 'board') || kd === 'path' || kd === 'spath' || kd === 'water')); };
-      const feather = iwMask(B, test, 22, 6); if (!feather) return;
+      const feather = iwMask(B, test, 22, 6); if (!feather) continue;
       const tex = iwPaint(B, k);
-      g.save(); g.globalAlpha = 0.45; g.drawImage(iwClip(tex, feather), 0, 0); g.restore();
-      g.drawImage(iwClip(tex, iwMask(B, test, 12, 0)), 0, 0);
-    });
+      g.save(); g.globalAlpha = 0.45; g.drawImage(iwClip(tex, feather), 0, 0); g.restore(); yield 2;
+      g.drawImage(iwClip(tex, iwMask(B, test, 12, 0)), 0, 0); yield 3;
+    }
     // Dirt paths and packed-snow paths: a darker verge, the path, soft inner shading, then grass tufts over the edge.
     const sandy = mostly('sand');
-    ['path', 'spath'].forEach(function (k) {
-      const test = function (kd) { return kd === k; }, mask = iwMask(B, test, 10, 0); if (!mask) return;
-      if (sandy && k === 'path') { g.drawImage(iwClip(iwPaint(B, k), mask), 0, 0); return; }   // a packed-sand track: no verge on a beach
+    for (const k of ['path', 'spath']) {
+      const test = function (kd) { return kd === k; }, mask = iwMask(B, test, 10, 0); if (!mask) continue;
+      if (sandy && k === 'path') { g.drawImage(iwClip(iwPaint(B, k), mask), 0, 0); continue; }   // a packed-sand track: no verge on a beach
       g.save(); g.globalAlpha = k === 'path' ? 0.45 : 0.35; g.drawImage(iwClip(iwFill(k === 'path' ? '#7a6440' : '#8a9ab0'), iwMask(B, test, 10, 4)), 0, 2); g.restore();
-      g.drawImage(iwClip(iwPaint(B, k), mask), 0, 0);
+      g.drawImage(iwClip(iwPaint(B, k), mask), 0, 0); yield 4;
       g.save(); g.globalAlpha = 0.3; g.drawImage(iwClip(iwFill(k === 'path' ? '#a07a48' : '#9aaabe'), iwEdge(mask, iwMask(B, test, 10, -6))), 0, 0); g.restore();
       if (k === 'path') for (let y = 0; y < IW_N; y++) for (let x = 0; x < IW_N; x++) if (B.kd[y][x] === 'path') {
         const r = iwRng(B.ox + x, B.oy + y, 5);
@@ -8494,8 +8506,9 @@
           for (let i = 0; i < 3; i++) { const px = x * IW_TP + (d[0] ? (d[0] > 0 ? IW_TP - 2 : 2) : 4 + r() * 40), py = y * IW_TP + (d[1] ? (d[1] > 0 ? IW_TP - 1 : 4) : 6 + r() * 40); iwTuft(g, px, py, 5 + r() * 3, r); }
         });
       }
-    });
-    iwT('sandsnowpath', t0); yield; t0 = performance.now(); iwWater(B, snowy); iwT('water', t0); yield; t0 = performance.now();
+      yield 5;
+    }
+    iwT('sandsnowpath', t0); yield 6; t0 = performance.now(); yield* iwWater(B, snowy); iwT('water', t0); yield 7; t0 = performance.now();
     // Man-made ground is drawn tile by tile with crisp edges: paving, roads, boardwalks and walls.
     for (let y = 0; y < IW_N; y++) for (let x = 0; x < IW_N; x++) { const k = B.kd[y][x]; if (k === 'road') iwRoad(B, x, y); }
     for (let y = 0; y < IW_N; y++) for (let x = 0; x < IW_N; x++) { const k = B.kd[y][x]; if (k === 'pave') iwPave(B, x, y); else if (k === 'board') iwBoard(B, x, y); }
@@ -8506,14 +8519,12 @@
       else if (c === 'v') iwLedge(B, x, y);
       else if (c === 'f') iwFlowers(g, x * IW_TP, y * IW_TP, iwRng(B.ox + x, B.oy + y, 9));
     }
-    iwT('made', t0); yield; t0 = performance.now();
+    iwT('made', t0); yield 8; t0 = performance.now();
     // Tall grass: a darker clump under the blades (the blades themselves are drawn live, so they can sway and rustle).
     const tall = iwMask(B, function (kd, c) { return c === ','; }, 8, 2);
     if (tall) {
       g.save(); g.globalAlpha = 0.3; g.drawImage(iwClip(iwFill('#1e4422'), iwMask(B, function (kd, c) { return c === ','; }, 8, 4)), 3, 6); g.restore();
-      const t = iwCv(IW_S, IW_S), tg = t.getContext('2d'); tg.fillStyle = snowy ? '#9cc0b4' : '#4e9a44'; tg.fillRect(0, 0, IW_S, IW_S);
-      for (let y = 0; y < IW_N; y++) for (let x = 0; x < IW_N; x++) { const r = iwRng(B.ox + x, B.oy + y, 13); iwBlot(tg, x * IW_TP + r() * 48, y * IW_TP + r() * 48, 16 + r() * 14, snowy ? '#b8d4ca' : '#3e8838', 0.6); }
-      g.drawImage(iwClip(t, tall), 0, 0);
+      g.drawImage(iwClip(iwLay(B, snowy ? iwBlotTex('tallS', '#9cc0b4', ['#b8d4ca'], 0.6, 16, 30) : iwBlotTex('tall', '#4e9a44', ['#3e8838'], 0.6, 16, 30)), tall), 0, 0);
     }
     iwT('tall', t0);
   }
@@ -8522,18 +8533,16 @@
   }
   /* Water: a bank (sand, or icy snow on snowy maps), the water itself shading deeper away from the shore,
      foam along the edge, and sparkles out in open water. Water that runs off the map or into the next map continues. */
-  function iwWater(B, snowy) {
+  function* iwWater(B, snowy) {
     // Boardwalks over water count as water here, so the water runs on underneath them.
     const g = B.g, test = function (kd, c, x, y) { return kd === 'water' || (kd === 'board' && [[0, -1], [0, 1], [-1, 0], [1, 0]].some(function (d) { return (B.kd[y + d[1]] || [])[x + d[0]] === 'water'; })); };
     const water = iwMask(B, test, 14, -1); if (!water) return;
-    const bank = iwMask(B, test, 16, 10), wet = iwMask(B, test, 14, 5);
+    const bank = iwMask(B, test, 16, 10), wet = iwMask(B, test, 14, 5); yield 9;
     g.drawImage(iwClip(snowy ? iwPaint(B, 'snow') : iwPaint(B, 'sand'), bank), 0, 0);
     g.save(); g.globalAlpha = 0.5; g.drawImage(iwClip(iwFill(snowy ? '#a8bcd0' : '#b49a68'), iwEdge(wet, water)), 0, 0); g.restore();
-    const body = iwCv(IW_S, IW_S), bg = body.getContext('2d');
-    bg.fillStyle = snowy ? '#6cb8da' : '#54b6e0'; bg.fillRect(0, 0, IW_S, IW_S);
-    for (let y = 0; y < IW_N; y++) for (let x = 0; x < IW_N; x++) { const r = iwRng(B.ox + x, B.oy + y, 19); iwBlot(bg, x * IW_TP + r() * 48, y * IW_TP + r() * 48, 30 + r() * 30, r() < 0.5 ? '#70ccec' : '#3f9fd2', 0.35); }
-    g.drawImage(iwClip(body, water), 0, 0);
-    [[-12, 0.28], [-24, 0.28], [-40, 0.25]].forEach(function (d) { const m2 = iwMask(B, test, 18, d[0]); if (!m2) return; g.save(); g.globalAlpha = d[1]; g.drawImage(iwClip(iwFill('#1f6fa8'), m2), 0, 0); g.restore(); });
+    const body = iwLay(B, snowy ? iwBlotTex('wsnow', '#6cb8da', ['#86d0ec', '#4e9ac6'], 0.35, 30, 60) : iwBlotTex('water', '#54b6e0', ['#70ccec', '#3f9fd2'], 0.35, 30, 60));
+    g.drawImage(iwClip(body, water), 0, 0); yield 10;
+    for (const d of [[-12, 0.28], [-24, 0.28], [-40, 0.25]]) { const m2 = iwMask(B, test, 18, d[0]); if (m2) { g.save(); g.globalAlpha = d[1]; g.drawImage(iwClip(iwFill('#1f6fa8'), m2), 0, 0); g.restore(); } yield 11; }
     g.save(); g.globalAlpha = 0.65; g.drawImage(iwClip(iwFill('#ffffff'), iwEdge(water, iwMask(B, test, 14, -5))), 0, 0); g.restore();
     const f2 = iwMask(B, test, 14, -11); if (f2) { g.save(); g.globalAlpha = 0.22; g.drawImage(iwClip(iwFill('#ffffff'), iwEdge(f2, iwMask(B, test, 14, -14))), 0, 0); g.restore(); }
     for (let y = 1; y < IW_N - 1; y++) for (let x = 1; x < IW_N - 1; x++) {
@@ -9009,8 +9018,8 @@
         B.kd[y].push(iwKind(c === 'F' || c === 'R' ? '.' : c, t[1]));   // fences and boulders are drawn live, on their floor
       }
     }
-    const full = iwCv(IW_S, IW_S); B.g = full.getContext('2d');
-    yield* iwGround(B); yield; let t1 = performance.now();
+    const full = IW_POOL.bake || (IW_POOL.bake = iwCv(IW_S, IW_S)); B.g = full.getContext('2d'); B.g.setTransform(1, 0, 0, 1, 0, 0); B.g.globalAlpha = 1; B.g.globalCompositeOperation = 'source-over'; B.g.clearRect(0, 0, IW_S, IW_S);
+    yield* iwGround(B); yield 12; let t1 = performance.now();
     // Everything standing up, in order of where it touches the ground.
     const ops = [];
     for (let y = 0; y < IW_N; y++) for (let x = 0; x < IW_N; x++) {
@@ -9038,50 +9047,136 @@
     });
     ops.sort(function (a, b) { return a.y - b.y; });
     function draw(g, o) { if (o.bld) g.drawImage(o.bld.c, o.x, o.by); else iwStamp(g, o.sp, o.x, o.ay); }
-    ops.forEach(function (o) { draw(B.g, o); });
-    // The parts of trees, lamps and chimneys that rise above their own tile go on a layer drawn over the characters,
-    // so someone standing behind a tree is partly hidden by it.
-    const over = iwCv(IW_S, IW_S), og = over.getContext('2d'); let anyOver = false;
-    ops.forEach(function (o) { const h = o.bld ? o.bld.c.height : o.sp.c.height, t0 = o.bld ? o.by : o.ay - o.sp.ay; if (t0 >= o.top) return; anyOver = true; og.save(); og.beginPath(); og.rect(0, 0, IW_S, o.top); og.clip(); draw(og, o); og.restore(); });
-    const cs = IW_CH * IW_TP, base = iwCv(cs, cs); base.getContext('2d').drawImage(full, IW_PAD * IW_TP, IW_PAD * IW_TP, cs, cs, 0, 0, cs, cs);
-    let ov = null; if (anyOver) { ov = iwCv(cs, cs); ov.getContext('2d').drawImage(over, IW_PAD * IW_TP, IW_PAD * IW_TP, cs, cs, 0, 0, cs, cs); }
-    iwT('objects', t1);
-    return { base: base, over: ov, used: 0 };
+    for (let i = 0; i < ops.length; i++) { draw(B.g, ops[i]); if (ops[i].bld && i < ops.length - 1) yield 13; }
+    yield 14;
+    // The parts of trees, lamps and chimneys that rise above their own tile are redrawn over any character
+    // standing just behind them (see iwDrawOver), so someone behind a tree is partly hidden by it.
+    // Only a short list is kept (no second full-size layer), in chunk pixels.
+    const tall = [];
+    ops.forEach(function (o) { const t0 = o.bld ? o.by : o.ay - o.sp.ay; if (t0 < o.top) tall.push({ o: o, x0: (o.bld ? o.x : o.x - o.sp.ax) - IW_PAD * IW_TP, y0: t0 - IW_PAD * IW_TP, w: o.bld ? o.bld.c.width : o.sp.c.width, top: o.top - IW_PAD * IW_TP }); });
+    yield 99;
+    const cs = IW_CH * IW_TP, base = iwChunkCv(); base.getContext('2d').drawImage(full, IW_PAD * IW_TP, IW_PAD * IW_TP, cs, cs, 0, 0, cs, cs);
+    return { base: base, tall: tall, used: 0 };
   }
+  // Chunk canvases are recycled when old chunks are dropped. Chunks are kept per map, so going back somewhere is instant.
+  const IW_FREE = [];
+  function iwChunkCv() { const c = IW_FREE.pop() || iwCv(IW_CH * IW_TP, IW_CH * IW_TP); c.getContext('2d').clearRect(0, 0, c.width, c.height); return c; }
+  const IW_MAX = 36;
   function iwEvict(keep) {
-    if (IWC.n <= 30) return;
-    let old = null, ok = null; Object.keys(IWC.chunks).forEach(function (q) { if (q !== keep && (!old || IWC.chunks[q].used < old.used)) { old = IWC.chunks[q]; ok = q; } });
-    if (ok) { delete IWC.chunks[ok]; IWC.n--; }
+    const cap = Math.max(IW_MAX, IWC.cap || 0), cur = IWC.id ? IWC.id.id + ':' : '#';
+    while (IWC.n > cap) {
+      let old = null, ok = null;
+      Object.keys(IWC.chunks).forEach(function (q) { if (q === keep) return; const c = IWC.chunks[q], other = q.indexOf(cur) !== 0; if (!old || (other && !old.other) || (other === old.other && c.used < old.c.used)) { old = { c: c, other: other }; ok = q; } });
+      if (!ok) return;
+      IW_FREE.push(old.c.base); delete IWC.chunks[ok]; IWC.n--;
+    }
   }
+  function iwKey(m, cx, cy) { return m.id + ':' + cx + ',' + cy; }
+  function iwStore(k, c) { IWC.chunks[k] = c; c.used = T; IWC.n++; iwEvict(k); }
+  // Bake a chunk right now (only used just after arriving on a map, while the screen is fading in).
   function iwChunk(m, cx, cy) {
-    if (IWC.id !== m) { IWC.id = m; IWC.chunks = {}; IWC.n = 0; IWC.pending = null; }
-    const k = cx + ',' + cy; let c = IWC.chunks[k];
-    if (!c) { c = IWC.chunks[k] = iwBake(m, cx, cy); IWC.n++; iwEvict(k); if (IWC.pending && IWC.pending.k === k) IWC.pending = null; }
+    const k = iwKey(m, cx, cy); let c = IWC.chunks[k];
+    if (!c) { if (IWC.pending) IWC.pending = null; c = iwBake(m, cx, cy); iwStore(k, c); }
     c.used = T; return c;
   }
   const IW_CS = IW_CH * 16;   // chunk size on screen, in game pixels
   function iwView(camX, camY, pad) { return [Math.floor(camX / IW_CS) - pad, Math.floor(camY / IW_CS) - pad, Math.floor((camX + VW - 1) / IW_CS) + pad, Math.floor((camY + VH - 1) / IW_CS) + pad]; }
   function iwDrawBase(m, camX, camY) {
-    const v = iwView(camX, camY, 0);
-    for (let cy = v[1]; cy <= v[3]; cy++) for (let cx = v[0]; cx <= v[2]; cx++) ctx.drawImage(iwChunk(m, cx, cy).base, cx * IW_CS - camX, cy * IW_CS - camY, IW_CS, IW_CS);
+    const v = iwView(camX, camY, 0), sync = T - IWC.arrive < 0.35;
+    for (let cy = v[1]; cy <= v[3]; cy++) for (let cx = v[0]; cx <= v[2]; cx++) {
+      const k = iwKey(m, cx, cy); let c = IWC.chunks[k];
+      if (!c && sync) c = iwChunk(m, cx, cy);
+      if (c) { c.used = T; ctx.drawImage(c.base, cx * IW_CS - camX, cy * IW_CS - camY, IW_CS, IW_CS); }
+      else { iwClassic(m, cx, cy, camX, camY); IWC.want = k; IWC.wantAt = [cx, cy]; }   // not ready yet: classic tiles for a moment, never a freeze
+    }
   }
-  function iwDrawOver(m, camX, camY) {
-    const v = iwView(camX, camY, 0);
-    for (let cy = v[1]; cy <= v[3]; cy++) for (let cx = v[0]; cx <= v[2]; cx++) { const c = iwChunk(m, cx, cy); if (c.over) ctx.drawImage(c.over, cx * IW_CS - camX, cy * IW_CS - camY, IW_CS, IW_CS); }
+  function iwClassic(m, cx, cy, camX, camY) {
+    const set = m.indoor ? 'in' : 'out', floor = m.indoor ? (m.tiles || 'o') : (m.bg || 'grass');
+    for (let ty = cy * IW_CH; ty < (cy + 1) * IW_CH; ty++) for (let tx = cx * IW_CH; tx < (cx + 1) * IW_CH; tx++) {
+      if (tx * 16 - camX > VW || ty * 16 - camY > VH || tx * 16 - camX < -16 || ty * 16 - camY < -16) continue;
+      const inside = tx >= 0 && ty >= 0 && tx < m.w && ty < m.h; if (!inside && m.indoor) continue;
+      let ch = inside ? tileAt(m, tx, ty) : m.border, fl = floor;
+      if (!inside) { const nb = neighbourTile(m, tx, ty); if (nb) { ch = nb[0]; fl = nb[1]; } }
+      ctx.drawImage(tileImg(ch, set, fl, 0, Math.floor(hash(tx, ty, 1) * 4)), tx * 16 - camX, ty * 16 - camY);
+    }
+    m.buildings.forEach(function (b) { if (b.x + b.w > cx * IW_CH && b.x < (cx + 1) * IW_CH && b.y + b.h > cy * IW_CH && b.y < (cy + 1) * IW_CH) { ctx.save(); ctx.beginPath(); ctx.rect(cx * IW_CS - camX, cy * IW_CS - camY, IW_CS, IW_CS); ctx.clip(); ctx.drawImage(bldImg(b), b.x * 16 - camX, b.y * 16 - camY); ctx.restore(); } });
   }
-  // Bakes one chunk just outside the view each frame, so walking never has to wait for one.
-  // Bakes chunks just outside the view a little at a time (one step per frame), so walking never stutters.
+  /* Arriving on a map. With "Pre-load maps" on (the default), the whole map plus a ring around it is drawn first,
+     behind a short loading bar, so walking afterwards never has to draw anything new. With it off, chunks are drawn
+     a step at a time while walking. Returns true while the loading screen is showing. */
+  function iwLoading(m, camX, camY) {
+    if (IWC.id !== m) {
+      IWC.id = m; IWC.arrive = T; IWC.pending = null; IWC.load = null; IWC.cap = 0;
+      if (store.get('preloadMaps', true) !== false) {
+        const pcx = Math.floor(W.p.x / IW_CH), pcy = Math.floor(W.p.y / IW_CH), list = [];
+        for (let cy = -1; cy <= Math.floor((m.h + 7) / IW_CH); cy++) for (let cx = -1; cx <= Math.floor((m.w + 7) / IW_CH); cx++) list.push([cx, cy]);
+        IWC.cap = list.length + 12;
+        const todo = list.filter(function (c) { return !IWC.chunks[iwKey(m, c[0], c[1])]; }).sort(function (a, b) { return (Math.abs(a[0] - pcx) + Math.abs(a[1] - pcy)) - (Math.abs(b[0] - pcx) + Math.abs(b[1] - pcy)); });
+        if (todo.length) IWC.load = { m: m, todo: todo, total: todo.length, done: 0, it: null, shown: T };
+      }
+    }
+    const L = IWC.load; if (!L || L.m !== m) return false;
+    // Work for up to ~12 ms per frame, so the loading bar keeps moving.
+    const t0 = performance.now();
+    while (L.todo.length && performance.now() - t0 < 12) {
+      if (!L.it) { const c = L.todo[0]; if (IWC.chunks[iwKey(m, c[0], c[1])]) { L.todo.shift(); L.done++; continue; } L.it = iwBakeGen(m, c[0], c[1]); }
+      const r = L.it.next();
+      if (r.done) { const c = L.todo.shift(); iwStore(iwKey(m, c[0], c[1]), r.value); L.it = null; L.done++; }
+    }
+    if (!L.todo.length) { IWC.load = null; IWC.arrive = T; return false; }
+    // loading screen
+    fr(0, 0, VW, VH, '#0e1626');
+    const k = L.done / L.total, w = 140, x = (VW - w) / 2, y = VH / 2 + 6;
+    text(fillNames(m.name), VW / 2, y - 26, '#e6ecff', { sz: 10, al: 'center', light: true });
+    text('Loading map\u2026', VW / 2, y - 12, '#8a98c0', { sz: 7, al: 'center', sh: false });
+    roundRect(ctx, x, y, w, 8, 4); ctx.fillStyle = '#26324e'; ctx.fill();
+    roundRect(ctx, x + 1, y + 1, Math.max(6, (w - 2) * k), 6, 3); ctx.fillStyle = '#5ab4f0'; ctx.fill();
+    return true;
+  }
+  function iwIsLoading() { return !!IWC.load; }
+  // Redraw tree tops, lamp heads and chimneys over characters standing just behind them.
+  function iwDrawOver(m, camX, camY, ents) {
+    const v = iwView(camX, camY, 0);
+    ctx.save(); ctx.imageSmoothingEnabled = true;
+    for (let cy = v[1]; cy <= v[3]; cy++) for (let cx = v[0]; cx <= v[2]; cx++) {
+      const c = IWC.chunks[iwKey(m, cx, cy)]; if (!c || !c.tall || !c.tall.length) continue;
+      const ox = cx * IW_CS - camX, oy = cy * IW_CS - camY;
+      c.tall.forEach(function (t) {
+        // in screen pixels: the part of this object above its own tile
+        const x0 = ox + t.x0 / 3, x1 = x0 + t.w / 3, y0 = oy + t.y0 / 3, y1 = oy + t.top / 3;
+        for (let i = 0; i < ents.length; i++) {
+          const e = ents[i], ex = e[0], ey = e[1];
+          if (ex + 16 <= x0 || ex >= x1 || ey + 12 <= y0 || ey - 4 >= y1) continue;
+          ctx.save(); ctx.beginPath(); ctx.rect(Math.max(x0, ex - 2), Math.max(y0, ey - 6), Math.min(x1, ex + 18) - Math.max(x0, ex - 2), y1 - Math.max(y0, ey - 6)); ctx.clip();
+          const o = t.o;
+          if (o.bld) ctx.drawImage(o.bld.c, ox + (o.x - IW_PAD * IW_TP) / 3, oy + (o.by - IW_PAD * IW_TP) / 3, o.bld.c.width / 3, o.bld.c.height / 3);
+          else ctx.drawImage(o.sp.c, ox + (Math.round(o.x - o.sp.ax) - IW_PAD * IW_TP) / 3, oy + (Math.round(o.ay - o.sp.ay) - IW_PAD * IW_TP) / 3, o.sp.c.width / 3, o.sp.c.height / 3);
+          ctx.restore(); break;
+        }
+      });
+    }
+    ctx.restore();
+  }
+  // Bakes chunks a little at a time (one small step per frame): anything on screen first, then the nearest ones around it.
   function iwPrebake(m, camX, camY) {
     if (IWC.id !== m) return;
     const P = IWC.pending;
     if (P && P.m === m) {
       if (IWC.chunks[P.k]) { IWC.pending = null; return; }
-      const r = P.it.next();
-      if (r.done) { IWC.pending = null; IWC.chunks[P.k] = r.value; r.value.used = T; IWC.n++; iwEvict(P.k); }
+      const r = P.it.next(); IW_PROF.stepCount = (IW_PROF.stepCount || 0) + 1;
+      if (r.done) { IWC.pending = null; iwStore(P.k, r.value); }
       return;
     }
-    const v = iwView(camX, camY, 1);
-    for (let cy = v[1]; cy <= v[3]; cy++) for (let cx = v[0]; cx <= v[2]; cx++) if (!IWC.chunks[cx + ',' + cy]) { IWC.pending = { m: m, k: cx + ',' + cy, it: iwBakeGen(m, cx, cy) }; return; }
+    IWC.pending = null;
+    let best = null, bd = 1e9;
+    if (IWC.want && !IWC.chunks[IWC.want] && IWC.want.indexOf(m.id + ':') === 0) best = IWC.wantAt;
+    else {
+      const v = iwView(camX, camY, 1), mx = (camX + VW / 2) / IW_CS - 0.5, my = (camY + VH / 2) / IW_CS - 0.5;
+      const maxX = Math.floor((m.w + 7) / IW_CH), maxY = Math.floor((m.h + 7) / IW_CH);
+      for (let cy = Math.max(-1, v[1]); cy <= Math.min(maxY, v[3]); cy++) for (let cx = Math.max(-1, v[0]); cx <= Math.min(maxX, v[2]); cx++) if (!IWC.chunks[iwKey(m, cx, cy)]) { const d = (cx - mx) * (cx - mx) + (cy - my) * (cy - my); if (d < bd) { bd = d; best = [cx, cy]; } }
+    }
+    IWC.want = null;
+    if (best) IWC.pending = { m: m, k: iwKey(m, best[0], best[1]), it: iwBakeGen(m, best[0], best[1]) };
   }
 
   /* ---------- Live layer: tall grass, water, fences, boulders, neon ---------- */
@@ -9140,19 +9235,169 @@
     ctx.restore();
   }
   // Night: building windows glow.
+  let IW_GLOW = null;
   function iwNightWindows(m, camX, camY) {
-    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    if (!IW_GLOW) IW_GLOW = iwSpr('glow', 84, 84, 42, 42, function (g) { const gr = g.createRadialGradient(42, 42, 2, 42, 42, 42); gr.addColorStop(0, 'rgba(255,190,100,0.22)'); gr.addColorStop(1, 'rgba(255,190,100,0)'); g.fillStyle = gr; g.fillRect(0, 0, 84, 84); });
+    ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = 'rgba(255,196,100,0.5)';
     (m.buildings || []).forEach(function (b) {
       if (!b._win || (b.x + b.w) * 16 < camX || b.x * 16 > camX + VW || (b.y + b.h) * 16 < camY || b.y * 16 > camY + VH) return;
-      b._win.forEach(function (w, i) { if (hash(b.x + i, b.y, 71) < 0.25) return; ctx.fillStyle = 'rgba(255,196,100,0.5)'; ctx.fillRect(w[0] / 3 - camX, w[1] / 3 - camY, w[2] / 3, w[3] / 3); const cx = (w[0] + w[2] / 2) / 3 - camX, cy = (w[1] + w[3]) / 3 - camY, gr = ctx.createRadialGradient(cx, cy, 1, cx, cy, 14); gr.addColorStop(0, 'rgba(255,190,100,0.22)'); gr.addColorStop(1, 'rgba(255,190,100,0)'); ctx.fillStyle = gr; ctx.fillRect(cx - 14, cy - 14, 28, 28); });
+      b._win.forEach(function (w, i) { if (hash(b.x + i, b.y, 71) < 0.25) return; ctx.fillRect(w[0] / 3 - camX, w[1] / 3 - camY, w[2] / 3, w[3] / 3); ctx.drawImage(IW_GLOW.c, (w[0] + w[2] / 2) / 3 - camX - 14, (w[1] + w[3]) / 3 - camY - 14, 28, 28); });
     });
     ctx.restore();
   }
   // Whole-map render (used by the tests to check every map).
   function iwRenderWhole(m) {
     const c = iwCv(m.w * IW_TP, m.h * IW_TP), g = c.getContext('2d'), cs = IW_CH * IW_TP;
-    for (let cy = 0; cy * IW_CH < m.h; cy++) for (let cx = 0; cx * IW_CH < m.w; cx++) { const k = iwBake(m, cx, cy); g.drawImage(k.base, cx * cs, cy * cs); if (k.over) g.drawImage(k.over, cx * cs, cy * cs); }
+    for (let cy = 0; cy * IW_CH < m.h; cy++) for (let cx = 0; cx * IW_CH < m.w; cx++) { const k = iwBake(m, cx, cy); g.drawImage(k.base, cx * cs, cy * cs); IW_FREE.push(k.base); }
     return c;
+  }
+
+  /* ================= Illustrated interiors and caves ================= */
+  function iwKindIn(ch, fl) {
+    if (ch === ' ' || ch === null || ch === undefined) return 'void';
+    if (ch === 'w') return 'wall';
+    if (ch === 'K') return 'rock';
+    if (ch === '~') return 'water';
+    if ('GCMJWY'.indexOf(ch) >= 0) return 'f' + ch;
+    if ((ch === 'R' || ch === 'x') && fl === 'o') return 'fG';
+    return 'f' + fl;
+  }
+  // Wall and floor colours for each kind of building.
+  const IW_WALLS = {
+    o: { paper: '#efe2c4', stripe: 'rgba(170,130,80,0.10)', base: '#8a5a3a', crown: '#d8c49c', deco: 'frame' },
+    O: { paper: '#f2f6f4', stripe: 'rgba(60,150,140,0.08)', base: '#5a8a8a', crown: '#d8e4e2', band: '#7cc6bc', deco: 'poster' },
+    G: { paper: '#dccaa6', stripe: 'rgba(120,90,50,0.16)', base: '#8a7050', crown: '#efe2c8', blocks: 1, deco: 'banner' },
+    M: { paper: '#9ca4b0', stripe: 'rgba(40,50,60,0.12)', base: '#4a525e', crown: '#bcc4ce', panels: 1, deco: 'hazard' },
+    Y: { paper: '#7a1a2a', stripe: 'rgba(240,190,90,0.12)', base: '#3a0a14', crown: '#d8a840', deco: 'sconce' },
+    W: { paper: '#ccd8c6', stripe: 'rgba(60,80,60,0.08)', base: '#6a7a68', crown: '#e2eadc', wainscot: '#a8b8a4', deco: 'notice' },
+    J: { paper: '#c4e0f2', stripe: 'rgba(255,255,255,0.3)', base: '#7aa6c8', crown: '#eaf6ff', deco: 'icicle' },
+    C: { paper: '#8a7a68', stripe: 'rgba(40,30,20,0.15)', base: '#4a3e34', crown: '#a8988a', deco: '' }
+  };
+  function iwFloorTile(B, x, y, f) {
+    const g = B.g, X = x * IW_TP, Y = y * IW_TP, gx = B.ox + x, gy = B.oy + y, r = iwRng(gx, gy, 101);
+    if (f === 'o') {   // honey wood planks, staggered
+      const cols = ['#d8a868', '#cf9e5e', '#ddb072', '#c99858'];
+      for (let k = 0; k < 4; k++) {
+        const py = Y + k * 12, row = gy * 4 + k, off = (hash(row, 3, 7) * 48) | 0;
+        g.fillStyle = cols[Math.floor(hash(row, gx, 9) * 4)]; g.fillRect(X, py, IW_TP, 12);
+        g.fillStyle = 'rgba(255,240,210,0.25)'; g.fillRect(X, py, IW_TP, 1.5);
+        g.fillStyle = 'rgba(110,70,30,0.35)'; g.fillRect(X, py + 11, IW_TP, 1);
+        const jx = ((off + gx * 48) % 96) - gx * 48 % 96; for (let jj = -96; jj < 96; jj += 96) { const xx = X + ((off - (gx * 48) % 96 + 192 + jj) % 96); if (xx >= X && xx < X + IW_TP) { g.fillStyle = 'rgba(110,70,30,0.4)'; g.fillRect(xx, py, 1.2, 12); } }
+        g.strokeStyle = 'rgba(150,100,50,0.18)'; g.lineWidth = 0.8; g.beginPath(); g.moveTo(X, py + 4 + r() * 4); g.bezierCurveTo(X + 16, py + 3 + r() * 6, X + 32, py + 3 + r() * 6, X + 48, py + 4 + r() * 4); g.stroke();
+      }
+    } else if (f === 'O') {   // glossy clinic tiles
+      for (let j = 0; j < 2; j++) for (let i = 0; i < 2; i++) { const light = ((gx * 2 + i) + (gy * 2 + j)) % 2 === 0; g.fillStyle = light ? '#f6f7fa' : '#e2e8ef'; g.fillRect(X + i * 24, Y + j * 24, 24, 24); g.fillStyle = 'rgba(255,255,255,0.6)'; g.fillRect(X + i * 24 + 2, Y + j * 24 + 2, 8, 2); g.fillStyle = 'rgba(150,160,180,0.45)'; g.fillRect(X + i * 24 + 23, Y + j * 24, 1, 24); g.fillRect(X + i * 24, Y + j * 24 + 23, 24, 1); }
+    } else if (f === 'G') {   // sandstone slabs
+      for (let j = 0; j < 2; j++) for (let i = 0; i < 2; i++) { const q = iwRng(gx * 2 + i, gy * 2 + j, 103); g.fillStyle = ['#d6c49e', '#ccb894', '#dccba8', '#c8b48e'][Math.floor(q() * 4)]; g.fillRect(X + i * 24, Y + j * 24, 24, 24); g.fillStyle = 'rgba(255,250,235,0.35)'; g.fillRect(X + i * 24 + 1, Y + j * 24 + 1, 22, 1.5); g.fillStyle = 'rgba(120,96,60,0.35)'; g.fillRect(X + i * 24, Y + j * 24 + 23, 24, 1); g.fillRect(X + i * 24 + 23, Y + j * 24, 1, 24); if (q() < 0.3) { g.fillStyle = 'rgba(140,110,70,0.3)'; g.beginPath(); g.arc(X + i * 24 + 6 + q() * 12, Y + j * 24 + 6 + q() * 12, 1.5, 0, 7); g.fill(); } }
+    } else if (f === 'M') {   // metal plates with rivets and tread
+      g.fillStyle = '#7c8490'; g.fillRect(X, Y, IW_TP, IW_TP);
+      g.strokeStyle = 'rgba(255,255,255,0.12)'; g.lineWidth = 2; for (let k = -48; k < 48; k += 9) { g.beginPath(); g.moveTo(X + k, Y + 48); g.lineTo(X + k + 6, Y + 42); g.stroke(); g.beginPath(); g.moveTo(X + k + 20, Y + 30); g.lineTo(X + k + 26, Y + 24); g.stroke(); }
+      g.fillStyle = 'rgba(255,255,255,0.18)'; g.fillRect(X, Y, IW_TP, 1.5); g.fillRect(X, Y, 1.5, IW_TP); g.fillStyle = 'rgba(0,0,0,0.3)'; g.fillRect(X, Y + IW_TP - 1.5, IW_TP, 1.5); g.fillRect(X + IW_TP - 1.5, Y, 1.5, IW_TP);
+      [[5, 5], [43, 5], [5, 43], [43, 43]].forEach(function (p) { g.fillStyle = '#a8b0bc'; g.beginPath(); g.arc(X + p[0], Y + p[1], 1.8, 0, 7); g.fill(); g.fillStyle = '#4a525c'; g.beginPath(); g.arc(X + p[0] + 0.6, Y + p[1] + 0.6, 1, 0, 7); g.fill(); });
+    } else if (f === 'Y') {   // casino carpet: red with gold lozenges
+      g.fillStyle = '#8e1a2c'; g.fillRect(X, Y, IW_TP, IW_TP);
+      for (let j = 0; j < 2; j++) for (let i = 0; i < 2; i++) { const cx = X + i * 24 + 12, cy = Y + j * 24 + 12; g.fillStyle = '#c89a3a'; g.beginPath(); g.moveTo(cx, cy - 9); g.lineTo(cx + 9, cy); g.lineTo(cx, cy + 9); g.lineTo(cx - 9, cy); g.closePath(); g.fill(); g.fillStyle = '#6a1020'; g.beginPath(); g.moveTo(cx, cy - 5); g.lineTo(cx + 5, cy); g.lineTo(cx, cy + 5); g.lineTo(cx - 5, cy); g.closePath(); g.fill(); g.fillStyle = '#e8c060'; g.beginPath(); g.arc(cx, cy, 1.6, 0, 7); g.fill(); g.fillStyle = 'rgba(232,192,96,0.5)'; g.fillRect(cx + 11, cy - 1, 2, 2); }
+    } else if (f === 'W') {   // worn hospital vinyl
+      for (let j = 0; j < 2; j++) for (let i = 0; i < 2; i++) { const q = iwRng(gx * 2 + i, gy * 2 + j, 107); g.fillStyle = ['#a9b8a4', '#a2b29e', '#b0beaa', '#9cac98'][Math.floor(q() * 4)]; g.fillRect(X + i * 24, Y + j * 24, 24, 24); for (let k = 0; k < 6; k++) { g.fillStyle = q() < 0.5 ? 'rgba(60,70,55,0.25)' : 'rgba(240,248,236,0.35)'; g.fillRect(X + i * 24 + q() * 22, Y + j * 24 + q() * 22, 1.5, 1.5); } g.fillStyle = 'rgba(70,82,66,0.4)'; g.fillRect(X + i * 24 + 23, Y + j * 24, 1, 24); g.fillRect(X + i * 24, Y + j * 24 + 23, 24, 1); }
+      if (r() < 0.12) { g.fillStyle = 'rgba(90,100,70,0.18)'; g.beginPath(); g.ellipse(X + 24, Y + 24, 14, 8, r(), 0, 7); g.fill(); }
+    } else if (f === 'J') {   // polished ice
+      const gr = g.createLinearGradient(X, Y, X + IW_TP, Y + IW_TP); gr.addColorStop(0, '#dff0fb'); gr.addColorStop(1, '#c4e2f4'); g.fillStyle = gr; g.fillRect(X, Y, IW_TP, IW_TP);
+      g.strokeStyle = 'rgba(255,255,255,0.7)'; g.lineWidth = 1.2; g.beginPath(); g.moveTo(X + r() * 20, Y + 6 + r() * 10); g.lineTo(X + 20 + r() * 26, Y + r() * 14); g.stroke();
+      g.strokeStyle = 'rgba(140,190,220,0.4)'; g.lineWidth = 0.8; g.beginPath(); g.moveTo(X + r() * 48, Y + 30 + r() * 16); g.lineTo(X + r() * 48, Y + 24 + r() * 20); g.stroke();
+    } else if (f === 'C') {
+      // cave floor is drawn as a soft layer elsewhere
+    }
+  }
+  function iwWallTile(B, x, y, st) {
+    const g = B.g, X = x * IW_TP, Y = y * IW_TP, W2 = IW_WALLS[st] || IW_WALLS.o, gx = B.ox + x, gy = B.oy + y;
+    const below = (B.kd[y + 1] || [])[x], above = (B.kd[y - 1] || [])[x], lower = below !== 'wall';
+    g.fillStyle = W2.paper; g.fillRect(X, Y, IW_TP, IW_TP);
+    if (W2.blocks) { for (let row = 0; row < 3; row++) { const o2 = (gy * 3 + row) % 2 ? 12 : 0; for (let i = -1; i < 3; i++) { g.fillStyle = 'rgba(110,84,50,0.25)'; g.fillRect(X + i * 24 + o2, Y + row * 16, 1, 16); } g.fillRect(X, Y + row * 16 + 15, IW_TP, 1); } }
+    else if (W2.panels) { g.fillStyle = 'rgba(0,0,0,0.18)'; g.fillRect(X + IW_TP - 1, Y, 1, IW_TP); g.fillStyle = 'rgba(255,255,255,0.15)'; g.fillRect(X, Y, 1, IW_TP); [[6, 8], [42, 8], [6, 40], [42, 40]].forEach(function (p) { g.fillStyle = '#c4ccd6'; g.beginPath(); g.arc(X + p[0], Y + p[1], 1.6, 0, 7); g.fill(); }); }
+    else for (let k = 0; k < 4; k++) { g.fillStyle = W2.stripe; g.fillRect(X + k * 12 + 2, Y, 5, IW_TP); }
+    if (above !== 'wall') { g.fillStyle = W2.crown; g.fillRect(X, Y, IW_TP, 7); g.fillStyle = 'rgba(0,0,0,0.15)'; g.fillRect(X, Y + 7, IW_TP, 2); g.fillStyle = 'rgba(255,255,255,0.35)'; g.fillRect(X, Y, IW_TP, 1.5); }
+    if (lower) {
+      if (W2.wainscot) { g.fillStyle = W2.wainscot; g.fillRect(X, Y + 22, IW_TP, 26); g.fillStyle = 'rgba(255,255,255,0.3)'; g.fillRect(X, Y + 22, IW_TP, 1.5); }
+      if (W2.band) { g.fillStyle = W2.band; g.fillRect(X, Y + 20, IW_TP, 5); }
+      g.fillStyle = W2.base; g.fillRect(X, Y + IW_TP - 10, IW_TP, 10); g.fillStyle = 'rgba(255,255,255,0.22)'; g.fillRect(X, Y + IW_TP - 10, IW_TP, 1.5);
+      if (below && below !== 'void') { const sg = g.createLinearGradient(0, Y + IW_TP, 0, Y + IW_TP + 9); sg.addColorStop(0, 'rgba(0,0,0,0.22)'); sg.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = sg; g.fillRect(X, Y + IW_TP, IW_TP, 9); }
+      // the odd decoration, only above clear floor
+      const fr = B.ch[y + 1] && B.ch[y + 1][x], clear = fr && 'oOGMCYWJ'.indexOf(fr) >= 0;
+      if (clear && hash(gx, gy, 113) < 0.2) iwWallDeco(g, X, Y, W2.deco, hash(gx, gy, 115));
+    }
+  }
+  function iwWallDeco(g, X, Y, kind, h) {
+    if (kind === 'frame') { const cols = ['#5a9ad8', '#e07a5a', '#6ab46a', '#d8b040']; g.fillStyle = '#7a5230'; g.fillRect(X + 12, Y + 8, 24, 20); g.fillStyle = cols[Math.floor(h * 4)]; g.fillRect(X + 15, Y + 11, 18, 14); g.fillStyle = 'rgba(255,255,255,0.45)'; g.beginPath(); g.moveTo(X + 15, Y + 25); g.lineTo(X + 22, Y + 16); g.lineTo(X + 27, Y + 21); g.lineTo(X + 33, Y + 14); g.lineTo(X + 33, Y + 25); g.closePath(); g.fill(); }
+    else if (kind === 'poster') { g.fillStyle = '#ffffff'; g.fillRect(X + 14, Y + 6, 20, 26); g.strokeStyle = '#7cc6bc'; g.lineWidth = 1.5; g.strokeRect(X + 14, Y + 6, 20, 26); g.fillStyle = '#e04050'; g.fillRect(X + 22, Y + 10, 4, 12); g.fillRect(X + 18, Y + 14, 12, 4); g.fillStyle = '#9aa6b0'; g.fillRect(X + 17, Y + 25, 14, 1.5); g.fillRect(X + 17, Y + 28, 10, 1.5); }
+    else if (kind === 'banner') { g.fillStyle = h < 0.5 ? '#c03a3a' : '#3a6ac0'; g.fillRect(X + 16, Y + 4, 16, 28); g.beginPath(); g.moveTo(X + 16, Y + 32); g.lineTo(X + 24, Y + 38); g.lineTo(X + 32, Y + 32); g.fill(); g.fillStyle = '#f0c040'; g.beginPath(); g.arc(X + 24, Y + 16, 4, 0, 7); g.fill(); }
+    else if (kind === 'hazard') { g.fillStyle = '#f0c030'; g.beginPath(); g.moveTo(X + 24, Y + 8); g.lineTo(X + 36, Y + 30); g.lineTo(X + 12, Y + 30); g.closePath(); g.fill(); g.strokeStyle = '#2a2a2a'; g.lineWidth = 2; g.stroke(); g.fillStyle = '#2a2a2a'; g.fillRect(X + 23, Y + 15, 2, 8); g.fillRect(X + 23, Y + 25, 2, 2); }
+    else if (kind === 'sconce') { g.fillStyle = '#d8a840'; g.fillRect(X + 21, Y + 18, 6, 12); g.fillStyle = '#fff2b0'; g.beginPath(); g.ellipse(X + 24, Y + 14, 5, 7, 0, 0, 7); g.fill(); const gr = g.createRadialGradient(X + 24, Y + 14, 1, X + 24, Y + 14, 18); gr.addColorStop(0, 'rgba(255,220,140,0.45)'); gr.addColorStop(1, 'rgba(255,220,140,0)'); g.fillStyle = gr; g.fillRect(X + 6, Y - 4, 36, 36); }
+    else if (kind === 'notice') { g.fillStyle = '#c8b890'; g.fillRect(X + 10, Y + 8, 28, 20); g.fillStyle = '#ffffff'; g.fillRect(X + 13, Y + 11, 9, 11); g.fillRect(X + 25, Y + 12, 10, 8); g.fillStyle = '#d04040'; g.beginPath(); g.arc(X + 17, Y + 11, 1.4, 0, 7); g.arc(X + 30, Y + 12, 1.4, 0, 7); g.fill(); }
+    else if (kind === 'icicle') { g.fillStyle = 'rgba(255,255,255,0.85)'; for (let k = 0; k < 5; k++) { const ix = X + 5 + k * 9 + h * 4; g.beginPath(); g.moveTo(ix - 3, Y + 6); g.lineTo(ix + 3, Y + 6); g.lineTo(ix, Y + 14 + ((k * 7 + h * 10) % 10)); g.closePath(); g.fill(); } }
+  }
+  function iwExitMat(B, x, y) {
+    const g = B.g, X = x * IW_TP, Y = y * IW_TP, L = B.ch[y][x - 1] === 'm', R2 = B.ch[y][x + 1] === 'm';
+    const x0 = X + (L ? 0 : 5), x1 = X + IW_TP - (R2 ? 0 : 5);
+    g.fillStyle = 'rgba(0,0,0,0.2)'; g.fillRect(x0 + 2, Y + 10, x1 - x0, 32);
+    g.fillStyle = '#b8343a'; g.fillRect(x0, Y + 8, x1 - x0, 32); g.fillStyle = '#d65058'; g.fillRect(x0 + (L ? 0 : 3), Y + 11, x1 - x0 - (L ? 0 : 3) - (R2 ? 0 : 3), 26);
+    g.strokeStyle = 'rgba(255,220,200,0.5)'; g.lineWidth = 1; for (let k = 0; k < 4; k++) { g.beginPath(); g.moveTo(x0 + 2, Y + 15 + k * 6); g.lineTo(x1 - 2, Y + 15 + k * 6); g.stroke(); }
+    g.fillStyle = '#f0e0c8'; for (let xx = x0 + 2; xx < x1 - 1; xx += 4) { g.fillRect(xx, Y + 40, 1.4, 4); g.fillRect(xx, Y + 4, 1.4, 4); }
+  }
+  function iwStairs(B, x, y, up) {
+    const g = B.g, X = x * IW_TP, Y = y * IW_TP;
+    g.fillStyle = '#5a4430'; g.fillRect(X + 2, Y, IW_TP - 4, IW_TP);
+    for (let i = 0; i < 5; i++) { const sy = Y + 3 + i * 9, sh = up ? i : 4 - i, c = ['#7a5a3a', '#8a6a48', '#9a7a56', '#aa8a64', '#ba9a72'][sh]; g.fillStyle = c; g.fillRect(X + 5, sy, IW_TP - 10, 8); g.fillStyle = 'rgba(255,240,210,0.4)'; g.fillRect(X + 5, sy, IW_TP - 10, 1.5); g.fillStyle = 'rgba(0,0,0,0.25)'; g.fillRect(X + 5, sy + 7, IW_TP - 10, 1); }
+    g.fillStyle = '#4a3420'; g.fillRect(X + 2, Y, 4, IW_TP); g.fillRect(X + IW_TP - 6, Y, 4, IW_TP);
+    g.fillStyle = '#ffffff'; g.beginPath(); if (up) { g.moveTo(X + 36, Y + 8); g.lineTo(X + 42, Y + 15); g.lineTo(X + 30, Y + 15); } else { g.moveTo(X + 36, Y + 15); g.lineTo(X + 42, Y + 8); g.lineTo(X + 30, Y + 8); } g.closePath(); g.fill();
+  }
+  function iwLadder(B, x, y, hole) {
+    const g = B.g, X = x * IW_TP, Y = y * IW_TP;
+    if (hole) { g.fillStyle = 'rgba(0,0,0,0.3)'; g.beginPath(); g.ellipse(X + 25, Y + 27, 20, 15, 0, 0, 7); g.fill(); const gr = g.createRadialGradient(X + 24, Y + 26, 2, X + 24, Y + 26, 18); gr.addColorStop(0, '#000000'); gr.addColorStop(1, '#2a2018'); g.fillStyle = gr; g.beginPath(); g.ellipse(X + 24, Y + 25, 18, 13, 0, 0, 7); g.fill(); g.strokeStyle = '#5a4a3a'; g.lineWidth = 2.5; g.stroke(); }
+    g.fillStyle = '#8a6a3a'; g.fillRect(X + 14, Y + (hole ? 12 : 0), 4, hole ? 34 : 46); g.fillRect(X + 30, Y + (hole ? 12 : 0), 4, hole ? 34 : 46);
+    g.fillStyle = '#b08a50'; for (let yy = Y + (hole ? 16 : 4); yy < Y + 46; yy += 8) g.fillRect(X + 14, yy, 20, 3);
+    if (!hole) { g.fillStyle = 'rgba(0,0,0,0.25)'; g.fillRect(X + 12, Y + 44, 24, 4); }
+  }
+  // Interiors and caves: floors, walls, cave rock, pools, mats, stairs and ladders.
+  function* iwGroundIn(B) {
+    const g = B.g, cave = B.m.cave || B.m.tiles === 'C', st = B.m.tiles || 'o';
+    g.fillStyle = '#000000'; g.fillRect(0, 0, IW_S, IW_S);
+    // Caves: rocky walls everywhere first, then the floor as a soft organic shape cut out of the rock.
+    const isFloor = function (kd) { return kd !== 'void' && kd !== 'rock' && kd !== 'wall'; };
+    if (B.kd.some(function (row) { return row.indexOf('rock') >= 0; })) {
+      const rk = iwLay(B, iwTex('rock', function (rg, wrap) { rg.fillStyle = '#3e3238'; rg.fillRect(0, 0, IW_TP12, IW_TP12); for (let y = 0; y < 12; y++) for (let x = 0; x < 12; x++) { const r = iwRng(x, y, 121); for (let i = 0; i < 3; i++) { const px = x * IW_TP + r() * 48, py = y * IW_TP + r() * 48, rx = 10 + r() * 14, ry = 7 + r() * 9, rot = r() * 3; wrap(px, py, 26, function (X, Y) { const lg = rg.createRadialGradient(X - rx * 0.3, Y - ry * 0.4, 1, X, Y, rx); lg.addColorStop(0, '#6e5e62'); lg.addColorStop(0.6, '#4e4046'); lg.addColorStop(1, '#2e2428'); rg.fillStyle = lg; rg.beginPath(); rg.ellipse(X, Y, rx, ry, rot, 0, 7); rg.fill(); }); } } }));
+      const vm = iwMask(B, function (kd) { return kd !== 'void'; }, 6, 0);
+      if (vm) g.drawImage(iwClip(rk, vm), 0, 0);
+    }
+    yield 16;
+    const fm = iwMask(B, function (kd) { return isFloor(kd); }, 10, -2);
+    if (fm && cave) {
+      // dirt floor, with a dark band where it meets the rock (the rock wall casting a shadow)
+      const ft = iwLay(B, iwBlotTex('cavefloor', '#7a6650', ['#8a7660', '#665440'], 0.4, 20, 46, function (fg, wrap, x, y, r) { for (let i = 0; i < 6; i++) { const px = x * IW_TP + r() * 48, py = y * IW_TP + r() * 48, a = 1 + r() * 2, b2 = 0.8 + r() * 1.4, rot = r() * 3, col = r() < 0.5 ? 'rgba(50,38,26,0.45)' : 'rgba(190,170,140,0.45)'; wrap(px, py, 4, function (X, Y) { fg.fillStyle = col; fg.beginPath(); fg.ellipse(X, Y, a, b2, rot, 0, 7); fg.fill(); }); } }));
+      if (st === 'C') g.drawImage(iwClip(ft, fm), 0, 0);
+      g.save(); g.globalAlpha = 0.45; g.drawImage(iwClip(iwFill('#1a1210'), iwEdge(fm, iwMask(B, function (kd) { return isFloor(kd); }, 10, -12))), 0, 0); g.restore();
+      // a lighter lip along the rock above each floor edge
+      for (let y = 1; y < IW_N; y++) for (let x = 0; x < IW_N; x++) if (B.kd[y][x] === 'rock' && isFloor(B.kd[y + 1] && B.kd[y + 1][x])) { const X = x * IW_TP, Y = y * IW_TP, sg = g.createLinearGradient(0, Y + 26, 0, Y + 48); sg.addColorStop(0, 'rgba(120,100,104,0)'); sg.addColorStop(1, 'rgba(120,100,104,0.55)'); g.fillStyle = sg; g.fillRect(X, Y + 26, IW_TP, 20); }
+    }
+    yield 17;
+    // Crisp floors (and cave tiles that aren't dirt, e.g. metal floors in the Racket's vault).
+    for (let y = 0; y < IW_N; y++) for (let x = 0; x < IW_N; x++) { const k = B.kd[y][x]; if (k[0] === 'f' && !(cave && k === 'fC')) { g.save(); if (cave && fm) { g.beginPath(); g.rect(x * IW_TP, y * IW_TP, IW_TP, IW_TP); g.clip(); } iwFloorTile(B, x, y, k[1]); g.restore(); } }
+    // Water: a natural pool in caves, a tiled pool indoors.
+    const wm = iwMask(B, function (kd) { return kd === 'water'; }, cave ? 12 : 2, cave ? -2 : 0);
+    if (wm) {
+      const body = iwTmp(true), bg = body.getContext('2d'); bg.fillStyle = cave ? '#2a5a7a' : '#4aa6d8'; bg.fillRect(0, 0, IW_S, IW_S);
+      for (let y = 0; y < IW_N; y++) for (let x = 0; x < IW_N; x++) { const r = iwRng(B.ox + x, B.oy + y, 125); iwBlot(bg, x * IW_TP + r() * 48, y * IW_TP + r() * 48, 24 + r() * 20, cave ? '#3a7090' : '#6cc0ea', 0.4); }
+      g.drawImage(iwClip(body, wm), 0, 0);
+      if (cave) { g.save(); g.globalAlpha = 0.5; g.drawImage(iwClip(iwFill('#c8d8e0'), iwEdge(wm, iwMask(B, function (kd) { return kd === 'water'; }, 12, -6))), 0, 0); g.restore(); }
+      else for (let y = 0; y < IW_N; y++) for (let x = 0; x < IW_N; x++) if (B.kd[y][x] === 'water') [[0, -1], [0, 1], [-1, 0], [1, 0]].forEach(function (d) { const nk = iwNb(B, x, y, d[0], d[1]); if (!nk || nk === 'water') return; const X = x * IW_TP, Y = y * IW_TP; g.fillStyle = '#e8eef4'; if (d[1]) g.fillRect(X, d[1] > 0 ? Y + IW_TP - 6 : Y, IW_TP, 6); else g.fillRect(d[0] > 0 ? X + IW_TP - 6 : X, Y, 6, IW_TP); g.fillStyle = 'rgba(20,60,90,0.3)'; if (d[1] < 0) g.fillRect(X, Y + 6, IW_TP, 6); if (d[0] < 0) g.fillRect(X + 6, Y, 5, IW_TP); });
+    }
+    yield 18;
+    for (let y = 0; y < IW_N; y++) for (let x = 0; x < IW_N; x++) {
+      const c = B.ch[y][x];
+      if (c === 'w') iwWallTile(B, x, y, st);
+      else if (c === 'm') iwExitMat(B, x, y);
+      else if (c === '<' || c === '>') iwStairs(B, x, y, c === '>');
+      else if (c === 'U' || c === 'V') iwLadder(B, x, y, c === 'V');
+    }
   }
 
   /* ================= World rebuild: Red-scale maps ================= */
@@ -13347,7 +13592,8 @@
     const x0 = Math.floor(camX / 16), y0 = Math.floor(camY / 16), fr2 = Math.floor(T * 1.6) % 2;
     const set = m.indoor ? 'in' : 'out', floor = m.indoor ? (m.tiles || 'o') : (m.bg || 'grass');
     if (m.indoor) fr(0, 0, VW, VH, '#000');
-    const iw = !m.indoor && iwOn;   // outdoor maps use the illustrated renderer (3g-iworld.js)
+    const iw = !m.indoor && iwOn && store.get('detailMaps', true) !== false;   // outdoor maps use the illustrated renderer (3g-iworld.js), unless switched off in Settings
+    if (iw && iwLoading(m, camX, camY)) return;
     if (iw) { iwDrawBase(m, camX, camY); iwDrawLive(m, camX, camY, fr2); }
     else for (let ty = y0; ty <= y0 + 10; ty++) for (let tx = x0; tx <= x0 + 15; tx++) {
       const inside = tx >= 0 && ty >= 0 && tx < m.w && ty < m.h;
@@ -13407,7 +13653,7 @@
         }
       }
     });
-    if (iw) iwDrawOver(m, camX, camY);
+    if (iw) iwDrawOver(m, camX, camY, ents.filter(function (e) { return !(e.n && (e.n.def.kind === 'capsule')); }).map(function (e) { return [Math.round(e.pos[0] - camX), Math.round(e.pos[1] - camY)]; }));
     drawLighting(m, camX, camY);
     if (iw) iwPrebake(m, camX, camY);
     if (W.banner) {
@@ -13420,12 +13666,13 @@
   const worldScene = {
     timed: true,
     update: function (dt) {
+      if (iwIsLoading()) return;   // nothing moves while a map is pre-loading
       updatePlayer(dt); updateNpcs(dt);
       if (W.banner) { W.banner.t += dt; if (W.banner.t > 2.6) W.banner = null; }
     },
     draw: drawWorld,
     btn: function (b) {
-      if (W.busy || W.p.moving || fade > 0) return;
+      if (W.busy || W.p.moving || fade > 0 || iwIsLoading()) return;
       if (b === 'a') interact();
       else if (b === 'start') runScript(startMenu);
     }
