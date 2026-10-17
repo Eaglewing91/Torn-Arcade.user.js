@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.15.2
+// @version      2.16.0
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with nine game apps: Tornies (a creature-collecting RPG), Torn Invasion (a Doom-style alien shooter), Angry Bogies (a slingshot physics game), Snake, Whack-a-Mole, Card Match, Dirty Bombs, Shooting Range and Flappy Torn. Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -3383,6 +3383,182 @@
   // The Tornie Log goal leaves out event-only Tornies (like the one you can only get from a gift code).
   const DEX_GOAL = DEX_SIZE - 1;
   function dexCount() { return Object.keys(G.caught || {}).filter(function (n) { return SP[n] && !SP[n].event; }).length; }
+
+  /* ---------- Move descriptions ----------
+     A short flavour line per move. The rules text (category, power, accuracy, effects) is built from the move's
+     own data by moveInfo(), so it always matches what the move really does in battle. */
+  const MOVE_FLAVOUR = {
+    tackle: 'Slams into the foe with its whole body.',
+    scratch: 'Rakes the foe with sharp claws.',
+    quick_attack: 'A lightning-quick lunge.',
+    growl: 'A menacing snarl that makes the foe hesitate.',
+    tail_whip: 'Mocks the foe until it drops its guard.',
+    harden: 'Tenses every muscle to brace for impact.',
+    defense_curl: 'Rolls up into a tight, tough ball.',
+    growth: 'Soaks up energy and blooms with strength.',
+    smokescreen: 'Blows a cloud of smoke in the foe\'s face.',
+    screech: 'An ear-splitting shriek that rattles the foe.',
+    headbutt: 'Rams the foe head-first.',
+    body_slam: 'Flops onto the foe with its full weight.',
+    fury_swipes: 'A rapid flurry of swipes.',
+    hyper_fang: 'Sinks huge front teeth into the foe.',
+    take_down: 'A reckless full-speed charge.',
+    swift: 'Fires a spray of star-shaped bolts that home in.',
+    ember: 'Flicks hot cinders at the foe.',
+    flame_wheel: 'Wraps itself in fire and rolls into the foe.',
+    fire_fang: 'Bites with blazing fangs.',
+    flamethrower: 'Breathes a roaring stream of fire.',
+    water_gun: 'Squirts a jet of water.',
+    bubble: 'Blasts the foe with bursting bubbles.',
+    aqua_jet: 'Rushes the foe on a surge of water.',
+    water_pulse: 'Hits the foe with a pulsing ring of water.',
+    aqua_tail: 'Swings its tail like a crashing riptide.',
+    withdraw: 'Pulls back into its shell.',
+    vine_whip: 'Lashes the foe with thin vines.',
+    absorb: 'Drains a little energy from the foe.',
+    mega_drain: 'Draws deep on the foe\'s energy.',
+    razor_leaf: 'Launches leaves as sharp as blades.',
+    magical_leaf: 'A strange leaf that chases the foe down.',
+    seed_bomb: 'Lobs hard seeds that burst on impact.',
+    sleep_powder: 'Scatters a dust that makes the foe drowsy.',
+    stun_spore: 'Releases pollen that numbs the foe.',
+    poison_powder: 'Sprinkles a cloud of toxic dust.',
+    thundershock: 'A sharp jolt of electricity.',
+    spark: 'Charges into the foe crackling with static.',
+    thunder_wave: 'A weak pulse of current that locks up muscles.',
+    shock_wave: 'A bolt of electricity that always finds its mark.',
+    thunderbolt: 'Hurls a lance of lightning.',
+    gust: 'Whips up a strong gale with its wings.',
+    peck: 'Jabs the foe with a pointed beak.',
+    wing_attack: 'Slaps the foe with outstretched wings.',
+    aerial_ace: 'Dives from the sky too fast to dodge.',
+    drill_peck: 'Spins like a drill and spears the foe.',
+    string_shot: 'Sprays sticky silk that gums up the foe.',
+    bug_bite: 'Crunches the foe with strong jaws.',
+    struggle_bug: 'A buzzing swarm that breaks the foe\'s focus.',
+    rock_throw: 'Hurls a chunk of brick at the foe.',
+    rock_tomb: 'Buries the foe\'s feet in rubble.',
+    smack_down: 'Slams a heavy stone down on the foe.',
+    mud_slap: 'Flings mud into the foe\'s eyes.',
+    sand_attack: 'Kicks grit into the foe\'s face.',
+    bulldoze: 'Stomps so hard the ground ripples.',
+    bite: 'Chomps down with sharp teeth.',
+    feint_attack: 'Lures the foe in, then strikes when it\'s off guard.',
+    karate_chop: 'A precise knife-hand chop.',
+    double_kick: 'A quick one-two combination.',
+    rock_smash: 'A punch that cracks rock and armour.',
+    confusion: 'A burst of mental force.',
+    poison_sting: 'Jabs the foe with a venom-tipped barb.',
+    metal_claw: 'Slashes with claws of hard chrome.',
+    struggle: 'Out of moves, it lashes out with whatever it has left.',
+    pump_iron: 'A quick workout that bulks up body and guard.',
+    low_sweep: 'Sweeps the foe\'s legs out from under it.',
+    uppercut: 'A rising punch to the jaw.',
+    haymaker: 'A huge wind-up punch with everything behind it.',
+    frost_nip: 'A biting blast of cold air.',
+    icicle_dart: 'Fires a sharp icicle before the foe can react.',
+    snowball: 'Pelts the foe with a packed snowball.',
+    chill_bite: 'Bites with fangs coated in frost.',
+    frost_breath: 'Exhales a freezing gust.',
+    whiteout: 'Calls down a blinding blizzard.',
+    spook: 'Pops out of nowhere to give the foe a fright.',
+    haunt_touch: 'A chilling touch from beyond.',
+    soul_drain: 'Saps the foe\'s spirit to restore its own.',
+    shade_ball: 'Hurls a ball of shadowy energy.',
+    phantom_rush: 'Vanishes, then strikes from the shadows.',
+    wyrm_breath: 'Breathes ancient, crackling dragon fire.',
+    mythic_claw: 'Rakes with claws older than the city.',
+    ancient_roar: 'A roar from the dawn of Torn City.',
+    wyrmrage: 'An all-out rampage of mythic fury.',
+    hypno_gaze: 'Stares into the foe\'s eyes until it drifts off.',
+    brainwave: 'Sends a powerful wave of thought.',
+    focus_up: 'Clears its mind and steadies its will.',
+    mind_crush: 'Crushes the foe with sheer willpower.',
+    gear_grind: 'Grinds the foe between spinning gears.',
+    plating: 'Bolts extra metal plates onto its body.',
+    iron_ram: 'Rams the foe with an iron-hard head.',
+    steel_beam: 'Fires a searing beam of molten steel.',
+    sludge_spray: 'Sprays the foe with toxic sludge.',
+    toxic_fang: 'Bites with fangs dripping venom.',
+    acid_bath: 'Drenches the foe in burning acid.',
+    sand_blast: 'Blasts the foe with a storm of sand.',
+    dig_strike: 'Burrows underground and bursts up beneath the foe.',
+    quake: 'Shakes the whole street with a mighty quake.',
+    air_blade: 'Slices the foe with blades of air.',
+    cyclone: 'Whips up a spinning cyclone.',
+    magma_burst: 'Erupts with a burst of molten rock.',
+    firestorm: 'Charges in wrapped in a raging firestorm.',
+    harbour_surge: 'Calls up a wave from the harbour.',
+    tidal_crash: 'Brings down a crashing tidal wave.',
+    thorn_storm: 'Whips up a storm of razor thorns.',
+    solar_burst: 'Gathers sunlight and fires it in one blast.',
+    regrow: 'Regrows damaged leaves and stems.',
+    volt_fang: 'Bites with fangs charged with electricity.',
+    overcharge: 'Releases every last volt at once.',
+    stinger_volley: 'Fires a volley of sharp stingers.',
+    swarm_strike: 'Calls in a swarm to overwhelm the foe.',
+    gem_beam: 'Fires a beam of light through a gemstone.',
+    boulder_crash: 'Drops a massive boulder on the foe.',
+    backstab: 'Slips behind the foe and strikes a weak spot.',
+    blackout: 'Plunges the foe into total darkness.',
+    pickpocket: 'Swipes at the foe with quick fingers.',
+    shout: 'A furious shout that saps the foe\'s strength.',
+    breather: 'Takes a moment to catch its breath.',
+    rampage: 'Goes on a reckless, all-out rampage.',
+    overmind: 'Unleashes the full power of its mind.',
+    daydream: 'Drags the foe into a strange daydream.',
+    wave_rider: 'Rides a rolling wave straight into the foe.',
+    sky_lift: 'Carries the foe up high and drops it.',
+    heavy_lift: 'Hoists the foe overhead and slams it down.',
+    floodlight: 'Blinds the foe with a dazzling floodlight.'
+  };
+  const MV_STAT = { atk: 'Power', def: 'Guard', spa: 'Focus', spd: 'Resolve', spe: 'Speed', acc: 'aim', eva: 'dodging' };
+  const MV_ST = { brn: 'scorch', par: 'stun', psn: 'poison', slp: 'put to sleep', frz: 'freeze' };
+  // Rules text built from the move data: what it does beyond plain damage.
+  function moveEffects(M) {
+    const f = M.fx || {}, out = [], c = f.c || 100;
+    if (f.prio) out.push('Always goes first.');
+    if (M.cat !== 'X' && M.acc === 0) out.push('Never misses.');
+    if (f.hits) out.push(Array.isArray(f.hits) ? 'Hits 2-5 times in a row.' : 'Hits ' + f.hits + ' times in a row.');
+    if (f.crit) out.push('High chance of a critical hit.');
+    if (f.st) {
+      const verb = MV_ST[f.st] || 'affect';
+      out.push(M.cat === 'X' ? (f.st === 'slp' ? 'Puts the foe to sleep.' : f.st === 'psn' ? 'Poisons the foe.' : f.st === 'par' ? 'Stuns the foe.' : f.st === 'brn' ? 'Scorches the foe.' : 'Freezes the foe.')
+        : c + '% chance to ' + verb + (f.st === 'slp' ? '' : ' the foe') + '.');
+    }
+    if (f.conf) out.push(f.conf + '% chance to daze the foe.');
+    if (f.flinch) out.push(f.flinch + '% chance to make the foe lose its turn.');
+    if (f.stat) f.stat.forEach(function (s) {
+      const who = f.self ? 'its own' : 'the foe\'s', n = Math.abs(s[1]), up = s[1] > 0;
+      const t = (up ? 'Raises ' : 'Lowers ') + who + ' ' + MV_STAT[s[0]] + (n > 1 ? ' sharply' : '') + '.';
+      out.push(M.cat === 'X' || c >= 100 ? t : c + '% chance: ' + t.charAt(0).toLowerCase() + t.slice(1));
+    });
+    if (f.selfStat) f.selfStat.forEach(function (s) { out.push(c + '% chance to raise its own ' + MV_STAT[s[0]] + '.'); });
+    if (f.drain) out.push('Restores HP equal to ' + Math.round(f.drain * 100) + '% of the damage dealt.');
+    if (f.heal) out.push('Restores ' + Math.round(f.heal * 100) + '% of its max HP.');
+    if (f.recoil) out.push('The user takes ' + Math.round(f.recoil * 100) + '% of the damage dealt as recoil.');
+    if (f.thaw) out.push('Thaws the user out if it is frozen.');
+    return out.join(' ');
+  }
+  function moveDesc(id) { const M = MOVES[id]; if (!M) return ''; const e = moveEffects(M); return (MOVE_FLAVOUR[id] || '') + (e ? ' ' + e : ''); }
+  // One line of numbers: category, power and accuracy.
+  function moveStats(id) {
+    const M = MOVES[id]; if (!M) return '';
+    const cat = M.cat === 'P' ? 'Physical' : M.cat === 'S' ? 'Special' : 'Status';
+    return cat + (M.pow ? '  ·  Power ' + M.pow : '') + '  ·  Accuracy ' + (M.acc ? M.acc + '%' : '—');
+  }
+  // Draws a move's details in a box: optional name, type chip and numbers, then the wrapped description.
+  function drawMoveInfo(id, x, y, w, h, o) {
+    const M = MOVES[id]; if (!M) return;
+    o = o || {};
+    box(x, y, w, h);
+    let yy = y + 5;
+    if (o.name) { text(M.name, x + 8, yy, '#303846', { sz: 9 }); if (o.right) text(o.right, x + w - 8, yy + 1, '#5a6474', { sz: 7, al: 'right' }); yy += 12; }
+    typeChip(M.type, x + 8, yy, 40);
+    text(moveStats(id), x + 53, yy + 1, '#5a6474', { sz: 6.5 });
+    yy += 11;
+    wrapText(moveDesc(id), w - 16, 6.5).forEach(function (l, k) { if (k === 0 || yy + k * 7.6 + 6.5 <= y + h - 2) text(l, x + 8, yy + k * 7.6, '#303846', { sz: 6.5, sh: false }); });
+  }
 
   /* ---------- World extras: night, hidden things, fences, fishing, legends, taxi ---------- */
   let forceNight = null;   // tests can force day or night
@@ -11448,11 +11624,18 @@
   function summaryScreen(i, list) {
     list = list || G.party;
     return new Promise(function (res) {
-      const m = { i: i };
+      const m = { i: i, mv: -1 };   // mv >= 0: looking at move details
       m.btn = function (b) {
-        const n = list.length;
+        const n = list.length, nm = list[m.i].moves.length;
+        if (m.mv >= 0) {
+          if (b === 'up') { m.mv = (m.mv + nm - 1) % nm; blip(); }
+          else if (b === 'down') { m.mv = (m.mv + 1) % nm; blip(); }
+          else if (b === 'a' || b === 'b') { m.mv = -1; blip(); }
+          return;
+        }
         if (b === 'left' || b === 'up') { m.i = (m.i + n - 1) % n; blip(); cry(list[m.i].sp); }
         else if (b === 'right' || b === 'down') { m.i = (m.i + 1) % n; blip(); cry(list[m.i].sp); }
+        else if (b === 'a' && nm) { m.mv = 0; blip(); }
         else if (b === 'a' || b === 'b') { blip(); pop(m); res(); }
       };
       m.draw = function () {
@@ -11481,6 +11664,7 @@
           if (dz) for (let j = 0; j < 10; j++) fr(160 + j * 4, 15 + k * 12, 3, 2, j < dz ? '#e0a020' : '#d8dce4');
         });
         box(106, 78, 130, 78);
+        if (m.mv >= 0) { roundRect(ctx, 109, 82 + m.mv * 18, 124, 18.5, 3); ctx.fillStyle = '#fff4d8'; ctx.fill(); ctx.lineWidth = 1; ctx.strokeStyle = '#f08a30'; ctx.stroke(); }
         mon.moves.forEach(function (mv, k) {
           const M = MOVES[mv.id], y = 84 + k * 18;
           text(M.name, 113, y, '#303846', { sz: 8.5 });
@@ -11488,6 +11672,8 @@
           text(mv.pp + '/' + M.pp + ' uses', 228, y + 9, '#5a6474', { sz: 7, al: 'right' });
         });
         text('◀ ▶', 98, 9, '#8a94a4', { sz: 6, al: 'right' });
+        if (m.mv >= 0 && mon.moves[m.mv]) drawMoveInfo(mon.moves[m.mv].id, 4, 4, 232, 72, { name: true, right: mon.moves[m.mv].pp + '/' + MOVES[mon.moves[m.mv].id].pp + ' uses' });
+        else if (mon.moves.length) text('A: moves', 82, 10, '#8a94a4', { sz: 6, al: 'right', sh: false });
       };
       push(m); cry(list[i].sp);
     });
@@ -12850,6 +13036,7 @@
         else if (b === 'b') { blip(); pop(m); res(-1); }
       };
       m.draw = function () {
+        drawMoveInfo(pm.moves[m.i].id, 0, 39, 240, 33);   // between the two HP boxes, so both stay visible
         box(0, 116, 166, 44);
         pm.moves.forEach(function (mv, k) {
           const x = 8 + (k % 2) * 79, y = 124 + Math.floor(k / 2) * 16;
@@ -13039,12 +13226,7 @@
       drawBehind: function () { screenBg('#4a6a9a', '#2a3e64'); box(8, 4, 160, 16); text('Which move should it drop?', 16, 7.5, '#303846', { sz: 8.5 }); },
       draw: function () {
         const id = sel < m.moves.length ? m.moves[sel].id : newId, M = MOVES[id];
-        box(8, 112, 224, 44);
-        typeChip(M.type, 16, 119, 44);
-        text(M.cat === 'X' ? 'Status' : M.cat === 'P' ? 'Physical' : 'Special', 66, 119.5, '#5a6474', { sz: 8 });
-        text('Power ' + (M.pow || '-'), 16, 134, '#303846', { sz: 8.5 });
-        text('Accuracy ' + (M.acc || '-'), 90, 134, '#303846', { sz: 8.5 });
-        text('Uses ' + M.pp, 176, 134, '#303846', { sz: 8.5 });
+        drawMoveInfo(id, 8, 101, 224, 55, { name: true, right: 'Uses ' + M.pp });
         ctx.drawImage(monSprite(m.sp, false, m.rk), 172, 26, 64, 64);
       }
     });
