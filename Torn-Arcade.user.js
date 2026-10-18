@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.23.0
+// @version      2.23.1
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with five game apps: Tornies (a creature-collecting RPG), Torn Invasion (a Doom-style alien shooter), Angry Bogies (a slingshot physics game), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -17496,37 +17496,40 @@
       // Levels 8-15 (rebalanced in 2.23.0): every thug can be reached by a sensible shot, steel is only used for
       // pillars and caps (never fully boxing a thug in), toughness rises gently, and each level has a bogie or two
       // more than it strictly needs, so three stars are possible with good shots.
-      { name: 'Northridge', theme: 'snow', tough: 1.35, zoom: 0.72, birds: ['triple', 'hammer', 'bomb', 'triple', 'classic', 'classic'], build: function () {
-        const i = B.tower(18.2, GY, [['glass', 2.6, 1.6, 'glass', 'small'], ['glass', 2.2, 1.5, 'glass', 'helmet'], ['glass', 1.8, 1.3, 'wood', 'small']]);
-        B.box('glass', 18.2, i, 0.8, 0.8);
-        const P = B.plat(26.4, GY, 5.6, 1.2);
-        const f1 = B.hall('wood', 26.4, P, 2, 2.6, 1.8, 'stone', ['big', 'small']);
-        const f2 = B.frame('glass', 26.4, f1, 2.6, 1.5, 'wood'); B.thug('helmet', 26.4, f1); B.thug('small', 26.4, f2);
-        B.box('dirty', 30.4, GY, 0.7, 0.9);
-        const l1 = B.frame('wood', 33.2, GY, 2.6, 1.8, 'wood'); B.thug('big', 33.2, GY);
-        const l2 = B.frame('glass', 33.2, l1, 2.0, 1.4, 'wood'); B.thug('small', 33.2, l1); B.box('wood', 33.2, l2, 0.8, 0.8);
+      { name: 'Northridge', theme: 'snow', tough: 1.5, zoom: 0.66, birds: ['bomb', 'hammer', 'triple', 'bomb', 'triple', 'hammer', 'classic'], build: function () {
+        const i = B.tower(18.4, GY, [['glass', 2.6, 1.6, 'glass', 'small'], ['glass', 2.4, 1.5, 'glass', 'helmet'], ['glass', 2.2, 1.4, 'glass', 'small'], ['glass', 2.0, 1.3, 'glass', 'small'], ['glass', 1.8, 1.2, 'wood', 'small']]);
+        B.box('glass', 18.4, i, 0.8, 0.8);
+        B.box('dirty', 22.4, GY, 0.7, 0.9);
+        const P = B.plat(27.4, GY, 6.4, 1.6);
+        const f1 = B.hall('stone', 27.4, P, 2, 2.8, 2.0, 'stone', ['big', 'helmet']);
+        const f2 = B.frame('stone', 27.4, f1, 3.6, 2.0, 'stone'); B.thug('boss', 27.4, f1);
+        const f3 = B.frame('glass', 27.4, f2, 2.4, 1.5, 'wood'); B.thug('helmet', 27.4, f2); B.thug('small', 27.4, f3);
+        B.box('dirty', 33.0, GY, 0.7, 0.9);
+        const l1 = B.hall('wood', 37.4, GY, 2, 2.6, 1.8, 'wood', ['big', 'small']);
+        const l2 = B.hall('wood', 37.4, l1, 2, 2.4, 1.6, 'stone', ['helmet', 'small']);
+        const l3 = B.frame('glass', 37.4, l2, 2.4, 1.4, 'wood'); B.thug('big', 37.4, l2); B.box('wood', 37.4, l3, 0.9, 0.9);
       } },
-      { name: 'Council Plaza', theme: 'plaza', tough: 1.45, zoom: 0.7, birds: ['hammer', 'bomb', 'triple', 'hammer', 'triple', 'bomb', 'classic'], build: function () {
+      { name: 'Council Plaza', theme: 'plaza', tough: 1.55, zoom: 0.7, birds: ['hammer', 'bomb', 'triple', 'hammer', 'triple', 'bomb', 'classic'], build: function () {
         const g = B.frame('stone', 17, GY, 2.4, 1.6, 'wood'); B.thug('helmet', 17, GY); B.box('glass', 17, g, 0.8, 0.8);
         [22.8, 29.6].forEach(function (x) {
           const top = B.tower(x, GY, [['stone', 3.0, 1.9, 'stone', 'big'], ['wood', 2.6, 1.7, 'wood', 'helmet'], ['wood', 2.2, 1.5, 'glass', 'small'], ['glass', 1.8, 1.3, 'wood', 'small']]);
           B.box('wood', x, top, 0.8, 0.8);
         });
-        let d = GY; for (let i = 0; i < 2; i++) d = B.box('dirty', 26.2, d, 0.7, 0.9);
+        B.box('dirty', 26.2, GY, 0.7, 0.9); B.box('dirty', 32.1, GY, 0.7, 0.9);
         const v1 = B.frame('steel', 34.6, GY, 3.0, 2.0, 'wood'); B.thug('boss', 34.6, GY);
         B.frame('glass', 34.6, v1, 2.2, 1.4, 'wood'); B.thug('small', 34.6, v1);
       } },
-      { name: 'Don Varro\'s Vault', theme: 'vault', tough: 1.55, zoom: 0.66, birds: ['bomb', 'hammer', 'triple', 'bomb', 'hammer', 'triple', 'classic', 'classic'], build: function () {
+      { name: 'Don Varro\'s Vault', theme: 'vault', tough: 1.65, zoom: 0.66, birds: ['bomb', 'hammer', 'triple', 'bomb', 'hammer', 'triple', 'classic', 'classic'], build: function () {
         let w = GY; for (let i = 0; i < 3; i++) w = B.box('stone', 16.8, w, 0.9, 0.9); B.thug('helmet', 16.8, w);
         const k1 = B.hall('wood', 24, GY, 3, 2.6, 2.0, 'stone', ['big', 'boss', 'big']);
         const k2 = B.hall('wood', 24, k1, 2, 2.6, 1.7, 'wood', ['helmet', 'small']);
         const k3 = B.frame('glass', 24, k2, 2.4, 1.4, 'wood'); B.thug('small', 24, k2); B.thug('helmet', 24, k3);
-        let d = GY; for (let i = 0; i < 2; i++) d = B.box('dirty', 29.6, d, 0.7, 0.9);
+        B.box('dirty', 29.6, GY, 0.7, 0.9); B.box('dirty', 19.0, GY, 0.7, 0.9);
         const v1 = B.hall('stone', 35, GY, 2, 2.6, 1.9, 'wood', ['helmet', 'big']);
         const v2 = B.frame('wood', 35, v1, 2.4, 1.5, 'glass'); B.thug('small', 35, v1); B.box('glass', 35, v2, 0.8, 0.8);
       } },
       // 11-15: new levels. Bigger forts, more thugs and more to smash, with dirty-bomb crates placed for chain reactions.
-      { name: 'Midtown Rooftops', theme: 'westgate', tough: 1.6, zoom: 0.66, birds: ['triple', 'bomb', 'hammer', 'triple', 'bomb', 'hammer', 'classic', 'classic'], build: function () {
+      { name: 'Midtown Rooftops', theme: 'westgate', tough: 1.7, zoom: 0.66, birds: ['triple', 'bomb', 'hammer', 'triple', 'bomb', 'hammer', 'classic', 'classic'], build: function () {
         const P1 = B.plat(18.4, GY, 3.4, 2.2);
         const a1 = B.frame('wood', 18.4, P1, 2.4, 1.6, 'glass'); B.thug('small', 18.4, P1); B.thug('helmet', 18.4, a1);
         const t = B.tower(24.6, GY, [['stone', 3.2, 1.9, 'wood', 'big'], ['wood', 2.8, 1.6, 'wood', 'small'], ['glass', 2.4, 1.4, 'glass', 'helmet'], ['wood', 2.0, 1.3, 'wood', 'small']]);
@@ -17537,7 +17540,7 @@
         const s1 = B.frame('wood', 37.4, GY, 2.0, 1.5, 'glass'); B.thug('small', 37.4, GY);
         const s2 = B.frame('glass', 37.4, s1, 1.6, 1.3, 'wood'); B.thug('small', 37.4, s1); B.box('glass', 37.4, s2, 0.7, 0.7);
       } },
-      { name: 'Sewer Works', theme: 'industrial', tough: 1.65, zoom: 0.64, birds: ['hammer', 'bomb', 'triple', 'hammer', 'bomb', 'triple', 'classic', 'classic'], build: function () {
+      { name: 'Sewer Works', theme: 'industrial', tough: 1.75, zoom: 0.64, birds: ['hammer', 'bomb', 'triple', 'hammer', 'bomb', 'triple', 'classic', 'classic'], build: function () {
         const q1 = B.frame('wood', 15.6, GY, 1.8, 1.4, 'wood'); B.thug('small', 15.6, GY);
         const q2 = B.frame('glass', 15.6, q1, 1.6, 1.2, 'wood'); B.thug('small', 15.6, q1); B.box('wood', 15.6, q2, 0.7, 0.7);
         const P = B.plat(20.2, GY, 5.2, 1.0);
@@ -17552,19 +17555,19 @@
         B.box('dirty', 36.2, GY, 0.7, 0.9);
         const e1 = B.frame('wood', 38.6, GY, 2.0, 1.5, 'stone'); B.thug('big', 38.6, GY); B.thug('small', 38.6, e1);
       } },
-      { name: 'Smugglers\' Wharf', theme: 'docks', tough: 1.7, zoom: 0.62, birds: ['triple', 'bomb', 'hammer', 'triple', 'bomb', 'hammer', 'triple', 'classic', 'classic'], build: function () {
+      { name: 'Smugglers\' Wharf', theme: 'docks', tough: 1.8, zoom: 0.62, birds: ['triple', 'bomb', 'hammer', 'triple', 'bomb', 'hammer', 'triple', 'classic', 'classic'], build: function () {
         let y = GY; for (let i = 0; i < 3; i++) y = B.box('wood', 17.4, y, 0.9, 0.9); B.thug('small', 17.4, y);
         const c1 = B.hall('wood', 22.6, GY, 3, 2.2, 1.7, 'wood', ['small', 'helmet', 'small']);
         const c2 = B.hall('glass', 22.6, c1, 2, 2.4, 1.4, 'wood', ['big', 'small']);
         B.box('wood', 22.6, c2, 0.9, 0.9);
-        let d = GY; for (let i = 0; i < 2; i++) d = B.box('dirty', 27.4, d, 0.7, 0.9);
+        B.box('dirty', 27.0, GY, 0.7, 0.9); B.box('dirty', 34.1, GY, 0.7, 0.9);
         const t = B.tower(31.6, GY, [['steel', 3.0, 1.9, 'stone', 'big'], ['stone', 2.6, 1.7, 'wood', 'helmet'], ['wood', 2.2, 1.5, 'wood', 'small'], ['glass', 1.8, 1.3, 'wood', 'helmet']]);
         B.box('glass', 31.6, t, 0.8, 0.8);
         const s1 = B.frame('wood', 36.2, GY, 2.2, 1.6, 'glass'); B.thug('big', 36.2, GY);
         const s2 = B.frame('glass', 36.2, s1, 1.8, 1.3, 'wood'); B.thug('small', 36.2, s1); B.thug('helmet', 36.2, s2);
         let y2 = GY; for (let i = 0; i < 3; i++) y2 = B.box('wood', 39.8, y2, 0.9, 0.9); B.thug('small', 39.8, y2);
       } },
-      { name: 'High Roller Suite', theme: 'casino', tough: 1.75, zoom: 0.6, birds: ['bomb', 'triple', 'hammer', 'bomb', 'triple', 'hammer', 'bomb', 'classic', 'classic'], build: function () {
+      { name: 'High Roller Suite', theme: 'casino', tough: 1.85, zoom: 0.6, birds: ['bomb', 'triple', 'hammer', 'bomb', 'triple', 'hammer', 'bomb', 'classic', 'classic'], build: function () {
         const g1 = B.frame('glass', 17.4, GY, 2.2, 1.5, 'wood'); B.thug('helmet', 17.4, GY);
         const g2 = B.frame('glass', 17.4, g1, 1.8, 1.3, 'glass'); B.thug('small', 17.4, g1); B.thug('small', 17.4, g2);
         const P = B.plat(25.4, GY, 6.4, 1.2);
@@ -17577,12 +17580,12 @@
         const z = B.frame('wood', 38.6, GY, 2.0, 1.5, 'wood'); B.thug('small', 38.6, GY);
         const z2 = B.frame('glass', 38.6, z, 1.6, 1.3, 'wood'); B.thug('helmet', 38.6, z); B.thug('small', 38.6, z2);
       } },
-      { name: 'Racket HQ', theme: 'hideout', tough: 1.65, zoom: 0.58, birds: ['bomb', 'hammer', 'triple', 'bomb', 'hammer', 'triple', 'bomb', 'hammer', 'classic', 'classic'], build: function () {
+      { name: 'Racket HQ', theme: 'hideout', tough: 1.75, zoom: 0.58, birds: ['bomb', 'hammer', 'triple', 'bomb', 'hammer', 'triple', 'bomb', 'hammer', 'classic', 'classic'], build: function () {
         let w1 = GY, w2 = GY; for (let i = 0; i < 3; i++) { w1 = B.box('stone', 16.6, w1, 0.9, 0.9); w2 = B.box('stone', 18.2, w2, 0.9, 0.9); }
         B.box('wood', 17.4, w1, 2.4, 0.35); B.thug('helmet', 17.4, w1 - 0.35);
         const a1 = B.hall('wood', 23.4, GY, 3, 2.2, 1.8, 'stone', ['small', 'helmet', 'small']);
         const a2 = B.frame('glass', 23.4, a1, 2.8, 1.5, 'wood'); B.thug('big', 23.4, a1); B.box('dirty', 23.4, a2, 0.7, 0.9);
-        let d = GY; for (let i = 0; i < 2; i++) d = B.box('dirty', 27.8, d, 0.7, 0.9);
+        B.box('dirty', 28.4, GY, 0.7, 0.9); B.box('dirty', 36.95, GY, 0.7, 0.9);
         const k1 = B.hall('stone', 33.2, GY, 2, 3.0, 2.2, 'steel', ['boss', 'big']);
         const k2 = B.hall('wood', 33.2, k1, 2, 2.6, 1.8, 'wood', ['helmet', 'small']);
         const k3 = B.frame('wood', 33.2, k2, 2.4, 1.5, 'glass'); B.thug('small', 33.2, k2); B.thug('small', 33.2, k3);
