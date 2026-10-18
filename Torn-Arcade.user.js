@@ -7754,7 +7754,7 @@
      with a 'ta-art-pack' event whose detail is a JSON string { pack, ver, items }. Nothing is downloaded and no
      request is made. Every item is checked before it is used: only known names, and only base64 WebP images of a
      sensible size. Anything else is ignored. */
-  const ART_WANT = { tornies: 1, chars: 4 };   // newest pack versions this script knows about
+  const ART_WANT = { tornies: 1, chars: 5 };   // newest pack versions this script knows about
   const ARTP = {};                              // packs received: { ver, n }
   const ART_KEYS = {
     tornies: function (k) { return /^\d{1,3}$/.test(k) && +k >= 1 && +k <= DEX_SIZE; },
