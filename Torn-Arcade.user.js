@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.27.3
+// @version      2.27.4
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with six game apps: Tornies (a creature-collecting RPG), Torn Invasion (a Doom-style alien shooter), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -18592,11 +18592,24 @@
     let banked = 0, paidIn = 0, shopping = false;   // War Chest money already paid in during this game, and the wave-30 Armoury visit
     let sel = null, menu = null, strikeMode = false, earned = 0, kills = 0, leaked = 0, endT = 0, result = null, btns = [], t = 0, raf = 0, last = 0, acc = 0, active = false, shake = 0;
 
-    function startMap(i) {
+    function startMap(i, resume) {
+      const cp = resume && save.runs && save.runs[i];
+      if (!cp && save.runs && save.runs[i]) { delete save.runs[i]; persist(); }   // a new game replaces this map's checkpoint
       mi = i; M = MAPS[i]; wave = 0; hqMax = 20 + 4 * armLv('walls'); hq = hqMax; cash = M.cash + 40 * armLv('fund');
       raiders = []; shots = []; fires = []; fx = []; floats = []; queue = []; waveOn = false; spawnT = 0;
       towers = M.pads.map(function () { return null; }); banked = 0; paidIn = 0; shopping = false; leakLog = []; sel = null; menu = null; strikeMode = false; earned = 0; kills = 0; leaked = 0; result = null; paused = false;
+      if (cp) {   // carry on from the last checkpoint (the end of wave 10, 20 or 30)
+        wave = cp.wave; cash = cp.cash; hq = cp.hq; hqMax = cp.hqMax; banked = cp.banked; paidIn = cp.paidIn; earned = cp.earned; kills = cp.kills; leaked = cp.leaked;
+        towers = M.pads.map(function (p, k) { const q = cp.towers[k]; return q && TW[q.t] ? { t: q.t, lv: q.lv, x: p.x, y: p.y, cd: 0.2, ang: -Math.PI / 2, spent: q.spent, flash: 0, dealt: q.dealt || 0 } : null; });
+        floatText(W / 2, 118, 'Carrying on after wave ' + wave, '#9fd0ff');
+      }
       st = 'play'; endT = 0; showStats(); mapImg();
+    }
+    function checkpoint() {   // saved at the end of waves 10, 20 and 30
+      save.runs = save.runs || {};
+      save.runs[mi] = { wave: wave, cash: cash, hq: hq, hqMax: hqMax, banked: banked, paidIn: paidIn, earned: earned, kills: kills, leaked: leaked,
+        towers: towers.map(function (q) { return q && { t: q.t, lv: q.lv, spent: q.spent, dealt: Math.round(q.dealt || 0) }; }) };
+      persist();
     }
     function nextWave() {
       if (st !== 'play' || wave >= WAVES) return;
@@ -18726,8 +18739,9 @@
     function chestSoFar() { return Math.round(earned * 0.035) + wave * 4; }
     function payMilestone() {
       const due = chestSoFar() - banked, add = due + MILESTONE[wave];
-      banked += due; paidIn += add; save.chest += add; persist();
+      banked += due; paidIn += add; save.chest += add; checkpoint();
       floatText(W / 2, 118, 'Wave ' + wave + ' reward: +$' + add + ' to your War Chest', '#7ee07e');
+      floatText(W / 2, 174, 'Progress saved: you can leave and carry on from wave ' + (wave + 1), '#9fd0ff');
       if (wave === SHOP_WAVE) floatText(W / 2, 146, 'The Armoury is open until you start wave ' + (wave + 1), '#ffd65a');
       snd('clear');
     }
@@ -18745,6 +18759,7 @@
       if (reached > (save.best[mi] || 0)) save.best[mi] = reached;
       record('defence:' + (mi + 1), reached);
       if (win) save.open = Math.max(save.open, Math.min(MAPS.length - 1, mi + 1));
+      if (save.runs) delete save.runs[mi];   // the game is over, so its checkpoint goes
       persist();
       result = { win: win, stars: stars, gain: gain, reached: reached, newStars: stars > prevStars, first: firstWin };
       st = win ? 'win' : 'lose'; endT = 0; queue = []; menu = null; sel = null; strikeMode = false;
@@ -19044,9 +19059,13 @@
         ot((i + 1) + '. ' + m.name, x + 150, y + 22, 14, '#fff', 'left');
         const s = save.stars[i] || 0;
         for (let k = 0; k < 3; k++) ot('★', x + 160 + k * 24, y + 50, 19, k < s ? '#ffd65a' : '#3a4558', 'center');
-        tx(save.best[i] ? 'Best: wave ' + save.best[i] : open ? 'Not played' : 'Locked', x + 150, y + 74, 12.5, '#aebcd0', 'left', 700);
+        tx(save.runs && save.runs[i] ? 'Saved after wave ' + save.runs[i].wave : save.best[i] ? 'Best: wave ' + save.best[i] : open ? 'Not played' : 'Locked', x + 150, y + 74, 12.5, save.runs && save.runs[i] ? '#9fd0ff' : '#aebcd0', 'left', 700);
         tx(m.paths.length > 1 ? m.paths.length + ' routes' : '1 route', x + 12, y + 102, 12.5, '#c9d3e3', 'left', 700);
-        if (open) button(x + 12, y + ch - 46, cw - 24, 34, 'Play', function () { startMap(i); }, { size: 14 });
+        const cp = save.runs && save.runs[i];
+        if (open && cp) {
+          button(x + 12, y + ch - 46, cw - 112, 34, '▶ Continue · wave ' + (cp.wave + 1), function () { startMap(i, true); }, { size: 13 });
+          button(x + cw - 94, y + ch - 46, 82, 34, 'Restart', function () { startMap(i); }, { fill: 'rgba(40,46,58,.95)', size: 12.5 });
+        } else if (open) button(x + 12, y + ch - 46, cw - 24, 34, 'Play', function () { startMap(i); }, { size: 14 });
         else tx('🔒 Clear ' + MAPS[i - 1].name + ' first', x + cw / 2, y + ch - 29, 12, '#c06a5a', 'center', 700);
       });
       tx('War Chest: $' + save.chest.toLocaleString('en-GB'), W / 2 - 110, H - 30, 16, '#7ee07e', 'center');
@@ -19138,7 +19157,7 @@
           if (sel !== null && towers[sel]) { if (k === 'u') { upgrade(sel); return true; } if (k === 's') { sell(sel); return true; } }
           return false;
         }
-        if (st === 'select' && /^[1-6]$/.test(k)) { const i = Number(k) - 1; if (i <= save.open && !e.repeat) startMap(i); return true; }
+        if (st === 'select' && /^[1-6]$/.test(k)) { const i = Number(k) - 1; if (i <= save.open && !e.repeat) startMap(i, true); return true; }
         return false;
       }
     };
