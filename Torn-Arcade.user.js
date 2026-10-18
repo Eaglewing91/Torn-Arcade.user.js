@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.27.0
+// @version      2.27.1
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with six game apps: Tornies (a creature-collecting RPG), Torn Invasion (a Doom-style alien shooter), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -18567,6 +18567,14 @@
       if (moved) store.set('best', all);
       store.set('fdefence', save);
     }
+    if ((save.v || 0) < 3) {   // 2.27.1: the game went from 20 to 40 waves with new bosses, so everyone starts again on equal terms
+      const had = save.open > 0 || Object.keys(save.stars).length > 0 || save.chest > 0 || Object.keys(save.best).length > 0;
+      Object.assign(save, { open: 0, stars: {}, best: {}, chest: 0, own: {}, lv: {}, strikes: 0, v: 3, resetNote: had ? 1 : 0 });
+      const all = store.get('best', {}) || {}; let gone = false;
+      Object.keys(all).forEach(function (k) { if (/^defence:/.test(k)) { delete all[k]; gone = true; } });
+      if (gone) store.set('best', all);
+      store.set('fdefence', save);
+    }
     function persist() { store.set('fdefence', save); }
     function owned(t) { return t === 'gunner' || t === 'cannon' || !!save.own[t]; }
     function armLv(k) { return save.lv[k] || 0; }
@@ -19001,6 +19009,15 @@
       ctx.fillStyle = 'rgba(6,10,18,.72)'; ctx.fillRect(0, 0, W, H);
       ot('FACTION DEFENCE', W / 2, 40, 34, '#7fb0ff', 'center');
       ot('Hold your HQ against ' + WAVES + ' waves of Racket raiders', W / 2, 70, 13, '#dfe6f2', 'center', 700);
+      if (save.resetNote) {   // one-time note after the 40-wave update reset progress
+        ctx.fillStyle = 'rgba(4,8,16,.86)'; ctx.fillRect(0, 0, W, H);
+        const bw = 560, bh = 230, bx = (W - bw) / 2, by = (H - bh) / 2;
+        pill(bx, by, bw, bh, '#162034', 'rgba(127,176,255,.6)');
+        tx('Faction Defence has been rebuilt', W / 2, by + 36, 22, '#ffd65a', 'center', 900);
+        wrapText('Every map now has 40 waves, with new bosses: the Riot Captain and the Juggernaut. Because the game changed so much, everyone\'s Faction Defence progress (stars, maps, War Chest and Armoury) has been reset so all players start on equal terms.', bx + 28, by + 74, bw - 56, 14, '#c3d0e2', 20);
+        button(W / 2 - 80, by + bh - 52, 160, 38, 'Let\'s go', function () { save.resetNote = 0; persist(); }, {});
+        return;
+      }
       const cw = 262, ch = 186, gap = 16, x0 = (W - (cw * 3 + gap * 2)) / 2, y0 = 88;
       MAPS.forEach(function (m, i) {
         const x = x0 + (i % 3) * (cw + gap), y = y0 + Math.floor(i / 3) * (ch + 12), open = i <= save.open;
