@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.26.1
+// @version      2.27.0
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with six game apps: Tornies (a creature-collecting RPG), Torn Invasion (a Doom-style alien shooter), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -414,7 +414,7 @@
     { id: 'pocket', name: 'Tornies',        icon: '🐾', bg: ['#4fd8b8', '#0f7a6a'] , desc: 'A creature-collecting adventure across Torn City. Catch 178 Tornies, win 8 Arena medals and take on the Torn Council.' },
     { id: 'invasion', name: 'Invasion', title: 'Torn Invasion', icon: '👽', bg: ['#6be38a', '#14532a'] , desc: 'A Doom-style shooter. Fight your way through alien-infested levels of Torn City with pistol, shotgun and plasma rifle.' },
     { id: 'bogies', name: 'Angry Bogies', icon: '😠', bg: ['#ff9a5a', '#c8382a'] , desc: 'Bogie versus the Racket. Fling Bogies from a slingshot, smash the hideouts and knock out every thug. Fifteen levels, three stars each.' },
-    { id: 'defence', name: 'Faction Defence', icon: '🛡️', bg: ['#7fb0ff', '#2a4f9a'], desc: 'Hold your Faction HQ against Racket raids. Build and upgrade defenders beside the road, survive 20 waves on 6 maps and spend your War Chest in the Armoury.' },
+    { id: 'defence', name: 'Faction Defence', icon: '🛡️', bg: ['#7fb0ff', '#2a4f9a'], desc: 'Hold your Faction HQ against Racket raids. Build and upgrade defenders beside the road, survive 40 waves on 6 maps and spend your War Chest in the Armoury.' },
     { id: 'bombs',  name: 'Dirty Bombs',    icon: '☢️', bg: ['#ffe066', '#c99a10'] , desc: 'Clear the city block by block without setting off a dirty bomb. Numbers show how many bombs are nearby.' },
     { id: 'flappy', name: 'Flappy Torn',    icon: '🐦', bg: ['#6cc8ff', '#1f72c8'] , desc: 'Fly through the gaps in the pipes over Torn City. Every pipe you pass is a point.' }
   ];
@@ -438,7 +438,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gift codes', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, invasion: 1, bogies: 1, defence: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.26';
+  const VERSION = '2.27';
 
   GM_addStyle([
     /* The phone */
@@ -18453,32 +18453,32 @@
 
   /* ================= Faction Defence (tower defence) =================
      Racket raiders walk the roads towards your Faction HQ. Build defenders on the marked spots beside the road,
-     upgrade them with the cash you earn in the game, and survive 20 waves. After each game, part of what you earned
+     upgrade them with the cash you earn in the game, and survive 40 waves. After each game, part of what you earned
      goes into the War Chest, which is spent in the Armoury on unlocks and permanent upgrades.
      All of this belongs to Faction Defence only: nothing is shared with the other apps and nothing is requested
      from anywhere. The map pictures come from the optional Character Art pack; without it simple maps are drawn. */
   (function () {
-    const W = 960, H = 540, K = 0.625, STEP = 1 / 60, WAVES = 20, SC = 1.45;   // SC: size of people and defenders on the map
+    const W = 960, H = 540, K = 0.625, STEP = 1 / 60, WAVES = 40, SC = 1.45;   // SC: size of people and defenders on the map
     const TAU = Math.PI * 2;
     // Maps: routes (already smoothed) and build spots are in the artwork's own pixels (1536 x 864) and scaled by K.
     // They come from art/fd2/layout.py, which also drew the blueprint the artwork was painted from, so they match exactly.
     const MAPS = [
-      { name: 'Westgate', art: 'fdwestgate', ground: '#7cc443', mult: 0.76, cash: 250, bonus: 150, box: [1240, 600, 1490, 840],
+      { name: 'Westgate', art: 'fdwestgate', ground: '#7cc443', mult: 0.86, cash: 250, bonus: 150, box: [1240, 600, 1490, 840],
         paths: [[[-40,180],[490,180],[504,181],[517,185],[529,192],[540,200],[548,211],[555,223],[559,236],[560,250],[560,400],[559,414],[555,427],[548,439],[540,450],[529,458],[517,465],[504,469],[490,470],[320,470],[306,471],[293,475],[281,482],[270,490],[262,501],[255,513],[251,526],[250,540],[250,650],[251,664],[255,677],[262,689],[270,700],[281,708],[293,715],[306,719],[320,720],[790,720],[804,719],[817,715],[829,708],[840,700],[848,689],[855,677],[859,664],[860,650],[860,240],[861,226],[865,213],[872,201],[880,190],[891,182],[903,175],[916,171],[930,170],[1290,170],[1304,171],[1317,175],[1329,182],[1340,190],[1348,201],[1355,213],[1359,226],[1360,240],[1360,600]]],
         pads: [[188,268],[420,92],[472,286],[614,498],[277,388],[339,646],[472,808],[704,632],[948,630],[772,366],[946,251],[1078,82],[1279,255],[1272,400]] },
-      { name: 'The Docks', art: 'fddocks', ground: '#b9bcbf', mult: 1.12, cash: 300, bonus: 200, box: [628, 700, 908, 864],
+      { name: 'The Docks', art: 'fddocks', ground: '#b9bcbf', mult: 1.22, cash: 300, bonus: 200, box: [628, 700, 908, 864],
         paths: [[[-40,215],[1330,215],[1344,216],[1357,220],[1369,227],[1380,236],[1388,246],[1395,258],[1399,271],[1400,285],[1400,570],[1399,584],[1395,597],[1388,609],[1380,620],[1369,628],[1357,635],[1344,639],[1330,640],[1150,640],[1136,639],[1123,635],[1111,628],[1100,620],[1092,609],[1085,597],[1081,584],[1080,570],[1080,490],[1079,476],[1075,463],[1068,451],[1060,440],[1049,432],[1037,425],[1024,421],[1010,420],[520,420],[506,421],[493,425],[481,432],[470,440],[462,451],[455,463],[451,476],[450,490],[450,540],[451,554],[455,567],[462,579],[470,590],[481,598],[493,605],[506,609],[520,610],[725,610],[733,611],[741,613],[749,617],[755,623],[761,629],[765,637],[767,645],[768,653],[768,700]]],
         pads: [[188,303],[428,127],[668,303],[908,127],[1148,303],[1431,164],[1312,453],[1344,727],[1164,558],[1004,507],[814,332],[574,508],[363,552],[700,522]] },
-      { name: 'Midtown', art: 'fdmidtown', ground: '#9aa09a', mult: 1.35, cash: 300, bonus: 250, box: [1240, 640, 1490, 864],
+      { name: 'Midtown', art: 'fdmidtown', ground: '#9aa09a', mult: 1.45, cash: 300, bonus: 250, box: [1240, 640, 1490, 864],
         paths: [[[-40,150],[230,150],[244,151],[257,155],[269,162],[280,170],[288,181],[295,193],[299,206],[300,220],[300,530],[301,544],[305,557],[312,569],[320,580],[331,588],[343,595],[356,599],[370,600],[930,600],[944,599],[957,595],[969,588],[980,580],[988,569],[995,557],[999,544],[1000,530],[1000,320],[999,306],[995,293],[988,281],[980,270],[969,262],[957,255],[944,251],[930,250],[670,250],[656,251],[643,255],[631,262],[620,270],[612,281],[605,293],[601,306],[600,320],[600,705],[601,719],[605,732],[612,744],[620,754],[631,763],[643,770],[656,774],[670,775],[1240,775]]],
         pads: [[184,238],[388,268],[212,492],[430,512],[686,688],[878,512],[1088,486],[913,328],[774,162],[688,323],[526,436],[549,806],[822,687],[1046,687]] },
-      { name: 'Casino Strip', art: 'fdcasino', ground: '#c9a27a', mult: 1.12, cash: 360, bonus: 300, box: [1290, 620, 1536, 864],
+      { name: 'Casino Strip', bossHp: 0.85, art: 'fdcasino', ground: '#c9a27a', mult: 1.12, cash: 360, bonus: 300, box: [1290, 620, 1536, 864],
         paths: [[[-40,150],[230,150],[244,151],[257,155],[269,162],[280,170],[288,181],[295,193],[299,206],[300,220],[300,362],[301,376],[305,389],[312,401],[320,412],[331,420],[343,427],[356,431],[370,432],[519,432],[522,432],[524,431],[525,430],[527,429],[528,427],[530,426],[530,424],[531,421],[532,410],[536,388],[543,367],[553,347],[565,328],[580,312],[596,297],[615,285],[635,275],[656,268],[678,264],[700,262],[722,264],[744,268],[765,275],[785,285],[804,297],[820,312],[835,328],[847,347],[857,367],[864,388],[868,410],[869,421],[870,424],[870,426],[872,427],[873,429],[875,430],[876,431],[878,432],[881,432],[1030,432],[1044,433],[1057,437],[1069,444],[1080,452],[1088,463],[1095,475],[1099,488],[1100,502],[1100,672],[1101,686],[1105,699],[1112,711],[1120,722],[1131,730],[1143,737],[1156,741],[1170,742],[1290,742]],[[-40,150],[230,150],[244,151],[257,155],[269,162],[280,170],[288,181],[295,193],[299,206],[300,220],[300,362],[301,376],[305,389],[312,401],[320,412],[331,420],[343,427],[356,431],[370,432],[519,432],[522,432],[524,433],[525,434],[527,435],[528,437],[530,438],[530,440],[531,443],[532,454],[536,476],[543,497],[553,517],[565,536],[580,552],[596,567],[615,579],[635,589],[656,596],[678,600],[700,602],[722,600],[744,596],[765,589],[785,579],[804,567],[820,552],[835,536],[847,517],[857,497],[864,476],[868,454],[869,443],[870,440],[870,438],[872,437],[873,435],[875,434],[876,433],[878,432],[881,432],[1030,432],[1044,433],[1057,437],[1069,444],[1080,452],[1088,463],[1095,475],[1099,488],[1100,502],[1100,672],[1101,686],[1105,699],[1112,711],[1120,722],[1131,730],[1143,737],[1156,741],[1170,742],[1290,742]]],
         pads: [[160,238],[381,175],[213,378],[426,344],[537,233],[676,175],[865,234],[937,520],[1069,349],[1012,630],[1179,656],[456,515],[587,663],[822,659]] },
       { name: 'Industrial Zone', art: 'fdindustrial', ground: '#8a8478', mult: 1.34, cash: 360, bonus: 350, box: [1030, 650, 1300, 864],
         paths: [[[150,-40],[150,630],[151,644],[155,657],[162,669],[170,680],[181,688],[193,695],[206,699],[220,700],[330,700],[344,699],[357,695],[369,688],[380,680],[388,669],[395,657],[399,644],[400,630],[400,240],[401,226],[405,213],[412,201],[420,190],[431,182],[443,175],[456,171],[470,170],[580,170],[594,171],[607,175],[619,182],[630,190],[638,201],[645,213],[649,226],[650,240],[650,630],[651,644],[655,657],[662,669],[670,680],[681,688],[693,695],[706,699],[720,700],[830,700],[844,699],[857,695],[869,688],[880,680],[888,669],[895,657],[899,644],[900,630],[900,240],[901,226],[905,213],[912,201],[920,190],[931,182],[943,175],[956,171],[970,170],[1095,170],[1109,171],[1122,175],[1134,182],[1144,190],[1153,201],[1160,213],[1164,226],[1165,240],[1165,650]]],
         pads: [[62,196],[238,452],[121,753],[314,620],[488,418],[374,115],[564,250],[738,456],[624,755],[816,617],[988,414],[889,104],[1084,256],[1253,444]] },
-      { name: 'Racket HQ', both: 4, art: 'fdhideout', ground: '#9c7a52', mult: 0.9, cash: 420, bonus: 450, box: [1250, 40, 1500, 300],
+      { name: 'Racket HQ', both: 4, art: 'fdhideout', ground: '#9c7a52', mult: 0.95, cash: 420, bonus: 450, box: [1250, 40, 1500, 300],
         paths: [[[-40,720],[190,720],[204,719],[217,715],[229,708],[240,700],[248,689],[255,677],[259,664],[260,650],[260,490],[261,476],[265,463],[272,451],[280,440],[291,432],[303,425],[316,421],[330,420],[490,420],[504,419],[517,415],[529,408],[540,400],[548,389],[555,377],[559,364],[560,350],[560,240],[561,226],[565,213],[572,201],[580,190],[591,182],[603,175],[616,171],[630,170],[1250,170]],[[1060,904],[1060,690],[1059,676],[1055,663],[1048,651],[1040,640],[1029,632],[1017,625],[1004,621],[990,620],[890,620],[876,619],[863,615],[851,608],[840,600],[832,589],[825,577],[821,564],[820,550],[820,470],[821,456],[825,443],[832,431],[840,420],[851,412],[863,405],[876,401],[890,400],[1010,400],[1024,399],[1037,395],[1049,388],[1060,380],[1068,369],[1075,357],[1079,344],[1080,330],[1080,240],[1081,226],[1085,213],[1092,201],[1100,190],[1111,182],[1123,175],[1136,171],[1150,170],[1250,170]]],
         pads: [[326,731],[172,610],[346,501],[470,332],[648,306],[694,82],[822,258],[914,82],[1148,816],[972,694],[922,532],[732,518],[942,312],[1114,449]] },
     ];
@@ -18520,22 +18520,27 @@
       biker:  { hp: 24,   spd: 105, armor: 0,    cash: 4,   hit: 1,  r: 8,  name: 'Biker' },
       brute:  { hp: 115,  spd: 38, armor: 0.55, cash: 8,  hit: 2,  r: 10, name: 'Armoured brute' },
       medic:  { hp: 48,   spd: 48, armor: 0,    cash: 7,  hit: 1,  r: 7,  name: 'Medic', heal: 7 },
-      boss:   { hp: 450,  spd: 26, armor: 0.3,  cash: 50,  hit: 5,  r: 13, name: 'Enforcer' },
-      don:    { hp: 1800, spd: 22, armor: 0.35, cash: 150, hit: 12, r: 15, name: 'Don Varro' }
+      boss:   { hp: 600,  spd: 26, armor: 0.3,  cash: 50,  hit: 5,  r: 13, name: 'Enforcer', big: 'ENFORCER' },
+      riot:   { hp: 700,  spd: 24, armor: 0.25, cash: 70,  hit: 7,  r: 14, name: 'Riot Captain', big: 'RIOT CAPTAIN', shield: 0.5 },   // the shield soaks up hits (fire gets under it)
+      jugg:   { hp: 1000, spd: 17, armor: 0.4,  cash: 160, hit: 15, r: 16, name: 'Juggernaut', big: 'JUGGERNAUT', blast: 0.6, slowRes: 0.5 },   // bomb-suit armour: half damage from shells and fire, shrugs off half of any slow
+      don:    { hp: 1500, spd: 22, armor: 0.35, cash: 150, hit: 12, r: 15, name: 'Don Varro', big: 'DON VARRO' }
     };
     // When each raider type first appears, per map (wave number).
-    const INTRO = [{ biker: 6, brute: 9, medic: 13 }, { biker: 4, brute: 7, medic: 10 }, { biker: 4, brute: 6, medic: 9 }, { biker: 3, brute: 7, medic: 8 }, { biker: 3, brute: 5, medic: 7 }, { biker: 3, brute: 5, medic: 6 }];
+    const INTRO = [{ biker: 8, brute: 14, medic: 20 }, { biker: 6, brute: 11, medic: 16 }, { biker: 6, brute: 10, medic: 14 }, { biker: 5, brute: 11, medic: 13 }, { biker: 5, brute: 8, medic: 11 }, { biker: 4, brute: 8, medic: 10 }];
+    const BOSSES = { 10: ['boss'], 20: ['riot'], 30: ['boss', 'riot'], 40: ['jugg'] };
     function waveList(mi, w) {
       const I = INTRO[mi], out = [], np = MAPS[mi].paths.length;
       const add = function (t, n, gap) { for (let i = 0; i < n; i++) out.push({ t: t, gap: gap }); };
-      add('thug', 5 + Math.floor(w * 1.25), 0.85);
-      if (w >= I.biker) add('biker', 2 + Math.floor((w - I.biker) * 0.6), 0.45);
-      if (w >= I.brute) add('brute', 1 + Math.floor((w - I.brute) * 0.5), 1.2);
-      if (w >= I.medic) add('medic', 1 + Math.floor((w - I.medic) * 0.25), 1.0);
-      if (w === 10 || w === 20) out.push({ t: mi === MAPS.length - 1 && w === 20 ? 'don' : 'boss', gap: 2 });
+      add('thug', 5 + Math.floor(w * 0.8), 0.8);
+      if (w >= I.biker) add('biker', 2 + Math.floor((w - I.biker) * 0.4), 0.45);
+      if (w >= I.brute) add('brute', 1 + Math.floor((w - I.brute) * 0.33), 1.15);
+      if (w >= I.medic) add('medic', 1 + Math.floor((w - I.medic) * 0.17), 1.0);
+      // bosses: the Enforcer at 10, the Riot Captain at 20, both at 30, and the Juggernaut to finish (escorting Don Varro on the last map)
+      (BOSSES[w] || []).forEach(function (t) { out.push({ t: t, gap: 2.2 }); });
+      if (w === WAVES && mi === MAPS.length - 1) out.push({ t: 'don', gap: 2.2 });
       // mix the order a little (the same every time, so a wave plays the same way twice)
       let s = (mi + 1) * 977 + w * 131;
-      for (let i = out.length - 1; i > 0; i--) { s = (s * 16807) % 2147483647; const j = s % (i + 1); if (out[i].t !== 'boss' && out[j].t !== 'boss' && out[i].t !== 'don' && out[j].t !== 'don') { const q = out[i]; out[i] = out[j]; out[j] = q; } }
+      for (let i = out.length - 1; i > 0; i--) { s = (s * 16807) % 2147483647; const j = s % (i + 1); if (!RD[out[i].t].big && !RD[out[j].t].big) { const q = out[i]; out[i] = out[j]; out[j] = q; } }
       const both = MAPS[mi].both || 1;   // until this wave everyone takes the first route, so new players learn the map first
       out.forEach(function (o, i) { o.p = np > 1 && w >= both ? (i + w) % np : 0; });
       return out;
@@ -18567,7 +18572,7 @@
     function armLv(k) { return save.lv[k] || 0; }
 
     /* ---------- Panel ---------- */
-    const panel = makePanel('defence', 'Faction Defence', 'Defend your Faction HQ from Racket raids. Build defenders beside the road and survive 20 waves.',
+    const panel = makePanel('defence', 'Faction Defence', 'Defend your Faction HQ from Racket raids. Build defenders beside the road and survive 40 waves.',
       '<button type="button" class="ta-btn ta-btn-alt ta-fd-maps">Maps</button><button type="button" class="ta-btn ta-fd-next">Next wave</button>',
       [['wave', 'Wave', '–'], ['cash', 'Cash', '–'], ['hq', 'HQ', '–'], ['chest', 'War Chest', '$0']],
       '<canvas class="ta-canvas"></canvas>',
@@ -18590,19 +18595,23 @@
       if (wave > 0 && raiders.length) { const b = 5 + wave; cash += b; floatText(W - 120, 60, '+$' + b + ' early', '#7ee07e'); }
       wave++; queue = waveList(mi, wave); spawnT = 0.6; waveOn = true; snd('horn'); showStats();
     }
+    function hpMult(w, big) { return big ? 0.72 + 0.06 * (w - 1) : 0.72 + 0.09 * (w - 1) + 0.0012 * (w - 1) * (w - 1); }   // toughness by wave: raiders about x2.9 at 20 and x6 at 40; bosses grow more gently
     function spawn(o) {
-      const D = RD[o.t], m = M.mult * (0.72 + 0.12 * (wave - 1)), hp = Math.round(D.hp * m);
-      raiders.push({ t: o.t, D: D, P: M.paths[o.p], d: 0, hp: hp, max: hp, slowT: 0, slow: 0, lane: ((raiders.length * 7919) % 11 - 5) * 1.2, x: -99, y: -99, a: 0, hurt: 0, seed: Math.random() * 10, id: Math.random() });
+      const D = RD[o.t], m = M.mult * hpMult(wave, !!D.big) * (D.big ? M.bossHp || 1 : 1), hp = Math.round(D.hp * m);
+      raiders.push({ t: o.t, D: D, P: M.paths[o.p], d: 0, hp: hp, max: hp, sh: D.shield ? Math.round(hp * D.shield) : 0, shMax: D.shield ? Math.round(hp * D.shield) : 0, slowT: 0, slow: 0, lane: ((raiders.length * 7919) % 11 - 5) * 1.2, x: -99, y: -99, a: 0, hurt: 0, seed: Math.random() * 10, id: Math.random() });
     }
     function dmgTo(r, amount, pierce, src) {
-      const a = r.D.armor * (1 - pierce), d = amount * (1 - a) * (1 + 0.08 * armLv('train'));
+      const a = r.D.armor * (1 - pierce), fire = src && (src.t === 'molotov'), blast = src && (src.t === 'cannon' || fire);
+      let d = amount * (1 - a) * (1 + 0.08 * armLv('train'));
+      if (blast && r.D.blast) d *= r.D.blast;   // bomb-suit armour
+      if (r.sh > 0 && !fire) { const take = Math.min(r.sh, d); r.sh -= take; d -= take; r.hurt = 0.08; if (r.sh <= 0) { floatText(r.x, r.y - 20, 'Shield broken!', '#9fd0ff'); snd('boom'); } if (d <= 0) return; }   // the riot shield takes hits first; fire gets under it
       if (src && r.hp > 0) src.dealt = (src.dealt || 0) + Math.min(r.hp, d);
       r.hp -= d; r.hurt = 0.12;
       if (r.hp <= 0 && !r.dead) {
         r.dead = true; kills++; const c = Math.round(r.D.cash * (1 + 0.03 * (wave - 1))); cash += c; earned += c;
         floatText(r.x, r.y - 14, '+$' + c, '#ffe27a');
         for (let i = 0; i < 6; i++) fx.push({ k: 'spark', x: r.x, y: r.y, vx: (Math.random() - 0.5) * 90, vy: (Math.random() - 0.5) * 90, life: 0.4, c: '#fff3b0' });
-        if (r.t === 'boss' || r.t === 'don') { shake = 0.4; snd('boom'); }
+        if (r.D.big) { shake = 0.4; snd('boom'); }
       }
     }
     function floatText(x, y, s, c) { floats.push({ x: x, y: y, s: s, c: c, life: 1 }); }
@@ -18627,7 +18636,7 @@
       for (const r of raiders) {
         if (r.dead) continue;
         if (r.slowT > 0) r.slowT -= dt;
-        const v = r.D.spd * (r.slowT > 0 ? 1 - r.slow : 1);
+        const v = r.D.spd * (r.slowT > 0 ? 1 - r.slow * (1 - (r.D.slowRes || 0)) : 1);
         r.d += v * dt;
         const p = pathAt(r.P, r.d);
         r.x = p.x + Math.cos(p.a + Math.PI / 2) * r.lane; r.y = p.y + Math.sin(p.a + Math.PI / 2) * r.lane; r.a = p.a;
@@ -18703,7 +18712,7 @@
     function endGame(win) {
       const stars = win ? (hq >= hqMax * 0.75 ? 3 : hq >= hqMax * 0.4 ? 2 : 1) : 0;
       const prevStars = save.stars[mi] || 0, firstWin = win && !prevStars;
-      let gain = Math.round(earned * 0.06) + (win ? wave : wave - 1) * 8;
+      let gain = Math.round(earned * 0.035) + Math.max(0, win ? wave : wave - 1) * 4;
       if (win) gain += firstWin ? M.bonus : Math.round(M.bonus * 0.4);
       if (stars > prevStars) gain += (stars - prevStars) * 40;
       save.chest += gain;
@@ -18823,32 +18832,50 @@
         ctx.fillStyle = hurt ? '#fff' : '#e8e8ee'; ctx.beginPath(); ctx.arc(s * 0.12, 0, s * 0.42, 0, TAU); ctx.fill(); ctx.stroke();   // helmet
         ctx.fillStyle = '#2a6fd6'; ctx.fillRect(s * 0.3, -s * 0.22, s * 0.16, s * 0.44);   // visor
       } else {
-        const body = hurt ? '#ffffff' : { thug: HOOD[Math.floor(r.seed * 7) % HOOD.length], brute: '#5d6b3a', medic: '#f4f4f4', boss: '#22222a', don: '#3a1d48' }[r.t];
+        const body = hurt ? '#ffffff' : { thug: HOOD[Math.floor(r.seed * 7) % HOOD.length], brute: '#5d6b3a', medic: '#f4f4f4', boss: '#22222a', don: '#3a1d48', riot: '#1d2a44', jugg: '#6b6a45' }[r.t];
         // feet stepping
         ctx.fillStyle = '#2a2a2e'; ctx.beginPath(); ctx.ellipse(bob, -s * 0.32, s * 0.24, s * 0.16, 0, 0, TAU); ctx.ellipse(-bob, s * 0.32, s * 0.24, s * 0.16, 0, 0, TAU); ctx.fill();
         // body with arms
-        ctx.fillStyle = body; ctx.beginPath(); ctx.ellipse(-s * 0.08, 0, s * 0.55, s * 0.82, 0, 0, TAU); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = body; ctx.beginPath(); ctx.ellipse(-s * 0.08, 0, s * (r.t === 'jugg' ? 0.72 : 0.55), s * (r.t === 'jugg' ? 0.98 : 0.82), 0, 0, TAU); ctx.fill(); ctx.stroke();
+        if (r.t === 'riot') { ctx.fillStyle = hurt ? '#fff' : '#2c3d60'; roundRect(ctx, -s * 0.4, -s * 0.6, s * 0.6, s * 1.2, 4); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#8fa8d0'; ctx.fillRect(-s * 0.3, -s * 0.5, s * 0.1, s * 1.0); }   // riot vest
+        if (r.t === 'jugg') {   // bomb-suit armour: chest plate, collar and shoulder pads
+          ctx.fillStyle = hurt ? '#fff' : '#585836'; roundRect(ctx, -s * 0.5, -s * 0.7, s * 0.78, s * 1.4, 6); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = hurt ? '#fff' : '#8a8a5c'; ctx.beginPath(); ctx.ellipse(-s * 0.1, -s * 0.86, s * 0.34, s * 0.26, 0, 0, TAU); ctx.ellipse(-s * 0.1, s * 0.86, s * 0.34, s * 0.26, 0, 0, TAU); ctx.fill(); ctx.stroke();
+          ctx.strokeStyle = '#3a3a24'; ctx.lineWidth = 1.5; for (let q = -2; q <= 2; q++) { ctx.beginPath(); ctx.moveTo(-s * 0.42, q * s * 0.22); ctx.lineTo(s * 0.18, q * s * 0.22); ctx.stroke(); } ctx.strokeStyle = O; ctx.lineWidth = 2;
+          ctx.fillStyle = hurt ? '#fff' : '#7d7c50'; ctx.beginPath(); ctx.arc(s * 0.18, 0, s * 0.42, 0, TAU); ctx.fill(); ctx.stroke();   // thick collar
+        }
         if (r.t === 'brute') { ctx.fillStyle = hurt ? '#fff' : '#3c4526'; roundRect(ctx, -s * 0.42, -s * 0.62, s * 0.62, s * 1.24, 4); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#9aa36a'; ctx.fillRect(-s * 0.3, -s * 0.45, s * 0.38, s * 0.12); ctx.fillRect(-s * 0.3, s * 0.33, s * 0.38, s * 0.12); }
         if (r.t === 'medic') { ctx.fillStyle = '#e03a3a'; ctx.fillRect(-s * 0.3, -s * 0.11, s * 0.44, s * 0.22); ctx.fillRect(-s * 0.19, -s * 0.33, s * 0.22, s * 0.66); }
         if (r.t === 'boss' || r.t === 'don') { ctx.strokeStyle = '#f0c040'; ctx.lineWidth = 2.2; ctx.beginPath(); ctx.arc(-s * 0.05, 0, s * 0.42, -1.1, 1.1); ctx.stroke(); ctx.strokeStyle = O; ctx.lineWidth = 2; }
         // head
-        const hx = s * 0.22, hr = s * 0.42;
+        const hx = s * (r.t === 'jugg' ? 0.3 : 0.22), hr = s * (r.t === 'jugg' ? 0.5 : 0.42);
         ctx.fillStyle = r.t === 'thug' ? body : '#e8bf96'; ctx.beginPath(); ctx.arc(hx, 0, hr, 0, TAU); ctx.fill(); ctx.stroke();
         if (r.t === 'thug') { ctx.fillStyle = '#e8bf96'; ctx.beginPath(); ctx.arc(hx + hr * 0.42, 0, hr * 0.5, -1.3, 1.3); ctx.fill(); }   // face in the hood
         if (r.t === 'brute') { ctx.fillStyle = '#4a5530'; ctx.beginPath(); ctx.arc(hx, 0, hr, Math.PI * 0.55, Math.PI * 1.45); ctx.fill(); }   // helmet
+        if (r.t === 'riot') { ctx.fillStyle = hurt ? '#fff' : '#18233a'; ctx.beginPath(); ctx.arc(hx, 0, hr * 1.12, 0, TAU); ctx.fill(); ctx.stroke(); ctx.fillStyle = 'rgba(150,200,255,.75)'; ctx.beginPath(); ctx.arc(hx, 0, hr * 1.0, -0.95, 0.95); ctx.lineTo(hx + hr * 0.25, 0); ctx.fill(); }   // helmet with visor
+        if (r.t === 'jugg') {   // big round bomb-suit helmet with a dark visor
+          ctx.fillStyle = hurt ? '#fff' : '#8f8e60'; ctx.beginPath(); ctx.arc(hx, 0, hr * 1.12, 0, TAU); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = '#16222c'; roundRect(ctx, hx + hr * 0.15, -hr * 0.62, hr * 0.78, hr * 1.24, hr * 0.3); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = 'rgba(160,220,255,.5)'; ctx.fillRect(hx + hr * 0.3, -hr * 0.45, hr * 0.14, hr * 0.5);
+        }
+        if (r.t === 'riot' && r.sh > 0) {   // the riot shield, held in front
+          ctx.fillStyle = hurt ? 'rgba(255,255,255,.9)' : 'rgba(170,200,235,.78)'; roundRect(ctx, s * 0.68, -s * 0.9, s * 0.3, s * 1.8, 4); ctx.fill(); ctx.stroke();
+          ctx.strokeStyle = 'rgba(40,60,100,.8)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(s * 0.83, -s * 0.7); ctx.lineTo(s * 0.83, s * 0.7); ctx.stroke(); ctx.strokeStyle = O; ctx.lineWidth = 2;
+        }
         if (r.t === 'boss' || r.t === 'don') {   // wide-brimmed hat
           ctx.fillStyle = r.t === 'don' ? '#5a1a2a' : '#141418'; ctx.beginPath(); ctx.arc(hx, 0, hr * 1.35, 0, TAU); ctx.fill(); ctx.stroke();
           ctx.fillStyle = '#c0392b'; ctx.beginPath(); ctx.arc(hx, 0, hr * 0.95, 0, TAU); ctx.fill(); ctx.fillStyle = r.t === 'don' ? '#5a1a2a' : '#141418'; ctx.beginPath(); ctx.arc(hx, 0, hr * 0.72, 0, TAU); ctx.fill();
         }
       }
       ctx.restore();
+      if (r.shMax && r.sh > 0) { const w = Math.max(22, s * 2.2); ctx.fillStyle = 'rgba(0,0,0,.75)'; ctx.fillRect(x - w / 2 - 1, y - s - 16, w + 2, 5); ctx.fillStyle = '#6fb4ff'; ctx.fillRect(x - w / 2, y - s - 15, w * r.sh / r.shMax, 3); }   // shield bar
       if (r.hp < r.max) {
         const w = Math.max(22, s * 2.2), f = Math.max(0, r.hp / r.max);
         ctx.fillStyle = 'rgba(0,0,0,.75)'; ctx.fillRect(x - w / 2 - 1, y - s - 10, w + 2, 6);
         ctx.fillStyle = f > 0.5 ? '#5bd35b' : f > 0.25 ? '#f0c040' : '#e5483a'; ctx.fillRect(x - w / 2, y - s - 9, w * f, 4);
       }
       if (r.slowT > 0) { ctx.strokeStyle = 'rgba(255,230,80,.9)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, s + 3, t * 8, t * 8 + 2); ctx.stroke(); ctx.beginPath(); ctx.arc(x, y, s + 3, t * 8 + Math.PI, t * 8 + Math.PI + 2); ctx.stroke(); }
-      if (r.t === 'boss' || r.t === 'don') ot(r.t === 'don' ? 'DON VARRO' : 'ENFORCER', x, Math.max(12, y - s - 18), 11, '#ffd65a', 'center');
+      if (D.big) ot(D.big, x, Math.max(12, y - s - (r.shMax && r.sh > 0 ? 24 : 18)), 11, r.t === 'jugg' ? '#ff9a5a' : '#ffd65a', 'center');
     }
     function drawPad(p, i) {
       const on = sel === i || (menu && menu.pi === i);
@@ -18973,7 +19000,7 @@
     function drawSelect() {
       ctx.fillStyle = 'rgba(6,10,18,.72)'; ctx.fillRect(0, 0, W, H);
       ot('FACTION DEFENCE', W / 2, 40, 34, '#7fb0ff', 'center');
-      ot('Hold your HQ against 20 waves of Racket raiders', W / 2, 70, 13, '#dfe6f2', 'center', 700);
+      ot('Hold your HQ against ' + WAVES + ' waves of Racket raiders', W / 2, 70, 13, '#dfe6f2', 'center', 700);
       const cw = 262, ch = 186, gap = 16, x0 = (W - (cw * 3 + gap * 2)) / 2, y0 = 88;
       MAPS.forEach(function (m, i) {
         const x = x0 + (i % 3) * (cw + gap), y = y0 + Math.floor(i / 3) * (ch + 12), open = i <= save.open;
