@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.27.6
+// @version      2.27.7
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with six game apps: Tornies (a creature-collecting RPG), Torn Invasion (a Doom-style alien shooter), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -18597,9 +18597,9 @@
       if (!cp && save.runs && save.runs[i]) { delete save.runs[i]; persist(); }   // a new game replaces this map's checkpoint
       mi = i; M = MAPS[i]; wave = 0; hqMax = 20 + 4 * armLv('walls'); hq = hqMax; cash = M.cash + 40 * armLv('fund');
       raiders = []; shots = []; fires = []; fx = []; floats = []; queue = []; waveOn = false; spawnT = 0;
-      towers = M.pads.map(function () { return null; }); banked = 0; paidIn = 0; shopping = false; paidWave = 0; leakLog = []; sel = null; menu = null; strikeMode = false; earned = 0; kills = 0; leaked = 0; result = null; paused = false;
+      towers = M.pads.map(function () { return null; }); banked = 0; paidIn = 0; shopping = false; groups = {}; leakLog = []; sel = null; menu = null; strikeMode = false; earned = 0; kills = 0; leaked = 0; result = null; paused = false;
       if (cp) {   // carry on from the last checkpoint (the end of wave 10, 20 or 30)
-        wave = cp.wave; paidWave = cp.wave; cash = cp.cash; hq = cp.hq; hqMax = cp.hqMax; banked = cp.banked; paidIn = cp.paidIn; earned = cp.earned; kills = cp.kills; leaked = cp.leaked;
+        wave = cp.wave; cash = cp.cash; hq = cp.hq; hqMax = cp.hqMax; banked = cp.banked; paidIn = cp.paidIn; earned = cp.earned; kills = cp.kills; leaked = cp.leaked;
         towers = M.pads.map(function (p, k) { const q = cp.towers[k]; return q && TW[q.t] ? { t: q.t, lv: q.lv, x: p.x, y: p.y, cd: 0.2, ang: -Math.PI / 2, spent: q.spent, flash: 0, dealt: q.dealt || 0 } : null; });
         floatText(W / 2, 118, 'Carrying on after wave ' + wave, '#9fd0ff');
       }
@@ -18615,13 +18615,13 @@
       if (st !== 'play' || wave >= WAVES) return;
       if (queue.length) return;   // the current wave is still arriving
       if (bossHold()) { floatText(W / 2, 118, 'Clear the boss wave first', '#ffd65a'); snd('alarm'); return; }   // waves 10, 20 and 30 must be finished (milestone payout, wave-30 Armoury)
-      if (wave > 0 && raiders.length) { payWave(); const b = 5 + wave; cash += b; floatText(W - 120, 60, '+$' + b + ' early', '#7ee07e'); }   // starting early pays this wave's bonuses now, plus the early bonus
-      wave++; queue = waveList(mi, wave); spawnT = 0.6; waveOn = true; snd('horn'); showStats();
+      if (wave > 0 && raiders.length) { const b = 5 + wave; cash += b; floatText(W - 120, 60, '+$' + b + ' early', '#7ee07e'); }   // the early-start bonus; this wave's own bonus still waits until its group is finished
+      wave++; queue = waveList(mi, wave); queue.forEach(function (o) { o.w = wave; }); groups[wave] = queue.length; spawnT = 0.6; waveOn = true; snd('horn'); showStats();
     }
     function hpMult(w, big) { return big ? 0.72 + 0.06 * (w - 1) : 0.72 + 0.09 * (w - 1) + 0.0012 * (w - 1) * (w - 1); }   // toughness by wave: raiders about x2.9 at 20 and x6 at 40; bosses grow more gently
     function spawn(o) {
       const D = RD[o.t], m = M.mult * hpMult(wave, !!D.big) * (D.big ? M.bossHp || 1 : 1), hp = Math.round(D.hp * m);
-      raiders.push({ t: o.t, D: D, P: M.paths[o.p], d: 0, hp: hp, max: hp, sh: D.shield ? Math.round(hp * D.shield) : 0, shMax: D.shield ? Math.round(hp * D.shield) : 0, slowT: 0, slow: 0, lane: ((raiders.length * 7919) % 11 - 5) * 1.2, x: -99, y: -99, a: 0, hurt: 0, seed: Math.random() * 10, id: Math.random() });
+      raiders.push({ w: o.w || wave, t: o.t, D: D, P: M.paths[o.p], d: 0, hp: hp, max: hp, sh: D.shield ? Math.round(hp * D.shield) : 0, shMax: D.shield ? Math.round(hp * D.shield) : 0, slowT: 0, slow: 0, lane: ((raiders.length * 7919) % 11 - 5) * 1.2, x: -99, y: -99, a: 0, hurt: 0, seed: Math.random() * 10, id: Math.random() });
     }
     function dmgTo(r, amount, pierce, src) {
       const a = r.D.armor * (1 - pierce), fire = src && (src.t === 'molotov'), blast = src && (src.t === 'cannon' || fire);
@@ -18631,7 +18631,7 @@
       if (src && r.hp > 0) src.dealt = (src.dealt || 0) + Math.min(r.hp, d);
       r.hp -= d; r.hurt = 0.12;
       if (r.hp <= 0 && !r.dead) {
-        r.dead = true; kills++; const c = Math.round(r.D.cash * (1 + 0.03 * (wave - 1))); cash += c; earned += c;
+        r.dead = true; kills++; groupGone(r); const c = Math.round(r.D.cash * (1 + 0.03 * (wave - 1))); cash += c; earned += c;
         floatText(r.x, r.y - 14, '+$' + c, '#ffe27a');
         for (let i = 0; i < 6; i++) fx.push({ k: 'spark', x: r.x, y: r.y, vx: (Math.random() - 0.5) * 90, vy: (Math.random() - 0.5) * 90, life: 0.4, c: '#fff3b0' });
         if (r.D.big) { shake = 0.4; snd('boom'); }
@@ -18666,7 +18666,7 @@
         if (r.hurt > 0) r.hurt -= dt;
         if (r.D.heal) for (const o of raiders) if (o !== r && !o.dead && o.hp < o.max && Math.abs(o.x - r.x) < 50 && Math.abs(o.y - r.y) < 50) o.hp = Math.min(o.max, o.hp + r.D.heal * dt * (1 + 0.05 * wave));
         if (r.d >= r.P.len) {
-          r.dead = true; r.leaked = true; hq -= r.D.hit; leaked += r.D.hit; shake = 0.25; snd('alarm');           floatText(M.hq.x, M.hq.y - 30, '-' + r.D.hit + ' HQ', '#ff6a5a');
+          r.dead = true; r.leaked = true; groupGone(r); hq -= r.D.hit; leaked += r.D.hit; shake = 0.25; snd('alarm');           floatText(M.hq.x, M.hq.y - 30, '-' + r.D.hit + ' HQ', '#ff6a5a');
           if (hq <= 0) { hq = 0; endGame(false); return; }
         }
       }
@@ -18726,7 +18726,7 @@
       if (shake > 0) shake -= dt;
       // wave cleared
       if (waveOn && !queue.length && !raiders.length) {
-        waveOn = false; payWave(); snd('clear');
+        waveOn = false; snd('clear');
         if (wave >= WAVES) endGame(true);
         else if (MILESTONE[wave]) payMilestone();
         showStats();
@@ -18746,11 +18746,14 @@
       snd('clear');
     }
     function bossHold() { return waveOn && !!MILESTONE[wave] && (queue.length > 0 || raiders.length > 0); }
-    let paidWave = 0;   // the last wave whose bonus has been paid (each wave pays once: on clearing it, or on starting the next one early)
-    function payWave() {
-      if (paidWave >= wave) return; paidWave = wave;
-      const b = 10 + 2 * wave; cash += b; floatText(W / 2, 90, 'Wave ' + wave + ' bonus  +$' + b, '#9fe39f');
-      if (mi === 0 && wave < 10) { cash += EARLY_BONUS; floatText(W / 2, 60, 'Early Wave Bonus +$' + EARLY_BONUS, '#ffd65a'); }   // Westgate only: help new players build up before the first boss
+    // Each wave is a group: its bonus is paid when every raider of that wave has left the road (killed or reached the HQ),
+    // even if the next wave was started early and is still coming.
+    let groups = {};
+    function groupGone(r) { if (groups[r.w] > 0 && --groups[r.w] === 0) payWave(r.w); }
+    function payWave(w) {
+      const b = 10 + 2 * w; cash += b; floatText(W / 2, 90, 'Wave ' + w + ' cleared  +$' + b, '#9fe39f');
+      if (mi === 0 && w < 10) { cash += EARLY_BONUS; floatText(W / 2, 60, 'Early Wave Bonus +$' + EARLY_BONUS, '#ffd65a'); }   // Westgate only: help new players build up before the first boss
+      showStats();
     }
     function shopOpen() { return st === 'play' && wave === SHOP_WAVE && !waveOn && !queue.length; }
     function endGame(win) {
