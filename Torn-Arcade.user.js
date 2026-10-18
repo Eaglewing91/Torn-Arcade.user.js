@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.24.0
+// @version      2.24.1
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with six game apps: Tornies (a creature-collecting RPG), Torn Invasion (a Doom-style alien shooter), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -19008,7 +19008,12 @@
   // Mouse clicks on our buttons don't leave them focused, so Space goes to the game.
   root.addEventListener('mousedown', function (e) { if (e.target.closest && e.target.closest('button')) e.preventDefault(); });
   // Visibility: pause when the tab is hidden.
-  document.addEventListener('visibilitychange', function () { if (document.hidden && isOpen && current && games[current]) games[current].leave(); });
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) { if (isOpen && current && games[current]) games[current].leave(); return; }
+    // Back on the tab: wake the open game up again (Tornies and Invasion do this themselves). A game that was
+    // mid-play comes back paused where it has a pause (Faction Defence, Flappy Torn).
+    if (isOpen && current && games[current] && current !== 'pocket' && current !== 'invasion') games[current].enter();
+  });
   // Keys only act while the phone is open, and never while typing.
   window.addEventListener('keydown', function (e) {
     if (!isOpen) return;
