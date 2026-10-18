@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.22.1
+// @version      2.22.2
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with five game apps: Tornies (a creature-collecting RPG), Torn Invasion (a Doom-style alien shooter), Angry Bogies (a slingshot physics game), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -937,7 +937,7 @@
   }
   function devArm() { clearTimeout(DEV.timer); DEV.timer = setTimeout(devLockNow, 10 * 60 * 1000); }
   function devLockNow() { DEV.priv = null; DEV.code = ''; clearTimeout(DEV.timer); if (current === 'dev') renderDev(); }
-  function devPassOk(p) { return typeof p === 'string' && p.length >= 14 && !/^(.)\1+$/.test(p); }
+  function devPassOk(p) { return typeof p === 'string' && p.length >= 10 && !/^(.)\1+$/.test(p); }
   function devDownload(name, text) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: 'application/json' })); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 3000); }
   function devRid() { const al = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', r = crypto.getRandomValues(new Uint8Array(10)); return Array.from(r, function (x) { return al[x % al.length]; }).join(''); }
   function devData() { return games.pocket && games.pocket.devData ? games.pocket.devData() : { sp: [], items: [] }; }
@@ -949,7 +949,7 @@
     const pubLine = saved ? 'TA-PUBKEY:' + saved.x + '.' + saved.y : '';
     if (!saved) {
       box.innerHTML = '<div class="ta-group"><h3>Set up your signing key</h3><div class="ta-list"><div class="ta-devform">' + msg +
-        '<p>Creates your private signing key in this browser, locked with a passphrase. Use 4–5 random words or a long random password (at least 14 characters). It can\'t be recovered if you forget it.</p>' +
+        '<p>Creates your private signing key in this browser, locked with a passphrase. Use 4–5 random words or a long random password (at least 10 characters). It can\'t be recovered if you forget it.</p>' +
         '<label>Passphrase<input type="password" class="ta-devin" data-f="p1" autocomplete="new-password"></label><label>Passphrase again<input type="password" class="ta-devin" data-f="p2" autocomplete="new-password"></label>' +
         '<div class="ta-devbtns"><button type="button" class="ta-btn" data-dev="create">Create signing key</button><button type="button" class="ta-btn ta-btn-alt" data-dev="restore">Restore from backup…</button></div>' +
         '<input type="file" class="ta-devfile" accept=".json,application/json" hidden></div></div></div>';
@@ -1004,7 +1004,7 @@
       if (a === 'create') {
         const p1 = devVal('p1'), p2 = devVal('p2');
         if (p1 !== p2) throw 'The two passphrases don\'t match.';
-        if (!devPassOk(p1)) throw 'Use at least 14 characters (4–5 random words works well).';
+        if (!devPassOk(p1)) throw 'Use at least 10 characters (4–5 random words works well).';
         t.disabled = true; t.textContent = 'Creating…';
         const kp = await crypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, true, ['sign', 'verify']);
         const jwk = await crypto.subtle.exportKey('jwk', kp.privateKey), locked = await devLock(jwk, p1);
@@ -1028,7 +1028,7 @@
       else if (a === 'chpass') { const c = $(devBox, '.ta-devchpass'); c.hidden = !c.hidden; return; }
       else if (a === 'dochpass') {
         const n1 = devVal('n1'), n2 = devVal('n2');
-        if (n1 !== n2) throw 'The new passphrases don\'t match.'; if (!devPassOk(n1)) throw 'Use at least 14 characters for the new passphrase.';
+        if (n1 !== n2) throw 'The new passphrases don\'t match.'; if (!devPassOk(n1)) throw 'Use at least 10 characters for the new passphrase.';
         let jwk; try { jwk = await devUnlockJwk(saved, devVal('old')); } catch (e) { throw 'Current passphrase is wrong.'; }
         const locked = await devLock(jwk, n1); store.set('devKey', locked); devDownload('torn-arcade-dev-key-backup.json', JSON.stringify(locked));
         DEV.msg = 'Passphrase changed. A new encrypted backup was downloaded; old backups still use the old passphrase.';
