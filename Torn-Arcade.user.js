@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.24.1
+// @version      2.25.0
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with six game apps: Tornies (a creature-collecting RPG), Torn Invasion (a Doom-style alien shooter), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -414,7 +414,7 @@
     { id: 'pocket', name: 'Tornies',        icon: '🐾', bg: ['#4fd8b8', '#0f7a6a'] , desc: 'A creature-collecting adventure across Torn City. Catch 178 Tornies, win 8 Arena medals and take on the Torn Council.' },
     { id: 'invasion', name: 'Invasion', title: 'Torn Invasion', icon: '👽', bg: ['#6be38a', '#14532a'] , desc: 'A Doom-style shooter. Fight your way through alien-infested levels of Torn City with pistol, shotgun and plasma rifle.' },
     { id: 'bogies', name: 'Angry Bogies', icon: '😠', bg: ['#ff9a5a', '#c8382a'] , desc: 'Bogie versus the Racket. Fling Bogies from a slingshot, smash the hideouts and knock out every thug. Fifteen levels, three stars each.' },
-    { id: 'defence', name: 'Faction Defence', icon: '🛡️', bg: ['#7fb0ff', '#2a4f9a'], desc: 'Hold your Faction HQ against Racket raids. Build and upgrade defenders beside the road, survive 20 waves on 4 maps and spend your War Chest in the Armoury.' },
+    { id: 'defence', name: 'Faction Defence', icon: '🛡️', bg: ['#7fb0ff', '#2a4f9a'], desc: 'Hold your Faction HQ against Racket raids. Build and upgrade defenders beside the road, survive 20 waves on 6 maps and spend your War Chest in the Armoury.' },
     { id: 'bombs',  name: 'Dirty Bombs',    icon: '☢️', bg: ['#ffe066', '#c99a10'] , desc: 'Clear the city block by block without setting off a dirty bomb. Numbers show how many bombs are nearby.' },
     { id: 'flappy', name: 'Flappy Torn',    icon: '🐦', bg: ['#6cc8ff', '#1f72c8'] , desc: 'Fly through the gaps in the pipes over Torn City. Every pipe you pass is a point.' }
   ];
@@ -438,7 +438,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gift codes', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, invasion: 1, bogies: 1, defence: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.24';
+  const VERSION = '2.25';
 
   GM_addStyle([
     /* The phone */
@@ -820,7 +820,7 @@
     bombs:  function (k, v) { return [cap(k[1]), v + 's']; },
     flappy: function (k, v) { return [cap(k[1]), v]; },
     bogies: function (k, v) { return ['Level ' + k[1], Number(v).toLocaleString('en-GB')]; },
-    defence: function (k, v) { return [['Westgate', 'The Docks', 'Casino Strip', 'Racket HQ'][k[1] - 1] || 'Map ' + k[1], 'Wave ' + v]; }
+    defence: function (k, v) { return [['Westgate', 'The Docks', 'Midtown', 'Casino Strip', 'Industrial Zone', 'Racket HQ'][k[1] - 1] || 'Map ' + k[1], 'Wave ' + v]; }
   };
   function iconSmall(a) {
     const img = APP_ART[a.id] ? 'data:image/webp;base64,' + APP_ART[a.id] : '';
@@ -7754,11 +7754,11 @@
      with a 'ta-art-pack' event whose detail is a JSON string { pack, ver, items }. Nothing is downloaded and no
      request is made. Every item is checked before it is used: only known names, and only base64 WebP images of a
      sensible size. Anything else is ignored. */
-  const ART_WANT = { tornies: 1, chars: 3 };   // newest pack versions this script knows about
+  const ART_WANT = { tornies: 1, chars: 4 };   // newest pack versions this script knows about
   const ARTP = {};                              // packs received: { ver, n }
   const ART_KEYS = {
     tornies: function (k) { return /^\d{1,3}$/.test(k) && +k >= 1 && +k <= DEX_SIZE; },
-    chars: function (k) { return /^[a-z0-9]{2,16}$/.test(k) && (k in PAL || /^outfit[0-3]$/.test(k) || /^fd(westgate|docks|casino|hideout)$/.test(k)); }
+    chars: function (k) { return /^[a-z0-9]{2,16}$/.test(k) && (k in PAL || /^outfit[0-3]$/.test(k) || /^fd(westgate|docks|midtown|casino|industrial|hideout)$/.test(k)); }
   };
   const ART_B64 = /^UklGR[A-Za-z0-9+/]+={0,2}$/;   // base64 of a RIFF/WebP file
   function artOn(pack) { return store.get('art_' + pack, true) !== false; }
@@ -18397,22 +18397,27 @@
   (function () {
     const W = 960, H = 540, K = 0.625, STEP = 1 / 60, WAVES = 20, SC = 1.45;   // SC: size of people and defenders on the map
     const TAU = Math.PI * 2;
-    // Maps: paths and build spots are in the artwork's own pixels (1536 x 864) and scaled by K.
+    // Maps: routes (already smoothed) and build spots are in the artwork's own pixels (1536 x 864) and scaled by K.
+    // They come from art/fd2/layout.py, which also drew the blueprint the artwork was painted from, so they match exactly.
     const MAPS = [
-      { name: 'Westgate', art: 'fdwestgate', ground: '#7cc443', mult: 1.16, cash: 250, bonus: 150,
-        paths: [[[-30, 445], [171, 445], [171, 194], [221, 144], [1310, 144], [1360, 194], [1360, 490], [1310, 540], [221, 540], [171, 590], [171, 690], [221, 740], [1232, 740]]],
-        pads: [[420, 255], [720, 255], [1020, 255], [1240, 262], [330, 452], [640, 452], [950, 452], [1250, 452], [330, 640], [620, 640], [900, 640], [1150, 640], [1460, 250], [820, 815]] },
-      { name: 'The Docks', art: 'fddocks', ground: '#b9bcbf', mult: 1.1, cash: 280, bonus: 220,
-        paths: [[[765, -30], [765, 201], [1282, 201], [1332, 251], [1332, 338], [1282, 388], [241, 388], [191, 438], [191, 485], [241, 535], [1108, 535], [1158, 585], [1158, 634], [1208, 684], [1262, 684]]],
-        pads: [[330, 295], [620, 295], [900, 295], [1100, 272], [250, 462], [640, 462], [950, 462], [1240, 462], [330, 610], [640, 610], [950, 610], [1240, 560], [1430, 190], [80, 250]] },
-      { name: 'Casino Strip', art: 'fdcasino', ground: '#c9a27a', mult: 0.82, cash: 360, bonus: 300,
-        paths: [[[770, -30], [770, 188], [209, 188], [159, 238], [159, 673], [209, 723], [1285, 723]],
-                [[770, -30], [770, 188], [770, 380], [1219, 380], [1247, 410], [1247, 518], [1219, 548], [770, 548], [770, 723], [1285, 723]]],
-        pads: [[420, 275], [620, 275], [920, 275], [1120, 275], [240, 450], [1300, 450], [420, 630], [620, 630], [920, 630], [1120, 630], [250, 640], [1290, 620], [560, 465], [980, 465]] },
-      { name: 'Racket HQ', art: 'fdhideout', ground: '#9c7a52', mult: 0.96, cash: 420, bonus: 400,
-        paths: [[[300, 894], [300, 678], [256, 678], [206, 628], [206, 487], [256, 437], [1267, 437], [1317, 487], [1317, 560]],
-                [[300, 894], [300, 678], [256, 678], [206, 628], [206, 246], [256, 196], [1267, 196], [1317, 246], [1317, 560]]],
-        pads: [[420, 315], [720, 315], [1020, 315], [1200, 315], [420, 560], [720, 560], [1000, 560], [1080, 560], [110, 450], [560, 780], [950, 780], [1440, 450], [1475, 590], [620, 100]] }
+      { name: 'Westgate', art: 'fdwestgate', ground: '#7cc443', mult: 0.8, cash: 250, bonus: 150, box: [1240, 600, 1490, 840],
+        paths: [[[-40,180],[490,180],[504,181],[517,185],[529,192],[540,200],[548,211],[555,223],[559,236],[560,250],[560,400],[559,414],[555,427],[548,439],[540,450],[529,458],[517,465],[504,469],[490,470],[320,470],[306,471],[293,475],[281,482],[270,490],[262,501],[255,513],[251,526],[250,540],[250,650],[251,664],[255,677],[262,689],[270,700],[281,708],[293,715],[306,719],[320,720],[790,720],[804,719],[817,715],[829,708],[840,700],[848,689],[855,677],[859,664],[860,650],[860,240],[861,226],[865,213],[872,201],[880,190],[891,182],[903,175],[916,171],[930,170],[1290,170],[1304,171],[1317,175],[1329,182],[1340,190],[1348,201],[1355,213],[1359,226],[1360,240],[1360,600]]],
+        pads: [[398,602],[446,326],[1262,302],[974,290],[758,614],[530,602],[1286,434],[650,794],[518,794],[338,254],[206,254],[1442,446],[938,518],[782,482]] },
+      { name: 'The Docks', both: 5, art: 'fddocks', ground: '#b9bcbf', mult: 0.72, cash: 300, bonus: 200, box: [628, 700, 908, 864],
+        paths: [[[300,-40],[300,160],[301,174],[305,187],[312,199],[320,210],[331,218],[343,225],[356,229],[370,230],[550,230],[564,231],[577,235],[589,242],[600,250],[608,261],[615,273],[619,286],[620,300],[620,360],[619,374],[615,387],[608,399],[600,410],[589,418],[577,425],[564,429],[550,430],[230,430],[216,431],[203,435],[191,442],[180,450],[172,461],[165,473],[161,486],[160,500],[160,570],[161,584],[165,597],[172,609],[180,620],[191,628],[203,635],[216,639],[230,640],[739,640],[745,641],[750,642],[755,645],[760,648],[763,653],[766,658],[767,663],[768,669],[768,700]], [[1236,-40],[1236,160],[1235,174],[1231,187],[1224,199],[1216,210],[1205,218],[1193,225],[1180,229],[1166,230],[986,230],[972,231],[959,235],[947,242],[936,250],[928,261],[921,273],[917,286],[916,300],[916,360],[917,374],[921,387],[928,399],[936,410],[947,418],[959,425],[972,429],[986,430],[1306,430],[1320,431],[1333,435],[1345,442],[1356,450],[1364,461],[1371,473],[1375,486],[1376,500],[1376,570],[1375,584],[1371,597],[1364,609],[1356,620],[1345,628],[1333,635],[1320,639],[1306,640],[797,640],[791,641],[786,642],[781,645],[776,648],[773,653],[770,658],[769,663],[768,669],[768,700]]],
+        pads: [[1214,542],[1082,338],[458,338],[314,542],[446,554],[1082,542],[566,518],[338,302],[1202,302],[878,554],[1118,122],[410,122],[698,542],[1154,722]] },
+      { name: 'Midtown', art: 'fdmidtown', ground: '#9aa09a', mult: 1.45, cash: 300, bonus: 250, box: [1240, 640, 1490, 864],
+        paths: [[[-40,150],[230,150],[244,151],[257,155],[269,162],[280,170],[288,181],[295,193],[299,206],[300,220],[300,530],[301,544],[305,557],[312,569],[320,580],[331,588],[343,595],[356,599],[370,600],[930,600],[944,599],[957,595],[969,588],[980,580],[988,569],[995,557],[999,544],[1000,530],[1000,320],[999,306],[995,293],[988,281],[980,270],[969,262],[957,255],[944,251],[930,250],[670,250],[656,251],[643,255],[631,262],[620,270],[612,281],[605,293],[601,306],[600,320],[600,705],[601,719],[605,732],[612,744],[620,754],[631,763],[643,770],[656,774],[670,775],[1240,775]]],
+        pads: [[734,674],[470,506],[674,518],[518,674],[866,698],[998,686],[890,494],[890,362],[734,362],[194,278],[374,422],[122,74],[818,170],[374,290]] },
+      { name: 'Casino Strip', art: 'fdcasino', ground: '#c9a27a', mult: 1.2, cash: 360, bonus: 300, box: [1290, 620, 1536, 864],
+        paths: [[[-40,150],[230,150],[244,151],[257,155],[269,162],[280,170],[288,181],[295,193],[299,206],[300,220],[300,362],[301,376],[305,389],[312,401],[320,412],[331,420],[343,427],[356,431],[370,432],[519,432],[522,432],[524,431],[525,430],[527,429],[528,427],[530,426],[530,424],[531,421],[532,410],[536,388],[543,367],[553,347],[565,328],[580,312],[596,297],[615,285],[635,275],[656,268],[678,264],[700,262],[722,264],[744,268],[765,275],[785,285],[804,297],[820,312],[835,328],[847,347],[857,367],[864,388],[868,410],[869,421],[870,424],[870,426],[872,427],[873,429],[875,430],[876,431],[878,432],[881,432],[1030,432],[1044,433],[1057,437],[1069,444],[1080,452],[1088,463],[1095,475],[1099,488],[1100,502],[1100,672],[1101,686],[1105,699],[1112,711],[1120,722],[1131,730],[1143,737],[1156,741],[1170,742],[1290,742]], [[-40,150],[230,150],[244,151],[257,155],[269,162],[280,170],[288,181],[295,193],[299,206],[300,220],[300,362],[301,376],[305,389],[312,401],[320,412],[331,420],[343,427],[356,431],[370,432],[519,432],[522,432],[524,433],[525,434],[527,435],[528,437],[530,438],[530,440],[531,443],[532,454],[536,476],[543,497],[553,517],[565,536],[580,552],[596,567],[615,579],[635,589],[656,596],[678,600],[700,602],[722,600],[744,596],[765,589],[785,579],[804,567],[820,552],[835,536],[847,517],[857,497],[864,476],[868,454],[869,443],[870,440],[870,438],[872,437],[873,435],[875,434],[876,433],[878,432],[881,432],[1030,432],[1044,433],[1057,437],[1069,444],[1080,452],[1088,463],[1095,475],[1099,488],[1100,502],[1100,672],[1101,686],[1105,699],[1112,711],[1120,722],[1131,730],[1143,737],[1156,741],[1170,742],[1290,742]]],
+        pads: [[986,554],[434,314],[182,254],[1202,590],[422,506],[986,350],[122,74],[794,446],[614,446],[1022,674],[374,194],[254,74],[50,230],[230,398]] },
+      { name: 'Industrial Zone', art: 'fdindustrial', ground: '#8a8478', mult: 1.6, cash: 360, bonus: 350, box: [1030, 650, 1300, 864],
+        paths: [[[150,-40],[150,630],[151,644],[155,657],[162,669],[170,680],[181,688],[193,695],[206,699],[220,700],[330,700],[344,699],[357,695],[369,688],[380,680],[388,669],[395,657],[399,644],[400,630],[400,240],[401,226],[405,213],[412,201],[420,190],[431,182],[443,175],[456,171],[470,170],[580,170],[594,171],[607,175],[619,182],[630,190],[638,201],[645,213],[649,226],[650,240],[650,630],[651,644],[655,657],[662,669],[670,680],[681,688],[693,695],[706,699],[720,700],[830,700],[844,699],[857,695],[869,688],[880,680],[888,669],[895,657],[899,644],[900,630],[900,240],[901,226],[905,213],[912,201],[920,190],[931,182],[943,175],[956,171],[970,170],[1095,170],[1109,171],[1122,175],[1134,182],[1144,190],[1153,201],[1160,213],[1164,226],[1165,240],[1165,650]]],
+        pads: [[782,554],[518,314],[266,554],[1010,290],[782,422],[518,506],[290,422],[266,290],[782,290],[1058,506],[554,626],[266,158],[974,410],[74,482]] },
+      { name: 'Racket HQ', both: 4, art: 'fdhideout', ground: '#9c7a52', mult: 1.03, cash: 420, bonus: 450, box: [1250, 40, 1500, 300],
+        paths: [[[-40,720],[190,720],[204,719],[217,715],[229,708],[240,700],[248,689],[255,677],[259,664],[260,650],[260,490],[261,476],[265,463],[272,451],[280,440],[291,432],[303,425],[316,421],[330,420],[490,420],[504,419],[517,415],[529,408],[540,400],[548,389],[555,377],[559,364],[560,350],[560,240],[561,226],[565,213],[572,201],[580,190],[591,182],[603,175],[616,171],[630,170],[1250,170]], [[1060,904],[1060,690],[1059,676],[1055,663],[1048,651],[1040,640],[1029,632],[1017,625],[1004,621],[990,620],[890,620],[876,619],[863,615],[851,608],[840,600],[832,589],[825,577],[821,564],[820,550],[820,470],[821,456],[825,443],[832,431],[840,420],[851,412],[863,405],[876,401],[890,400],[1010,400],[1024,399],[1037,395],[1049,388],[1060,380],[1068,369],[1075,357],[1079,344],[1080,330],[1080,240],[1081,226],[1085,213],[1092,201],[1100,190],[1111,182],[1123,175],[1136,171],[1150,170],[1250,170]]],
+        pads: [[986,254],[974,518],[1154,278],[1094,86],[866,290],[146,626],[710,266],[374,530],[974,758],[434,314],[962,86],[830,86],[122,794],[698,86]] }
     ];
     MAPS.forEach(function (m) {
       m.paths = m.paths.map(function (p) {
@@ -18422,6 +18427,7 @@
       });
       m.pads = m.pads.map(function (q) { return { x: q[0] * K, y: q[1] * K }; });
       const e = m.paths[0].pts[m.paths[0].pts.length - 1]; m.hq = { x: e[0], y: e[1] };
+      m.box = m.box.map(function (v) { return v * K; });
     });
     function pathAt(P, d) {
       if (d <= 0) return { x: P.pts[0][0], y: P.pts[0][1], a: Math.atan2(P.pts[1][1] - P.pts[0][1], P.pts[1][0] - P.pts[0][0]) };
@@ -18455,7 +18461,7 @@
       don:    { hp: 1800, spd: 22, armor: 0.35, cash: 150, hit: 12, r: 15, name: 'Don Varro' }
     };
     // When each raider type first appears, per map (wave number).
-    const INTRO = [{ biker: 6, brute: 9, medic: 13 }, { biker: 4, brute: 7, medic: 10 }, { biker: 3, brute: 7, medic: 8 }, { biker: 3, brute: 5, medic: 6 }];
+    const INTRO = [{ biker: 6, brute: 9, medic: 13 }, { biker: 4, brute: 7, medic: 10 }, { biker: 4, brute: 6, medic: 9 }, { biker: 3, brute: 7, medic: 8 }, { biker: 3, brute: 5, medic: 7 }, { biker: 3, brute: 5, medic: 6 }];
     function waveList(mi, w) {
       const I = INTRO[mi], out = [], np = MAPS[mi].paths.length;
       const add = function (t, n, gap) { for (let i = 0; i < n; i++) out.push({ t: t, gap: gap }); };
@@ -18463,11 +18469,12 @@
       if (w >= I.biker) add('biker', 2 + Math.floor((w - I.biker) * 0.6), 0.45);
       if (w >= I.brute) add('brute', 1 + Math.floor((w - I.brute) * 0.5), 1.2);
       if (w >= I.medic) add('medic', 1 + Math.floor((w - I.medic) * 0.25), 1.0);
-      if (w === 10 || w === 20) out.push({ t: mi === 3 && w === 20 ? 'don' : 'boss', gap: 2 });
+      if (w === 10 || w === 20) out.push({ t: mi === MAPS.length - 1 && w === 20 ? 'don' : 'boss', gap: 2 });
       // mix the order a little (the same every time, so a wave plays the same way twice)
       let s = (mi + 1) * 977 + w * 131;
       for (let i = out.length - 1; i > 0; i--) { s = (s * 16807) % 2147483647; const j = s % (i + 1); if (out[i].t !== 'boss' && out[j].t !== 'boss' && out[i].t !== 'don' && out[j].t !== 'don') { const q = out[i]; out[i] = out[j]; out[j] = q; } }
-      out.forEach(function (o, i) { o.p = np > 1 ? (i + w) % np : 0; });
+      const both = MAPS[mi].both || 1;   // until this wave everyone takes the first route, so new players learn the map first
+      out.forEach(function (o, i) { o.p = np > 1 && w >= both ? (i + w) % np : 0; });
       return out;
     }
 
@@ -18482,6 +18489,16 @@
       strike:  { name: 'Air strike',     icon: '✈️', costs: [150], desc: 'One use. Tap the map to hit everything in a wide area. Hold up to 3.' }
     };
     const save = Object.assign({ open: 0, stars: {}, best: {}, chest: 0, own: {}, lv: {}, strikes: 0 }, store.get('fdefence', null) || {});
+    if (!save.v) {   // progress from the four-map version: Casino Strip was map 3 and Racket HQ map 4
+      const mv = { 2: 3, 3: 5 }, st2 = {}, b2 = {};
+      Object.keys(save.stars).forEach(function (k) { st2[mv[k] !== undefined ? mv[k] : k] = save.stars[k]; });
+      Object.keys(save.best).forEach(function (k) { b2[mv[k] !== undefined ? mv[k] : k] = save.best[k]; });
+      save.stars = st2; save.best = b2; save.v = 2;
+      const all = store.get('best', {}) || {}; let moved = false;
+      [['defence:4', 'defence:6'], ['defence:3', 'defence:4']].forEach(function (p) { if (all[p[0]] !== undefined) { all[p[1]] = all[p[0]]; delete all[p[0]]; moved = true; } });
+      if (moved) store.set('best', all);
+      store.set('fdefence', save);
+    }
     function persist() { store.set('fdefence', save); }
     function owned(t) { return t === 'gunner' || t === 'cannon' || !!save.own[t]; }
     function armLv(k) { return save.lv[k] || 0; }
@@ -18698,9 +18715,11 @@
       g.setLineDash([12, 12]); g.lineWidth = 2.5; g.strokeStyle = 'rgba(255,255,255,.75)';
       m.paths.forEach(function (P) { g.beginPath(); P.pts.forEach(function (q, i) { if (i) g.lineTo(q[0], q[1]); else g.moveTo(q[0], q[1]); }); g.stroke(); });
       g.setLineDash([]);
-      const h = m.hq; g.fillStyle = '#6b5a4a'; roundRect(g, h.x - 8, h.y - 40, 78, 80, 8); g.fill();
-      g.fillStyle = '#8a7a66'; roundRect(g, h.x - 2, h.y - 34, 66, 68, 6); g.fill();
-      g.fillStyle = '#c0392b'; g.fillRect(h.x + 28, h.y - 30, 3, 22); g.beginPath(); g.moveTo(h.x + 31, h.y - 30); g.lineTo(h.x + 48, h.y - 25); g.lineTo(h.x + 31, h.y - 20); g.fill();
+      const b = m.box, cx = (b[0] + b[2]) / 2, cy = (b[1] + b[3]) / 2;
+      g.fillStyle = '#6b5a4a'; roundRect(g, b[0], b[1], b[2] - b[0], b[3] - b[1], 10); g.fill();
+      g.fillStyle = '#8a7a66'; roundRect(g, b[0] + 8, b[1] + 8, b[2] - b[0] - 16, b[3] - b[1] - 16, 8); g.fill();
+      g.fillStyle = '#46597f'; g.fillRect(cx - 36, cy - 26, 72, 52);
+      g.fillStyle = '#c0392b'; g.fillRect(cx - 1.5, cy - 56, 3, 30); g.beginPath(); g.moveTo(cx + 1.5, cy - 56); g.lineTo(cx + 24, cy - 49); g.lineTo(cx + 1.5, cy - 42); g.fill();
       plain[m.art] = c; return c;
     }
 
@@ -18886,22 +18905,24 @@
     }
     function drawSelect() {
       ctx.fillStyle = 'rgba(6,10,18,.72)'; ctx.fillRect(0, 0, W, H);
-      ot('FACTION DEFENCE', W / 2, 48, 40, '#7fb0ff', 'center');
-      ot('Hold your HQ against 20 waves of Racket raiders', W / 2, 82, 14, '#dfe6f2', 'center', 700);
-      const cw = 200, ch = 228, gap = 18, x0 = (W - (cw * 4 + gap * 3)) / 2, y0 = 112;
+      ot('FACTION DEFENCE', W / 2, 40, 34, '#7fb0ff', 'center');
+      ot('Hold your HQ against 20 waves of Racket raiders', W / 2, 70, 13, '#dfe6f2', 'center', 700);
+      const cw = 262, ch = 186, gap = 16, x0 = (W - (cw * 3 + gap * 2)) / 2, y0 = 88;
       MAPS.forEach(function (m, i) {
-        const x = x0 + i * (cw + gap), y = y0, open = i <= save.open;
+        const x = x0 + (i % 3) * (cw + gap), y = y0 + Math.floor(i / 3) * (ch + 12), open = i <= save.open;
         pill(x, y, cw, ch, open ? 'rgba(22,30,46,.94)' : 'rgba(18,22,30,.9)', open ? 'rgba(127,176,255,.6)' : '#2a3242');
         const im = (function () { const keep = M; M = m; const a = mapImg(); M = keep; return a; })() || plainMap(m);
-        ctx.save(); roundRect(ctx, x + 8, y + 8, cw - 16, 108, 8); ctx.clip(); ctx.globalAlpha = open ? 1 : 0.35; ctx.drawImage(im, x + 8, y + 8, cw - 16, 108); ctx.restore(); ctx.globalAlpha = 1;
-        ot((i + 1) + '. ' + m.name, x + cw / 2, y + 134, 15, '#fff', 'center');
+        ctx.save(); roundRect(ctx, x + 8, y + 8, 132, 74, 6); ctx.clip(); ctx.globalAlpha = open ? 1 : 0.35; ctx.drawImage(im, x + 8, y + 8, 132, 74); ctx.restore(); ctx.globalAlpha = 1;
+        ot((i + 1) + '. ' + m.name, x + 150, y + 22, 14, '#fff', 'left');
         const s = save.stars[i] || 0;
-        for (let k = 0; k < 3; k++) ot('★', x + cw / 2 - 26 + k * 26, y + 160, 20, k < s ? '#ffd65a' : '#3a4558', 'center');
-        ot(save.best[i] ? 'Best: wave ' + save.best[i] : open ? 'Not played' : '🔒 Clear ' + MAPS[i - 1].name, x + cw / 2, y + 184, 11, '#9fb0c8', 'center', 700);
-        if (open) button(x + 40, y + ch - 36, cw - 80, 28, 'Play', function () { startMap(i); }, { size: 13 });
+        for (let k = 0; k < 3; k++) ot('★', x + 160 + k * 24, y + 50, 19, k < s ? '#ffd65a' : '#3a4558', 'center');
+        ot(save.best[i] ? 'Best: wave ' + save.best[i] : open ? 'Not played' : 'Locked', x + 150, y + 74, 11, '#9fb0c8', 'left', 700);
+        ot(m.paths.length > 1 ? m.paths.length + ' routes' : '1 route', x + 12, y + 102, 11, '#c9d3e3', 'left', 700);
+        if (open) button(x + 12, y + ch - 46, cw - 24, 34, 'Play', function () { startMap(i); }, { size: 14 });
+        else ot('🔒 Clear ' + MAPS[i - 1].name + ' first', x + cw / 2, y + ch - 29, 12, '#c06a5a', 'center', 700);
       });
-      ot('War Chest: $' + save.chest.toLocaleString('en-GB'), W / 2 - 110, H - 40, 16, '#7ee07e', 'center');
-      button(W / 2 + 20, H - 58, 150, 36, '🛠️ Armoury', function () { st = 'armoury'; showStats(); });
+      ot('War Chest: $' + save.chest.toLocaleString('en-GB'), W / 2 - 110, H - 30, 16, '#7ee07e', 'center');
+      button(W / 2 + 20, H - 48, 150, 36, '🛠️ Armoury', function () { st = 'armoury'; showStats(); });
     }
     function drawArmoury() {
       ctx.fillStyle = 'rgba(6,10,18,.82)'; ctx.fillRect(0, 0, W, H);
@@ -18970,7 +18991,7 @@
     showStats();
 
         games.defence = {
-      wipe: function () { Object.keys(save).forEach(function (k) { delete save[k]; }); Object.assign(save, { open: 0, stars: {}, best: {}, chest: 0, own: {}, lv: {}, strikes: 0 }); persist(); st = 'select'; showStats(); },
+      wipe: function () { Object.keys(save).forEach(function (k) { delete save[k]; }); Object.assign(save, { v: 2, open: 0, stars: {}, best: {}, chest: 0, own: {}, lv: {}, strikes: 0 }); persist(); st = 'select'; showStats(); },
       enter: function () { active = true; showStats(); run(); },
       leave: function () { active = false; paused = st === 'play' && wave > 0; stop(); },
       relayout: function () {},
@@ -18986,7 +19007,7 @@
           if (sel !== null && towers[sel]) { if (k === 'u') { upgrade(sel); return true; } if (k === 's') { sell(sel); return true; } }
           return false;
         }
-        if (st === 'select' && /^[1-4]$/.test(k)) { const i = Number(k) - 1; if (i <= save.open && !e.repeat) startMap(i); return true; }
+        if (st === 'select' && /^[1-6]$/.test(k)) { const i = Number(k) - 1; if (i <= save.open && !e.repeat) startMap(i); return true; }
         return false;
       }
     };
