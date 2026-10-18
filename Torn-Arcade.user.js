@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.27.5
+// @version      2.27.6
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with six game apps: Tornies (a creature-collecting RPG), Torn Invasion (a Doom-style alien shooter), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -18597,9 +18597,9 @@
       if (!cp && save.runs && save.runs[i]) { delete save.runs[i]; persist(); }   // a new game replaces this map's checkpoint
       mi = i; M = MAPS[i]; wave = 0; hqMax = 20 + 4 * armLv('walls'); hq = hqMax; cash = M.cash + 40 * armLv('fund');
       raiders = []; shots = []; fires = []; fx = []; floats = []; queue = []; waveOn = false; spawnT = 0;
-      towers = M.pads.map(function () { return null; }); banked = 0; paidIn = 0; shopping = false; leakLog = []; sel = null; menu = null; strikeMode = false; earned = 0; kills = 0; leaked = 0; result = null; paused = false;
+      towers = M.pads.map(function () { return null; }); banked = 0; paidIn = 0; shopping = false; paidWave = 0; leakLog = []; sel = null; menu = null; strikeMode = false; earned = 0; kills = 0; leaked = 0; result = null; paused = false;
       if (cp) {   // carry on from the last checkpoint (the end of wave 10, 20 or 30)
-        wave = cp.wave; cash = cp.cash; hq = cp.hq; hqMax = cp.hqMax; banked = cp.banked; paidIn = cp.paidIn; earned = cp.earned; kills = cp.kills; leaked = cp.leaked;
+        wave = cp.wave; paidWave = cp.wave; cash = cp.cash; hq = cp.hq; hqMax = cp.hqMax; banked = cp.banked; paidIn = cp.paidIn; earned = cp.earned; kills = cp.kills; leaked = cp.leaked;
         towers = M.pads.map(function (p, k) { const q = cp.towers[k]; return q && TW[q.t] ? { t: q.t, lv: q.lv, x: p.x, y: p.y, cd: 0.2, ang: -Math.PI / 2, spent: q.spent, flash: 0, dealt: q.dealt || 0 } : null; });
         floatText(W / 2, 118, 'Carrying on after wave ' + wave, '#9fd0ff');
       }
@@ -18615,7 +18615,7 @@
       if (st !== 'play' || wave >= WAVES) return;
       if (queue.length) return;   // the current wave is still arriving
       if (bossHold()) { floatText(W / 2, 118, 'Clear the boss wave first', '#ffd65a'); snd('alarm'); return; }   // waves 10, 20 and 30 must be finished (milestone payout, wave-30 Armoury)
-      if (wave > 0 && raiders.length) { const b = 5 + wave; cash += b; floatText(W - 120, 60, '+$' + b + ' early', '#7ee07e'); }
+      if (wave > 0 && raiders.length) { payWave(); const b = 5 + wave; cash += b; floatText(W - 120, 60, '+$' + b + ' early', '#7ee07e'); }   // starting early pays this wave's bonuses now, plus the early bonus
       wave++; queue = waveList(mi, wave); spawnT = 0.6; waveOn = true; snd('horn'); showStats();
     }
     function hpMult(w, big) { return big ? 0.72 + 0.06 * (w - 1) : 0.72 + 0.09 * (w - 1) + 0.0012 * (w - 1) * (w - 1); }   // toughness by wave: raiders about x2.9 at 20 and x6 at 40; bosses grow more gently
@@ -18726,8 +18726,7 @@
       if (shake > 0) shake -= dt;
       // wave cleared
       if (waveOn && !queue.length && !raiders.length) {
-        waveOn = false; const b = 10 + 2 * wave; cash += b; floatText(W / 2, 90, 'Wave ' + wave + ' cleared  +$' + b, '#9fe39f'); snd('clear');
-        if (mi === 0 && wave < 10) { cash += EARLY_BONUS; floatText(W / 2, 60, 'Early Wave Bonus +$' + EARLY_BONUS, '#ffd65a'); }   // Westgate only: help new players build up before the first boss
+        waveOn = false; payWave(); snd('clear');
         if (wave >= WAVES) endGame(true);
         else if (MILESTONE[wave]) payMilestone();
         showStats();
@@ -18747,6 +18746,12 @@
       snd('clear');
     }
     function bossHold() { return waveOn && !!MILESTONE[wave] && (queue.length > 0 || raiders.length > 0); }
+    let paidWave = 0;   // the last wave whose bonus has been paid (each wave pays once: on clearing it, or on starting the next one early)
+    function payWave() {
+      if (paidWave >= wave) return; paidWave = wave;
+      const b = 10 + 2 * wave; cash += b; floatText(W / 2, 90, 'Wave ' + wave + ' bonus  +$' + b, '#9fe39f');
+      if (mi === 0 && wave < 10) { cash += EARLY_BONUS; floatText(W / 2, 60, 'Early Wave Bonus +$' + EARLY_BONUS, '#ffd65a'); }   // Westgate only: help new players build up before the first boss
+    }
     function shopOpen() { return st === 'play' && wave === SHOP_WAVE && !waveOn && !queue.length; }
     function endGame(win) {
       const stars = win ? (hq >= hqMax * 0.75 ? 3 : hq >= hqMax * 0.4 ? 2 : 1) : 0;
