@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.25.2
+// @version      2.25.3
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with six game apps: Tornies (a creature-collecting RPG), Torn Invasion (a Doom-style alien shooter), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -18726,12 +18726,16 @@
     /* ---------- Drawing ---------- */
     function ot(s, x, y, size, col, align, weight) {
       ctx.font = (weight || 900) + ' ' + size + 'px system-ui,Arial,sans-serif'; ctx.textAlign = align || 'left'; ctx.textBaseline = 'middle';
-      ctx.lineWidth = Math.max(3, size / 5); ctx.strokeStyle = 'rgba(0,0,0,.85)'; ctx.lineJoin = 'round'; ctx.strokeText(s, x, y); ctx.fillStyle = col || '#fff'; ctx.fillText(s, x, y);
+      ctx.lineWidth = size < 14 ? 2.2 : Math.max(3, size / 5); ctx.strokeStyle = 'rgba(0,0,0,.8)'; ctx.lineJoin = 'round'; ctx.strokeText(s, x, y); ctx.fillStyle = col || '#fff'; ctx.fillText(s, x, y);
+    }
+    function tx(s, x, y, size, col, align, weight) {   // clean text without an outline, for panels and cards
+      ctx.font = (weight || 600) + ' ' + size + 'px system-ui,Arial,sans-serif'; ctx.textAlign = align || 'left'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = col || '#fff'; ctx.fillText(s, x, y);
     }
     function wrapText(s, x, y, maxW, size, col, lh) {
       ctx.font = '600 ' + size + 'px system-ui,Arial,sans-serif'; const words = s.split(' '); let line = '', n = 0;
-      for (const w of words) { const tryL = line ? line + ' ' + w : w; if (ctx.measureText(tryL).width > maxW && line) { ot(line, x, y + n * lh, size, col, 'left', 600); line = w; n++; } else line = tryL; }
-      if (line) ot(line, x, y + n * lh, size, col, 'left', 600);
+      for (const w of words) { const tryL = line ? line + ' ' + w : w; if (ctx.measureText(tryL).width > maxW && line) { tx(line, x, y + n * lh, size, col, 'left', 600); line = w; n++; } else line = tryL; }
+      if (line) tx(line, x, y + n * lh, size, col, 'left', 600);
     }
     function pill(x, y, w, h, fill, line) { roundRect(ctx, x, y, w, h, Math.min(10, h / 2)); ctx.fillStyle = fill; ctx.fill(); if (line) { ctx.lineWidth = 1.5; ctx.strokeStyle = line; ctx.stroke(); } }
     function button(x, y, w, h, label, act, opts) {
@@ -18881,8 +18885,8 @@
       pill(x, y, w, h, 'rgba(14,18,28,.94)', '#ffd65a');
       ot(T.icon + ' ' + T.name + ' · Lv ' + tw.lv, x + 10, y + 15, 13, '#ffd65a', 'left', 800);
       const dm = T.dmg * LV_DMG[tw.lv - 1] * (1 + 0.08 * armLv('train'));
-      ot((tw.t === 'molotov' ? 'Burn ' + Math.round(dm) + '/s' : 'Damage ' + Math.round(dm)) + ' · Range ' + Math.round(T.range * LV_RNG[tw.lv - 1]), x + 10, y + 35, 11, '#dfe6f2', 'left', 600);
-      ot(T.desc.split('. ')[0].replace(/\.$/, '') + '.', x + 10, y + 53, 10.5, '#9fb0c8', 'left', 600);
+      tx((tw.t === 'molotov' ? 'Burn ' + Math.round(dm) + '/s' : 'Damage ' + Math.round(dm)) + ' · Range ' + Math.round(T.range * LV_RNG[tw.lv - 1]), x + 10, y + 35, 11, '#dfe6f2', 'left', 600);
+      tx(T.desc.split('. ')[0].replace(/\.$/, '') + '.', x + 10, y + 53, 10.5, '#9fb0c8', 'left', 600);
       const c = upCost(tw);
       button(x + 8, y + h - 38, 120, 30, tw.lv >= 3 ? 'Max level' : 'Up $' + c, function () { upgrade(pi); }, { off: tw.lv >= 3 || cash < c, size: 12 });
       button(x + 136, y + h - 38, 92, 30, 'Sell $' + Math.round(tw.spent * 0.7), function () { sell(pi); }, { fill: '#a33a2a', size: 12 });
@@ -18896,7 +18900,7 @@
       ot(M.name + ' · ' + (r.win ? 'all ' + WAVES + ' waves' : 'reached wave ' + r.reached), W / 2, y + 68, 14, '#dfe6f2', 'center', 700);
       for (let k = 0; k < 3; k++) ot('★', W / 2 - 44 + k * 44, y + 104, 36, k < r.stars ? '#ffd65a' : '#3a4558', 'center');
       ot('+$' + r.gain.toLocaleString('en-GB') + ' to your War Chest' + (r.first ? ' (first clear bonus)' : ''), W / 2, y + 144, 14, '#7ee07e', 'center', 800);
-      ot('War Chest: $' + save.chest.toLocaleString('en-GB'), W / 2, y + 166, 12, '#c9d3e3', 'center', 700);
+      tx('War Chest: $' + save.chest.toLocaleString('en-GB'), W / 2, y + 166, 12, '#c9d3e3', 'center', 700);
       const last = mi >= MAPS.length - 1;
       button(x + 20, y + h - 52, 120, 36, 'Maps', function () { st = 'select'; showStats(); });
       button(x + 150, y + h - 52, 120, 36, 'Armoury', function () { st = 'armoury'; showStats(); });
@@ -18916,29 +18920,31 @@
         ot((i + 1) + '. ' + m.name, x + 150, y + 22, 14, '#fff', 'left');
         const s = save.stars[i] || 0;
         for (let k = 0; k < 3; k++) ot('★', x + 160 + k * 24, y + 50, 19, k < s ? '#ffd65a' : '#3a4558', 'center');
-        ot(save.best[i] ? 'Best: wave ' + save.best[i] : open ? 'Not played' : 'Locked', x + 150, y + 74, 11, '#9fb0c8', 'left', 700);
-        ot(m.paths.length > 1 ? m.paths.length + ' routes' : '1 route', x + 12, y + 102, 11, '#c9d3e3', 'left', 700);
+        tx(save.best[i] ? 'Best: wave ' + save.best[i] : open ? 'Not played' : 'Locked', x + 150, y + 74, 12.5, '#aebcd0', 'left', 700);
+        tx(m.paths.length > 1 ? m.paths.length + ' routes' : '1 route', x + 12, y + 102, 12.5, '#c9d3e3', 'left', 700);
         if (open) button(x + 12, y + ch - 46, cw - 24, 34, 'Play', function () { startMap(i); }, { size: 14 });
-        else ot('🔒 Clear ' + MAPS[i - 1].name + ' first', x + cw / 2, y + ch - 29, 12, '#c06a5a', 'center', 700);
+        else tx('🔒 Clear ' + MAPS[i - 1].name + ' first', x + cw / 2, y + ch - 29, 12, '#c06a5a', 'center', 700);
       });
-      ot('War Chest: $' + save.chest.toLocaleString('en-GB'), W / 2 - 110, H - 30, 16, '#7ee07e', 'center');
+      tx('War Chest: $' + save.chest.toLocaleString('en-GB'), W / 2 - 110, H - 30, 16, '#7ee07e', 'center');
       button(W / 2 + 20, H - 48, 150, 36, '🛠️ Armoury', function () { st = 'armoury'; showStats(); });
     }
     function drawArmoury() {
-      ctx.fillStyle = 'rgba(6,10,18,.82)'; ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = '#0a0f1a'; ctx.fillRect(0, 0, W, H);
       ot('ARMOURY', 24, 36, 28, '#ffd65a');
-      ot('War Chest: $' + save.chest.toLocaleString('en-GB'), W - 24, 36, 18, '#7ee07e', 'right');
-      ot('Earn War Chest money by playing Faction Defence. It is only for Faction Defence.', 24, 64, 11, '#9fb0c8', 'left', 600);
-      const keys = Object.keys(ARM), cw = 296, ch = 92, gx = 14, gy = 12, x0 = 24, y0 = 82;
+      ot('War Chest: $' + save.chest.toLocaleString('en-GB'), W - 24, 36, 20, '#7ee07e', 'right');
+      tx('Earn War Chest money by playing Faction Defence. It is only for Faction Defence.', 24, 66, 13.5, '#b8c6da', 'left', 500);
+      const keys = Object.keys(ARM), cw = 296, ch = 116, gx = 14, gy = 12, x0 = 24, y0 = 86;
       keys.forEach(function (k, i) {
         const A = ARM[k], x = x0 + (i % 3) * (cw + gx), y = y0 + Math.floor(i / 3) * (ch + gy);
         const unlock = !!TW[k], lv = unlock ? (save.own[k] ? 1 : 0) : k === 'strike' ? save.strikes : armLv(k);
         const max = k === 'strike' ? 3 : A.costs.length, done = lv >= max, cost = k === 'strike' ? A.costs[0] : A.costs[lv];
-        pill(x, y, cw, ch, 'rgba(22,30,46,.95)', done ? 'rgba(126,224,126,.6)' : 'rgba(127,176,255,.45)');
-        ot(A.icon + ' ' + A.name, x + 12, y + 18, 14, '#fff', 'left', 800);
-        wrapText(A.desc, x + 12, y + 38, cw - 24, 10.5, '#9fb0c8', 13);
-        if (!unlock) for (let q = 0; q < max; q++) { ctx.fillStyle = q < lv ? '#ffd65a' : '#2e3a50'; roundRect(ctx, x + 12 + q * 18, y + ch - 18, 14, 6, 3); ctx.fill(); }
-        button(x + cw - 112, y + ch - 38, 100, 28, done ? (unlock ? 'Unlocked' : 'Maxed') : '$' + cost, function () { buy(k); }, { off: done || save.chest < cost, size: 12 });
+        pill(x, y, cw, ch, '#162034', done ? 'rgba(126,224,126,.7)' : 'rgba(127,176,255,.5)');
+        tx(A.icon + ' ' + A.name, x + 14, y + 22, 17, '#fff', 'left', 800);
+        wrapText(A.desc, x + 14, y + 48, cw - 28, 13.5, '#c3d0e2', 18);
+        if (!unlock) for (let q = 0; q < max; q++) { ctx.fillStyle = q < lv ? '#ffd65a' : '#2e3a50'; roundRect(ctx, x + 14 + q * 15, y + ch - 22, 11, 7, 3.5); ctx.fill(); }
+        if (!unlock && k !== 'strike') tx('Level ' + lv + ' / ' + max, x + 20 + max * 15, y + ch - 18, 12.5, '#8fa2bd', 'left', 600);
+        if (k === 'strike') tx('Held ' + lv + ' / 3', x + 20 + max * 15, y + ch - 18, 12.5, '#8fa2bd', 'left', 600);
+        button(x + cw - 118, y + ch - 42, 106, 32, done ? (unlock ? 'Unlocked' : 'Maxed') : '$' + cost, function () { buy(k); }, { off: done || save.chest < cost, size: 14 });
       });
       button(24, H - 52, 120, 36, '‹ Maps', function () { st = 'select'; showStats(); });
       if (result && !result.win) button(156, H - 52, 140, 36, 'Try again', function () { startMap(mi); });
