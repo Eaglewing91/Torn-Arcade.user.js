@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.23.1
+// @version      2.23.2
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with five game apps: Tornies (a creature-collecting RPG), Torn Invasion (a Doom-style alien shooter), Angry Bogies (a slingshot physics game), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -12402,7 +12402,7 @@
                       n  note shown         m  Tornies: [species, level, golden 0/1, perfect stats 0/1, nickname]
                       it items {id: qty}    mo money
      Each code is for one Torn ID and works once: it is remembered in this browser's Torn Arcade storage and in the save. */
-  const GIFT_PUBLIC_KEY = null;   // { x: '...', y: '...' } from the Code Maker (public key only; safe to publish)
+  const GIFT_PUBLIC_KEY = { x: 'u0JQt6vaTCu7Sizjr1taVL4oR361l4kKayhHGOfFNUk', y: 'SWKk4vFpjqVUlanSTO0OYaUehXL1t1JDRpDPysdi9RI' };   // the developer's public key (from the Dev app; safe to publish)
   const GIFT_MAX = { mons: 6, lv: 100, qty: 99, money: 10000000 };
   function giftB64(s) { s = s.replace(/-/g, '+').replace(/_/g, '/'); while (s.length % 4) s += '='; const bin = atob(s), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return u; }
   let giftKeyP = null;
