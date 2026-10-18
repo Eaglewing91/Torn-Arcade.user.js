@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.25.3
+// @version      2.26.0
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with six game apps: Tornies (a creature-collecting RPG), Torn Invasion (a Doom-style alien shooter), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -438,7 +438,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gift codes', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, invasion: 1, bogies: 1, defence: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.25';
+  const VERSION = '2.26';
 
   GM_addStyle([
     /* The phone */
@@ -599,6 +599,11 @@
     '.ta-walls{display:flex;gap:8px}',
     '.ta-wall{width:44px;height:72px;border-radius:9px;border:2px solid transparent;padding:0;margin:0;cursor:pointer;background-size:cover;background-position:center}',
     '.ta-wall.ta-on{border-color:#5aa3ef;box-shadow:0 0 0 2px rgba(90,163,239,.3)}',
+    '.ta-themes{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}',
+    '.ta-theme{display:flex;flex-direction:column;align-items:center;gap:4px;padding:0;margin:0;border:0;background:none;color:inherit;font:600 10.5px/1.15 system-ui,Arial,sans-serif;cursor:pointer;text-align:center}',
+    '.ta-theme i{display:block;width:100%;height:64px;border-radius:9px;border:2px solid transparent;background-size:cover;background-position:center}',
+    '.ta-theme.ta-on i{border-color:#5aa3ef;box-shadow:0 0 0 2px rgba(90,163,239,.3)}',
+    '.ta-theme.ta-on span{color:#8fc1ff}',
     '.ta-danger{border:0;margin:0;border-radius:9px;padding:7px 12px;font:700 12.5px system-ui,Arial,sans-serif;color:#fff;background:#8a2a32;cursor:pointer;flex:none}',
     '.ta-danger.ta-sure{background:#e0453a}',
     '.ta-btn.ta-mapbtn{padding:6px 12px;font-size:12.5px;flex:none}', '.ta-btn.ta-sure{background:#e0453a;box-shadow:0 2px 0 #9a2a22}',
@@ -751,9 +756,62 @@
     }
     try { return WALL_URL[id] = c.toDataURL('image/png'); } catch (e) { return ''; }
   }
+  /* Phone themes: colours, clock, glass and icon style, with an illustrated wallpaper from the Character Art pack
+     (or a matching gradient without it). 'classic' is the original look with the chosen wallpaper. */
+  const THEMES = {
+    classic: { name: 'Classic' },
+    neon: { name: 'Neon Night', dark: 1, g: '30,10,55', a: 'rgba(255,60,190,.35)', edge: 'rgba(255,80,200,.6)', glow: 'rgba(255,60,190,.4)', ring: 'rgba(255,255,255,.14)', title: '#ffd65a', pos: 'center 70%',
+      fb: 'linear-gradient(180deg,#120830,#2a0a4a 55%,#3a0a4a 75%,#0a0618)', bar: ['#2a0d45', '#160828', 'rgba(255,80,200,.5)'],
+      clock: 'font-weight:200;background:linear-gradient(90deg,#ff6ad5,#7fe9ff);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 8px rgba(255,90,210,.6))', lsh: '0 0 6px rgba(255,90,210,.9),0 1px 2px #000' },
+    crimson: { name: 'Crimson Syndicate', dark: 1, g: '14,0,0', a: '#b3001b', edge: 'rgba(255,40,60,.55)', glow: 'rgba(220,0,30,.45)', ring: 'rgba(255,60,70,.5)', title: '#ff4d5e', pos: 'center 30%', radius: 12,
+      fb: 'linear-gradient(180deg,#1a0000,#4a0008 50%,#7a0010 70%,#0a0000)', bar: ['#2a0005', '#120002', 'rgba(255,40,60,.5)'],
+      clock: 'font-weight:900;color:#fff;text-shadow:0 0 14px rgba(255,0,30,.8),2px 2px 0 #7a0010', lsh: '0 1px 3px #000,0 0 8px rgba(255,0,30,.6)' },
+    casino: { name: 'Casino Royale', dark: 1, g: '30,10,50', a: 'linear-gradient(90deg,#b8862b,#f4d47c,#b8862b)', pill: '#3a2400', edge: 'rgba(244,212,124,.6)', glow: 'rgba(244,190,80,.3)', ring: 'rgba(244,212,124,.75)', title: '#f4d47c', pos: 'center bottom',
+      fb: 'radial-gradient(circle at 50% 85%,#5a2a7a,#2a0f45 55%,#160628)', bar: ['#2a1240', '#170a26', 'rgba(244,212,124,.55)'],
+      clock: 'font-family:Georgia,serif;font-weight:700;background:linear-gradient(180deg,#fff3c4,#d4a541);-webkit-background-clip:text;background-clip:text;color:transparent', lsh: '0 1px 3px #000' },
+    jungle: { name: 'Emerald Jungle', dark: 1, g: '6,30,16', a: '#16a34a', edge: 'rgba(134,239,172,.45)', ring: 'rgba(187,247,208,.5)', title: '#86efac', pos: 'center 40%',
+      fb: 'linear-gradient(180deg,#6fa58a,#2e5a3a 40%,#123a22 70%,#06180e)', bar: ['#0f2e1a', '#08190e', 'rgba(134,239,172,.45)'],
+      clock: 'font-weight:800;color:#ecfdf5;text-shadow:0 3px 12px rgba(0,40,10,.7)', lsh: '0 1px 3px rgba(0,0,0,.9)' },
+    riviera: { name: 'Riviera', dark: 0, ga: .55, a: '#0e9fb3', edge: 'rgba(255,255,255,.8)', ring: 'rgba(255,255,255,.95)', title: '#0b7f90', pos: 'center 30%', status: '#10324a',
+      fb: 'linear-gradient(180deg,#7fd0ea,#bfe8f2 55%,#3fb8c8 70%,#f4e4c8)', bar: ['#0e5566', '#0a3a47', 'rgba(255,255,255,.35)'],
+      clock: 'font-weight:700;color:#0f3550', date: '#1f4a66', label: '#10283a', lsh: '0 0 3px #fff,0 0 6px #fff,0 0 10px rgba(255,255,255,.95)' }
+  };
+  function themeCss(id) {
+    const T = THEMES[id], P = '.ta-root[data-theme="' + id + '"] ', dark = !!T.dark;
+    const glass = dark ? 'rgba(' + T.g + ',.5)' : 'rgba(255,255,255,' + T.ga + ')';
+    return [
+      P + '.ta-home{background-size:cover!important;background-position:' + T.pos + '!important}',
+      T.status ? '.ta-root[data-theme="' + id + '"]:not([data-app]) .ta-status,.ta-root[data-theme="' + id + '"][data-app=""] .ta-status,.ta-root[data-theme="' + id + '"]:not([data-app]) .ta-status *,.ta-root[data-theme="' + id + '"][data-app=""] .ta-status *{color:' + T.status + '!important}' : '',
+      P + '.ta-widget{background:' + glass + '!important;border:1px solid ' + T.edge + '!important;box-shadow:' + (T.glow ? '0 0 18px ' + T.glow + ',' : '') + '0 10px 26px rgba(0,0,0,' + (dark ? .35 : .15) + ')!important}',
+      P + '.ta-wclock{' + T.clock.split(';').map(function (r) { return r + '!important'; }).join(';') + '}',
+      P + '.ta-wdate{color:' + (T.date || (dark ? '#e8ecf4' : '#2a3142')) + '!important}',
+      P + '.ta-widget em{background:' + T.a + '!important;color:' + (T.pill || '#fff') + '!important' + (T.glow ? ';box-shadow:0 0 10px ' + T.glow : '') + '}',
+      P + '.ta-lock{background:' + (dark ? 'rgba(255,255,255,.14)' : 'rgba(255,255,255,.7)') + '!important}',
+      P + '.ta-note{background:' + (dark ? 'rgba(' + T.g + ',.74)' : 'rgba(255,255,255,.85)') + '!important;border:1px solid ' + T.edge + '!important}',
+      P + '.ta-note *{color:' + (dark ? '#e6eaf2' : '#2a3142') + '!important}',
+      P + '.ta-note b,' + P + '.ta-note strong{color:' + T.title + '!important}',
+      P + '.ta-noteicon{background:' + T.a + '!important}',
+      P + '.ta-home .ta-appicon{border-radius:' + (T.radius || 18) + 'px!important;box-shadow:0 0 0 2px ' + T.ring + ',' + (T.glow ? '0 0 14px ' + T.glow + ',' : '') + '0 7px 14px rgba(0,0,0,.4)!important}',
+      P + '.ta-home .ta-applabel{color:' + (T.label || '#fff') + '!important;text-shadow:' + T.lsh + '!important;font-weight:700!important}',
+      P + '.ta-dock{background:' + glass + '!important;border:1px solid ' + T.edge + '!important' + (T.glow ? ';box-shadow:0 0 18px ' + T.glow : '') + '}',
+      P + '.ta-appbar{background:linear-gradient(180deg,' + T.bar[0] + ',' + T.bar[1] + ')!important;border-bottom-color:' + T.bar[2] + '!important}'
+    ].join('\n');
+  }
+  let themeStyle = null;
+  function themeId() { const t = store.get('theme', 'classic'); return THEMES[t] ? t : 'classic'; }
+  function themeWall(id) {   // the pack wallpaper, or a matching gradient
+    const api = games.pocket && games.pocket.art, b64 = api && api.get ? api.get('wp' + id) : null;
+    return b64 ? 'url("data:image/webp;base64,' + b64 + '")' : THEMES[id].fb;
+  }
   function applyWallpaper() {
-    const id = store.get('wallpaper', 'night');
-    homeEl.style.backgroundImage = 'url("' + wallpaper(id) + '")';
+    const t = themeId();
+    if (!themeStyle) {
+      themeStyle = document.createElement('style'); themeStyle.id = 'ta-themes';
+      themeStyle.textContent = Object.keys(THEMES).filter(function (k) { return k !== 'classic'; }).map(themeCss).join('\n');
+      document.head.appendChild(themeStyle);
+    }
+    if (t === 'classic') { delete root.dataset.theme; homeEl.style.backgroundImage = 'url("' + wallpaper(store.get('wallpaper', 'night')) + '")'; }
+    else { root.dataset.theme = t; homeEl.style.backgroundImage = themeWall(t); }
   }
 
   /* Torn City Time (UTC), worked out on this device */
@@ -1068,15 +1126,19 @@
   devBox.addEventListener('keydown', function (e) { if (e.key === 'Enter' && e.target.dataset && e.target.dataset.f === 'pass') { const b = $(devBox, '[data-dev="unlock"]'); if (b) devAction(b); } });
   function refreshDevIcon() { const b = $(root, '.ta-dock [data-app="dev"]'); if (b) b.hidden = !devIsMe(); }
 
+  function artThemesReady() { const api = games.pocket && games.pocket.art; return !!(api && api.get && api.get('wpneon')); }
   function renderSettings() {
-    const wall = store.get('wallpaper', 'night');
+    const wall = store.get('wallpaper', 'night'), theme = themeId();
     settingsBox.innerHTML =
       '<div class="ta-group"><h3>General</h3><div class="ta-list">' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#2f7bd1">🔊</span><div class="ta-rtext"><b>Sound</b><small>Game sounds and effects</small></div><button type="button" class="ta-switch' + (muted ? '' : ' ta-on') + '" data-set="sound"></button></div>' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#1c9a5a">🎚️</span><div class="ta-rtext"><b>Volume</b><input type="range" class="ta-vol" min="0" max="100" step="1" value="' + volume + '" aria-label="Volume"></div><span class="ta-volnum">' + volume + '%</span></div>' +
-        '<div class="ta-row"><span class="ta-ricon" style="background:#7a52d8">🖼️</span><div class="ta-rtext"><b>Wallpaper</b><div class="ta-walls" style="margin-top:6px">' +
-          Object.keys(WALLS).map(function (id) { return '<button type="button" class="ta-wall' + (id === wall ? ' ta-on' : '') + '" data-wall="' + id + '" title="' + WALLS[id].name + '" style="background-image:url(&quot;' + wallpaper(id) + '&quot;)"></button>'; }).join('') +
+        '<div class="ta-row"><span class="ta-ricon" style="background:#d0457a">🎨</span><div class="ta-rtext"><b>Theme</b><small>' + (artThemesReady() ? 'Colours, clock and icon style for the phone' : 'Install the Character Art pack for the illustrated theme wallpapers') + '</small><div class="ta-themes">' +
+          Object.keys(THEMES).map(function (id) { const bg = id === 'classic' ? 'url(&quot;' + wallpaper(wall) + '&quot;)' : themeWall(id).replace(/"/g, '&quot;'); return '<button type="button" class="ta-theme' + (id === theme ? ' ta-on' : '') + '" data-theme="' + id + '"><i style="background-image:' + bg + '"></i><span>' + THEMES[id].name + '</span></button>'; }).join('') +
         '</div></div></div>' +
+        (theme === 'classic' ? '<div class="ta-row"><span class="ta-ricon" style="background:#7a52d8">🖼️</span><div class="ta-rtext"><b>Wallpaper</b><div class="ta-walls" style="margin-top:6px">' +
+          Object.keys(WALLS).map(function (id) { return '<button type="button" class="ta-wall' + (id === wall ? ' ta-on' : '') + '" data-wall="' + id + '" title="' + WALLS[id].name + '" style="background-image:url(&quot;' + wallpaper(id) + '&quot;)"></button>'; }).join('') +
+        '</div></div></div>' : '') +
       '</div></div>' +
       '<div class="ta-group"><h3>Notifications</h3><div class="ta-list">' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#d0453a">🔔</span><div class="ta-rtext"><b>Torn event notifications</b><small>Shows your new Torn events on the phone while it is open</small></div><button type="button" class="ta-switch' + (store.get('evNotify', true) ? ' ta-on' : '') + '" data-set="evNotify"></button></div>' +
@@ -1160,8 +1222,9 @@
     else if (e.target.classList.contains('ta-cheatin')) { e.preventDefault(); tryCheat(); }
   });
   settingsBox.addEventListener('click', function (e) {
-    const t = e.target.closest('[data-set],[data-wall]');
-    if (!t) return;
+    const t = e.target.closest('[data-set],[data-wall],button.ta-theme');
+    if (!t || !settingsBox.contains(t)) return;
+    if (t.dataset.theme) { store.set('theme', t.dataset.theme); applyWallpaper(); sfx.click(); renderSettings(); return; }
     if (t.dataset.wall) { store.set('wallpaper', t.dataset.wall); applyWallpaper(); sfx.click(); renderSettings(); return; }
     const k = t.dataset.set;
     if (k === 'cheat') { tryCheat(); return; }
@@ -7748,17 +7811,17 @@
      The illustrated Tornie and character artwork lives in two separate, optional userscripts, so the main script
      stays small (some phones and apps only accept scripts up to 2 MB):
        "Torn Arcade - Tornies Art"    (pack 'tornies': PIX[1..179])
-       "Torn Arcade - Character Art"  (pack 'chars':   PORTRAIT[key], plus the Faction Defence map pictures 'fd…')
+       "Torn Arcade - Character Art"  (pack 'chars':   PORTRAIT[key], plus the Faction Defence maps 'fd…' and theme wallpapers 'wp…')
      How they link: userscripts can't see each other's variables, so they talk with browser events on the Torn
      page itself. This script fires 'ta-art-request'; each pack answers (and also announces itself when it loads)
      with a 'ta-art-pack' event whose detail is a JSON string { pack, ver, items }. Nothing is downloaded and no
      request is made. Every item is checked before it is used: only known names, and only base64 WebP images of a
      sensible size. Anything else is ignored. */
-  const ART_WANT = { tornies: 1, chars: 6 };   // newest pack versions this script knows about
+  const ART_WANT = { tornies: 1, chars: 7 };   // newest pack versions this script knows about
   const ARTP = {};                              // packs received: { ver, n }
   const ART_KEYS = {
     tornies: function (k) { return /^\d{1,3}$/.test(k) && +k >= 1 && +k <= DEX_SIZE; },
-    chars: function (k) { return /^[a-z0-9]{2,16}$/.test(k) && (k in PAL || /^outfit[0-3]$/.test(k) || /^fd(westgate|docks|midtown|casino|industrial|hideout)$/.test(k)); }
+    chars: function (k) { return /^[a-z0-9]{2,16}$/.test(k) && (k in PAL || /^outfit[0-3]$/.test(k) || /^fd(westgate|docks|midtown|casino|industrial|hideout)$/.test(k) || /^wp(neon|crimson|casino|jungle|riviera)$/.test(k)); }
   };
   const ART_B64 = /^UklGR[A-Za-z0-9+/]+={0,2}$/;   // base64 of a RIFF/WebP file
   function artOn(pack) { return store.get('art_' + pack, true) !== false; }
@@ -7780,13 +7843,13 @@
     let n = 0; const good = {};
     Object.keys(d.items).forEach(function (k) {
       const v = d.items[k];
-      if (ok(k) && typeof v === 'string' && v.length < (/^fd/.test(k) ? 130000 : 80000) && ART_B64.test(v)) { good[k] = v; n++; }
+      if (ok(k) && typeof v === 'string' && v.length < (/^(fd|wp)/.test(k) ? 130000 : 80000) && ART_B64.test(v)) { good[k] = v; n++; }
     });
     ARTP[pack] = { ver: Math.floor(d.ver), n: n, on: artOn(pack) };
     if (artOn(pack)) {
       artClear(pack);
       const t = artTable(pack); Object.keys(good).forEach(function (k) { t[k] = good[k]; });
-      if (pack === 'chars') { const ks = Object.keys(good).filter(function (k) { return !/^fd/.test(k); }); let i = 0; (function warm() { for (let j = 0; j < 6 && i < ks.length; j++, i++) portWant(ks[i]); if (i < ks.length) setTimeout(warm, 30); })(); }
+      if (pack === 'chars') { const ks = Object.keys(good).filter(function (k) { return !/^(fd|wp)/.test(k); }); let i = 0; (function warm() { for (let j = 0; j < 6 && i < ks.length; j++, i++) portWant(ks[i]); if (i < ks.length) setTimeout(warm, 30); })(); }
       else [1, 4, 7].forEach(pixWant);   // the title screen starters
     }
     if (artNotify) artNotify();
@@ -7803,7 +7866,7 @@
   };
   const artApi = {
     url: ART_URL, want: ART_WANT,
-    get: function (k) { return artOn('chars') && /^fd/.test(k) ? PORTRAIT[k] || null : null; },   // Faction Defence map pictures
+    get: function (k) { return artOn('chars') && /^(fd|wp)/.test(k) ? PORTRAIT[k] || null : null; },   // Faction Defence maps and theme wallpapers
     info: function (pack) { const p = ARTP[pack]; return { installed: !!p, ver: p ? p.ver : 0, n: p ? p.n : 0, on: artOn(pack), old: !!p && p.ver < ART_WANT[pack] }; },
     setOn: function (pack, on) {
       store.set('art_' + pack, !!on);
@@ -7820,7 +7883,7 @@
         return out;
       }
       const met = (d && d.metArt) || {};
-      return Object.keys(PORTRAIT).filter(function (k) { return !/^(outfit|fd)/.test(k); }).sort().map(function (k) {
+      return Object.keys(PORTRAIT).filter(function (k) { return !/^(outfit|fd|wp)/.test(k); }).sort().map(function (k) {
         const nm = ART_LABEL[k] || k.charAt(0).toUpperCase() + k.slice(1);
         return { src: 'data:image/webp;base64,' + PORTRAIT[k], name: met[k] ? nm : '???', known: !!met[k] };
       });
@@ -19020,7 +19083,7 @@
   })();
 
   /* ================= Wiring ================= */
-  if (games.pocket && games.pocket.art) games.pocket.art.onChange(function () { refreshNav(); });
+  if (games.pocket && games.pocket.art) games.pocket.art.onChange(function () { refreshNav(); if (themeId() !== 'classic') applyWallpaper(); if (current === 'settings') renderSettings(); });
   refreshDevIcon();
   refreshArtIcons();
   root.querySelectorAll('.ta-appbtn').forEach(function (b) {

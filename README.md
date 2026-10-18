@@ -23,7 +23,7 @@ The illustrated Tornie and character artwork comes in two separate, optional scr
 | Script | What it adds | Size | Install |
 |---|---|---|---|
 | **Torn Arcade - Tornies Art** | Illustrated artwork for all 179 Tornies | about 1.4 MB | [Install](https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade-Tornies-Art.user.js) |
-| **Torn Arcade - Character Art** | Illustrated portraits of the gym leaders, story characters, trainers and your outfits, plus the six Faction Defence maps | about 0.9 MB | [Install](https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade-Character-Art.user.js) |
+| **Torn Arcade - Character Art** | Illustrated portraits of the gym leaders, story characters, trainers and your outfits, plus the six Faction Defence maps and the phone theme wallpapers | about 1.1 MB | [Install](https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade-Character-Art.user.js) |
 
 Install them like the main script, then reload Torn. The **Tornies Art** and **Character Art** apps on the bottom row of the phone show whether each pack is installed, a before/after preview, a gallery of the art you've unlocked and an on/off switch. Each pack updates itself separately.
 
@@ -80,7 +80,7 @@ A minesweeper-style puzzle. Clear the city block by block without setting off a 
 Tap to fly through the gaps in the pipes over the Torn City skyline. Every pipe you pass is a point.
 
 ### 🏆 Scores and ⚙️ Settings
-Scores keeps your best result for every mini-game. Settings has sound and volume, wallpapers, optional Torn event notifications, a Tornies cheat-code box and options to reset each game's data.
+Scores keeps your best result for every mini-game. Settings has sound and volume, **phone themes** (Classic, Neon Night, Crimson Syndicate, Casino Royale, Emerald Jungle and the light Riviera, each with its own colours, clock and icon style; the illustrated theme wallpapers come with the Character Art pack, and without it a matching gradient is used), wallpapers for the Classic theme, optional Torn event notifications, a Tornies cheat-code box and options to reset each game's data.
 
 ---
 
@@ -105,7 +105,7 @@ If you add a **Limited** access API key in Settings, the phone checks the offici
 |---|---|---|---|---|
 | Only locally | Nobody | Public amusement (games) and event notifications on the phone | Stored locally / Used only for automation (event checks while the phone is open). Never shared. | Limited (user → events). Optional: only needed for event notifications |
 
-- **Data Storage:** settings, wallpaper, best scores, your Tornies save, Torn Invasion progress, Angry Bogies stars, Faction Defence progress (stars, War Chest and Armoury) and your API key are kept in Tampermonkey storage on your device. Events are shown on the phone but never saved. With **Save maps on this device** on (Settings → Tornies), pictures of the Tornies maps the game has drawn are also kept in your browser's own storage for torn.com (IndexedDB, `torn-arcade-maps`). They are drawn by the script on your device, contain no personal data, are never uploaded or shared, and **Clear saved maps** deletes them.
+- **Data Storage:** settings, theme, wallpaper, best scores, your Tornies save, Torn Invasion progress, Angry Bogies stars, Faction Defence progress (stars, War Chest and Armoury) and your API key are kept in Tampermonkey storage on your device. Events are shown on the phone but never saved. With **Save maps on this device** on (Settings → Tornies), pictures of the Tornies maps the game has drawn are also kept in your browser's own storage for torn.com (IndexedDB, `torn-arcade-maps`). They are drawn by the script on your device, contain no personal data, are never uploaded or shared, and **Clear saved maps** deletes them.
 - **Data Sharing:** nothing is sent anywhere except event requests to `api.torn.com`.
 - **Where it may be used:** Torn (torn.com) only. See [Licence](#-licence).
 - The same table is shown next to the API key box in Settings and at the top of the script.
