@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.27.2
+// @version      2.27.3
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with six game apps: Tornies (a creature-collecting RPG), Torn Invasion (a Doom-style alien shooter), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -18601,6 +18601,7 @@
     function nextWave() {
       if (st !== 'play' || wave >= WAVES) return;
       if (queue.length) return;   // the current wave is still arriving
+      if (bossHold()) { floatText(W / 2, 118, 'Clear the boss wave first', '#ffd65a'); snd('alarm'); return; }   // waves 10, 20 and 30 must be finished (milestone payout, wave-30 Armoury)
       if (wave > 0 && raiders.length) { const b = 5 + wave; cash += b; floatText(W - 120, 60, '+$' + b + ' early', '#7ee07e'); }
       wave++; queue = waveList(mi, wave); spawnT = 0.6; waveOn = true; snd('horn'); showStats();
     }
@@ -18730,6 +18731,7 @@
       if (wave === SHOP_WAVE) floatText(W / 2, 146, 'The Armoury is open until you start wave ' + (wave + 1), '#ffd65a');
       snd('clear');
     }
+    function bossHold() { return waveOn && !!MILESTONE[wave] && (queue.length > 0 || raiders.length > 0); }
     function shopOpen() { return st === 'play' && wave === SHOP_WAVE && !waveOn && !queue.length; }
     function endGame(win) {
       const stars = win ? (hq >= hqMax * 0.75 ? 3 : hq >= hqMax * 0.4 ? 2 : 1) : 0;
@@ -18968,8 +18970,8 @@
       ot('$' + cash.toLocaleString('en-GB'), 12, 62, 18, '#ffe27a');
       drawHQBar();
       if (st === 'play') {
-        const canNext = !queue.length && wave < WAVES;
-        button(W - 150, H - 46, 138, 34, wave === 0 ? '▶ Start' : waveOn ? '▶ Next wave +$' + (5 + wave) : '▶ Next wave', nextWave, { off: !canNext, size: 13 });
+        const hold = bossHold(), canNext = !queue.length && wave < WAVES && !hold;
+        button(W - 150, H - 46, 138, 34, wave === 0 ? '▶ Start' : hold ? 'Clear the boss wave' : waveOn ? '▶ Next wave +$' + (5 + wave) : '▶ Next wave', nextWave, { off: !canNext, size: hold ? 11.5 : 13 });
         button(W - 210, H - 46, 52, 34, speed === 1 ? '1×' : '2×', function () { speed = speed === 1 ? 2 : 1; }, { fill: 'rgba(26,34,48,.92)', size: 14 });
         if (shopOpen()) button(W - 432, H - 46, 124, 34, '🛠️ Armoury', function () { shopping = true; st = 'armoury'; menu = null; sel = null; strikeMode = false; showStats(); }, { fill: '#c98a1e', size: 13 });
         if (save.strikes > 0 || strikeMode) button(W - 300, H - 46, 82, 34, '✈️ ×' + save.strikes, function () { strikeMode = !strikeMode; menu = null; sel = null; }, { fill: strikeMode ? 'rgba(200,60,40,.95)' : 'rgba(26,34,48,.92)', size: 13 });
