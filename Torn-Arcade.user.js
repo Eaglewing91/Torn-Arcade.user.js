@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.26.0
+// @version      2.26.1
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with six game apps: Tornies (a creature-collecting RPG), Torn Invasion (a Doom-style alien shooter), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -17566,7 +17566,7 @@
       // Levels 8-15 (rebalanced in 2.23.0): every thug can be reached by a sensible shot, steel is only used for
       // pillars and caps (never fully boxing a thug in), toughness rises gently, and each level has a bogie or two
       // more than it strictly needs, so three stars are possible with good shots.
-      { name: 'Northridge', theme: 'snow', tough: 1.5, zoom: 0.66, birds: ['bomb', 'hammer', 'triple', 'bomb', 'triple', 'hammer', 'classic'], build: function () {
+      { name: 'Northridge', theme: 'snow', tough: 1.65, zoom: 0.66, birds: ['bomb', 'hammer', 'triple', 'bomb', 'triple', 'hammer'], build: function () {
         const i = B.tower(18.4, GY, [['glass', 2.6, 1.6, 'glass', 'small'], ['glass', 2.4, 1.5, 'glass', 'helmet'], ['glass', 2.2, 1.4, 'glass', 'small'], ['glass', 2.0, 1.3, 'glass', 'small'], ['glass', 1.8, 1.2, 'wood', 'small']]);
         B.box('glass', 18.4, i, 0.8, 0.8);
         B.box('dirty', 22.4, GY, 0.7, 0.9);
@@ -17579,7 +17579,7 @@
         const l2 = B.hall('wood', 37.4, l1, 2, 2.4, 1.6, 'stone', ['helmet', 'small']);
         const l3 = B.frame('glass', 37.4, l2, 2.4, 1.4, 'wood'); B.thug('big', 37.4, l2); B.box('wood', 37.4, l3, 0.9, 0.9);
       } },
-      { name: 'Council Plaza', theme: 'plaza', tough: 1.55, zoom: 0.7, birds: ['hammer', 'bomb', 'triple', 'hammer', 'triple', 'bomb', 'classic'], build: function () {
+      { name: 'Council Plaza', theme: 'plaza', tough: 1.7, zoom: 0.7, birds: ['hammer', 'bomb', 'triple', 'hammer', 'triple', 'bomb'], build: function () {
         const g = B.frame('stone', 17, GY, 2.4, 1.6, 'wood'); B.thug('helmet', 17, GY); B.box('glass', 17, g, 0.8, 0.8);
         [22.8, 29.6].forEach(function (x) {
           const top = B.tower(x, GY, [['stone', 3.0, 1.9, 'stone', 'big'], ['wood', 2.6, 1.7, 'wood', 'helmet'], ['wood', 2.2, 1.5, 'glass', 'small'], ['glass', 1.8, 1.3, 'wood', 'small']]);
@@ -17589,7 +17589,7 @@
         const v1 = B.frame('steel', 34.6, GY, 3.0, 2.0, 'wood'); B.thug('boss', 34.6, GY);
         B.frame('glass', 34.6, v1, 2.2, 1.4, 'wood'); B.thug('small', 34.6, v1);
       } },
-      { name: 'Don Varro\'s Vault', theme: 'vault', tough: 1.65, zoom: 0.66, birds: ['bomb', 'hammer', 'triple', 'bomb', 'hammer', 'triple', 'classic', 'classic'], build: function () {
+      { name: 'Don Varro\'s Vault', theme: 'vault', tough: 1.8, zoom: 0.66, birds: ['bomb', 'hammer', 'triple', 'bomb', 'hammer', 'triple'], build: function () {
         let w = GY; for (let i = 0; i < 3; i++) w = B.box('stone', 16.8, w, 0.9, 0.9); B.thug('helmet', 16.8, w);
         const k1 = B.hall('wood', 24, GY, 3, 2.6, 2.0, 'stone', ['big', 'boss', 'big']);
         const k2 = B.hall('wood', 24, k1, 2, 2.6, 1.7, 'wood', ['helmet', 'small']);
@@ -17599,7 +17599,7 @@
         const v2 = B.frame('wood', 35, v1, 2.4, 1.5, 'glass'); B.thug('small', 35, v1); B.box('glass', 35, v2, 0.8, 0.8);
       } },
       // 11-15: new levels. Bigger forts, more thugs and more to smash, with dirty-bomb crates placed for chain reactions.
-      { name: 'Midtown Rooftops', theme: 'westgate', tough: 1.7, zoom: 0.66, birds: ['triple', 'bomb', 'hammer', 'triple', 'bomb', 'hammer', 'classic', 'classic'], build: function () {
+      { name: 'Midtown Rooftops', theme: 'westgate', tough: 1.78, zoom: 0.66, birds: ['triple', 'bomb', 'hammer', 'triple', 'bomb', 'hammer', 'classic'], build: function () {
         const P1 = B.plat(18.4, GY, 3.4, 2.2);
         const a1 = B.frame('wood', 18.4, P1, 2.4, 1.6, 'glass'); B.thug('small', 18.4, P1); B.thug('helmet', 18.4, a1);
         const t = B.tower(24.6, GY, [['stone', 3.2, 1.9, 'wood', 'big'], ['wood', 2.8, 1.6, 'wood', 'small'], ['glass', 2.4, 1.4, 'glass', 'helmet'], ['wood', 2.0, 1.3, 'wood', 'small']]);
@@ -17610,7 +17610,7 @@
         const s1 = B.frame('wood', 37.4, GY, 2.0, 1.5, 'glass'); B.thug('small', 37.4, GY);
         const s2 = B.frame('glass', 37.4, s1, 1.6, 1.3, 'wood'); B.thug('small', 37.4, s1); B.box('glass', 37.4, s2, 0.7, 0.7);
       } },
-      { name: 'Sewer Works', theme: 'industrial', tough: 1.75, zoom: 0.64, birds: ['hammer', 'bomb', 'triple', 'hammer', 'bomb', 'triple', 'classic', 'classic'], build: function () {
+      { name: 'Sewer Works', theme: 'industrial', tough: 1.8, zoom: 0.64, birds: ['hammer', 'bomb', 'triple', 'hammer', 'bomb', 'triple', 'classic'], build: function () {
         const q1 = B.frame('wood', 15.6, GY, 1.8, 1.4, 'wood'); B.thug('small', 15.6, GY);
         const q2 = B.frame('glass', 15.6, q1, 1.6, 1.2, 'wood'); B.thug('small', 15.6, q1); B.box('wood', 15.6, q2, 0.7, 0.7);
         const P = B.plat(20.2, GY, 5.2, 1.0);
@@ -17625,7 +17625,7 @@
         B.box('dirty', 36.2, GY, 0.7, 0.9);
         const e1 = B.frame('wood', 38.6, GY, 2.0, 1.5, 'stone'); B.thug('big', 38.6, GY); B.thug('small', 38.6, e1);
       } },
-      { name: 'Smugglers\' Wharf', theme: 'docks', tough: 1.8, zoom: 0.62, birds: ['triple', 'bomb', 'hammer', 'triple', 'bomb', 'hammer', 'triple', 'classic', 'classic'], build: function () {
+      { name: 'Smugglers\' Wharf', theme: 'docks', tough: 1.95, zoom: 0.62, birds: ['triple', 'bomb', 'hammer', 'triple', 'bomb', 'hammer', 'classic'], build: function () {
         let y = GY; for (let i = 0; i < 3; i++) y = B.box('wood', 17.4, y, 0.9, 0.9); B.thug('small', 17.4, y);
         const c1 = B.hall('wood', 22.6, GY, 3, 2.2, 1.7, 'wood', ['small', 'helmet', 'small']);
         const c2 = B.hall('glass', 22.6, c1, 2, 2.4, 1.4, 'wood', ['big', 'small']);
@@ -17637,7 +17637,7 @@
         const s2 = B.frame('glass', 36.2, s1, 1.8, 1.3, 'wood'); B.thug('small', 36.2, s1); B.thug('helmet', 36.2, s2);
         let y2 = GY; for (let i = 0; i < 3; i++) y2 = B.box('wood', 39.8, y2, 0.9, 0.9); B.thug('small', 39.8, y2);
       } },
-      { name: 'High Roller Suite', theme: 'casino', tough: 1.85, zoom: 0.6, birds: ['bomb', 'triple', 'hammer', 'bomb', 'triple', 'hammer', 'bomb', 'classic', 'classic'], build: function () {
+      { name: 'High Roller Suite', theme: 'casino', tough: 2.0, zoom: 0.6, birds: ['bomb', 'triple', 'hammer', 'bomb', 'triple', 'hammer'], build: function () {
         const g1 = B.frame('glass', 17.4, GY, 2.2, 1.5, 'wood'); B.thug('helmet', 17.4, GY);
         const g2 = B.frame('glass', 17.4, g1, 1.8, 1.3, 'glass'); B.thug('small', 17.4, g1); B.thug('small', 17.4, g2);
         const P = B.plat(25.4, GY, 6.4, 1.2);
@@ -17650,7 +17650,7 @@
         const z = B.frame('wood', 38.6, GY, 2.0, 1.5, 'wood'); B.thug('small', 38.6, GY);
         const z2 = B.frame('glass', 38.6, z, 1.6, 1.3, 'wood'); B.thug('helmet', 38.6, z); B.thug('small', 38.6, z2);
       } },
-      { name: 'Racket HQ', theme: 'hideout', tough: 1.75, zoom: 0.58, birds: ['bomb', 'hammer', 'triple', 'bomb', 'hammer', 'triple', 'bomb', 'hammer', 'classic', 'classic'], build: function () {
+      { name: 'Racket HQ', theme: 'hideout', tough: 1.85, zoom: 0.58, birds: ['bomb', 'hammer', 'triple', 'bomb', 'hammer', 'triple', 'bomb', 'hammer'], build: function () {
         let w1 = GY, w2 = GY; for (let i = 0; i < 3; i++) { w1 = B.box('stone', 16.6, w1, 0.9, 0.9); w2 = B.box('stone', 18.2, w2, 0.9, 0.9); }
         B.box('wood', 17.4, w1, 2.4, 0.35); B.thug('helmet', 17.4, w1 - 0.35);
         const a1 = B.hall('wood', 23.4, GY, 3, 2.2, 1.8, 'stone', ['small', 'helmet', 'small']);
@@ -18463,22 +18463,22 @@
     // Maps: routes (already smoothed) and build spots are in the artwork's own pixels (1536 x 864) and scaled by K.
     // They come from art/fd2/layout.py, which also drew the blueprint the artwork was painted from, so they match exactly.
     const MAPS = [
-      { name: 'Westgate', art: 'fdwestgate', ground: '#7cc443', mult: 0.68, cash: 250, bonus: 150, box: [1240, 600, 1490, 840],
+      { name: 'Westgate', art: 'fdwestgate', ground: '#7cc443', mult: 0.76, cash: 250, bonus: 150, box: [1240, 600, 1490, 840],
         paths: [[[-40,180],[490,180],[504,181],[517,185],[529,192],[540,200],[548,211],[555,223],[559,236],[560,250],[560,400],[559,414],[555,427],[548,439],[540,450],[529,458],[517,465],[504,469],[490,470],[320,470],[306,471],[293,475],[281,482],[270,490],[262,501],[255,513],[251,526],[250,540],[250,650],[251,664],[255,677],[262,689],[270,700],[281,708],[293,715],[306,719],[320,720],[790,720],[804,719],[817,715],[829,708],[840,700],[848,689],[855,677],[859,664],[860,650],[860,240],[861,226],[865,213],[872,201],[880,190],[891,182],[903,175],[916,171],[930,170],[1290,170],[1304,171],[1317,175],[1329,182],[1340,190],[1348,201],[1355,213],[1359,226],[1360,240],[1360,600]]],
         pads: [[188,268],[420,92],[472,286],[614,498],[277,388],[339,646],[472,808],[704,632],[948,630],[772,366],[946,251],[1078,82],[1279,255],[1272,400]] },
-      { name: 'The Docks', art: 'fddocks', ground: '#b9bcbf', mult: 1.0, cash: 300, bonus: 200, box: [628, 700, 908, 864],
+      { name: 'The Docks', art: 'fddocks', ground: '#b9bcbf', mult: 1.12, cash: 300, bonus: 200, box: [628, 700, 908, 864],
         paths: [[[-40,215],[1330,215],[1344,216],[1357,220],[1369,227],[1380,236],[1388,246],[1395,258],[1399,271],[1400,285],[1400,570],[1399,584],[1395,597],[1388,609],[1380,620],[1369,628],[1357,635],[1344,639],[1330,640],[1150,640],[1136,639],[1123,635],[1111,628],[1100,620],[1092,609],[1085,597],[1081,584],[1080,570],[1080,490],[1079,476],[1075,463],[1068,451],[1060,440],[1049,432],[1037,425],[1024,421],[1010,420],[520,420],[506,421],[493,425],[481,432],[470,440],[462,451],[455,463],[451,476],[450,490],[450,540],[451,554],[455,567],[462,579],[470,590],[481,598],[493,605],[506,609],[520,610],[725,610],[733,611],[741,613],[749,617],[755,623],[761,629],[765,637],[767,645],[768,653],[768,700]]],
         pads: [[188,303],[428,127],[668,303],[908,127],[1148,303],[1431,164],[1312,453],[1344,727],[1164,558],[1004,507],[814,332],[574,508],[363,552],[700,522]] },
-      { name: 'Midtown', art: 'fdmidtown', ground: '#9aa09a', mult: 1.2, cash: 300, bonus: 250, box: [1240, 640, 1490, 864],
+      { name: 'Midtown', art: 'fdmidtown', ground: '#9aa09a', mult: 1.35, cash: 300, bonus: 250, box: [1240, 640, 1490, 864],
         paths: [[[-40,150],[230,150],[244,151],[257,155],[269,162],[280,170],[288,181],[295,193],[299,206],[300,220],[300,530],[301,544],[305,557],[312,569],[320,580],[331,588],[343,595],[356,599],[370,600],[930,600],[944,599],[957,595],[969,588],[980,580],[988,569],[995,557],[999,544],[1000,530],[1000,320],[999,306],[995,293],[988,281],[980,270],[969,262],[957,255],[944,251],[930,250],[670,250],[656,251],[643,255],[631,262],[620,270],[612,281],[605,293],[601,306],[600,320],[600,705],[601,719],[605,732],[612,744],[620,754],[631,763],[643,770],[656,774],[670,775],[1240,775]]],
         pads: [[184,238],[388,268],[212,492],[430,512],[686,688],[878,512],[1088,486],[913,328],[774,162],[688,323],[526,436],[549,806],[822,687],[1046,687]] },
-      { name: 'Casino Strip', art: 'fdcasino', ground: '#c9a27a', mult: 1.0, cash: 360, bonus: 300, box: [1290, 620, 1536, 864],
+      { name: 'Casino Strip', art: 'fdcasino', ground: '#c9a27a', mult: 1.12, cash: 360, bonus: 300, box: [1290, 620, 1536, 864],
         paths: [[[-40,150],[230,150],[244,151],[257,155],[269,162],[280,170],[288,181],[295,193],[299,206],[300,220],[300,362],[301,376],[305,389],[312,401],[320,412],[331,420],[343,427],[356,431],[370,432],[519,432],[522,432],[524,431],[525,430],[527,429],[528,427],[530,426],[530,424],[531,421],[532,410],[536,388],[543,367],[553,347],[565,328],[580,312],[596,297],[615,285],[635,275],[656,268],[678,264],[700,262],[722,264],[744,268],[765,275],[785,285],[804,297],[820,312],[835,328],[847,347],[857,367],[864,388],[868,410],[869,421],[870,424],[870,426],[872,427],[873,429],[875,430],[876,431],[878,432],[881,432],[1030,432],[1044,433],[1057,437],[1069,444],[1080,452],[1088,463],[1095,475],[1099,488],[1100,502],[1100,672],[1101,686],[1105,699],[1112,711],[1120,722],[1131,730],[1143,737],[1156,741],[1170,742],[1290,742]],[[-40,150],[230,150],[244,151],[257,155],[269,162],[280,170],[288,181],[295,193],[299,206],[300,220],[300,362],[301,376],[305,389],[312,401],[320,412],[331,420],[343,427],[356,431],[370,432],[519,432],[522,432],[524,433],[525,434],[527,435],[528,437],[530,438],[530,440],[531,443],[532,454],[536,476],[543,497],[553,517],[565,536],[580,552],[596,567],[615,579],[635,589],[656,596],[678,600],[700,602],[722,600],[744,596],[765,589],[785,579],[804,567],[820,552],[835,536],[847,517],[857,497],[864,476],[868,454],[869,443],[870,440],[870,438],[872,437],[873,435],[875,434],[876,433],[878,432],[881,432],[1030,432],[1044,433],[1057,437],[1069,444],[1080,452],[1088,463],[1095,475],[1099,488],[1100,502],[1100,672],[1101,686],[1105,699],[1112,711],[1120,722],[1131,730],[1143,737],[1156,741],[1170,742],[1290,742]]],
         pads: [[160,238],[381,175],[213,378],[426,344],[537,233],[676,175],[865,234],[937,520],[1069,349],[1012,630],[1179,656],[456,515],[587,663],[822,659]] },
-      { name: 'Industrial Zone', art: 'fdindustrial', ground: '#8a8478', mult: 1.25, cash: 360, bonus: 350, box: [1030, 650, 1300, 864],
+      { name: 'Industrial Zone', art: 'fdindustrial', ground: '#8a8478', mult: 1.34, cash: 360, bonus: 350, box: [1030, 650, 1300, 864],
         paths: [[[150,-40],[150,630],[151,644],[155,657],[162,669],[170,680],[181,688],[193,695],[206,699],[220,700],[330,700],[344,699],[357,695],[369,688],[380,680],[388,669],[395,657],[399,644],[400,630],[400,240],[401,226],[405,213],[412,201],[420,190],[431,182],[443,175],[456,171],[470,170],[580,170],[594,171],[607,175],[619,182],[630,190],[638,201],[645,213],[649,226],[650,240],[650,630],[651,644],[655,657],[662,669],[670,680],[681,688],[693,695],[706,699],[720,700],[830,700],[844,699],[857,695],[869,688],[880,680],[888,669],[895,657],[899,644],[900,630],[900,240],[901,226],[905,213],[912,201],[920,190],[931,182],[943,175],[956,171],[970,170],[1095,170],[1109,171],[1122,175],[1134,182],[1144,190],[1153,201],[1160,213],[1164,226],[1165,240],[1165,650]]],
         pads: [[62,196],[238,452],[121,753],[314,620],[488,418],[374,115],[564,250],[738,456],[624,755],[816,617],[988,414],[889,104],[1084,256],[1253,444]] },
-      { name: 'Racket HQ', both: 4, art: 'fdhideout', ground: '#9c7a52', mult: 0.8, cash: 420, bonus: 450, box: [1250, 40, 1500, 300],
+      { name: 'Racket HQ', both: 4, art: 'fdhideout', ground: '#9c7a52', mult: 0.9, cash: 420, bonus: 450, box: [1250, 40, 1500, 300],
         paths: [[[-40,720],[190,720],[204,719],[217,715],[229,708],[240,700],[248,689],[255,677],[259,664],[260,650],[260,490],[261,476],[265,463],[272,451],[280,440],[291,432],[303,425],[316,421],[330,420],[490,420],[504,419],[517,415],[529,408],[540,400],[548,389],[555,377],[559,364],[560,350],[560,240],[561,226],[565,213],[572,201],[580,190],[591,182],[603,175],[616,171],[630,170],[1250,170]],[[1060,904],[1060,690],[1059,676],[1055,663],[1048,651],[1040,640],[1029,632],[1017,625],[1004,621],[990,620],[890,620],[876,619],[863,615],[851,608],[840,600],[832,589],[825,577],[821,564],[820,550],[820,470],[821,456],[825,443],[832,431],[840,420],[851,412],[863,405],[876,401],[890,400],[1010,400],[1024,399],[1037,395],[1049,388],[1060,380],[1068,369],[1075,357],[1079,344],[1080,330],[1080,240],[1081,226],[1085,213],[1092,201],[1100,190],[1111,182],[1123,175],[1136,171],[1150,170],[1250,170]]],
         pads: [[326,731],[172,610],[346,501],[470,332],[648,306],[694,82],[822,258],[914,82],[1148,816],[972,694],[922,532],[732,518],[942,312],[1114,449]] },
     ];
