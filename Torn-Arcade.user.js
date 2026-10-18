@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.27.1
+// @version      2.27.2
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with six game apps: Tornies (a creature-collecting RPG), Torn Invasion (a Doom-style alien shooter), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -18589,12 +18589,13 @@
 
     let st = 'select', mi = 0, M = MAPS[0], wave = 0, cash = 0, hq = 20, hqMax = 20, speed = 1, paused = false;
     let leakLog = [], raiders = [], towers = [], shots = [], fires = [], fx = [], floats = [], queue = [], spawnT = 0, waveOn = false;
+    let banked = 0, paidIn = 0, shopping = false;   // War Chest money already paid in during this game, and the wave-30 Armoury visit
     let sel = null, menu = null, strikeMode = false, earned = 0, kills = 0, leaked = 0, endT = 0, result = null, btns = [], t = 0, raf = 0, last = 0, acc = 0, active = false, shake = 0;
 
     function startMap(i) {
       mi = i; M = MAPS[i]; wave = 0; hqMax = 20 + 4 * armLv('walls'); hq = hqMax; cash = M.cash + 40 * armLv('fund');
       raiders = []; shots = []; fires = []; fx = []; floats = []; queue = []; waveOn = false; spawnT = 0;
-      towers = M.pads.map(function () { return null; }); leakLog = []; sel = null; menu = null; strikeMode = false; earned = 0; kills = 0; leaked = 0; result = null; paused = false;
+      towers = M.pads.map(function () { return null; }); banked = 0; paidIn = 0; shopping = false; leakLog = []; sel = null; menu = null; strikeMode = false; earned = 0; kills = 0; leaked = 0; result = null; paused = false;
       st = 'play'; endT = 0; showStats(); mapImg();
     }
     function nextWave() {
@@ -18713,17 +18714,30 @@
       if (waveOn && !queue.length && !raiders.length) {
         waveOn = false; const b = 10 + 2 * wave; cash += b; floatText(W / 2, 90, 'Wave ' + wave + ' cleared  +$' + b, '#9fe39f'); snd('clear');
         if (wave >= WAVES) endGame(true);
+        else if (MILESTONE[wave]) payMilestone();
         showStats();
       }
     }
 
+    // Every ten waves the War Chest is paid what this game has earned so far, plus a milestone reward.
+    // After wave 30 the Armoury opens until the next wave starts.
+    const MILESTONE = { 10: 50, 20: 75, 30: 100 }, SHOP_WAVE = 30;
+    function chestSoFar() { return Math.round(earned * 0.035) + wave * 4; }
+    function payMilestone() {
+      const due = chestSoFar() - banked, add = due + MILESTONE[wave];
+      banked += due; paidIn += add; save.chest += add; persist();
+      floatText(W / 2, 118, 'Wave ' + wave + ' reward: +$' + add + ' to your War Chest', '#7ee07e');
+      if (wave === SHOP_WAVE) floatText(W / 2, 146, 'The Armoury is open until you start wave ' + (wave + 1), '#ffd65a');
+      snd('clear');
+    }
+    function shopOpen() { return st === 'play' && wave === SHOP_WAVE && !waveOn && !queue.length; }
     function endGame(win) {
       const stars = win ? (hq >= hqMax * 0.75 ? 3 : hq >= hqMax * 0.4 ? 2 : 1) : 0;
       const prevStars = save.stars[mi] || 0, firstWin = win && !prevStars;
-      let gain = Math.round(earned * 0.035) + Math.max(0, win ? wave : wave - 1) * 4;
+      let gain = Math.round(earned * 0.035) + Math.max(0, win ? wave : wave - 1) * 4 - banked;   // minus what was already paid in at the milestones
       if (win) gain += firstWin ? M.bonus : Math.round(M.bonus * 0.4);
       if (stars > prevStars) gain += (stars - prevStars) * 40;
-      save.chest += gain;
+      gain = Math.max(0, gain); save.chest += gain; gain += paidIn;   // shown as the whole game's total
       if (stars > prevStars) save.stars[mi] = stars;
       const reached = win ? WAVES : wave;
       if (reached > (save.best[mi] || 0)) save.best[mi] = reached;
@@ -18957,6 +18971,7 @@
         const canNext = !queue.length && wave < WAVES;
         button(W - 150, H - 46, 138, 34, wave === 0 ? '▶ Start' : waveOn ? '▶ Next wave +$' + (5 + wave) : '▶ Next wave', nextWave, { off: !canNext, size: 13 });
         button(W - 210, H - 46, 52, 34, speed === 1 ? '1×' : '2×', function () { speed = speed === 1 ? 2 : 1; }, { fill: 'rgba(26,34,48,.92)', size: 14 });
+        if (shopOpen()) button(W - 432, H - 46, 124, 34, '🛠️ Armoury', function () { shopping = true; st = 'armoury'; menu = null; sel = null; strikeMode = false; showStats(); }, { fill: '#c98a1e', size: 13 });
         if (save.strikes > 0 || strikeMode) button(W - 300, H - 46, 82, 34, '✈️ ×' + save.strikes, function () { strikeMode = !strikeMode; menu = null; sel = null; }, { fill: strikeMode ? 'rgba(200,60,40,.95)' : 'rgba(26,34,48,.92)', size: 13 });
         if (strikeMode) ot('Tap the map to call the air strike', W / 2, H - 28, 14, '#ffb0a0', 'center');
         if (paused) { ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.fillRect(0, 0, W, H); ot('PAUSED', W / 2, H / 2, 36, '#fff', 'center'); ot('Press P or tap to carry on', W / 2, H / 2 + 34, 14, '#dfe6f2', 'center', 700); }
@@ -19053,6 +19068,7 @@
         if (k === 'strike') tx('Held ' + lv + ' / 3', x + 20 + max * 15, y + ch - 18, 12.5, '#8fa2bd', 'left', 600);
         button(x + cw - 118, y + ch - 42, 106, 32, done ? (unlock ? 'Unlocked' : 'Maxed') : '$' + cost, function () { buy(k); }, { off: done || save.chest < cost, size: 14 });
       });
+      if (shopping) { button(24, H - 52, 170, 36, '‹ Back to the game', function () { shopping = false; st = 'play'; showStats(); }); tx('Wave ' + SHOP_WAVE + ' Armoury: what you buy works in this game straight away (starting cash from your next game).', 210, H - 34, 12.5, '#ffd65a', 'left', 600); return; }
       button(24, H - 52, 120, 36, '‹ Maps', function () { st = 'select'; showStats(); });
       if (result && !result.win) button(156, H - 52, 140, 36, 'Try again', function () { startMap(mi); });
     }
@@ -19060,13 +19076,13 @@
       const A = ARM[k];
       if (TW[k]) { if (save.own[k] || save.chest < A.costs[0]) return; save.chest -= A.costs[0]; save.own[k] = 1; }
       else if (k === 'strike') { if (save.strikes >= 3 || save.chest < A.costs[0]) return; save.chest -= A.costs[0]; save.strikes++; }
-      else { const lv = armLv(k); if (lv >= A.costs.length || save.chest < A.costs[lv]) return; save.chest -= A.costs[lv]; save.lv[k] = lv + 1; }
+      else { const lv = armLv(k); if (lv >= A.costs.length || save.chest < A.costs[lv]) return; save.chest -= A.costs[lv]; save.lv[k] = lv + 1; if (k === 'walls' && shopping) { hqMax += 4; hq += 4; } }
       persist(); snd('build'); showStats();
     }
 
     let shown = '';
     function showStats() {
-      const inGame = st === 'play' || st === 'win' || st === 'lose', key = st + wave + ':' + cash + ':' + hq + ':' + save.chest;
+      const inGame = st === 'play' || st === 'win' || st === 'lose' || shopping, key = st + wave + ':' + cash + ':' + hq + ':' + save.chest;
       if (key === shown) return; shown = key;
       stat(panel, 'wave', inGame ? Math.max(1, wave) + ' / ' + WAVES : '–');
       stat(panel, 'cash', inGame ? '$' + cash.toLocaleString('en-GB') : '–');
