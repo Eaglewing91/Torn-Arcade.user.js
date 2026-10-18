@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.27.4
+// @version      2.27.5
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with six game apps: Tornies (a creature-collecting RPG), Torn Invasion (a Doom-style alien shooter), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -18727,6 +18727,7 @@
       // wave cleared
       if (waveOn && !queue.length && !raiders.length) {
         waveOn = false; const b = 10 + 2 * wave; cash += b; floatText(W / 2, 90, 'Wave ' + wave + ' cleared  +$' + b, '#9fe39f'); snd('clear');
+        if (mi === 0 && wave < 10) { cash += EARLY_BONUS; floatText(W / 2, 60, 'Early Wave Bonus +$' + EARLY_BONUS, '#ffd65a'); }   // Westgate only: help new players build up before the first boss
         if (wave >= WAVES) endGame(true);
         else if (MILESTONE[wave]) payMilestone();
         showStats();
@@ -18735,7 +18736,7 @@
 
     // Every ten waves the War Chest is paid what this game has earned so far, plus a milestone reward.
     // After wave 30 the Armoury opens until the next wave starts.
-    const MILESTONE = { 10: 50, 20: 75, 30: 100 }, SHOP_WAVE = 30;
+    const MILESTONE = { 10: 50, 20: 75, 30: 100 }, SHOP_WAVE = 30, EARLY_BONUS = 7;
     function chestSoFar() { return Math.round(earned * 0.035) + wave * 4; }
     function payMilestone() {
       const due = chestSoFar() - banked, add = due + MILESTONE[wave];
