@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.23.2
-// @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with five game apps: Tornies (a creature-collecting RPG), Torn Invasion (a Doom-style alien shooter), Angry Bogies (a slingshot physics game), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
+// @version      2.24.0
+// @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with six game apps: Tornies (a creature-collecting RPG), Torn Invasion (a Doom-style alien shooter), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
 // @license      All Rights Reserved - for use on Torn (torn.com) only; no copying, modifying, redistribution or use elsewhere (see LICENCE below)
@@ -81,7 +81,7 @@
  * HOW IT WORKS
  * - Adds a "Mobile Phone" link under Calendar in Torn's sidebar (Areas). It is
  *   a copy of Torn's own Calendar row, so it matches the other links. Clicking
- *   it opens a mobile phone on top of the page with five game apps, plus Scores
+ *   it opens a mobile phone on top of the page with six game apps, plus Scores
  *   and Settings. Everything runs inside that phone. On pages without the
  *   sidebar, a small floating "Phone" button is shown instead.
  * - Apart from adding that one link, the script never reads, clicks or
@@ -118,7 +118,7 @@
  * TERMS OF SERVICE
  * - Data Storage:          Only locally (settings, wallpaper, best scores, your
  *                          Tornies save, Torn Invasion progress, Angry Bogies
- *                          stars and your API
+ *                          stars, Faction Defence progress and your API
  *                          key, in Tampermonkey storage). Events are only
  *                          shown, never saved. With "Save maps on this
  *                          device" on (Settings > Tornies), pictures of the
@@ -414,6 +414,7 @@
     { id: 'pocket', name: 'Tornies',        icon: '🐾', bg: ['#4fd8b8', '#0f7a6a'] , desc: 'A creature-collecting adventure across Torn City. Catch 178 Tornies, win 8 Arena medals and take on the Torn Council.' },
     { id: 'invasion', name: 'Invasion', title: 'Torn Invasion', icon: '👽', bg: ['#6be38a', '#14532a'] , desc: 'A Doom-style shooter. Fight your way through alien-infested levels of Torn City with pistol, shotgun and plasma rifle.' },
     { id: 'bogies', name: 'Angry Bogies', icon: '😠', bg: ['#ff9a5a', '#c8382a'] , desc: 'Bogie versus the Racket. Fling Bogies from a slingshot, smash the hideouts and knock out every thug. Fifteen levels, three stars each.' },
+    { id: 'defence', name: 'Faction Defence', icon: '🛡️', bg: ['#7fb0ff', '#2a4f9a'], desc: 'Hold your Faction HQ against Racket raids. Build and upgrade defenders beside the road, survive 20 waves on 4 maps and spend your War Chest in the Armoury.' },
     { id: 'bombs',  name: 'Dirty Bombs',    icon: '☢️', bg: ['#ffe066', '#c99a10'] , desc: 'Clear the city block by block without setting off a dirty bomb. Numbers show how many bombs are nearby.' },
     { id: 'flappy', name: 'Flappy Torn',    icon: '🐦', bg: ['#6cc8ff', '#1f72c8'] , desc: 'Fly through the gaps in the pipes over Torn City. Every pipe you pass is a point.' }
   ];
@@ -422,6 +423,7 @@
     pocket: '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',
     invasion: 'UklGRtwLAABXRUJQVlA4INALAADwMwCdASqAAIAAPm0skUYkIqGhLhUtwIANiWQAun+rET/cechbP9Vw5lUeeM+r6RPMF59fmc82P01/6HfifQA6Xv/CWtbypx3bg00pwe1Ke8+FX485Rf9Vwy4A94D7H8sz4llAT9Gej3op+sfYP/XpN5blt3TS0RZjXmrH2slFmj4dOU/EisNIxmUF41uMfSUa3P/7Cuk3cflLo7gjFZVdpQJ4v6PossuKjlsvUdK1gsYwWt23ZZlhr2/7Dkztbxs15VNBGyiwVfz21w1X2/JEW22ho7fAXr2nEF26rqYDKYsRDELLegM3+BrNH1jf1rrYbciaxGtMjOPFVdLAYWgw1w7z0ZPRdMUdnEEFH7SQItCA4alRyDmY2upRHIeKbwbdTACT/9UgYnLMPjZ6WK7713Bqek9Ll9hTwyZ3hYjwH927DFYo7Azuzm2M+3/FUVUqkYfZU152EwBmtK+ub6U7q134M+dtG+9+NivvoChch4yemdFAul7Rdg5q1d3fh6Z++d5AsipuHl4oSoQlnjYQpZPvIK1BaoMzpX7ZfMjjETsrpT61DZMgAP75gTmc5Z/9+L8X2/ypwehAg4ClU+/4r+y3I+z1S5nmXFaiPnd35Q29+EEIZ6AojfL8b739Cgv5rLL7IIA/o6OPZT/N2nQYE0DV/ogvCdLx5d+GNc8dUYOeDN9UcKcS44MRo5IZOiOH7Fy0B0hTUXYrDvUdVc62pde/vsTzgbMRGN5S9bjEnMI8HojJfpPQFcm3oXtrYvSnLWK+GByzdW1/Ivd4y/hY8okhAIAo93fUKr02967S6V/yM6+jjBjVpXVtYHHDq75BOGOBNvWeS4KHGK2Ujh6YOdS5diB9bNxVfbF7Q74HDqYJEACtOJCCw29pVJMblDt9VTNCOjVH/u3NNt64S5QhRqcT1KpmFVogpXdW0kb+fJBah8erpQVEiyaTHn+4Hw9RyVf+CmlE/wyKfsxZw87h7awwsHa0B7ARigEQgZKv3ZoRJbhyjH5LuAMdgMGAIcISz8Dd1nEe4VJFvTtt93Pk3d/PSPFmScDEt+u4uxpsSMgZvyn/pQQFW1kRw/ARdXA6AZYf6flIt9e7e5ItrZ3/Z4awNgKVALSdbqyR/TzJjzWiDRENHzPmYIPx03Om9moHC7BJ6NrFGjlHTSt1B/cxxs/6YgUZ8XLSY4huVkxT5Vu0k4VGaKa+oh4p1nGFXD+q6Onj5ya+o9qq1eNreiYC8l8AmoAQ5LVSlaFwsQ7750CYTX1KGAIweYlREuUN3TQHUJogoJFzfRUzkV40/wfgjGLQigObAioeIzoYNpRElp7SI6vSfO/LP61ZfmHq2AY9lBc3Ziic0XGi9d7IcEi0w41BLCuFJk9YmMp0Zcy77romBkUMc2fXHxoWOs2DZybOv0wjn9SiNkwc0VR3lLH+UoCuv56y2xG7id461wPv+P6d2fQQc1gRQii2OqG2aepyIZ13BTEJHryQggOM9lyZpqn4oGG0KTE+ZSD3LA5heM2dR2V4e6wlb5cV7Im+wYNwmB7Zli1u0Sz0+v0BqoaBQU9rvBVdKqPhymB0PaRf9i5yq93DAYb1/f/y0HXD3NsUd/cEM1cCgYFXHhc/XRT9FWJ8XF3IEGqOKRNV5T2vQJfCp2WzA9y6LDcM1ykw1JOEIwSSQFaB51wFclog6hoScE/BmVvgsHcK90Dd2U63Zxm8b3UwCiKneNG3vZ4jwWJJmQ//m9FQ9eZNlVdPPbCmfKbX557ppNcHxxyPI6pMc28vVfmIDc9eieXKG0C1rHEqge8w3A4No7YXSh6QXBFAgFNIbtVej+YO7lzXf3zRUFmW21KzweqoRNUES5n1hjPTs5EcG18cD/wlNwxvunnx/voPh4LfPrmH6YMj8nu3mmoExruEEty42Lsu+K0qhNCub4xTjAdEpc6mJG5XZ7QBS1b7jGfG06Jcvr+rlYYWY+IytuTJBfrn2xjFezpfRDbIsz+KOWh36q312ErAZLDxDRUTmMOE2VSMRHbZqTYmK5/P23+Ema8luufo2pIEDaxzU6L5teNsLwcwKGmF8JZAqX4ISMNbYVPzu7StsGxpPid7QG52HooD0iRQ+LvpletGo3x083z01dIu0ikuBlKIxbavdJ7rwD7Hn8CjF13NnzrXN1+eU86485OS5MMYBrEFZiIU4A2JJ23t2w83Za4u2smUhr1qrO4UdTKjNebxskF7sB0oKc4eZQSuCxrf3RehQot2osqTYzukHSjHSu/pjbax/NHx9KPMKanMY+SxCgvmJhAVv1jhPHhOvRM4lS6SKCkemwaiL95h3Cr6pfNuoCtB+z01F8PRwS/GMCPVOCi8e+JvhM2421u+M6Ku0q5/qejPQKMw9ZioGgGgumClTaWwMD7QNnkQE0/efRInqi1fDtpAkOYr+k2GsX2XCr+8v5udhgD7iRRupyqA+U2cyiGMGt5Vr3IoHQitXKhLTudoR114Qas622xRQWC/zIKkDgNPUqNzAGxOx99+/q1T64yi/FojIHvcVduXNaqrynHUk2/YFNAL7Re1a1FXOFXJLUFYvcKiJhxlfYr69TPtutR8Bp/3TVH2n4MM3/Qhqpmn6q214rhzHgzkyic0F+UDfUlxS8+vY7cH0RsRsIbkNftZrJ3LxKorPc7LG381jbRhGkvFBnwUj/Wnz+Z3XbHJNRXdw9wQ5uLRc/z1rthKBzAo8OYvsMhKfuWcNc8rS9VvO20BcFxf/CedtEm4f1Xa3W5atww2Wk7uFeMLd/hFiKyIujxEzWwZiBTI/ya0onEH6sFCYFDbsX/uPRBHyZBkIblN+w4yQ1WxYd8wb7HK1LgoGUEIpNQslhN+BqfrQ3sRUODhxWZcffrKzO7qxHh6HpwkiF1SUl6n5MAUcJZMgnDFBFtTZtC1xATTW2nqGMKsK4GN8EmNBZv0eKGK6NH5PtNvdqm6Xtm0zH3wyniX1h78wfr4gor36NmKIy8Wbk8GfgmwGK+em7fswyvtOvl7hb3yUx5pe9lfkfTv+lBRlJzSv2Do1mtJqR/i9DupqN943h/W4Dst91m1IN85iGIMLguqnqZo2uNIx1+xrgBDhyDYOPjADumTo3MeybCyZAzWRbiCZe9LxchOGNTJSB/F2SBSPoWs+dF8US81xpz4fw6zVQ4IW48y7f0CJOKSSx9OKhDT3mxry+GnRBjA1VTXfFD7UIz/d/AVz0rTzk9LhWnoDYmrX0zC6XUQvKIQgRSobuiga713z34iKS7Ll22SorKO/mCK2zvuYXYZ9Pe3F1QgXB1uuAk4+3E3mcxu6b4uZxyTSYcTR9xCwQ/nLCmGYq5wJfol2vSqyqyWeK5N/yD5EWTR9pdFTia44+1j8mMCx2joomEh3xhZoxyQtnXN4Jv8vIvfCXPDhdXfJsx/HQBr8MBnbQba5CXrYMYGwjmahutGemGSkEahSbDAVTEJfJIWFts7moMyW1E63lRDhgul5hjrFO9Xfr5MxzgMPJCEduQTBM8sbsmXmd/NE9nqfmtCIbNTz+ICdJr2HaqsWfybZ77DZgATl6yeZm4JKDpvMW3fwc9tdzZdA9mYDuvPJBGyYYAT9rj53y1R1psuYa/Cz624PR3sCggnfE7Wa9x665DFegomUYKL+3TG+OjO0uEIfnImi0yR3x0V4wXKaBdOKkL0Mg5JR760LzoEvoEjVLVjRk9JNAJ+bodYsf7lUkRFEIvPE15WyJJrogm+wp3WcxR2jAvvJHH0aOFS6a8yA5U7TeLux4nC0YcKp3Z3DgL0wwuokePLYuA/hW9/F+78TtIEpFdzpAIFeAPoXKu0EU7q1dqr2KsGKR4m1DxOUF44OkejYihdwa5uZQayg14E596GPcJWyNb7ku745T/vw+NMzYDW9pxy8GSy7Xc73Uj2mdNBi3XwmPsiOBH2ZV5mdkuVAU779UYaemQ0P8XXvaqBAz/B2U5sQvHTHiAQdKRJssDZPOiSNK7ggkzemAFeSPPpoHBMR7mds5gTnIZuBAH/yNw9Exq5TlrQAAA=',
     bogies: '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',
+    defence: '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',
     bombs: 'UklGRlgKAABXRUJQVlA4IEwKAABQNQCdASqAAIAAPm0uk0ckIiGhJ5IuqIANiWYAt3nXVr5w/t/OGtH+e4E89mcd2xPMK6Af7gerL9rvWl9Pv929QD9o+tg9BTy6fZw/dn0tNN7l+6TWhH8t/PMePAC9jZYd7ZjQHjVGgdHuoWcj+NjPr7MrLT8XoAvxBxT2HFQlfe+43iHUpxEsMlI1+91uNa5oL0e2FKgQzBG37wnnY+ll/e73OrlD9yopNnNUE8xAFY2ZzJU47nt8YKGS3z+bCG6pKGRH/fjV0Lk3RXbxM9TA+rSfzyZl8Dg7n5jlp9hlzcmyy6fpRyK0lEVpt3XdaXlQ/jxOTvWOQB6/iuTcN9jRDX+ltwbcz69t4/xDELLn0x04E2AUkMY03FI3/2lguSC85lHSCpiZaF2YFWUs7f9bbUYzOI0mhLyU6XNoxvMD2oMKMrnpkC06apkpPl67fCT4CFThQyZ9+pduDwxNIh8K8zE9RRbvZDNLhbfuzZSewSnwkCOgs5Tx6pf4nvhgebIlvZRGlxFO7I0uq79yY61aZwU2ylceU9M22tfiQj8SaUhFA61lDIqbiHQNrKt07aRc2vgA/u6ij4+d1yRpe1WDEMn/Ok/j140243/h5tGOjEksM797BpQ+8ZD0Ulab5ivFQn1YXviRPLyyxiMxte37oz6kW9SNP8xcQ64VzkdbBbjLzZj3Di5eHRpc7ieSlYL3WYXSL19+uyynQyQQV4QYHN5qf+y8l/XFsH1YuN6x4O7Obf5ufNZ5Qc7S7Kn20Ndljd2adFoDFYCubpyuheaU9Fi0lBK+5fa5szl10w97In9hD9kp80zh/Ypicp5B0zi89CMy3gDswwJJwcMcbDSQRIiTpQGdgjOpHANIF6XSqiAnk/2lkJnQPrtJ9OSIUfdwIJHzjBnjhdqoMWwXhABsCDkSG4PIrKzq9aMW9c0KjYJTgoG7iNzSoQx/Pcxo1JnzBWh/2gOQLsupWM+ME3tY90Ixc05qVtwsHbi7zcPSvoni0zBRNCT44/aZ9CQMJSBZEV5W0U6oY7G4bRV/p/b/V6W9aafc2QQWg2WXVkiwo/+6vyLb/9q0921MW/S20sG5+Q5NZI9hpUOrHBxNUi8+RSeNuxOzJaQjdkNAcMrJ8hPrk9i43OerB7Q9sQ/m7Sk3nwBnT13HK50F0Jmr8r1uIn4HSheLYCf9KHFlCl19TQZ52SXAuepxq/077LmGhxQcYHVQbmylcNZEIczgQCC4J+fYP/kX4rc2kqogkOJdBiCzr6vvqF3Nom9GsWxKHNlMZo72GnQe5n8zxddo5imNgYzKNfWQVTAL/EKb/8CX/NqRjheIgOE+3SJ0hczt3bUT7INBjQ4iUd0mlGA6nwuPd0Th/M5Er5HiNWnQRYFjNCuiaT5nG+UuP/23acQrWjv+F0aCoo4Ys18OmEYJaU7U7+khKMrmNw8Gcc9+S1NIh5S4pbxfsxIqobWDt8WrY3IjjaZQfR2+f2gKux4Z7sqcZc1Zzuogj5kS4yxyxQADrpx8sdb+pGLIIpkeDotQiI6yeczRSj2JI53gvT8IiqiTLV9WnRTfJ3L9CJNv5ljAb9EvW40ctHje+yr3024vwxQMkyDHtZUdOmX1rKmna+Yy4Gv/Il87eI9d24i5xNNcqoXz145oox9gNC2S9EkwlHecJUOlvKQJzlKxjMlt9c7VWqbUxb+v6YwPlCoPYfByH+7I3NhMIaUGdBKKb59biulYIrB4AY7E6VuK0zuR6tEpr6dvySbgqq4zhcc61uBht96C+th1EvIZ8LRS5zGKRbvDYNZAlzaRKQBPzTYz0ENYO925cnMfhgOzS5ETSXSDvSGD7uD9Gz+9S/Eu8rf+5TMSRmRZGO1A2BzmCSiDYmpks5dKyXom4bn/RZl9uk/S16QAi5JOEW4DavGyZJ945As+z5JEQMTRSfhugeHd8WUzBKX/2iRTn/vJD5ybN+3Y2KbAs6BJsF3b9CIrQy2X/VeIcF2dx0mVyIKfqR3tuOhDcZb3ENqybIo10C2DY1JzRBRq2yHT5h/7TF1ZZDbti96/6huBtaM/mx+cEZD3NTWh4j2A4AgiWGw6wGe2PHfZWog6e8pcAxea1y9L5Je0xCkynIW1lumLjX9A+34IaNy6udylxLTR/cn+//N25MOb5jxz3coRdIWiy+4pkWWMYZYaPPYogKFYJ5O2MgdAOjX8rKi5cNasFueP2e0Tnzv1Kr5rkEhBrO2cWhwhRS6l6N6bAmCwF6bwxElPOlZvuqEp2h/5jFmT3GJdPOePFbnYdFZC0im3XuEFaCVpF1ECRcp5FoguvK13Exr+vzP4prkaSc5X7uVNW/5iZafGAwdrHXhRfrwZhx+xG7FzutMNWPwOtHtyKx+L+XM7jNyNgf957f0YYF/dx5884+Azcy7BKugUkRESpMEQ+SCneAHx7yDxcWNAlknnJehO8ROayUPnF4n/oAjwNLoZ1DEmhtYxIeQ1SaOoMctV7IASaUARwRAfsem7b7tV9rFEEcMT+sewYJ14SI0fSzrjcVhKSdMLqEVB40vYR0JiI2Vyk/4HnGXU7KNUnfuqoLHwfQHqje6dp+dnudilmudZPnN9vW3b5O/4SR+lOuD4Pba1WLsaVNw5Dtmd5a2lLzkZfX0Gln3sPRKNmI1KFHQlam7M08W5AZeHKeMdD5Dv5QiXWTVG7WuN3WZ33nhsf3Li1fbzHMvwkdONKvhSZzBYCnHJsQF/A3Ww4D47X90Dd7cfy2aDBF98ke3B6pq/1KxWV3squrVA2mL8vxtKQaS0smkpIuMKM1znzcWWm+vNA8OYDjr1lKna46QsRT1OBHWgkClFN3DXlEAphsiVUPzQ03Cf6SBKwmywnZYcVVJGE7u131fa3f17FtKP9K31oJjUGZbPtvWg/vYGN68iIRd7XCN5KBsk2dOFDSaGx5RY8WtBG49xIDgSzWRXK8VukewBtbu51eu1ZHEFofCQxWWpMFaE7UFPAwesEsN35UUhrXdRiyjFN/gapCKSNc+8eHOwHxL7/enVF6yH5rsavn9WDpftG+CGxuUjcLrv6QnM8bm3UXbHm0dnDIPE9NhCqwrUxy4/whYwuV8gllMtkU/+zQqyo/iZp5HEzsAKfD7KXHaJxfvCYfKH2b2iqiyxbgMawJ7bs2NbMVbghwJVo5quf7lOGAGlohRVeIInbTbKoAtaC/qAwDLHwXQM92j6AkSdD7xobqGaCE1eINPi5Am8pfz1cWLbZ5phaoflpscjTa43z2UFyxTn3g4vjJ29Hrpb6d5wWbW4naHF+2BbEnSrEJekuikzXlbYrI2WdTVlbTBiQosgsHPplXV1yBAcsnpyohMpnNWbhMhJyuWiaI3r6f4FOOh6j4nQ1J3cecYYIt/FXZB6Bcdo7YrdzqHAC5HB3asH4/+ihcPjNxJKCwdCPqR2+TFFIA1HQhfkxrkG+k1qz5eJiOXg2CS05EgxFU7IC75OQ+Z3w4xyMordSjEeQfW9r2lCzX4XytJ2yQnDfxEAAA==',
     flappy: 'UklGRu4IAABXRUJQVlA4IOIIAACwKgCdASqAAIAAPm0ulEckIqIhJ5RMkIANiWgIkCR8YpeoNF+i/HL2qbW/cfx1z3J2rDPq7263mA/Yz9pPdu9Jn+P9ED/AdbZ6F/S7/3j/keklF3jOS/FN37+7D4Z70mfW5tFnpLiIwKqCoBMyymYZVR6HKoPjfOEtfHW2+2ZXxhVDNjMUQhfTY+U7gNjloEubdvjkF3pSQwEHUO7S3pyZtdZzbtUdORQJMQh1YG9H3bimMtqBdfK+Oq2+kEPLhds3ZyJC4J4Wbpqfp1GmMQ/YLZ56SUsU3/+2jF0bexNPN0wIFMpYfZb0RukL+wmyWQSbNXJtIiONAVzAvXqPVskhsbqJOfjj5SqMd6kL7cTTiYyvoKu8j5ZAlWVLBXG1LPZxf82DPtEx2Yu2GsRvU/f3BnksPsxhrgU4a9uI0UvNKVnwDl17Aj1sn35WHO19e1BGGWMUDuiNneF59zWnAAD+uRBS9/40PV07zn/n0fwnGylfOIY9cP8OGRUeFCFUoKrX606O6EdcMm7X1FphjR9KOF7MbAIoFYaPrHx19+cv7p96xJn1rLeo4xgnCKPpiV12et2C+9ywZ4uqZOahxIywXQCbY1WX3MZyDWV37yX6WpzVCDGMXi5eDEosC5xESrOkpahSHXUpsnqptksekcKLYczhw1A2tCt2Ve7zkMp0zbMkWzm/dHepWRUKtlb+fVv1sQ511wqKDEvzkE4w89NeMqxIGRQwo/0VR2mBHtesbcOUb+B6cWYGlwE9CXsA3nGoLYLlifqkl3I59TPUNhGmZ+AZ/moc9XqUm5vPF3oUgmX1TiZyAIDIg7HLYHbA54xiHb1+cU2HiRx5podMiKP8+bgKHHmsctaast38q84reJNig7geR6u17pbWxYAZJQp4wmTpgeGqN9w3CiWzdQJ8yDOeUOOmE9FMKDxhaIY7lmZzxBkrX6l0LPDyO1HfpZuxOGUcIQhYZF8cMebh+/u/vRZRwIbX4yISAJTPs7MY1w7niX3bOzF/P9GFC3oNpd+m6VKMLsO50zThu7lD/wwTyHOZnPxScjvflblsBT742LYxLoBIUwMyNtRUnpRd773YdWgg4j1z9Ei2s77SsIAV9//fi2/hibGYH3Hx8P57YTnX3VRuj/IDhEbUJn3eAEXfVTVz2VPn2ia4qx07EmH+lCtJx1yb617ivEu6+zIQQyI2jZ/ydtvr3pjKZMUppVwtFX59z/4i1nlm8ldxHYBQaGYTToTJA7KCIm7/R8b3PrJGKrupCddC4o00qhws5e+fZDC/AvOlEEFt9ODrTST7hup4e3cTkqIHzscgJifQg3EBALR94H3ZOF+WnHHG7SdSRceZ8Tl99o1wvImJRf+fMRYyXsaVHTVfuQhr7Iv8Q2IOg7NJjyTQ1UEZrvpHI29nVnVllY7If3RIoseY9Vi/dUSis1W3aPzuqPOlx73RqsW1yMLykoIHoSlWC+Wgwo7GCNN/68EYWSTM+Uh0an1KXGn4g3+D/jDO86RFsE5C60VYqfdtL3ACHXXxIxBpO/bQEl9ZMbMcT5DjS14/DmKTrDbahh9ZIbIvyZC0pBdFEHLXPnZbcEBpsajzpP8QwnKQ7/93gkHEjNP8h+y4/VblP4hO1uq7LVLy1EuJLcGCu393Icg37P2iuU4OVUsXG2rWv5fj1iNHmKGgLWnBZmQ0qgNsCIuE0zF00aJHhD+IGiX8Q0UXDNK8pxk6x3JMlPEAjMBCvbUlwq1/9/XagBlULi/B4gQDClJ8JeiGMdXrmZXyqTpxRnZd2+4x42g1GVz0xAkGer9MgoCgwz9L0s2NBKUZwqoVrcQlL047YF+yKNhqzikB0ZoU3Imub/AXLImvzGR3Zd8WIfbt6DyWhl6ra9VV5Ab8htCPmdXMbLqZT3o2xb1h4/OThx4SIVWwRigHx3n7m5x89E+pOzBgu2EIVsW4lsS0drrAvy3JQSP7taC762OkjM68t6P64I7aiMh6u0lXBTqfJHLIJCH+d5svs/tkwVbqlHxDo5H7zzXVkIXxBgPJaf1oIjwPugCbFaIen/8Eru5TWcXcDDhL1vCrXj4Py815M1/Cl+MaRI8MjoeP+TktTXT05fZoEQyrom+tPpiqVtE4a7dBOW78IP9A+4I+2yI3dRd7BcUP3QU0E9kspLN/JLsc1hwK2SeQtKSxLOT2t1WDHa+vFQ2GTYGV/2k93SYWyfOcgw/D0UP4O5CfUt0m92Chse3elbsUhchsx+vx/Fp8MThzes3tRAZKY2R7vB71C1lHfYT6yGy2LysIZ9OgJ5XAgzZiR1VLMGQyN+ZI8v5pqVzjjz6SaOP02HI1QeADAXP8r7sg4axLiXPk8OWy6y7LQxwhSK/wurYNQeavL7pOSTpNgk4iGG06yCpeTztykNgEKRYt7OnYjxE0OTvhsFcA7FdIHiVA7tB42hR/kI0Ah/trtU98MJXP8n/yQA1cdILqdYAXhwVWIkqB0xzRjH18zf7v0GnPR3Ap3wvZlx7IUpSt0l/0Wc3yNj+nfCaXnakGYxaIcrjIzp75r1kM44oW311eQdnuAiUipMuFdaCtyllsnXo5iQxnP3FePyW+Yr/PNoIXjM70r1RUI/+dEv6fgoo1s5s3JLm6DiabgRr0JLKXBPcZC+aKFX1vnZC8KRqqvCTu/KML+i1u/flj0G5PWI0MitZZ+10tS0+PYd8fN1Vf0XKsAzGA1vS5t14jKPNBTAgVi0ciRfSMhwANIQZvZ155c65Z8lBx2w7Fc9TFt98Ltr9nQK2GFkkGYoALDG+smTEOoifPmhTRJ5P3nevTUFnYS/VfORK0kmxuCbq8JvkMGPN5eBwrArUkbx+avt8cV+IkbT3UDjx5TfgchW+MSYAkaS81DNlrHGZ9e9eAvQqeon7S1LL37Db1bBVzwWlSlypYdBQtsLEwwEWDva4WUanL1NCwNvCyYgC9gQHLFvZ2Xf9qyDCztpFl/NERoyiYEVijkLIFulcWf44eJk21Rj1A+4u9w9fk1vvs5lPkUwFtCm12yIM+AAA='
   };
@@ -432,11 +434,11 @@
   // The optional Art Pack scripts, as apps on the bottom row of the home screen (see renderArt).
   const ART_APPS = [
     { id: 'artT', pack: 'tornies', name: 'Tornies Art', title: 'Tornies Art Pack', icon: '🎨', bg: ['#7ad8a8', '#1f7a5a'], size: '1.4 MB', what: 'the illustrated artwork for all 179 Tornies' },
-    { id: 'artC', pack: 'chars', name: 'Character Art', title: 'Character Art Pack', icon: '🖌️', bg: ['#c39bff', '#5a3ab8'], size: '0.5 MB', what: 'illustrated portraits for the gym leaders, story characters, trainers and your outfits' }
+    { id: 'artC', pack: 'chars', name: 'Character Art', title: 'Character Art Pack', icon: '🖌️', bg: ['#c39bff', '#5a3ab8'], size: '0.75 MB', what: 'illustrated portraits for the gym leaders, story characters, trainers and your outfits, plus the Faction Defence maps' }
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gift codes', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
-  const LAND_APPS = { pocket: 1, flappy: 1, invasion: 1, bogies: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.23';
+  const LAND_APPS = { pocket: 1, flappy: 1, invasion: 1, bogies: 1, defence: 1 };   // apps that turn the phone sideways
+  const VERSION = '2.24';
 
   GM_addStyle([
     /* The phone */
@@ -660,7 +662,7 @@
           '<span class="ta-sicons"><span class="ta-bars"><i style="height:4px"></i><i style="height:6px"></i><i style="height:8.5px"></i><i style="height:11px"></i></span><span>TornTel</span><span class="ta-batt"><i></i></span></span></div>' +
         '<div class="ta-home">' +
           '<div class="ta-widget"><button type="button" class="ta-lock" data-act="close" title="Lock phone (Esc)">🔒</button><b class="ta-wclock">00:00</b><span class="ta-wdate"></span><em>Torn City Time</em></div>' +
-          '<div class="ta-note" hidden><span class="ta-noteicon">👋</span><div class="ta-notetext"><b>Welcome to Torn Arcade v' + VERSION + '!</b><small>Five games in your pocket. Start with Tornies, and grab the free Art Packs on the bottom row for illustrated artwork. Bugs or ideas? Message Eaglewing [571041].</small></div><button type="button" class="ta-notex" title="Dismiss">✕</button></div>' +
+          '<div class="ta-note" hidden><span class="ta-noteicon">👋</span><div class="ta-notetext"><b>Welcome to Torn Arcade v' + VERSION + '!</b><small>Six games in your pocket. Start with Tornies, and grab the free Art Packs on the bottom row for illustrated artwork. Bugs or ideas? Message Eaglewing [571041].</small></div><button type="button" class="ta-notex" title="Dismiss">✕</button></div>' +
           '<div class="ta-grid">' + GAMES.map(appButton).join('') + '</div>' +
           '<div class="ta-grid ta-artrow">' + ART_APPS.map(appButton).join('') + '</div>' +
           '<div class="ta-dock">' + SYS_APPS.map(function (a) { return (a.id === 'settings' ? appButton(DEV_APP).replace('<button ', '<button hidden ') : '') + appButton(a); }).join('') + '</div>' +
@@ -817,7 +819,8 @@
   const SCORE_FMT = {
     bombs:  function (k, v) { return [cap(k[1]), v + 's']; },
     flappy: function (k, v) { return [cap(k[1]), v]; },
-    bogies: function (k, v) { return ['Level ' + k[1], Number(v).toLocaleString('en-GB')]; }
+    bogies: function (k, v) { return ['Level ' + k[1], Number(v).toLocaleString('en-GB')]; },
+    defence: function (k, v) { return [['Westgate', 'The Docks', 'Casino Strip', 'Racket HQ'][k[1] - 1] || 'Map ' + k[1], 'Wave ' + v]; }
   };
   function iconSmall(a) {
     const img = APP_ART[a.id] ? 'data:image/webp;base64,' + APP_ART[a.id] : '';
@@ -1104,6 +1107,7 @@
         '<div class="ta-row"><span class="ta-ricon" style="background:#d08a10">🏆</span><div class="ta-rtext"><b>Reset best scores</b><small>Clears the scores for every mini-game</small></div><button type="button" class="ta-danger" data-set="resetBest">Reset</button></div>' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#1c9a8a">🐾</span><div class="ta-rtext"><b>Delete Tornies save</b><small>Your team, medals and Tornie Log</small></div><button type="button" class="ta-danger" data-set="resetPocket">Delete</button></div>' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#1c6a32">👽</span><div class="ta-rtext"><b>Delete Invasion progress</b><small>Unlocked levels, best scores and achievements</small></div><button type="button" class="ta-danger" data-set="resetInvasion">Delete</button></div>' +
+        '<div class="ta-row"><span class="ta-ricon" style="background:#2a4f9a">🛡️</span><div class="ta-rtext"><b>Delete Faction Defence progress</b><small>Stars, War Chest and Armoury upgrades</small></div><button type="button" class="ta-danger" data-set="resetDefence">Delete</button></div>' +
       '</div></div>' +
       '<div class="ta-group"><h3>About</h3><div class="ta-list"><div class="ta-about"><b>Torn Arcade · Mobile Phone</b><br>Version ' + VERSION + ' by Eaglewing [571041]<br>' +
         'Everything runs on your device. The phone never loads Torn pages and talks to no other websites. If you add an API key, it only asks the official Torn API for your new events while the phone is open.<br><br>&copy; 2026 Eaglewing [571041]. All rights reserved. This script may not be copied, modified or redistributed without permission.</div></div></div>';
@@ -1186,10 +1190,11 @@
     if (k === 'detailMaps') { const on = !store.get('detailMaps', true); store.set('detailMaps', on); t.classList.toggle('ta-on', on); sfx.click(); return; }
     if (k === 'evNotify') { const on = !store.get('evNotify', true); store.set('evNotify', on); t.classList.toggle('ta-on', on); sfx.click(); if (on) evStart(); else evStop(); return; }
     if (k === 'sound') { setMuted(!muted); t.classList.toggle('ta-on', !muted); if (!muted) sfx.click(); return; }
-    if (k === 'resetBest' || k === 'resetPocket' || k === 'resetInvasion') {
+    if (k === 'resetBest' || k === 'resetPocket' || k === 'resetInvasion' || k === 'resetDefence') {
       if (!t.classList.contains('ta-sure')) { t.classList.add('ta-sure'); t.textContent = 'Tap again'; setTimeout(function () { if (t.isConnected) { t.classList.remove('ta-sure'); t.textContent = k === 'resetBest' ? 'Reset' : 'Delete'; } }, 3000); return; }
       if (k === 'resetBest') { store.set('best', {}); t.textContent = 'Done'; }
       else if (k === 'resetInvasion') { if (games.invasion) games.invasion.wipe(); t.textContent = 'Deleted'; }
+      else if (k === 'resetDefence') { if (games.defence) games.defence.wipe(); t.textContent = 'Deleted'; }
       else { if (games.pocket && games.pocket.wipe) games.pocket.wipe(); else store.set('pocket', null); t.textContent = 'Deleted'; }
       t.classList.remove('ta-sure'); t.disabled = true; sfx.click(); refreshNav();
     }
@@ -7743,17 +7748,17 @@
      The illustrated Tornie and character artwork lives in two separate, optional userscripts, so the main script
      stays small (some phones and apps only accept scripts up to 2 MB):
        "Torn Arcade - Tornies Art"    (pack 'tornies': PIX[1..179])
-       "Torn Arcade - Character Art"  (pack 'chars':   PORTRAIT[key])
+       "Torn Arcade - Character Art"  (pack 'chars':   PORTRAIT[key], plus the Faction Defence map pictures 'fd…')
      How they link: userscripts can't see each other's variables, so they talk with browser events on the Torn
      page itself. This script fires 'ta-art-request'; each pack answers (and also announces itself when it loads)
      with a 'ta-art-pack' event whose detail is a JSON string { pack, ver, items }. Nothing is downloaded and no
      request is made. Every item is checked before it is used: only known names, and only base64 WebP images of a
      sensible size. Anything else is ignored. */
-  const ART_WANT = { tornies: 1, chars: 2 };   // newest pack versions this script knows about
+  const ART_WANT = { tornies: 1, chars: 3 };   // newest pack versions this script knows about
   const ARTP = {};                              // packs received: { ver, n }
   const ART_KEYS = {
     tornies: function (k) { return /^\d{1,3}$/.test(k) && +k >= 1 && +k <= DEX_SIZE; },
-    chars: function (k) { return /^[a-z0-9]{2,16}$/.test(k) && (k in PAL || /^outfit[0-3]$/.test(k)); }
+    chars: function (k) { return /^[a-z0-9]{2,16}$/.test(k) && (k in PAL || /^outfit[0-3]$/.test(k) || /^fd(westgate|docks|casino|hideout)$/.test(k)); }
   };
   const ART_B64 = /^UklGR[A-Za-z0-9+/]+={0,2}$/;   // base64 of a RIFF/WebP file
   function artOn(pack) { return store.get('art_' + pack, true) !== false; }
@@ -7775,13 +7780,13 @@
     let n = 0; const good = {};
     Object.keys(d.items).forEach(function (k) {
       const v = d.items[k];
-      if (ok(k) && typeof v === 'string' && v.length < 80000 && ART_B64.test(v)) { good[k] = v; n++; }
+      if (ok(k) && typeof v === 'string' && v.length < (/^fd/.test(k) ? 130000 : 80000) && ART_B64.test(v)) { good[k] = v; n++; }
     });
     ARTP[pack] = { ver: Math.floor(d.ver), n: n, on: artOn(pack) };
     if (artOn(pack)) {
       artClear(pack);
       const t = artTable(pack); Object.keys(good).forEach(function (k) { t[k] = good[k]; });
-      if (pack === 'chars') { const ks = Object.keys(good); let i = 0; (function warm() { for (let j = 0; j < 6 && i < ks.length; j++, i++) portWant(ks[i]); if (i < ks.length) setTimeout(warm, 30); })(); }
+      if (pack === 'chars') { const ks = Object.keys(good).filter(function (k) { return !/^fd/.test(k); }); let i = 0; (function warm() { for (let j = 0; j < 6 && i < ks.length; j++, i++) portWant(ks[i]); if (i < ks.length) setTimeout(warm, 30); })(); }
       else [1, 4, 7].forEach(pixWant);   // the title screen starters
     }
     if (artNotify) artNotify();
@@ -7798,6 +7803,7 @@
   };
   const artApi = {
     url: ART_URL, want: ART_WANT,
+    get: function (k) { return artOn('chars') && /^fd/.test(k) ? PORTRAIT[k] || null : null; },   // Faction Defence map pictures
     info: function (pack) { const p = ARTP[pack]; return { installed: !!p, ver: p ? p.ver : 0, n: p ? p.n : 0, on: artOn(pack), old: !!p && p.ver < ART_WANT[pack] }; },
     setOn: function (pack, on) {
       store.set('art_' + pack, !!on);
@@ -7814,7 +7820,7 @@
         return out;
       }
       const met = (d && d.metArt) || {};
-      return Object.keys(PORTRAIT).filter(function (k) { return !/^outfit/.test(k); }).sort().map(function (k) {
+      return Object.keys(PORTRAIT).filter(function (k) { return !/^(outfit|fd)/.test(k); }).sort().map(function (k) {
         const nm = ART_LABEL[k] || k.charAt(0).toUpperCase() + k.slice(1);
         return { src: 'data:image/webp;base64,' + PORTRAIT[k], name: met[k] ? nm : '???', known: !!met[k] };
       });
@@ -12466,7 +12472,8 @@
       if (live) saveGame(); else store.set('pocket', G);
     } finally { if (!live) G = keep; }
     used[p.i] = 1; store.set('giftsUsed', used);
-    return { ok: true, msg: (p.n ? String(p.n).slice(0, 120) + ' ' : '') + 'You received: ' + got.join(', ') + '. Tornies are in your team, or in the Tornie Locker if your team is full.' };
+    const note = p.n ? String(p.n).slice(0, 120).replace(/[.!?]?\s*$/, function (e) { return e.trim() || '.'; }) + ' ' : '';
+    return { ok: true, msg: note + 'You received: ' + got.join(', ') + '.' + ((p.m || []).length ? ' Tornies are in your team, or in the Tornie Locker if your team is full.' : '') };
   }
 
   /* ---------- Tornie logic ---------- */
@@ -18376,6 +18383,610 @@
           return false;
         }
         if (k === ' ' || k === 'Enter') { if (!e.repeat) power(); return true; }
+        return false;
+      }
+    };
+  })();
+
+  /* ================= Faction Defence (tower defence) =================
+     Racket raiders walk the roads towards your Faction HQ. Build defenders on the marked spots beside the road,
+     upgrade them with the cash you earn in the game, and survive 20 waves. After each game, part of what you earned
+     goes into the War Chest, which is spent in the Armoury on unlocks and permanent upgrades.
+     All of this belongs to Faction Defence only: nothing is shared with the other apps and nothing is requested
+     from anywhere. The map pictures come from the optional Character Art pack; without it simple maps are drawn. */
+  (function () {
+    const W = 960, H = 540, K = 0.625, STEP = 1 / 60, WAVES = 20, SC = 1.45;   // SC: size of people and defenders on the map
+    const TAU = Math.PI * 2;
+    // Maps: paths and build spots are in the artwork's own pixels (1536 x 864) and scaled by K.
+    const MAPS = [
+      { name: 'Westgate', art: 'fdwestgate', ground: '#7cc443', mult: 1.16, cash: 250, bonus: 150,
+        paths: [[[-30, 445], [171, 445], [171, 194], [221, 144], [1310, 144], [1360, 194], [1360, 490], [1310, 540], [221, 540], [171, 590], [171, 690], [221, 740], [1232, 740]]],
+        pads: [[420, 255], [720, 255], [1020, 255], [1240, 262], [330, 452], [640, 452], [950, 452], [1250, 452], [330, 640], [620, 640], [900, 640], [1150, 640], [1460, 250], [820, 815]] },
+      { name: 'The Docks', art: 'fddocks', ground: '#b9bcbf', mult: 1.1, cash: 280, bonus: 220,
+        paths: [[[765, -30], [765, 201], [1282, 201], [1332, 251], [1332, 338], [1282, 388], [241, 388], [191, 438], [191, 485], [241, 535], [1108, 535], [1158, 585], [1158, 634], [1208, 684], [1262, 684]]],
+        pads: [[330, 295], [620, 295], [900, 295], [1100, 272], [250, 462], [640, 462], [950, 462], [1240, 462], [330, 610], [640, 610], [950, 610], [1240, 560], [1430, 190], [80, 250]] },
+      { name: 'Casino Strip', art: 'fdcasino', ground: '#c9a27a', mult: 0.82, cash: 360, bonus: 300,
+        paths: [[[770, -30], [770, 188], [209, 188], [159, 238], [159, 673], [209, 723], [1285, 723]],
+                [[770, -30], [770, 188], [770, 380], [1219, 380], [1247, 410], [1247, 518], [1219, 548], [770, 548], [770, 723], [1285, 723]]],
+        pads: [[420, 275], [620, 275], [920, 275], [1120, 275], [240, 450], [1300, 450], [420, 630], [620, 630], [920, 630], [1120, 630], [250, 640], [1290, 620], [560, 465], [980, 465]] },
+      { name: 'Racket HQ', art: 'fdhideout', ground: '#9c7a52', mult: 0.96, cash: 420, bonus: 400,
+        paths: [[[300, 894], [300, 678], [256, 678], [206, 628], [206, 487], [256, 437], [1267, 437], [1317, 487], [1317, 560]],
+                [[300, 894], [300, 678], [256, 678], [206, 628], [206, 246], [256, 196], [1267, 196], [1317, 246], [1317, 560]]],
+        pads: [[420, 315], [720, 315], [1020, 315], [1200, 315], [420, 560], [720, 560], [1000, 560], [1080, 560], [110, 450], [560, 780], [950, 780], [1440, 450], [1475, 590], [620, 100]] }
+    ];
+    MAPS.forEach(function (m) {
+      m.paths = m.paths.map(function (p) {
+        const pts = p.map(function (q) { return [q[0] * K, q[1] * K]; }), seg = []; let len = 0;
+        for (let i = 0; i < pts.length - 1; i++) { const l = Math.hypot(pts[i + 1][0] - pts[i][0], pts[i + 1][1] - pts[i][1]); seg.push(l); len += l; }
+        return { pts: pts, seg: seg, len: len };
+      });
+      m.pads = m.pads.map(function (q) { return { x: q[0] * K, y: q[1] * K }; });
+      const e = m.paths[0].pts[m.paths[0].pts.length - 1]; m.hq = { x: e[0], y: e[1] };
+    });
+    function pathAt(P, d) {
+      if (d <= 0) return { x: P.pts[0][0], y: P.pts[0][1], a: Math.atan2(P.pts[1][1] - P.pts[0][1], P.pts[1][0] - P.pts[0][0]) };
+      for (let i = 0; i < P.seg.length; i++) {
+        if (d <= P.seg[i] || i === P.seg.length - 1) {
+          const a = P.pts[i], b = P.pts[i + 1], f = Math.min(1, d / P.seg[i]);
+          return { x: a[0] + (b[0] - a[0]) * f, y: a[1] + (b[1] - a[1]) * f, a: Math.atan2(b[1] - a[1], b[0] - a[0]) };
+        }
+        d -= P.seg[i];
+      }
+    }
+
+    /* ---------- Defenders ---------- */
+    // cost, damage, seconds between shots, range (px), and what armour does to them (pierce 1 = ignores armour)
+    const TW = {
+      gunner:  { name: 'Gunner',  icon: '🔫', cost: 100, dmg: 6.5, cd: 0.5, range: 108, pierce: 0,   col: '#4f7fd8', desc: 'Fast shots at one raider. Weak against armour.' },
+      cannon:  { name: 'Cannon',  icon: '💥', cost: 170, dmg: 26,  cd: 1.5,  range: 104, pierce: 0.5, col: '#5b5f68', splash: 38, desc: 'Explosive shells hit a group.' },
+      molotov: { name: 'Molotov', icon: '🔥', cost: 150, dmg: 17,  cd: 2.0,  range: 100, pierce: 0.6, col: '#d0612a', pool: 36, burn: 3.0, desc: 'Leaves a fire on the road that burns everyone in it.' },
+      taser:   { name: 'Taser',   icon: '⚡', cost: 120, dmg: 6,   cd: 0.9,  range: 100, pierce: 0,   col: '#e8c832', slow: 0.5, chain: 2, desc: 'Slows raiders down. Zaps two more nearby.' },
+      sniper:  { name: 'Sniper',  icon: '🎯', cost: 250, dmg: 80,  cd: 3.3,  range: 190, pierce: 1,   col: '#3a6a3a', desc: 'Long range. Goes through armour. Aims at the toughest raider.' }
+    };
+    const TW_ORDER = ['gunner', 'cannon', 'molotov', 'taser', 'sniper'];
+    const LV_DMG = [1, 1.45, 2.1], LV_RNG = [1, 1.08, 1.16], UP_COST = [0, 0.75, 1.25];
+    /* ---------- Raiders ---------- */
+    const RD = {
+      thug:   { hp: 30,   spd: 54, armor: 0,    cash: 3,   hit: 1,  r: 7,  name: 'Thug' },
+      biker:  { hp: 24,   spd: 105, armor: 0,    cash: 4,   hit: 1,  r: 8,  name: 'Biker' },
+      brute:  { hp: 115,  spd: 38, armor: 0.55, cash: 8,  hit: 2,  r: 10, name: 'Armoured brute' },
+      medic:  { hp: 48,   spd: 48, armor: 0,    cash: 7,  hit: 1,  r: 7,  name: 'Medic', heal: 7 },
+      boss:   { hp: 450,  spd: 26, armor: 0.3,  cash: 50,  hit: 5,  r: 13, name: 'Enforcer' },
+      don:    { hp: 1800, spd: 22, armor: 0.35, cash: 150, hit: 12, r: 15, name: 'Don Varro' }
+    };
+    // When each raider type first appears, per map (wave number).
+    const INTRO = [{ biker: 6, brute: 9, medic: 13 }, { biker: 4, brute: 7, medic: 10 }, { biker: 3, brute: 7, medic: 8 }, { biker: 3, brute: 5, medic: 6 }];
+    function waveList(mi, w) {
+      const I = INTRO[mi], out = [], np = MAPS[mi].paths.length;
+      const add = function (t, n, gap) { for (let i = 0; i < n; i++) out.push({ t: t, gap: gap }); };
+      add('thug', 5 + Math.floor(w * 1.25), 0.85);
+      if (w >= I.biker) add('biker', 2 + Math.floor((w - I.biker) * 0.6), 0.45);
+      if (w >= I.brute) add('brute', 1 + Math.floor((w - I.brute) * 0.5), 1.2);
+      if (w >= I.medic) add('medic', 1 + Math.floor((w - I.medic) * 0.25), 1.0);
+      if (w === 10 || w === 20) out.push({ t: mi === 3 && w === 20 ? 'don' : 'boss', gap: 2 });
+      // mix the order a little (the same every time, so a wave plays the same way twice)
+      let s = (mi + 1) * 977 + w * 131;
+      for (let i = out.length - 1; i > 0; i--) { s = (s * 16807) % 2147483647; const j = s % (i + 1); if (out[i].t !== 'boss' && out[j].t !== 'boss' && out[i].t !== 'don' && out[j].t !== 'don') { const q = out[i]; out[i] = out[j]; out[j] = q; } }
+      out.forEach(function (o, i) { o.p = np > 1 ? (i + w) % np : 0; });
+      return out;
+    }
+
+    /* ---------- Save (Faction Defence only) ---------- */
+    const ARM = {   // Armoury: permanent upgrades bought with the War Chest
+      molotov: { name: 'Unlock Molotov', icon: '🔥', costs: [250], desc: 'Fire on the road. Great against crowds and medics.' },
+      taser:   { name: 'Unlock Taser',   icon: '⚡', costs: [350], desc: 'Slows raiders so your other defenders get more shots.' },
+      sniper:  { name: 'Unlock Sniper',  icon: '🎯', costs: [500], desc: 'Long range, goes through armour.' },
+      train:   { name: 'Training',       icon: '🎖️', costs: [150, 300, 480, 700, 950], desc: 'All defenders do 8% more damage per level.' },
+      walls:   { name: 'HQ walls',       icon: '🧱', costs: [120, 260, 420, 620], desc: 'Your HQ can take 4 more hits per level.' },
+      fund:    { name: 'Starting cash',  icon: '💵', costs: [120, 260, 420, 620], desc: 'Start every map with $40 more per level.' },
+      strike:  { name: 'Air strike',     icon: '✈️', costs: [150], desc: 'One use. Tap the map to hit everything in a wide area. Hold up to 3.' }
+    };
+    const save = Object.assign({ open: 0, stars: {}, best: {}, chest: 0, own: {}, lv: {}, strikes: 0 }, store.get('fdefence', null) || {});
+    function persist() { store.set('fdefence', save); }
+    function owned(t) { return t === 'gunner' || t === 'cannon' || !!save.own[t]; }
+    function armLv(k) { return save.lv[k] || 0; }
+
+    /* ---------- Panel ---------- */
+    const panel = makePanel('defence', 'Faction Defence', 'Defend your Faction HQ from Racket raids. Build defenders beside the road and survive 20 waves.',
+      '<button type="button" class="ta-btn ta-btn-alt ta-fd-maps">Maps</button><button type="button" class="ta-btn ta-fd-next">Next wave</button>',
+      [['wave', 'Wave', '–'], ['cash', 'Cash', '–'], ['hq', 'HQ', '–'], ['chest', 'War Chest', '$0']],
+      '<canvas class="ta-canvas"></canvas>',
+      'Tap a spot beside the road to build · tap a defender to upgrade or sell · <span class="ta-kbd">Space</span> next wave · <span class="ta-kbd">F</span> speed · <span class="ta-kbd">P</span> pause');
+    const canvas = $(panel, 'canvas'), ctx = setupCanvas(canvas, W, H);
+
+    let st = 'select', mi = 0, M = MAPS[0], wave = 0, cash = 0, hq = 20, hqMax = 20, speed = 1, paused = false;
+    let leakLog = [], raiders = [], towers = [], shots = [], fires = [], fx = [], floats = [], queue = [], spawnT = 0, waveOn = false;
+    let sel = null, menu = null, strikeMode = false, earned = 0, kills = 0, leaked = 0, endT = 0, result = null, btns = [], t = 0, raf = 0, last = 0, acc = 0, active = false, shake = 0;
+
+    function startMap(i) {
+      mi = i; M = MAPS[i]; wave = 0; hqMax = 20 + 4 * armLv('walls'); hq = hqMax; cash = M.cash + 40 * armLv('fund');
+      raiders = []; shots = []; fires = []; fx = []; floats = []; queue = []; waveOn = false; spawnT = 0;
+      towers = M.pads.map(function () { return null; }); leakLog = []; sel = null; menu = null; strikeMode = false; earned = 0; kills = 0; leaked = 0; result = null; paused = false;
+      st = 'play'; endT = 0; showStats(); mapImg();
+    }
+    function nextWave() {
+      if (st !== 'play' || wave >= WAVES) return;
+      if (queue.length) return;   // the current wave is still arriving
+      if (wave > 0 && raiders.length) { const b = 5 + wave; cash += b; floatText(W - 120, 60, '+$' + b + ' early', '#7ee07e'); }
+      wave++; queue = waveList(mi, wave); spawnT = 0.6; waveOn = true; snd('horn'); showStats();
+    }
+    function spawn(o) {
+      const D = RD[o.t], m = M.mult * (0.72 + 0.12 * (wave - 1)), hp = Math.round(D.hp * m);
+      raiders.push({ t: o.t, D: D, P: M.paths[o.p], d: 0, hp: hp, max: hp, slowT: 0, slow: 0, lane: ((raiders.length * 7919) % 11 - 5) * 1.2, x: -99, y: -99, a: 0, hurt: 0, seed: Math.random() * 10, id: Math.random() });
+    }
+    function dmgTo(r, amount, pierce, src) {
+      const a = r.D.armor * (1 - pierce), d = amount * (1 - a) * (1 + 0.08 * armLv('train'));
+      if (src && r.hp > 0) src.dealt = (src.dealt || 0) + Math.min(r.hp, d);
+      r.hp -= d; r.hurt = 0.12;
+      if (r.hp <= 0 && !r.dead) {
+        r.dead = true; kills++; const c = Math.round(r.D.cash * (1 + 0.03 * (wave - 1))); cash += c; earned += c;
+        floatText(r.x, r.y - 14, '+$' + c, '#ffe27a');
+        for (let i = 0; i < 6; i++) fx.push({ k: 'spark', x: r.x, y: r.y, vx: (Math.random() - 0.5) * 90, vy: (Math.random() - 0.5) * 90, life: 0.4, c: '#fff3b0' });
+        if (r.t === 'boss' || r.t === 'don') { shake = 0.4; snd('boom'); }
+      }
+    }
+    function floatText(x, y, s, c) { floats.push({ x: x, y: y, s: s, c: c, life: 1 }); }
+    function inRange(tw, r, R) { return (r.x - tw.x) * (r.x - tw.x) + (r.y - tw.y) * (r.y - tw.y) <= R * R; }
+    function pick(tw, R) {
+      let best = null, score = -1;
+      for (const r of raiders) {
+        if (r.dead || r.d < 4 || !inRange(tw, r, R)) continue;
+        const s = tw.t === 'sniper' ? r.hp : tw.t === 'taser' ? (r.slowT > 0.3 ? -1 : r.d) : r.d;   // sniper: toughest; taser: first one not already slowed
+        if (s > score) { score = s; best = r; }
+      }
+      if (!best && tw.t === 'taser') return pick(Object.assign({}, tw, { t: 'gunner' }), R);
+      return best;
+    }
+
+    function update(dt) {
+      t += dt;
+      if (st !== 'play') return;
+      // spawning
+      if (queue.length) { spawnT -= dt; if (spawnT <= 0) { const o = queue.shift(); spawn(o); spawnT = o.gap; } }
+      // raiders
+      for (const r of raiders) {
+        if (r.dead) continue;
+        if (r.slowT > 0) r.slowT -= dt;
+        const v = r.D.spd * (r.slowT > 0 ? 1 - r.slow : 1);
+        r.d += v * dt;
+        const p = pathAt(r.P, r.d);
+        r.x = p.x + Math.cos(p.a + Math.PI / 2) * r.lane; r.y = p.y + Math.sin(p.a + Math.PI / 2) * r.lane; r.a = p.a;
+        if (r.hurt > 0) r.hurt -= dt;
+        if (r.D.heal) for (const o of raiders) if (o !== r && !o.dead && o.hp < o.max && Math.abs(o.x - r.x) < 50 && Math.abs(o.y - r.y) < 50) o.hp = Math.min(o.max, o.hp + r.D.heal * dt * (1 + 0.05 * wave));
+        if (r.d >= r.P.len) {
+          r.dead = true; r.leaked = true; hq -= r.D.hit; leaked += r.D.hit; shake = 0.25; snd('alarm');           floatText(M.hq.x, M.hq.y - 30, '-' + r.D.hit + ' HQ', '#ff6a5a');
+          if (hq <= 0) { hq = 0; endGame(false); return; }
+        }
+      }
+      // defenders
+      for (const tw of towers) {
+        if (!tw) continue;
+        const T = TW[tw.t]; tw.cd -= dt; if (tw.flash > 0) tw.flash -= dt;
+        const R = T.range * LV_RNG[tw.lv - 1], tg = pick(tw, R);
+        if (tg) tw.ang = Math.atan2(tg.y - tw.y, tg.x - tw.x);
+        if (!tg || tw.cd > 0) continue;
+        tw.cd = T.cd; tw.flash = 0.08; const dm = T.dmg * LV_DMG[tw.lv - 1];
+        if (tw.t === 'gunner') { dmgTo(tg, dm, T.pierce, tw); shots.push({ k: 'tracer', x: tw.x, y: tw.y, tx: tg.x, ty: tg.y, life: 0.06 }); snd('shot'); }
+        else if (tw.t === 'sniper') { dmgTo(tg, dm, 1, tw); shots.push({ k: 'snipe', x: tw.x, y: tw.y, tx: tg.x, ty: tg.y, life: 0.18 }); snd('snipe'); }
+        else if (tw.t === 'taser') {
+          const hits = [tg]; let from = tg;
+          for (let c = 0; c < T.chain + (tw.lv === 3 ? 1 : 0); c++) {
+            let nx = null, nd = 45 * 45;
+            for (const r of raiders) { if (r.dead || hits.indexOf(r) >= 0) continue; const q = (r.x - from.x) * (r.x - from.x) + (r.y - from.y) * (r.y - from.y); if (q < nd) { nd = q; nx = r; } }
+            if (!nx) break; hits.push(nx); from = nx;
+          }
+          let px = tw.x, py = tw.y;
+          hits.forEach(function (r) { dmgTo(r, dm, 0, tw); const sl = T.slow + 0.05 * (tw.lv - 1); r.slow = r.slowT > 0 ? Math.max(r.slow, sl) : sl; r.slowT = 1.6; shots.push({ k: 'zap', x: px, y: py, tx: r.x, ty: r.y, life: 0.12 }); px = r.x; py = r.y; });
+          snd('zap');
+        } else {
+          // lob a shell or bottle where the raider will be
+          const lead = pathAt(tg.P, tg.d + tg.D.spd * (tg.slowT > 0 ? 1 - tg.slow : 1) * 0.55);
+          shots.push({ k: tw.t === 'cannon' ? 'shell' : 'bottle', x: tw.x, y: tw.y, sx: tw.x, sy: tw.y, tx: lead.x, ty: lead.y, T: 0, dur: 0.55, dm: dm, lv: tw.lv, pierce: T.pierce, src: tw });
+          snd(tw.t === 'cannon' ? 'cannon' : 'throw');
+        }
+      }
+      // shells and bottles in flight
+      for (const s of shots) {
+        if (s.k === 'shell' || s.k === 'bottle') {
+          s.T += dt; const f = Math.min(1, s.T / s.dur);
+          s.x = s.sx + (s.tx - s.sx) * f; s.y = s.sy + (s.ty - s.sy) * f - Math.sin(f * Math.PI) * 26;
+          if (f >= 1) {
+            s.life = 0;
+            if (s.k === 'shell') {
+              const R = TW.cannon.splash * (1 + 0.1 * (s.lv - 1));
+              for (const r of raiders) if (!r.dead && inRange({ x: s.tx, y: s.ty }, r, R)) dmgTo(r, s.dm, s.pierce, s.src);
+              fx.push({ k: 'boom', x: s.tx, y: s.ty, r: R, life: 0.35 }); snd('boom');
+            } else {
+              fires.push({ x: s.tx, y: s.ty, r: TW.molotov.pool * (1 + 0.1 * (s.lv - 1)), life: TW.molotov.burn, dps: s.dm, pierce: s.pierce, src: s.src });
+              snd('fire');
+            }
+          }
+        } else s.life -= dt;
+      }
+      shots = shots.filter(function (s) { return s.life === undefined || s.life > 0; });
+      for (const f of fires) { f.life -= dt; for (const r of raiders) if (!r.dead && inRange(f, r, f.r)) dmgTo(r, f.dps * dt, f.pierce, f.src); }
+      fires = fires.filter(function (f) { return f.life > 0; });
+      raiders = raiders.filter(function (r) { return !r.dead; });
+      for (const e of fx) { e.life -= dt; if (e.vx !== undefined) { e.x += e.vx * dt; e.y += e.vy * dt; } }
+      fx = fx.filter(function (e) { return e.life > 0; });
+      for (const f of floats) { f.life -= dt * 0.9; f.y -= 22 * dt; }
+      floats = floats.filter(function (f) { return f.life > 0; });
+      if (shake > 0) shake -= dt;
+      // wave cleared
+      if (waveOn && !queue.length && !raiders.length) {
+        waveOn = false; const b = 10 + 2 * wave; cash += b; floatText(W / 2, 90, 'Wave ' + wave + ' cleared  +$' + b, '#9fe39f'); snd('clear');
+        if (wave >= WAVES) endGame(true);
+        showStats();
+      }
+    }
+
+    function endGame(win) {
+      const stars = win ? (hq >= hqMax * 0.75 ? 3 : hq >= hqMax * 0.4 ? 2 : 1) : 0;
+      const prevStars = save.stars[mi] || 0, firstWin = win && !prevStars;
+      let gain = Math.round(earned * 0.06) + (win ? wave : wave - 1) * 8;
+      if (win) gain += firstWin ? M.bonus : Math.round(M.bonus * 0.4);
+      if (stars > prevStars) gain += (stars - prevStars) * 40;
+      save.chest += gain;
+      if (stars > prevStars) save.stars[mi] = stars;
+      const reached = win ? WAVES : wave;
+      if (reached > (save.best[mi] || 0)) save.best[mi] = reached;
+      record('defence:' + (mi + 1), reached);
+      if (win) save.open = Math.max(save.open, Math.min(MAPS.length - 1, mi + 1));
+      persist();
+      result = { win: win, stars: stars, gain: gain, reached: reached, newStars: stars > prevStars, first: firstWin };
+      st = win ? 'win' : 'lose'; endT = 0; queue = []; menu = null; sel = null; strikeMode = false;
+      snd(win ? 'win' : 'lose'); showStats();
+    }
+
+    /* ---------- Building ---------- */
+    function build(pi, ty) {
+      const T = TW[ty]; if (!T || towers[pi] || !owned(ty) || cash < T.cost) return false;
+      cash -= T.cost; towers[pi] = { t: ty, lv: 1, x: M.pads[pi].x, y: M.pads[pi].y, cd: 0.2, ang: -Math.PI / 2, spent: T.cost, flash: 0 };
+      menu = null; sel = null; snd('build'); showStats(); return true;
+    }
+    function upCost(tw) { return tw.lv >= 3 ? 0 : Math.round(TW[tw.t].cost * UP_COST[tw.lv] / 5) * 5; }
+    function upgrade(pi) {
+      const tw = towers[pi]; if (!tw || tw.lv >= 3) return false; const c = upCost(tw); if (cash < c) return false;
+      cash -= c; tw.spent += c; tw.lv++; snd('build'); floatText(tw.x, tw.y - 22, 'Level ' + tw.lv, '#9fd0ff'); showStats(); return true;
+    }
+    function sell(pi) {
+      const tw = towers[pi]; if (!tw) return; const v = Math.round(tw.spent * 0.7);
+      cash += v; towers[pi] = null; sel = null; floatText(tw.x, tw.y - 18, '+$' + v, '#ffe27a'); snd('sell'); showStats();
+    }
+    function airStrike(x, y) {
+      if (save.strikes <= 0) return;
+      save.strikes--; persist(); strikeMode = false;
+      const R = 75, dm = 160 * M.mult * (1 + 0.06 * wave);
+      for (const r of raiders) if (!r.dead && inRange({ x: x, y: y }, r, R)) dmgTo(r, dm, 1);
+      fx.push({ k: 'boom', x: x, y: y, r: R, life: 0.6, big: 1 }); shake = 0.5; snd('boom');
+    }
+
+    /* ---------- Sound ---------- */
+    let sndGap = {};
+    function snd(k) {
+      if (!active || muted) return;
+      const now = performance.now(); if (sndGap[k] && now - sndGap[k] < ({ shot: 70, zap: 90, fire: 120, boom: 90, throw: 120, cannon: 120 }[k] || 0)) return; sndGap[k] = now;
+      const S = {
+        shot: [[0, 900, 0.025, 'square', 0.025]], snipe: [[0, 1400, 0.05, 'square', 0.04], [30, 300, 0.12, 'triangle', 0.04]],
+        zap: [[0, 1800, 0.05, 'sawtooth', 0.025, 600]], cannon: [[0, 180, 0.08, 'square', 0.05, 90]], throw: [[0, 500, 0.08, 'triangle', 0.03, 300]],
+        fire: [[0, 220, 0.18, 'sawtooth', 0.025, 120]], boom: [[0, 110, 0.25, 'sawtooth', 0.07, 40]], alarm: [[0, 660, 0.1, 'square', 0.05], [120, 440, 0.12, 'square', 0.05]],
+        build: [[0, 520, 0.05, 'triangle', 0.05], [60, 780, 0.07, 'triangle', 0.05]], sell: [[0, 780, 0.05, 'triangle', 0.05], [60, 520, 0.07, 'triangle', 0.05]],
+        horn: [[0, 330, 0.18, 'sawtooth', 0.04], [200, 330, 0.25, 'sawtooth', 0.04]], clear: [[0, 660, 0.08, 'triangle', 0.05], [90, 990, 0.12, 'triangle', 0.05]]
+      };
+      if (k === 'win') return sfx.win(); if (k === 'lose') return sfx.over();
+      if (S[k]) seq(S[k]);
+    }
+
+    /* ---------- Map pictures ---------- */
+    const imgs = {};
+    function mapImg() {
+      const key = M.art, b64 = games.pocket && games.pocket.art && games.pocket.art.get ? games.pocket.art.get(key) : null;
+      if (!b64) return null;
+      if (!imgs[key] || imgs[key].b !== b64.length) { const im = new Image(); im.src = 'data:image/webp;base64,' + b64; imgs[key] = { im: im, b: b64.length }; }
+      return imgs[key].im.complete && imgs[key].im.naturalWidth ? imgs[key].im : null;
+    }
+    const plain = {};
+    function plainMap(m) {   // drawn when the Character Art pack isn't installed: ground, roads and the HQ
+      if (plain[m.art]) return plain[m.art];
+      const c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d');
+      g.fillStyle = m.ground; g.fillRect(0, 0, W, H);
+      let s = 7; for (let i = 0; i < 260; i++) { s = (s * 16807) % 2147483647; const x = s % W; s = (s * 16807) % 2147483647; const y = s % H; g.fillStyle = 'rgba(0,0,0,' + (0.03 + (s % 5) / 100) + ')'; g.beginPath(); g.arc(x, y, 6 + s % 18, 0, TAU); g.fill(); }
+      [[40, '#d9dde3'], [34, '#3d4148']].forEach(function (L) {
+        g.lineWidth = L[0]; g.strokeStyle = L[1]; g.lineJoin = 'round'; g.lineCap = 'round';
+        m.paths.forEach(function (P) { g.beginPath(); P.pts.forEach(function (q, i) { if (i) g.lineTo(q[0], q[1]); else g.moveTo(q[0], q[1]); }); g.stroke(); });
+      });
+      g.setLineDash([12, 12]); g.lineWidth = 2.5; g.strokeStyle = 'rgba(255,255,255,.75)';
+      m.paths.forEach(function (P) { g.beginPath(); P.pts.forEach(function (q, i) { if (i) g.lineTo(q[0], q[1]); else g.moveTo(q[0], q[1]); }); g.stroke(); });
+      g.setLineDash([]);
+      const h = m.hq; g.fillStyle = '#6b5a4a'; roundRect(g, h.x - 8, h.y - 40, 78, 80, 8); g.fill();
+      g.fillStyle = '#8a7a66'; roundRect(g, h.x - 2, h.y - 34, 66, 68, 6); g.fill();
+      g.fillStyle = '#c0392b'; g.fillRect(h.x + 28, h.y - 30, 3, 22); g.beginPath(); g.moveTo(h.x + 31, h.y - 30); g.lineTo(h.x + 48, h.y - 25); g.lineTo(h.x + 31, h.y - 20); g.fill();
+      plain[m.art] = c; return c;
+    }
+
+    /* ---------- Drawing ---------- */
+    function ot(s, x, y, size, col, align, weight) {
+      ctx.font = (weight || 900) + ' ' + size + 'px system-ui,Arial,sans-serif'; ctx.textAlign = align || 'left'; ctx.textBaseline = 'middle';
+      ctx.lineWidth = Math.max(3, size / 5); ctx.strokeStyle = 'rgba(0,0,0,.85)'; ctx.lineJoin = 'round'; ctx.strokeText(s, x, y); ctx.fillStyle = col || '#fff'; ctx.fillText(s, x, y);
+    }
+    function wrapText(s, x, y, maxW, size, col, lh) {
+      ctx.font = '600 ' + size + 'px system-ui,Arial,sans-serif'; const words = s.split(' '); let line = '', n = 0;
+      for (const w of words) { const tryL = line ? line + ' ' + w : w; if (ctx.measureText(tryL).width > maxW && line) { ot(line, x, y + n * lh, size, col, 'left', 600); line = w; n++; } else line = tryL; }
+      if (line) ot(line, x, y + n * lh, size, col, 'left', 600);
+    }
+    function pill(x, y, w, h, fill, line) { roundRect(ctx, x, y, w, h, Math.min(10, h / 2)); ctx.fillStyle = fill; ctx.fill(); if (line) { ctx.lineWidth = 1.5; ctx.strokeStyle = line; ctx.stroke(); } }
+    function button(x, y, w, h, label, act, opts) {
+      opts = opts || {};
+      let fill = opts.fill;
+      if (opts.off) fill = 'rgba(40,46,58,.9)';
+      else if (!fill) { fill = ctx.createLinearGradient(0, y, 0, y + h); fill.addColorStop(0, '#3f8cf0'); fill.addColorStop(1, '#2a6fd6'); }
+      pill(x, y, w, h, fill, opts.line || 'rgba(255,255,255,.2)');
+      ot(label, x + w / 2, y + h / 2 + 1, opts.size || 14, opts.off ? '#8a96a8' : '#fff', 'center', 800);
+      btns.push({ x: x, y: y, w: w, h: h, act: act, off: opts.off });
+    }
+    const HOOD = ['#d64545', '#8e5bd6', '#e07a2a', '#1fa38a', '#3d7bd9'];
+    function drawRaider(r) {
+      const D = r.D, s = D.r * 1.75, bob = Math.sin(t * 12 + r.seed) * 1.6, x = r.x, y = r.y, hurt = r.hurt > 0;
+      const O = '#141418';   // outline
+      ctx.save(); ctx.translate(x, y);
+      ctx.fillStyle = 'rgba(0,0,0,.32)'; ctx.beginPath(); ctx.ellipse(2, s * 0.55, s * 1.05, s * 0.5, 0, 0, TAU); ctx.fill();
+      ctx.rotate(r.a); ctx.lineWidth = 2; ctx.strokeStyle = O; ctx.lineJoin = 'round';
+      if (r.t === 'biker') {
+        ctx.fillStyle = '#2a2a30'; roundRect(ctx, -s * 1.25, -s * 0.28, s * 2.5, s * 0.56, s * 0.28); ctx.fill(); ctx.stroke();   // bike
+        ctx.fillStyle = hurt ? '#fff' : '#f2c230'; roundRect(ctx, -s * 0.55, -s * 0.5, s * 1.1, s, s * 0.3); ctx.fill(); ctx.stroke();   // jacket
+        ctx.fillStyle = hurt ? '#fff' : '#e8e8ee'; ctx.beginPath(); ctx.arc(s * 0.12, 0, s * 0.42, 0, TAU); ctx.fill(); ctx.stroke();   // helmet
+        ctx.fillStyle = '#2a6fd6'; ctx.fillRect(s * 0.3, -s * 0.22, s * 0.16, s * 0.44);   // visor
+      } else {
+        const body = hurt ? '#ffffff' : { thug: HOOD[Math.floor(r.seed * 7) % HOOD.length], brute: '#5d6b3a', medic: '#f4f4f4', boss: '#22222a', don: '#3a1d48' }[r.t];
+        // feet stepping
+        ctx.fillStyle = '#2a2a2e'; ctx.beginPath(); ctx.ellipse(bob, -s * 0.32, s * 0.24, s * 0.16, 0, 0, TAU); ctx.ellipse(-bob, s * 0.32, s * 0.24, s * 0.16, 0, 0, TAU); ctx.fill();
+        // body with arms
+        ctx.fillStyle = body; ctx.beginPath(); ctx.ellipse(-s * 0.08, 0, s * 0.55, s * 0.82, 0, 0, TAU); ctx.fill(); ctx.stroke();
+        if (r.t === 'brute') { ctx.fillStyle = hurt ? '#fff' : '#3c4526'; roundRect(ctx, -s * 0.42, -s * 0.62, s * 0.62, s * 1.24, 4); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#9aa36a'; ctx.fillRect(-s * 0.3, -s * 0.45, s * 0.38, s * 0.12); ctx.fillRect(-s * 0.3, s * 0.33, s * 0.38, s * 0.12); }
+        if (r.t === 'medic') { ctx.fillStyle = '#e03a3a'; ctx.fillRect(-s * 0.3, -s * 0.11, s * 0.44, s * 0.22); ctx.fillRect(-s * 0.19, -s * 0.33, s * 0.22, s * 0.66); }
+        if (r.t === 'boss' || r.t === 'don') { ctx.strokeStyle = '#f0c040'; ctx.lineWidth = 2.2; ctx.beginPath(); ctx.arc(-s * 0.05, 0, s * 0.42, -1.1, 1.1); ctx.stroke(); ctx.strokeStyle = O; ctx.lineWidth = 2; }
+        // head
+        const hx = s * 0.22, hr = s * 0.42;
+        ctx.fillStyle = r.t === 'thug' ? body : '#e8bf96'; ctx.beginPath(); ctx.arc(hx, 0, hr, 0, TAU); ctx.fill(); ctx.stroke();
+        if (r.t === 'thug') { ctx.fillStyle = '#e8bf96'; ctx.beginPath(); ctx.arc(hx + hr * 0.42, 0, hr * 0.5, -1.3, 1.3); ctx.fill(); }   // face in the hood
+        if (r.t === 'brute') { ctx.fillStyle = '#4a5530'; ctx.beginPath(); ctx.arc(hx, 0, hr, Math.PI * 0.55, Math.PI * 1.45); ctx.fill(); }   // helmet
+        if (r.t === 'boss' || r.t === 'don') {   // wide-brimmed hat
+          ctx.fillStyle = r.t === 'don' ? '#5a1a2a' : '#141418'; ctx.beginPath(); ctx.arc(hx, 0, hr * 1.35, 0, TAU); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = '#c0392b'; ctx.beginPath(); ctx.arc(hx, 0, hr * 0.95, 0, TAU); ctx.fill(); ctx.fillStyle = r.t === 'don' ? '#5a1a2a' : '#141418'; ctx.beginPath(); ctx.arc(hx, 0, hr * 0.72, 0, TAU); ctx.fill();
+        }
+      }
+      ctx.restore();
+      if (r.hp < r.max) {
+        const w = Math.max(22, s * 2.2), f = Math.max(0, r.hp / r.max);
+        ctx.fillStyle = 'rgba(0,0,0,.75)'; ctx.fillRect(x - w / 2 - 1, y - s - 10, w + 2, 6);
+        ctx.fillStyle = f > 0.5 ? '#5bd35b' : f > 0.25 ? '#f0c040' : '#e5483a'; ctx.fillRect(x - w / 2, y - s - 9, w * f, 4);
+      }
+      if (r.slowT > 0) { ctx.strokeStyle = 'rgba(255,230,80,.9)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, s + 3, t * 8, t * 8 + 2); ctx.stroke(); ctx.beginPath(); ctx.arc(x, y, s + 3, t * 8 + Math.PI, t * 8 + Math.PI + 2); ctx.stroke(); }
+      if (r.t === 'boss' || r.t === 'don') ot(r.t === 'don' ? 'DON VARRO' : 'ENFORCER', x, Math.max(12, y - s - 18), 11, '#ffd65a', 'center');
+    }
+    function drawPad(p, i) {
+      const on = sel === i || (menu && menu.pi === i);
+      ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.beginPath(); ctx.ellipse(p.x + 2, p.y + 4, 23, 18, 0, 0, TAU); ctx.fill();
+      const g = ctx.createRadialGradient(p.x - 7, p.y - 8, 2, p.x, p.y, 22); g.addColorStop(0, '#b8b2a6'); g.addColorStop(1, '#6f695e');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y, 21, 0, TAU); ctx.fill();
+      ctx.lineWidth = 2; ctx.strokeStyle = on ? '#ffd65a' : 'rgba(40,36,30,.8)'; ctx.stroke();
+      if (!towers[i]) { ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.arc(p.x, p.y, 15, 0, TAU); ctx.stroke(); ctx.setLineDash([]); ot('+', p.x, p.y + 1, 17, 'rgba(255,255,255,.9)', 'center'); }
+    }
+    function drawTower(tw) {
+      const T = TW[tw.t], x = tw.x, y = tw.y;
+      ctx.save(); ctx.translate(x, y); ctx.scale(SC, SC);
+      // base by type
+      ctx.fillStyle = T.col; ctx.beginPath();
+      if (tw.t === 'cannon') { for (let k = 0; k < 8; k++) { const a = k * TAU / 8; ctx.lineTo(Math.cos(a) * 12, Math.sin(a) * 12); } }
+      else ctx.arc(0, 0, 11, 0, TAU);
+      ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = 'rgba(0,0,0,.6)'; ctx.stroke();
+      if (tw.t === 'gunner') { ctx.fillStyle = '#c9a66b'; for (let k = 0; k < 6; k++) { const a = k * TAU / 6; ctx.beginPath(); ctx.ellipse(Math.cos(a) * 12, Math.sin(a) * 12, 4.5, 3, a, 0, TAU); ctx.fill(); } }   // sandbags
+      ctx.rotate(tw.ang);
+      if (tw.t === 'gunner') { ctx.fillStyle = '#222'; ctx.fillRect(2, -1.6, 14, 3.2); ctx.fillStyle = '#e0b48c'; ctx.beginPath(); ctx.arc(-1, 0, 5.5, 0, TAU); ctx.fill(); ctx.fillStyle = '#26324a'; ctx.beginPath(); ctx.arc(-1, 0, 5.5, Math.PI * 0.6, Math.PI * 1.4); ctx.fill(); }
+      else if (tw.t === 'cannon') { ctx.fillStyle = '#2a2c31'; roundRect(ctx, -2, -4, 20, 8, 3); ctx.fill(); ctx.fillStyle = '#4a4d55'; ctx.beginPath(); ctx.arc(0, 0, 6.5, 0, TAU); ctx.fill(); }
+      else if (tw.t === 'molotov') { ctx.fillStyle = '#7a3a1a'; ctx.beginPath(); ctx.arc(-1, 0, 6, 0, TAU); ctx.fill(); ctx.fillStyle = '#3a8a3a'; ctx.fillRect(4, -2, 7, 4); ctx.fillStyle = '#ffb030'; ctx.beginPath(); ctx.arc(12, 0, 2.4 + Math.sin(t * 20) * 0.6, 0, TAU); ctx.fill(); }
+      else if (tw.t === 'taser') { ctx.fillStyle = '#2a2a2e'; ctx.fillRect(1, -3, 10, 6); ctx.fillStyle = '#ffe14a'; ctx.fillRect(10, -3.5, 3, 2); ctx.fillRect(10, 1.5, 3, 2); ctx.fillStyle = '#26324a'; ctx.beginPath(); ctx.arc(-2, 0, 5.5, 0, TAU); ctx.fill(); }
+      else if (tw.t === 'sniper') { ctx.fillStyle = '#1a1a1a'; ctx.fillRect(0, -1.3, 22, 2.6); ctx.fillStyle = '#2a3a2a'; ctx.beginPath(); ctx.arc(-2, 0, 6, 0, TAU); ctx.fill(); ctx.fillStyle = '#556b2f'; ctx.beginPath(); ctx.arc(-2, 0, 6, -1, 1); ctx.fill(); }
+      if (tw.flash > 0 && (tw.t === 'gunner' || tw.t === 'sniper' || tw.t === 'cannon')) { ctx.fillStyle = 'rgba(255,230,120,.95)'; ctx.beginPath(); ctx.arc(tw.t === 'sniper' ? 23 : tw.t === 'cannon' ? 19 : 17, 0, 3.5, 0, TAU); ctx.fill(); }
+      ctx.restore();
+      for (let k = 0; k < tw.lv; k++) { ctx.fillStyle = '#ffd65a'; ctx.strokeStyle = '#000'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(x - (tw.lv - 1) * 5.5 + k * 11, y + 24, 3.4, 0, TAU); ctx.fill(); ctx.stroke(); }
+    }
+    function drawHQBar() {
+      const w = 170, x = W - w - 12, y = 12, f = hq / hqMax;
+      ot('🏴 Faction HQ  ' + hq + '/' + hqMax, x + w, y + 7, 12, '#fff', 'right', 800);
+      pill(x, y + 16, w, 9, 'rgba(40,10,10,.85)', '#000');
+      ctx.fillStyle = f > 0.5 ? '#5bd35b' : f > 0.25 ? '#f0c040' : '#e5483a'; roundRect(ctx, x + 1, y + 17, (w - 2) * f, 7, 3.5); ctx.fill();
+    }
+    function render() {
+      btns = [];
+      ctx.save();
+      if (shake > 0) ctx.translate((Math.random() - 0.5) * 8 * shake, (Math.random() - 0.5) * 8 * shake);
+      const im = mapImg(); ctx.drawImage(im || plainMap(M), 0, 0, W, H);
+      if (st === 'select') { ctx.restore(); return drawSelect(); }
+      if (st === 'armoury') { ctx.restore(); return drawArmoury(); }
+      for (const f of fires) {
+        const a = Math.min(1, f.life / 0.5);
+        const g = ctx.createRadialGradient(f.x, f.y, 2, f.x, f.y, f.r); g.addColorStop(0, 'rgba(255,220,90,' + 0.75 * a + ')'); g.addColorStop(0.6, 'rgba(240,110,30,' + 0.5 * a + ')'); g.addColorStop(1, 'rgba(200,40,10,0)');
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(f.x, f.y, f.r * (0.92 + Math.sin(t * 18 + f.x) * 0.06), 0, TAU); ctx.fill();
+      }
+      M.pads.forEach(drawPad);
+      const pickTw = sel !== null && towers[sel] ? towers[sel] : null;
+      if (pickTw) { const R = TW[pickTw.t].range * LV_RNG[pickTw.lv - 1]; ctx.fillStyle = 'rgba(255,214,90,.12)'; ctx.strokeStyle = 'rgba(255,214,90,.85)'; ctx.setLineDash([6, 5]); ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(pickTw.x, pickTw.y, R, 0, TAU); ctx.fill(); ctx.stroke(); ctx.setLineDash([]); }
+      raiders.slice().sort(function (a, b) { return a.y - b.y; }).forEach(drawRaider);
+      towers.forEach(function (tw) { if (tw) drawTower(tw); });
+      for (const s of shots) {
+        if (s.k === 'tracer' || s.k === 'snipe') { ctx.strokeStyle = s.k === 'snipe' ? 'rgba(255,255,255,' + s.life * 5 + ')' : 'rgba(255,236,150,.9)'; ctx.lineWidth = s.k === 'snipe' ? 2 : 1.5; ctx.beginPath(); ctx.moveTo(s.x, s.y); ctx.lineTo(s.tx, s.ty); ctx.stroke(); }
+        else if (s.k === 'zap') { ctx.strokeStyle = 'rgba(255,240,90,.95)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(s.x, s.y); for (let k = 1; k < 5; k++) ctx.lineTo(s.x + (s.tx - s.x) * k / 5 + (Math.random() - 0.5) * 9, s.y + (s.ty - s.y) * k / 5 + (Math.random() - 0.5) * 9); ctx.lineTo(s.tx, s.ty); ctx.stroke(); }
+        else { ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.beginPath(); ctx.arc(s.sx + (s.tx - s.sx) * (s.T / s.dur), s.sy + (s.ty - s.sy) * (s.T / s.dur), 3, 0, TAU); ctx.fill();
+          ctx.fillStyle = s.k === 'shell' ? '#1e1f22' : '#3a8a3a'; ctx.beginPath(); ctx.arc(s.x, s.y, s.k === 'shell' ? 4 : 3.2, 0, TAU); ctx.fill(); if (s.k === 'bottle') { ctx.fillStyle = '#ffb030'; ctx.beginPath(); ctx.arc(s.x, s.y - 4, 2, 0, TAU); ctx.fill(); } }
+      }
+      for (const e of fx) {
+        if (e.k === 'boom') { const f = 1 - e.life / (e.big ? 0.6 : 0.35); const g = ctx.createRadialGradient(e.x, e.y, 1, e.x, e.y, e.r * (0.5 + f * 0.6)); g.addColorStop(0, 'rgba(255,250,200,' + (1 - f) + ')'); g.addColorStop(0.5, 'rgba(255,150,40,' + 0.8 * (1 - f) + ')'); g.addColorStop(1, 'rgba(120,40,10,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(e.x, e.y, e.r * (0.5 + f * 0.6), 0, TAU); ctx.fill(); }
+        else { ctx.fillStyle = e.c; ctx.globalAlpha = Math.max(0, e.life / 0.4); ctx.fillRect(e.x - 1.5, e.y - 1.5, 3, 3); ctx.globalAlpha = 1; }
+      }
+      for (const f of floats) { ctx.globalAlpha = Math.min(1, f.life * 2); ot(f.s, f.x, f.y, 12, f.c, 'center', 800); ctx.globalAlpha = 1; }
+      ctx.restore();
+      // HUD
+      ot('Wave ' + Math.max(1, wave) + ' / ' + WAVES + ' · ' + M.name, 12, 19, 15, '#fff');
+      const left = queue.length + raiders.length;
+      ot(waveOn ? left + ' raider' + (left === 1 ? '' : 's') + ' left' : wave >= WAVES ? '' : 'Build, then start the next wave', 12, 39, 11, '#dfe6f2', 'left', 700);
+      ot('$' + cash.toLocaleString('en-GB'), 12, 62, 18, '#ffe27a');
+      drawHQBar();
+      if (st === 'play') {
+        const canNext = !queue.length && wave < WAVES;
+        button(W - 150, H - 46, 138, 34, wave === 0 ? '▶ Start' : waveOn ? '▶ Next wave +$' + (5 + wave) : '▶ Next wave', nextWave, { off: !canNext, size: 13 });
+        button(W - 210, H - 46, 52, 34, speed === 1 ? '1×' : '2×', function () { speed = speed === 1 ? 2 : 1; }, { fill: 'rgba(26,34,48,.92)', size: 14 });
+        if (save.strikes > 0 || strikeMode) button(W - 300, H - 46, 82, 34, '✈️ ×' + save.strikes, function () { strikeMode = !strikeMode; menu = null; sel = null; }, { fill: strikeMode ? 'rgba(200,60,40,.95)' : 'rgba(26,34,48,.92)', size: 13 });
+        if (strikeMode) ot('Tap the map to call the air strike', W / 2, H - 28, 14, '#ffb0a0', 'center');
+        if (paused) { ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.fillRect(0, 0, W, H); ot('PAUSED', W / 2, H / 2, 36, '#fff', 'center'); ot('Press P or tap to carry on', W / 2, H / 2 + 34, 14, '#dfe6f2', 'center', 700); }
+        if (menu) drawMenu();
+        else if (pickTw) drawInfo(sel);
+      } else drawEnd();
+    }
+    function drawMenu() {
+      const p = M.pads[menu.pi], list = TW_ORDER, n = list.length, R = 46;
+      let cx = Math.min(W - R - 26, Math.max(R + 26, p.x)), cy = Math.min(H - R - 30, Math.max(R + 30, p.y));
+      ctx.fillStyle = 'rgba(10,14,22,.55)'; ctx.beginPath(); ctx.arc(cx, cy, R + 26, 0, TAU); ctx.fill();
+      list.forEach(function (ty, k) {
+        const a = -Math.PI / 2 + k * TAU / n, x = cx + Math.cos(a) * R, y = cy + Math.sin(a) * R, T = TW[ty], own = owned(ty), ok = own && cash >= T.cost;
+        ctx.fillStyle = ok ? '#22314a' : '#1a1f29'; ctx.beginPath(); ctx.arc(x, y, 21, 0, TAU); ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = ok ? '#ffd65a' : '#3a4558'; ctx.stroke();
+        ctx.globalAlpha = own ? (ok ? 1 : 0.55) : 0.35; ot(T.icon, x, y - 4, 16, '#fff', 'center'); ctx.globalAlpha = 1;
+        ot(own ? '$' + T.cost : '🔒', x, y + 12, 10, ok ? '#7ee07e' : '#c06a5a', 'center', 800);
+        btns.push({ x: x - 21, y: y - 21, w: 42, h: 42, act: function () { if (own && ok) build(menu.pi, ty); else snd('alarm'); }, tip: ty });
+      });
+      ot('Build', cx, cy, 12, '#fff', 'center', 800);
+    }
+    function drawInfo(pi) {
+      const tw = towers[pi], T = TW[tw.t], w = 236, h = 112;
+      let x = tw.x + 32, y = tw.y - h / 2; if (x + w > W - 8) x = tw.x - 32 - w; y = Math.max(76, Math.min(H - h - 54, y));
+      pill(x, y, w, h, 'rgba(14,18,28,.94)', '#ffd65a');
+      ot(T.icon + ' ' + T.name + ' · Lv ' + tw.lv, x + 10, y + 15, 13, '#ffd65a', 'left', 800);
+      const dm = T.dmg * LV_DMG[tw.lv - 1] * (1 + 0.08 * armLv('train'));
+      ot((tw.t === 'molotov' ? 'Burn ' + Math.round(dm) + '/s' : 'Damage ' + Math.round(dm)) + ' · Range ' + Math.round(T.range * LV_RNG[tw.lv - 1]), x + 10, y + 35, 11, '#dfe6f2', 'left', 600);
+      ot(T.desc.split('. ')[0].replace(/\.$/, '') + '.', x + 10, y + 53, 10.5, '#9fb0c8', 'left', 600);
+      const c = upCost(tw);
+      button(x + 8, y + h - 38, 120, 30, tw.lv >= 3 ? 'Max level' : 'Up $' + c, function () { upgrade(pi); }, { off: tw.lv >= 3 || cash < c, size: 12 });
+      button(x + 136, y + h - 38, 92, 30, 'Sell $' + Math.round(tw.spent * 0.7), function () { sell(pi); }, { fill: '#a33a2a', size: 12 });
+    }
+    function drawEnd() {
+      const r = result;
+      ctx.fillStyle = 'rgba(5,8,14,.55)'; ctx.fillRect(0, 0, W, H);
+      const w = 420, h = 250, x = (W - w) / 2, y = (H - h) / 2;
+      pill(x, y, w, h, 'rgba(18,24,36,.96)', r.win ? '#ffd65a' : '#e5483a');
+      ot(r.win ? 'HQ DEFENDED!' : 'HQ OVERRUN', W / 2, y + 36, 30, r.win ? '#ffd65a' : '#ff7a6a', 'center');
+      ot(M.name + ' · ' + (r.win ? 'all ' + WAVES + ' waves' : 'reached wave ' + r.reached), W / 2, y + 68, 14, '#dfe6f2', 'center', 700);
+      for (let k = 0; k < 3; k++) ot('★', W / 2 - 44 + k * 44, y + 104, 36, k < r.stars ? '#ffd65a' : '#3a4558', 'center');
+      ot('+$' + r.gain.toLocaleString('en-GB') + ' to your War Chest' + (r.first ? ' (first clear bonus)' : ''), W / 2, y + 144, 14, '#7ee07e', 'center', 800);
+      ot('War Chest: $' + save.chest.toLocaleString('en-GB'), W / 2, y + 166, 12, '#c9d3e3', 'center', 700);
+      const last = mi >= MAPS.length - 1;
+      button(x + 20, y + h - 52, 120, 36, 'Maps', function () { st = 'select'; showStats(); });
+      button(x + 150, y + h - 52, 120, 36, 'Armoury', function () { st = 'armoury'; showStats(); });
+      if (r.win && !last) button(x + 280, y + h - 52, 120, 36, 'Next map', function () { startMap(mi + 1); });
+      else button(x + 280, y + h - 52, 120, 36, 'Try again', function () { startMap(mi); });
+    }
+    function drawSelect() {
+      ctx.fillStyle = 'rgba(6,10,18,.72)'; ctx.fillRect(0, 0, W, H);
+      ot('FACTION DEFENCE', W / 2, 48, 40, '#7fb0ff', 'center');
+      ot('Hold your HQ against 20 waves of Racket raiders', W / 2, 82, 14, '#dfe6f2', 'center', 700);
+      const cw = 200, ch = 228, gap = 18, x0 = (W - (cw * 4 + gap * 3)) / 2, y0 = 112;
+      MAPS.forEach(function (m, i) {
+        const x = x0 + i * (cw + gap), y = y0, open = i <= save.open;
+        pill(x, y, cw, ch, open ? 'rgba(22,30,46,.94)' : 'rgba(18,22,30,.9)', open ? 'rgba(127,176,255,.6)' : '#2a3242');
+        const im = (function () { const keep = M; M = m; const a = mapImg(); M = keep; return a; })() || plainMap(m);
+        ctx.save(); roundRect(ctx, x + 8, y + 8, cw - 16, 108, 8); ctx.clip(); ctx.globalAlpha = open ? 1 : 0.35; ctx.drawImage(im, x + 8, y + 8, cw - 16, 108); ctx.restore(); ctx.globalAlpha = 1;
+        ot((i + 1) + '. ' + m.name, x + cw / 2, y + 134, 15, '#fff', 'center');
+        const s = save.stars[i] || 0;
+        for (let k = 0; k < 3; k++) ot('★', x + cw / 2 - 26 + k * 26, y + 160, 20, k < s ? '#ffd65a' : '#3a4558', 'center');
+        ot(save.best[i] ? 'Best: wave ' + save.best[i] : open ? 'Not played' : '🔒 Clear ' + MAPS[i - 1].name, x + cw / 2, y + 184, 11, '#9fb0c8', 'center', 700);
+        if (open) button(x + 40, y + ch - 36, cw - 80, 28, 'Play', function () { startMap(i); }, { size: 13 });
+      });
+      ot('War Chest: $' + save.chest.toLocaleString('en-GB'), W / 2 - 110, H - 40, 16, '#7ee07e', 'center');
+      button(W / 2 + 20, H - 58, 150, 36, '🛠️ Armoury', function () { st = 'armoury'; showStats(); });
+    }
+    function drawArmoury() {
+      ctx.fillStyle = 'rgba(6,10,18,.82)'; ctx.fillRect(0, 0, W, H);
+      ot('ARMOURY', 24, 36, 28, '#ffd65a');
+      ot('War Chest: $' + save.chest.toLocaleString('en-GB'), W - 24, 36, 18, '#7ee07e', 'right');
+      ot('Earn War Chest money by playing Faction Defence. It is only for Faction Defence.', 24, 64, 11, '#9fb0c8', 'left', 600);
+      const keys = Object.keys(ARM), cw = 296, ch = 92, gx = 14, gy = 12, x0 = 24, y0 = 82;
+      keys.forEach(function (k, i) {
+        const A = ARM[k], x = x0 + (i % 3) * (cw + gx), y = y0 + Math.floor(i / 3) * (ch + gy);
+        const unlock = !!TW[k], lv = unlock ? (save.own[k] ? 1 : 0) : k === 'strike' ? save.strikes : armLv(k);
+        const max = k === 'strike' ? 3 : A.costs.length, done = lv >= max, cost = k === 'strike' ? A.costs[0] : A.costs[lv];
+        pill(x, y, cw, ch, 'rgba(22,30,46,.95)', done ? 'rgba(126,224,126,.6)' : 'rgba(127,176,255,.45)');
+        ot(A.icon + ' ' + A.name, x + 12, y + 18, 14, '#fff', 'left', 800);
+        wrapText(A.desc, x + 12, y + 38, cw - 24, 10.5, '#9fb0c8', 13);
+        if (!unlock) for (let q = 0; q < max; q++) { ctx.fillStyle = q < lv ? '#ffd65a' : '#2e3a50'; roundRect(ctx, x + 12 + q * 18, y + ch - 18, 14, 6, 3); ctx.fill(); }
+        button(x + cw - 112, y + ch - 38, 100, 28, done ? (unlock ? 'Unlocked' : 'Maxed') : '$' + cost, function () { buy(k); }, { off: done || save.chest < cost, size: 12 });
+      });
+      button(24, H - 52, 120, 36, '‹ Maps', function () { st = 'select'; showStats(); });
+      if (result && !result.win) button(156, H - 52, 140, 36, 'Try again', function () { startMap(mi); });
+    }
+    function buy(k) {
+      const A = ARM[k];
+      if (TW[k]) { if (save.own[k] || save.chest < A.costs[0]) return; save.chest -= A.costs[0]; save.own[k] = 1; }
+      else if (k === 'strike') { if (save.strikes >= 3 || save.chest < A.costs[0]) return; save.chest -= A.costs[0]; save.strikes++; }
+      else { const lv = armLv(k); if (lv >= A.costs.length || save.chest < A.costs[lv]) return; save.chest -= A.costs[lv]; save.lv[k] = lv + 1; }
+      persist(); snd('build'); showStats();
+    }
+
+    let shown = '';
+    function showStats() {
+      const inGame = st === 'play' || st === 'win' || st === 'lose', key = st + wave + ':' + cash + ':' + hq + ':' + save.chest;
+      if (key === shown) return; shown = key;
+      stat(panel, 'wave', inGame ? Math.max(1, wave) + ' / ' + WAVES : '–');
+      stat(panel, 'cash', inGame ? '$' + cash.toLocaleString('en-GB') : '–');
+      stat(panel, 'hq', inGame ? hq + ' / ' + hqMax : '–');
+      stat(panel, 'chest', '$' + save.chest.toLocaleString('en-GB'));
+    }
+
+    /* ---------- Loop and input ---------- */
+    function frame(now) {
+      raf = 0; if (!active) return;
+      const dt = Math.min(0.1, (now - last) / 1000 || 0); last = now;
+      if (st === 'play' && !paused) { acc += dt * speed; let n = 0; while (acc >= STEP && n < 12) { update(STEP); acc -= STEP; n++; } if (n === 12) acc = 0; } else { t += dt; endT += dt; }
+      if (st !== 'play') { for (const f of floats) f.life -= dt; }
+      render(); showStats();
+      raf = requestAnimationFrame(frame);
+    }
+    function run() { if (!raf) { last = performance.now(); raf = requestAnimationFrame(frame); } }
+    function stop() { if (raf) cancelAnimationFrame(raf); raf = 0; }
+    function hit(p) { return btns.slice().reverse().find(function (b) { return p.x >= b.x && p.x <= b.x + b.w && p.y >= b.y && p.y <= b.y + b.h; }); }
+    canvas.addEventListener('pointerdown', function (e) {
+      if (e.button !== undefined && e.button !== 0) return;
+      e.preventDefault();
+      const p = canvasPoint(canvas, e, W, H), b = hit(p);
+      if (st === 'play' && paused) { paused = false; return; }
+      if (b) { if (!b.off) { b.act(); if (!b.tip) sfx.click(); } return; }
+      if (st !== 'play') return;
+      if (strikeMode) { airStrike(p.x, p.y); return; }
+      const pi = M.pads.findIndex(function (q) { return Math.hypot(q.x - p.x, q.y - p.y) < 26; });
+      if (pi >= 0) { if (towers[pi]) { sel = sel === pi ? null : pi; menu = null; } else { menu = menu && menu.pi === pi ? null : { pi: pi }; sel = null; } sfx.click(); return; }
+      menu = null; sel = null;
+    });
+    canvas.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+    $(panel, '.ta-fd-maps').addEventListener('click', function () { st = 'select'; menu = null; sel = null; showStats(); sfx.click(); });
+    $(panel, '.ta-fd-next').addEventListener('click', function () { if (st === 'play') nextWave(); sfx.click(); });
+    showStats();
+
+        games.defence = {
+      wipe: function () { Object.keys(save).forEach(function (k) { delete save[k]; }); Object.assign(save, { open: 0, stars: {}, best: {}, chest: 0, own: {}, lv: {}, strikes: 0 }); persist(); st = 'select'; showStats(); },
+      enter: function () { active = true; showStats(); run(); },
+      leave: function () { active = false; paused = st === 'play' && wave > 0; stop(); },
+      relayout: function () {},
+      bestText: function () { const n = Object.keys(save.stars).reduce(function (s, k) { return s + save.stars[k]; }, 0); return n ? n + ' / ' + MAPS.length * 3 + ' stars' : 'No score yet'; },
+      onEscape: function () { if (menu || sel !== null || strikeMode) { menu = null; sel = null; strikeMode = false; return true; } return false; },
+      onKey: function (e) {
+        const k = keyName(e);
+        if (st === 'play') {
+          if (k === ' ' || k === 'Enter') { if (!e.repeat) nextWave(); return true; }
+          if (k === 'f') { if (!e.repeat) speed = speed === 1 ? 2 : 1; return true; }
+          if (k === 'p') { if (!e.repeat) paused = !paused; return true; }
+          if (menu && /^[1-5]$/.test(k)) { build(menu.pi, TW_ORDER[Number(k) - 1]); return true; }
+          if (sel !== null && towers[sel]) { if (k === 'u') { upgrade(sel); return true; } if (k === 's') { sell(sel); return true; } }
+          return false;
+        }
+        if (st === 'select' && /^[1-4]$/.test(k)) { const i = Number(k) - 1; if (i <= save.open && !e.repeat) startMap(i); return true; }
         return false;
       }
     };

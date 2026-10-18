@@ -4,7 +4,7 @@
 
 > ⚠️ **For use on Torn only.** Torn Arcade and its Art Packs are licensed solely for use on [torn.com](https://www.torn.com) through a userscript manager. Using, hosting or embedding any part of them anywhere else, or copying, modifying, redistributing or reusing them, is not allowed without written permission from the author. See [Licence](#-licence).
 
-Torn Arcade is a Tampermonkey userscript that adds a **Mobile Phone** link to Torn's sidebar. Click it and a phone opens on top of the page with five games, a scores screen and settings. Everything runs inside the phone, and every image, sound and piece of music is built into the script or its two optional Art Packs.
+Torn Arcade is a Tampermonkey userscript that adds a **Mobile Phone** link to Torn's sidebar. Click it and a phone opens on top of the page with six games, a scores screen and settings. Everything runs inside the phone, and every image, sound and piece of music is built into the script or its two optional Art Packs.
 
 ---
 
@@ -23,7 +23,7 @@ The illustrated Tornie and character artwork comes in two separate, optional scr
 | Script | What it adds | Size | Install |
 |---|---|---|---|
 | **Torn Arcade - Tornies Art** | Illustrated artwork for all 179 Tornies | about 1.4 MB | [Install](https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade-Tornies-Art.user.js) |
-| **Torn Arcade - Character Art** | Illustrated portraits of the gym leaders, story characters, trainers and your outfits | about 0.5 MB | [Install](https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade-Character-Art.user.js) |
+| **Torn Arcade - Character Art** | Illustrated portraits of the gym leaders, story characters, trainers and your outfits, plus the four Faction Defence maps | about 0.75 MB | [Install](https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade-Character-Art.user.js) |
 
 Install them like the main script, then reload Torn. The **Tornies Art** and **Character Art** apps on the bottom row of the phone show whether each pack is installed, a before/after preview, a gallery of the art you've unlocked and an on/off switch. Each pack updates itself separately.
 
@@ -44,6 +44,7 @@ From version 2.15.2, Tampermonkey checks this link for new versions (about once 
 | ![Tornie Clinic](screenshots/tornies-clinic.png) | ![Golden Torn Casino](screenshots/tornies-casino.png) |
 | ![Frostbite Cave](screenshots/tornies-ice-cave.png) | ![Torn Invasion](screenshots/torn-invasion.png) |
 | ![Angry Bogies](screenshots/angry-bogies.png) | ![Flappy Torn](screenshots/flappy-torn.png) |
+| ![Faction Defence, Casino Strip](screenshots/faction-defence.png) | ![Faction Defence, Racket HQ](screenshots/faction-defence-racket-hq.png) |
 
 ---
 
@@ -68,6 +69,9 @@ A Doom-style first-person shooter. Aliens have overrun Torn City, and you fight 
 
 ### 🐦 Angry Bogies
 Bogie versus the Racket. Pull back the slingshot, fling Bogies into the gang's hideouts, smash the structures and knock out every thug. **Fifteen levels with three stars each**, from the backstreets to Racket HQ, with more structures and more thugs as you go. Stars are scored on thugs knocked out, blocks smashed and Bogies left over.
+
+### 🛡️ Faction Defence
+A tower defence game. Racket raiders walk the roads towards your **Faction HQ**: build defenders on the spots beside the road, upgrade them with the cash you earn, and survive **20 waves** on **4 maps** (Westgate, The Docks, Casino Strip and Racket HQ), each with its own routes and raiders. Five defenders (Gunner, Cannon, Molotov, Taser and Sniper) each have a job, and the raiders (bikers, armoured brutes, medics and bosses, ending with Don Varro himself) make you mix them. Stars depend on how much of your HQ is left. After every game part of what you earned goes into the **War Chest**, which you spend in the **Armoury** on new defenders, permanent upgrades and air strikes. The War Chest belongs to Faction Defence only. The illustrated maps come with the Character Art pack; without it, simple maps are drawn instead.
 
 ### 💣 Dirty Bombs
 A minesweeper-style puzzle. Clear the city block by block without setting off a dirty bomb. Numbers show how many bombs are hidden next to each block.
@@ -101,7 +105,7 @@ If you add a **Limited** access API key in Settings, the phone checks the offici
 |---|---|---|---|---|
 | Only locally | Nobody | Public amusement (games) and event notifications on the phone | Stored locally / Used only for automation (event checks while the phone is open). Never shared. | Limited (user → events). Optional: only needed for event notifications |
 
-- **Data Storage:** settings, wallpaper, best scores, your Tornies save, Torn Invasion progress, Angry Bogies stars and your API key are kept in Tampermonkey storage on your device. Events are shown on the phone but never saved. With **Save maps on this device** on (Settings → Tornies), pictures of the Tornies maps the game has drawn are also kept in your browser's own storage for torn.com (IndexedDB, `torn-arcade-maps`). They are drawn by the script on your device, contain no personal data, are never uploaded or shared, and **Clear saved maps** deletes them.
+- **Data Storage:** settings, wallpaper, best scores, your Tornies save, Torn Invasion progress, Angry Bogies stars, Faction Defence progress (stars, War Chest and Armoury) and your API key are kept in Tampermonkey storage on your device. Events are shown on the phone but never saved. With **Save maps on this device** on (Settings → Tornies), pictures of the Tornies maps the game has drawn are also kept in your browser's own storage for torn.com (IndexedDB, `torn-arcade-maps`). They are drawn by the script on your device, contain no personal data, are never uploaded or shared, and **Clear saved maps** deletes them.
 - **Data Sharing:** nothing is sent anywhere except event requests to `api.torn.com`.
 - **Where it may be used:** Torn (torn.com) only. See [Licence](#-licence).
 - The same table is shown next to the API key box in Settings and at the top of the script.
