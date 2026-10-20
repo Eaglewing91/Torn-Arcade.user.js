@@ -9,7 +9,7 @@ const tt = require('./territories');
 const trades = require('./trades');
 
 const PORT = Number(process.env.PORT) || 8080;
-const VERSION = '1.2.0';
+const VERSION = '1.2.1';
 const GAMES = ['territories'];   // rated games, played on the server
 // Best-score leaderboards. These scores come from players' own devices, so each has limits that throw out
 // impossible values. dir: 'desc' = higher is better, 'asc' = lower is better (times).

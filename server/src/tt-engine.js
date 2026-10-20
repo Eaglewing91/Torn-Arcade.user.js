@@ -213,7 +213,7 @@
     function endTurn() {
       P(G.cur).favs.forEach(function (f) { f.fresh = false; });
       G.cur = (G.cur + 1) % G.players.length; G.turn++; G.phase = 'roll'; G.playedFav = false; G.dice = null; G.offer = null;
-      G.aiActs = 0; G.asked = false; G.aiTraded = false; G.ask = null; if (G.auto && G.auto.t !== G.turn) G.auto = null; env.turn(G.cur);
+      G.aiActs = 0; G.asked = false; G.aiTraded = false; G.ask = null; G.auto = null; env.turn(G.cur);
       if (G.hid) G.hid = G.hid.filter(function (h) { return G.turn - h.t < G.players.length * 2; });   // after a couple of rounds it no longer matters
     }
     function placeSafe(pi, v, setup) {
@@ -467,7 +467,9 @@
       if (G.phase === 'offer') return G.offer.to;
       return G.cur;
     }
-    function isAI(i) { return P(i).ai || !!(G.auto && G.auto.p === i && G.auto.t === G.turn && i === G.cur); }
+    // A handed-over turn lasts for that one turn (or, during setup, that one safehouse and road).
+    function moveKey() { return G.phase === 'setup' ? 's' + G.setup.i : 't' + G.turn; }
+    function isAI(i) { return P(i).ai || !!(G.auto && G.auto.p === i && G.auto.k === moveKey() && i === G.cur); }
     // One computer decision for whoever the game is waiting on.
     function aiMove() {
       const w = waiting(); if (w < 0) return;
@@ -479,7 +481,7 @@
     function takeOver(i) {
       if (G.phase === 'discard' && G.discardQ[0] === i) { say(P(i).name + ' was too slow. Cards were handed over for them.'); aiDiscard(i); return; }
       if (G.phase === 'offer' && G.offer.to === i) { say(P(i).name + ' didn\'t answer in time.'); answerOffer(i, false); return; }
-      if (G.cur === i && !(G.auto && G.auto.p === i && G.auto.t === G.turn)) { G.auto = { p: i, t: G.turn }; say(P(i).name + ' ran out of time. The computer plays this turn for them.'); }
+      if (G.cur === i && !isAI(i)) { G.auto = { p: i, k: moveKey() }; say(P(i).name + ' ran out of time. The computer plays this turn for them.'); }
     }
     function answerOffer(pi, yes) {
       const o = G.offer;
@@ -494,7 +496,7 @@
     // in online games, other people are listed so the offer can be put to them.
     function answers(pi, give, want) {
       return G.players.map(function (p, i) { return i; }).filter(function (i) { return i !== pi && (P(i).ai || G.online); }).map(function (i) {
-        if (!P(i).ai) return { i: i, human: true, can: RES.every(function (x) { return (want[x] || 0) <= P(i).hand[x]; }) };
+        if (!P(i).ai) return { i: i, human: true };   // people answer for themselves (their cards stay hidden)
         const w = wantsDeal(i, give, want, pi);
         return { i: i, ok: w.ok, why: w.why, counter: !w.ok && (w.why === 'value' || w.why === 'threat') ? counter(i, give, want, pi) : null };
       });

@@ -68,7 +68,7 @@ function summary(g, me) {
     seats: r.seats.map(function (s) { return { name: s.name, tornId: s.tornId || 0, col: s.col, st: s.st }; }),
     you: me ? seatOf(g, me.id) : -1,
     invited: me ? r.seats.some(function (s) { return s.tornId === me.torn_id && s.st === 'pending'; }) : false,
-    waitingOn: G && r.status === 'active' ? g.E.waiting() : -1, deadline: G && r.status === 'active' ? g.waitSince + TURN_MS : 0,
+    waitingOn: G && r.status === 'active' ? g.E.waiting() : -1, left: G && r.status === 'active' ? Math.max(0, g.waitSince + TURN_MS - Date.now()) : 0, auto: G && r.status === 'active' ? g.E.isAI(g.E.waiting()) : false,
     winner: G && r.status === 'over' ? G.winner : -1, turn: G ? G.turn : 0, rated: !!(G && G.rated)
   };
 }
@@ -112,7 +112,7 @@ async function tick() {
   } finally { ticking = false; }
 }
 let timer = null;
-function start() { if (!timer) timer = setInterval(tick, 250); if (timer.unref) timer.unref(); }
+function start() { if (!timer) timer = setInterval(tick, Math.max(10, Math.min(250, AI_MS))); if (timer.unref) timer.unref(); }
 
 /* ---------- Ratings (games with 2 or more people) ---------- */
 async function finish(g) {
@@ -157,7 +157,7 @@ async function inbox(me) {
   live.forEach(function (g) {
     const r = g.row;
     if (r.status === 'lobby' && r.seats.some(function (s) { return s.tornId === me.torn_id && s.st === 'pending'; })) invites.push({ id: Number(r.id), from: r.seats[0].name, fromId: r.seats[0].tornId, size: r.size });
-    if (r.status === 'active') { const i = seatOf(g, me.id); if (i >= 0 && g.E.waiting() === i && !g.E.isAI(i)) turns.push({ id: Number(r.id), deadline: g.waitSince + TURN_MS }); }
+    if (r.status === 'active') { const i = seatOf(g, me.id); if (i >= 0 && g.E.waiting() === i && !g.E.isAI(i)) turns.push({ id: Number(r.id), left: Math.max(0, g.waitSince + TURN_MS - Date.now()) }); }
   });
   return { invites: invites, turns: turns };
 }

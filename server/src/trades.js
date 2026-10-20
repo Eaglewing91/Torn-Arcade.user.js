@@ -68,7 +68,8 @@ async function route(req, res, url, c) {
     if (!okCode(b.offer)) return c.fail(res, 400, 'bad_offer', 'That Tornie couldn\'t be packed for trading.');
     const open = (await db.q("SELECT count(*)::int AS n FROM tornie_trades WHERE a = $1 AND status = 'open'", [me.id])).rows[0].n;
     if (open >= 5) return c.fail(res, 400, 'too_many', 'You already have 5 open trades. Finish or cancel one first.');
-    const t = (await db.q('INSERT INTO tornie_trades (a, a_tid, a_name, b_tid, a_offer) VALUES ($1, $2, $3, $4, $5) RETURNING *', [me.id, me.torn_id, me.name, to, b.offer])).rows[0];
+    const known = (await db.q('SELECT name FROM accounts WHERE torn_id = $1 AND verified', [to])).rows[0];   // their name, if they've played online
+    const t = (await db.q('INSERT INTO tornie_trades (a, a_tid, a_name, b_tid, b_name, a_offer) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *', [me.id, me.torn_id, me.name, to, known ? known.name : null, b.offer])).rows[0];
     return c.send(res, 200, { trade: viewOf(t, me) });
   }
   const m = /^\/v1\/trades\/(\d+)\/(offer|confirm|cancel|collect)$/.exec(path);
