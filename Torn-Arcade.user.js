@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.30.2
+// @version      2.30.3
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with six game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -448,7 +448,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gift codes', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.30.2';
+  const VERSION = '2.30.3';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -17124,7 +17124,15 @@
     const name = row.querySelector('[class*="linkName"]') || a.querySelector('span:last-child');
     if (name) name.textContent = 'Mobile Phone';
     const svg = row.querySelector('svg');
-    if (svg) {
+    // Torn's mobile layout (phones, tablets and Torn PDA: the "area-mobile" rows, or a window 1000px wide or less)
+    // uses bigger icon tiles. There the copy keeps the Calendar icon's own size and viewBox, and the phone icon is
+    // scaled to fill it, so it lines up with the other tiles. The PC sidebar is unchanged.
+    const mobileSide = /area-mobile/.test(anchor.className || '') || !!anchor.querySelector('[class*="mobileLink"]') || window.innerWidth <= 1000;
+    if (svg && mobileSide) {
+      const vb = (svg.getAttribute('viewBox') || '0 0 16 16').split(/[\s,]+/).map(Number);
+      const vw = vb[2] || 16, vh = vb[3] || 16, k = Math.min(vw, vh) / 16;
+      svg.innerHTML = '<g transform="translate(' + (vb[0] + (vw - 16 * k) / 2) + ' ' + (vb[1] + (vh - 16 * k) / 2) + ') scale(' + k + ')"><path fill-rule="evenodd" d="' + PHONE_PATH + '"></path></g>';
+    } else if (svg) {
       svg.setAttribute('viewBox', '0 0 16 16'); svg.setAttribute('width', '16'); svg.setAttribute('height', '16');
       svg.innerHTML = '<path fill-rule="evenodd" d="' + PHONE_PATH + '"></path>';
     }
