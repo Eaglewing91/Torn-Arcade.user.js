@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.32.3
+// @version      2.33.0
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with seven game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps and Egg Dash artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -545,7 +545,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gift codes', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.32.3';
+  const VERSION = '2.33.0';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -2434,13 +2434,13 @@
   function sp(n, name, types, base, rate, exp, growth, evo, learn, dex, design) {
     SP[n] = { n: n, name: name, types: types, base: base, rate: rate, exp: exp, growth: growth, evo: evo, learn: learn, dex: dex, d: design };
   }
-  const LEARN_GRASS = [[1, 'tackle'], [1, 'growl'], [8, 'vine_whip'], [10, 'absorb'], [11, 'bite'], [14, 'razor_leaf'], [18, 'stun_spore'], [22, 'mega_drain'], [26, 'sleep_powder'], [30, 'seed_bomb'], [34, 'feint_attack'], [38, 'magical_leaf'], [44, 'body_slam']];
-  const LEARN_FIRE = [[1, 'scratch'], [1, 'growl'], [8, 'ember'], [10, 'quick_attack'], [11, 'fury_swipes'], [13, 'rock_smash'], [16, 'flame_wheel'], [20, 'bite'], [24, 'fire_fang'], [29, 'double_kick'], [33, 'flamethrower'], [36, 'karate_chop'], [42, 'take_down']];
-  const LEARN_WATER = [[1, 'tackle'], [1, 'tail_whip'], [8, 'bubble'], [10, 'withdraw'], [11, 'water_gun'], [14, 'aqua_jet'], [18, 'bite'], [22, 'water_pulse'], [27, 'headbutt'], [32, 'aqua_tail'], [36, 'metal_claw'], [40, 'screech'], [45, 'body_slam']];
-  const LEARN_BIRD = [[1, 'tackle'], [1, 'growl'], [5, 'peck'], [9, 'sand_attack'], [13, 'quick_attack'], [17, 'gust'], [21, 'wing_attack'], [27, 'aerial_ace'], [33, 'drill_peck'], [40, 'take_down']];
-  const LEARN_RAT = [[1, 'tackle'], [1, 'tail_whip'], [4, 'quick_attack'], [8, 'bite'], [11, 'fury_swipes'], [14, 'hyper_fang'], [18, 'headbutt'], [23, 'feint_attack'], [28, 'take_down'], [34, 'screech']];
-  const LEARN_WATT = [[1, 'tackle'], [1, 'growl'], [5, 'thundershock'], [9, 'thunder_wave'], [13, 'quick_attack'], [17, 'spark'], [21, 'shock_wave'], [26, 'swift'], [31, 'thunderbolt'], [36, 'screech']];
-  const LEARN_ROCK = [[1, 'tackle'], [1, 'defense_curl'], [6, 'mud_slap'], [10, 'rock_throw'], [14, 'rock_tomb'], [18, 'bulldoze'], [22, 'smack_down'], [27, 'headbutt'], [33, 'take_down'], [39, 'body_slam']];
+  const LEARN_GRASS = [[1, 'tackle'], [1, 'growl'], [8, 'vine_whip'], [10, 'absorb'], [11, 'bite'], [14, 'razor_leaf'], [18, 'stun_spore'], [20, 'growth'], [22, 'mega_drain'], [26, 'sleep_powder'], [30, 'seed_bomb'], [34, 'feint_attack'], [38, 'magical_leaf'], [41, 'root_grip'], [44, 'body_slam'], [48, 'solar_burst']];
+  const LEARN_FIRE = [[1, 'scratch'], [1, 'growl'], [8, 'ember'], [10, 'quick_attack'], [11, 'fury_swipes'], [13, 'rock_smash'], [16, 'flame_wheel'], [20, 'bite'], [24, 'fire_fang'], [29, 'double_kick'], [19, 'smoulder'], [33, 'flamethrower'], [36, 'karate_chop'], [42, 'take_down'], [47, 'torch_job']];
+  const LEARN_WATER = [[1, 'tackle'], [1, 'tail_whip'], [8, 'bubble'], [10, 'withdraw'], [11, 'water_gun'], [14, 'aqua_jet'], [18, 'bite'], [22, 'water_pulse'], [27, 'headbutt'], [25, 'undertow'], [32, 'aqua_tail'], [36, 'metal_claw'], [40, 'screech'], [44, 'harbour_surge'], [45, 'body_slam']];
+  const LEARN_BIRD = [[1, 'tackle'], [1, 'growl'], [5, 'peck'], [9, 'sand_attack'], [13, 'quick_attack'], [17, 'gust'], [21, 'wing_attack'], [24, 'downdraft'], [27, 'aerial_ace'], [31, 'tailwind'], [33, 'drill_peck'], [40, 'take_down'], [45, 'air_blade']];
+  const LEARN_RAT = [[1, 'tackle'], [1, 'tail_whip'], [4, 'quick_attack'], [8, 'bite'], [11, 'fury_swipes'], [14, 'hyper_fang'], [18, 'headbutt'], [23, 'feint_attack'], [28, 'take_down'], [34, 'screech'], [40, 'breather']];
+  const LEARN_WATT = [[1, 'tackle'], [1, 'growl'], [5, 'thundershock'], [9, 'thunder_wave'], [13, 'quick_attack'], [17, 'spark'], [21, 'shock_wave'], [19, 'charge_up'], [26, 'swift'], [28, 'live_wire'], [31, 'thunderbolt'], [36, 'screech'], [42, 'overcharge']];
+  const LEARN_ROCK = [[1, 'tackle'], [1, 'defense_curl'], [6, 'mud_slap'], [10, 'rock_throw'], [14, 'rock_tomb'], [18, 'bulldoze'], [20, 'pebble_storm'], [22, 'smack_down'], [27, 'headbutt'], [30, 'shard_spike'], [33, 'take_down'], [37, 'dig_strike'], [39, 'body_slam'], [45, 'quake']];
 
   sp(1, 'Pawsprout', ['Plant'], [45, 49, 49, 63, 60, 45], 45, 64, 'ms', { lv: 16, to: 2 }, LEARN_GRASS,
     'A sprout-tailed pup found in the parks of Torn City. It soaks up sunlight through the leaf on its head.',
@@ -2448,7 +2448,7 @@
   sp(2, 'Brambark', ['Plant'], [60, 64, 63, 80, 78, 60], 45, 142, 'ms', { lv: 34, to: 3 }, LEARN_GRASS,
     'It patrols the city outskirts at night. The briars on its back grow sharper the more battles it wins.',
     { body: 'quad', c1: '#5fae55', c2: '#d4ecaa', c3: '#2f7a32', head: 1.08, s: 0.8, ears: 'pointy', tail: 'leaf', crest: 'leaves', mane: 'leaf' });
-  sp(3, 'Grimthorn', ['Plant', 'Shadow'], [80, 100, 83, 92, 85, 85], 45, 236, 'ms', null, LEARN_GRASS,
+  sp(3, 'Grimthorn', ['Plant', 'Shadow'], [80, 100, 83, 92, 85, 85], 45, 236, 'ms', null, LEARN_GRASS.concat([[37, 'mug'], [42, 'thorn_storm']]),
     'The alpha of the city\'s green belt. Gangs avoid the parks once a Grimthorn has claimed them.',
     { body: 'quad', c1: '#3f6e3c', c2: '#b0d090', c3: '#2a2838', head: 0.95, s: 1, ears: 'pointy', tail: 'thorn', crest: 'thorns', mane: 'thorn', fang: 1, fierce: 1, eye: '#e04848' });
   sp(4, 'Kindlekit', ['Fire'], [39, 52, 43, 60, 50, 65], 45, 62, 'ms', { lv: 16, to: 5 }, LEARN_FIRE,
@@ -2457,7 +2457,7 @@
   sp(5, 'Scorchtail', ['Fire'], [58, 64, 58, 80, 65, 80], 45, 142, 'ms', { lv: 36, to: 6 }, LEARN_FIRE,
     'It prowls rooftops at dusk. When it gets angry, the flame on its head flares white-hot.',
     { body: 'biped', c1: '#4a3e52', c2: '#f2cfae', c3: '#ffb03a', head: 1.1, s: 0.8, ears: 'pointy', tail: 'flame', crest: 'flame' });
-  sp(6, 'Blazeknuckle', ['Fire', 'Brawl'], [78, 104, 78, 99, 80, 100], 45, 240, 'ms', null, LEARN_FIRE,
+  sp(6, 'Blazeknuckle', ['Fire', 'Brawl'], [78, 104, 78, 99, 80, 100], 45, 240, 'ms', null, LEARN_FIRE.concat([[38, 'flare_kick'], [44, 'flying_knee']]),
     'A blazing brawler that trains in the city\'s fight clubs. Its punches leave scorch marks on steel.',
     { body: 'biped', c1: '#3a2c3c', c2: '#f8a878', c3: '#ffd23a', head: 0.95, s: 1, ears: 'pointy', tail: 'flame', crest: 'flame', mane: 'flame', fists: 1, fierce: 1 });
   sp(7, 'Splotter', ['Water'], [44, 48, 65, 50, 64, 43], 45, 63, 'ms', { lv: 16, to: 8 }, LEARN_WATER,
@@ -2466,7 +2466,7 @@
   sp(8, 'Surgotter', ['Water'], [59, 63, 80, 65, 80, 58], 45, 142, 'ms', { lv: 36, to: 9 }, LEARN_WATER,
     'It guards the docks from troublemakers. A flick of its tail can knock a grown man into the harbour.',
     { body: 'biped', otter: 1, c1: '#86583a', c2: '#ecd2b2', c3: '#249ab8', head: 1.1, s: 0.8, ears: 'round', tail: 'fin', crest: 'fin' });
-  sp(9, 'Dreadnotter', ['Water', 'Metal'], [79, 88, 103, 85, 100, 78], 45, 239, 'ms', null, LEARN_WATER,
+  sp(9, 'Dreadnotter', ['Water', 'Metal'], [79, 88, 103, 85, 100, 78], 45, 239, 'ms', null, LEARN_WATER.concat([[38, 'rivet_gun'], [44, 'wrecking_ball']]),
     'Its body is covered in plates as hard as a bank vault. It can stay underwater for days.',
     { body: 'biped', otter: 1, c1: '#5e4230', c2: '#dcc4a0', c3: '#a8b4c4', head: 0.95, s: 1, ears: 'fin', tail: 'fin', crest: 'blade', armor: 1, fierce: 1 });
   sp(10, 'Chiplet', ['Street', 'Air'], [40, 45, 40, 35, 35, 56], 255, 50, 'ms', { lv: 18, to: 11 }, LEARN_BIRD,
@@ -2481,17 +2481,17 @@
   sp(13, 'Gutterat', ['Street'], [30, 56, 35, 25, 35, 72], 255, 51, 'mf', { lv: 20, to: 14 }, LEARN_RAT,
     'It lives in alleys and sewers and will chew through almost anything, including padlocks.',
     { body: 'quad', c1: '#8a7a68', c2: '#e2d6c4', c3: '#d89a84', head: 1.28, s: 0.58, ears: 'big', tail: 'thin', teeth: 1 });
-  sp(14, 'Rodfather', ['Street', 'Shadow'], [55, 81, 60, 50, 70, 97], 127, 145, 'mf', null, LEARN_RAT,
+  sp(14, 'Rodfather', ['Street', 'Shadow'], [55, 81, 60, 50, 70, 97], 127, 145, 'mf', null, LEARN_RAT.concat([[22, 'shakedown'], [30, 'mug']]),
     'The boss of the sewers. Dozens of Gutterat follow its orders and bring it anything shiny they find.',
     { body: 'quad', c1: '#4a4450', c2: '#c8bca8', c3: '#c88878', head: 1.0, s: 0.86, ears: 'big', tail: 'thin', teeth: 1, fierce: 1, mane: 'spiky' });
   sp(15, 'Munchgrub', ['Bug'], [45, 30, 35, 20, 20, 45], 255, 39, 'mf', { lv: 9, to: 16 }, [[1, 'tackle'], [1, 'string_shot'], [7, 'bug_bite']],
     'It munches through park hedges all day long. The red spots on its back warn birds that it tastes awful.',
     { body: 'worm', c1: '#d8b878', c2: '#fff0c8', c3: '#3ad0e0', s: 0.72 });
-  sp(16, 'Lampupa', ['Bug'], [50, 20, 55, 25, 25, 30], 120, 72, 'mf', { lv: 14, to: 17 }, [[1, 'harden'], [9, 'harden']],
+  sp(16, 'Lampupa', ['Bug'], [50, 20, 55, 25, 25, 30], 120, 72, 'mf', { lv: 14, to: 17 }, [[1, 'harden'], [9, 'spin_cocoon']],
     'It hangs from lamp posts while its body changes inside the shell. It barely moves at all.',
     { body: 'cocoon', c1: '#d4d2c8', c2: '#f4f2ea', c3: '#9a9688', s: 0.82 });
   sp(17, 'Neonmoth', ['Bug', 'Air'], [60, 45, 50, 90, 80, 70], 45, 160, 'mf', null,
-    [[1, 'gust'], [14, 'gust'], [15, 'confusion'], [17, 'poison_powder'], [18, 'stun_spore'], [20, 'sleep_powder'], [22, 'struggle_bug'], [25, 'swift'], [29, 'wing_attack'], [34, 'screech']],
+    [[1, 'gust'], [14, 'gust'], [15, 'confusion'], [17, 'poison_powder'], [18, 'stun_spore'], [20, 'sleep_powder'], [22, 'struggle_bug'], [25, 'swift'], [27, 'buzz_beam'], [29, 'wing_attack'], [31, 'downdraft'], [34, 'screech'], [38, 'air_blade']],
     'Drawn to neon signs at night. The scales on its wings glow and can put onlookers to sleep.',
     { body: 'moth', c1: '#2a8a96', c2: '#e8fff8', c3: '#ff8a3a', s: 0.92, eye: '#ffe24a' });
   sp(18, 'Fuzzwatt', ['Electric'], [35, 40, 40, 65, 50, 80], 190, 60, 'mf', { lv: 24, to: 19 }, LEARN_WATT,
@@ -2508,19 +2508,19 @@
     { body: 'biped', c1: '#9a8a70', c2: '#cab89a', c3: '#5a4a38', head: 0.9, s: 1, ears: 'none', tail: 'spike', rocky: 1, fists: 1, fierce: 1 });
 
   // RARE: only found in one small patch of tall grass on Route 1.
-  const LEARN_LOOT = [[1, 'scratch'], [1, 'tail_whip'], [4, 'quick_attack'], [7, 'bite'], [10, 'feint_attack'], [14, 'fury_swipes'], [19, 'swift'], [25, 'hyper_fang'], [31, 'screech'], [36, 'karate_chop'], [42, 'take_down']];
+  const LEARN_LOOT = [[1, 'scratch'], [1, 'tail_whip'], [4, 'quick_attack'], [7, 'bite'], [10, 'feint_attack'], [14, 'fury_swipes'], [19, 'swift'], [25, 'hyper_fang'], [12, 'pickpocket'], [16, 'shakedown'], [22, 'menace'], [28, 'mug'], [31, 'screech'], [36, 'karate_chop'], [38, 'blackout'], [42, 'take_down']];
   sp(22, 'Pickpockit', ['Shadow'], [50, 68, 45, 60, 50, 98], 45, 125, 'ms', { lv: 20, to: 23 }, LEARN_LOOT,
     'Rarely seen in the long grass of Route 1. A quick-fingered thief that lifts wallets right out of pockets. Its gold markings are said to be made of stolen coins.',
     { body: 'quad', c1: '#2e2c3c', c2: '#ecebf4', c3: '#ffcc33', head: 1.22, s: 0.62, ears: 'big', tail: 'thin', crest: 'tuft', eye: '#ffcc33' });
   sp(23, 'Swindlefox', ['Shadow'], [65, 88, 60, 75, 65, 112], 45, 175, 'ms', { lv: 36, to: 24 }, LEARN_LOOT,
     'It works the busiest streets of Torn City at rush hour. By the time you notice your watch is gone, Swindlefox is three blocks away.',
     { body: 'quad', c1: '#26243a', c2: '#ecebf4', c3: '#ffcc33', head: 1.02, s: 0.86, ears: 'pointy', tail: 'thin', crest: 'tuft', mane: 'spiky', eye: '#ffcc33', fierce: 1 });
-  sp(24, 'Kingpinx', ['Shadow', 'Brawl'], [85, 118, 80, 85, 80, 122], 45, 250, 'ms', null, LEARN_LOOT,
+  sp(24, 'Kingpinx', ['Shadow', 'Brawl'], [85, 118, 80, 85, 80, 122], 45, 250, 'ms', null, LEARN_LOOT.concat([[40, 'uppercut'], [46, 'haymaker']]),
     'A crime boss among Tornies. Whole gangs of Pickpockit answer to it, and every coin they steal ends up in its golden mane.',
     { body: 'biped', c1: '#1e1c2c', c2: '#d8d4e4', c3: '#ffcc33', head: 0.95, s: 1, ears: 'pointy', tail: 'thin', crest: 'plume', mane: 'spiky', fists: 1, fierce: 1, eye: '#ffcc33' });
 
   // RARE: Route 2 only. A Fire/Shadow line that ends in one of the strongest non-legendary Tornies.
-  const LEARN_ASH = [[1, 'bite'], [1, 'smokescreen'], [5, 'ember'], [9, 'quick_attack'], [13, 'fire_fang'], [17, 'feint_attack'], [22, 'flame_wheel'], [28, 'hyper_fang'], [34, 'flamethrower'], [40, 'screech'], [46, 'take_down']];
+  const LEARN_ASH = [[1, 'bite'], [1, 'smokescreen'], [5, 'ember'], [9, 'quick_attack'], [13, 'fire_fang'], [17, 'feint_attack'], [22, 'flame_wheel'], [28, 'hyper_fang'], [19, 'smoulder'], [25, 'shakedown'], [34, 'flamethrower'], [40, 'screech'], [43, 'nightfall'], [46, 'take_down']];
   sp(25, 'Ashpup', ['Fire', 'Shadow'], [50, 70, 48, 60, 48, 72], 30, 70, 'slow', { lv: 22, to: 26 }, LEARN_ASH,
     'A pup born in the ashes of a burnt-out warehouse. It leaves a trail of smoking pawprints wherever it goes.',
     { body: 'quad', c1: '#403640', c2: '#7a4038', c3: '#ff7a2a', head: 1.3, s: 0.6, ears: 'pointy', tail: 'flame', eye: '#ffb02a' });
@@ -2647,38 +2647,125 @@
   mv('breather', 'Breather', 'Street', 'X', 0, 0, 10, { self: 1, heal: 0.5 });
   mv('rampage', 'Rampage', 'Street', 'P', 105, 100, 10, { recoil: 0.33 });
 
+  /* ---------- More moves (2.33): every type gets weak, medium and strong attacks of both kinds, plus status moves ---------- */
+  // Fire
+  mv('smoulder', 'Smoulder', 'Fire', 'X', 0, 85, 15, { st: 'brn' });
+  mv('heat_haze', 'Heat Haze', 'Fire', 'S', 70, 100, 15, { stat: [['acc', -1]], c: 30 });
+  mv('flare_kick', 'Flare Kick', 'Fire', 'P', 80, 95, 15, { st: 'brn', c: 20 });
+  mv('torch_job', 'Torch Job', 'Fire', 'S', 120, 90, 5, { selfStat: [['spa', -2]], c: 100 });
+  // Water
+  mv('salt_spray', 'Salt Spray', 'Water', 'S', 65, 100, 20, { stat: [['acc', -1]], c: 30 });
+  mv('undertow', 'Undertow', 'Water', 'P', 75, 100, 15, { stat: [['spe', -1]], c: 100 });
+  mv('hydrate', 'Hydrate', 'Water', 'X', 0, 0, 10, { self: 1, heal: 0.5 });
+  mv('harpoon', 'Harpoon', 'Water', 'P', 95, 90, 10, { crit: 1 });
+  // Plant
+  mv('root_grip', 'Root Grip', 'Plant', 'P', 60, 100, 20, { drain: 0.5 });
+  mv('spore_burst', 'Spore Burst', 'Plant', 'S', 75, 100, 15, { st: 'slp', c: 10 });
+  // Electric
+  mv('charge_up', 'Charge Up', 'Electric', 'X', 0, 0, 20, { self: 1, stat: [['spa', 1], ['spe', 1]] });
+  mv('power_surge', 'Power Surge', 'Electric', 'S', 75, 100, 15, { selfStat: [['spe', 1]], c: 30 });
+  mv('live_wire', 'Live Wire', 'Electric', 'P', 85, 95, 15, { st: 'par', c: 20 });
+  // Ice
+  mv('hailstones', 'Hailstones', 'Ice', 'P', 25, 95, 20, { hits: [2, 5] });
+  mv('cold_snap', 'Cold Snap', 'Ice', 'X', 0, 90, 20, { stat: [['spe', -2]] });
+  mv('glacier_slam', 'Glacier Slam', 'Ice', 'P', 100, 85, 10, { flinch: 20 });
+  // Brawl
+  mv('quick_jab', 'Quick Jab', 'Brawl', 'P', 40, 100, 30, { prio: 1 });
+  mv('stance', 'Fighting Stance', 'Brawl', 'X', 0, 0, 20, { self: 1, stat: [['def', 1], ['spd', 1]] });
+  mv('flying_knee', 'Flying Knee', 'Brawl', 'P', 90, 90, 10, { crit: 1 });
+  // Toxic
+  mv('toxic_spit', 'Toxic Spit', 'Toxic', 'S', 40, 100, 25, { st: 'psn', c: 30 });
+  mv('venom_lash', 'Venom Lash', 'Toxic', 'P', 55, 100, 20, { st: 'psn', c: 20 });
+  mv('smog_cloud', 'Smog Cloud', 'Toxic', 'X', 0, 90, 20, { stat: [['acc', -1]] });
+  mv('gunk_slam', 'Gunk Slam', 'Toxic', 'P', 105, 80, 5, { st: 'psn', c: 30 });
+  // Earth
+  mv('mud_shot', 'Mud Shot', 'Earth', 'S', 55, 95, 15, { stat: [['spe', -1]], c: 100 });
+  mv('pothole', 'Pothole', 'Earth', 'P', 70, 100, 15, { flinch: 20 });
+  mv('dig_in', 'Dig In', 'Earth', 'X', 0, 0, 20, { self: 1, stat: [['def', 1], ['spd', 1]] });
+  mv('landslide', 'Landslide', 'Earth', 'S', 90, 100, 10, { stat: [['acc', -1]], c: 20 });
+  // Air
+  mv('downdraft', 'Downdraft', 'Air', 'S', 65, 100, 20, { flinch: 20 });
+  mv('talon_rake', 'Talon Rake', 'Air', 'P', 70, 100, 15, { crit: 1 });
+  mv('tailwind', 'Tailwind', 'Air', 'X', 0, 0, 20, { self: 1, stat: [['spe', 2]] });
+  // Mind
+  mv('mind_fist', 'Mind Fist', 'Mind', 'P', 75, 100, 15, { conf: 10 });
+  mv('barrier', 'Barrier', 'Mind', 'X', 0, 0, 20, { self: 1, stat: [['def', 2]] });
+  mv('kinetic_slam', 'Kinetic Slam', 'Mind', 'P', 95, 90, 10);
+  // Bug
+  mv('leech_bite', 'Leech Bite', 'Bug', 'P', 60, 100, 15, { drain: 0.5 });
+  mv('spin_cocoon', 'Spin Cocoon', 'Bug', 'X', 0, 0, 20, { self: 1, stat: [['def', 1], ['spd', 1]] });
+  mv('buzz_beam', 'Buzz Beam', 'Bug', 'S', 85, 100, 15, { stat: [['spd', -1]], c: 10 });
+  mv('horn_charge', 'Horn Charge', 'Bug', 'P', 110, 85, 5);
+  // Stone
+  mv('pebble_storm', 'Pebble Storm', 'Stone', 'P', 25, 90, 20, { hits: [2, 5] });
+  mv('crystal_shell', 'Crystal Shell', 'Stone', 'X', 0, 0, 20, { self: 1, stat: [['def', 1], ['spd', 1]] });
+  mv('shard_spike', 'Shard Spike', 'Stone', 'P', 80, 90, 15, { crit: 1 });
+  mv('geode_burst', 'Geode Burst', 'Stone', 'S', 100, 85, 10, { stat: [['spd', -1]], c: 20 });
+  // Spirit
+  mv('wail', 'Wail', 'Spirit', 'X', 0, 100, 20, { stat: [['spa', -2]] });
+  mv('wisp_fire', 'Wisp Fire', 'Spirit', 'S', 70, 100, 15, { st: 'brn', c: 20 });
+  mv('poltergeist', 'Poltergeist', 'Spirit', 'P', 75, 100, 15, { flinch: 20 });
+  mv('ecto_blast', 'Ecto Blast', 'Spirit', 'S', 110, 80, 5, { conf: 30 });
+  // Mythic
+  mv('rune_bolt', 'Rune Bolt', 'Mythic', 'S', 40, 100, 25);
+  mv('scale_swipe', 'Scale Swipe', 'Mythic', 'P', 55, 100, 25);
+  mv('wyrm_dance', 'Wyrm Dance', 'Mythic', 'X', 0, 0, 20, { self: 1, stat: [['atk', 1], ['spe', 1]] });
+  mv('starfall', 'Starfall', 'Mythic', 'S', 120, 90, 5, { selfStat: [['spa', -2]], c: 100 });
+  // Shadow
+  mv('gloom_bolt', 'Gloom Bolt', 'Shadow', 'S', 50, 100, 25);
+  mv('menace', 'Menace', 'Shadow', 'X', 0, 100, 20, { stat: [['atk', -1], ['spa', -1]] });
+  mv('shakedown', 'Shakedown', 'Shadow', 'P', 55, 100, 20, { stat: [['def', -1]], c: 50 });
+  mv('mug', 'Mug', 'Shadow', 'P', 85, 95, 15, { flinch: 10 });
+  mv('nightfall', 'Nightfall', 'Shadow', 'S', 110, 85, 5, { stat: [['acc', -1]], c: 30 });
+  // Metal
+  mv('rivet_gun', 'Rivet Gun', 'Metal', 'P', 20, 100, 20, { hits: [2, 5] });
+  mv('magnet_pulse', 'Magnet Pulse', 'Metal', 'S', 65, 100, 20, { stat: [['spe', -1]], c: 30 });
+  mv('chrome_polish', 'Chrome Polish', 'Metal', 'X', 0, 0, 20, { self: 1, stat: [['spe', 2]] });
+  mv('wrecking_ball', 'Wrecking Ball', 'Metal', 'P', 120, 90, 5, { selfStat: [['spe', -1]], c: 100 });
+
   /* ---------- Learnsets built from type move pools ---------- */
   const POOL = {
-    Street: [[7, 'quick_attack'], [15, 'headbutt'], [21, 'shout'], [27, 'body_slam'], [34, 'breather'], [42, 'rampage']],
-    Fire: [[4, 'ember'], [13, 'fire_fang'], [18, 'flame_wheel'], [30, 'flamethrower'], [38, 'firestorm'], [47, 'magma_burst']],
-    Water: [[4, 'water_gun'], [9, 'bubble'], [14, 'aqua_jet'], [21, 'water_pulse'], [29, 'aqua_tail'], [37, 'harbour_surge'], [47, 'tidal_crash']],
-    Plant: [[4, 'vine_whip'], [8, 'absorb'], [13, 'razor_leaf'], [19, 'mega_drain'], [27, 'seed_bomb'], [31, 'regrow'], [36, 'thorn_storm'], [45, 'solar_burst']],
-    Electric: [[4, 'thundershock'], [9, 'thunder_wave'], [14, 'spark'], [20, 'volt_fang'], [25, 'shock_wave'], [33, 'thunderbolt'], [45, 'overcharge']],
-    Ice: [[4, 'frost_nip'], [10, 'icicle_dart'], [16, 'snowball'], [22, 'chill_bite'], [31, 'frost_breath'], [45, 'whiteout']],
-    Brawl: [[6, 'karate_chop'], [11, 'low_sweep'], [16, 'double_kick'], [21, 'rock_smash'], [25, 'pump_iron'], [30, 'uppercut'], [39, 'haymaker']],
-    Toxic: [[4, 'poison_sting'], [9, 'poison_powder'], [16, 'sludge_spray'], [23, 'toxic_fang'], [35, 'acid_bath']],
-    Earth: [[5, 'mud_slap'], [9, 'sand_attack'], [15, 'sand_blast'], [20, 'bulldoze'], [27, 'dig_strike'], [40, 'quake']],
-    Air: [[4, 'gust'], [8, 'peck'], [13, 'wing_attack'], [19, 'aerial_ace'], [26, 'air_blade'], [33, 'drill_peck'], [43, 'cyclone']],
-    Mind: [[5, 'confusion'], [10, 'hypno_gaze'], [16, 'brainwave'], [22, 'focus_up'], [34, 'mind_crush']],
-    Bug: [[3, 'string_shot'], [7, 'bug_bite'], [12, 'struggle_bug'], [18, 'stinger_volley'], [29, 'swarm_strike']],
-    Stone: [[6, 'rock_throw'], [11, 'smack_down'], [16, 'rock_tomb'], [26, 'gem_beam'], [37, 'boulder_crash']],
-    Spirit: [[4, 'spook'], [9, 'haunt_touch'], [17, 'soul_drain'], [26, 'shade_ball'], [37, 'phantom_rush']],
-    Mythic: [[8, 'wyrm_breath'], [20, 'mythic_claw'], [33, 'ancient_roar'], [46, 'wyrmrage']],
-    Shadow: [[5, 'bite'], [11, 'feint_attack'], [18, 'backstab'], [29, 'blackout']],
-    Metal: [[6, 'metal_claw'], [11, 'gear_grind'], [16, 'plating'], [24, 'iron_ram'], [36, 'steel_beam']]
+    Street: [[7, 'quick_attack'], [12, ['fury_swipes', 'tail_whip']], [15, 'headbutt'], [21, ['shout', 'screech']], [27, ['body_slam', 'hyper_fang']], [34, 'breather'], [42, ['rampage', 'take_down']]],
+    Fire: [[4, 'ember'], [9, ['flame_wheel', 'fire_fang']], [14, 'smoulder'], [20, 'heat_haze'], [26, 'flare_kick'], [31, 'flamethrower'], [38, ['firestorm', 'torch_job']], [47, 'magma_burst']],
+    Water: [[4, ['water_gun', 'bubble']], [9, 'aqua_jet'], [14, ['salt_spray', 'water_pulse']], [20, 'undertow'], [25, ['hydrate', 'withdraw']], [30, ['aqua_tail', 'harpoon']], [37, 'harbour_surge'], [47, 'tidal_crash']],
+    Plant: [[4, 'vine_whip'], [8, 'absorb'], [12, ['stun_spore', 'sleep_powder']], [15, 'razor_leaf'], [19, ['mega_drain', 'root_grip']], [24, ['spore_burst', 'magical_leaf']], [28, 'seed_bomb'], [32, 'regrow'], [37, 'thorn_storm'], [46, 'solar_burst']],
+    Electric: [[4, 'thundershock'], [9, 'thunder_wave'], [13, ['spark', 'volt_fang']], [18, 'charge_up'], [23, ['shock_wave', 'power_surge']], [28, 'live_wire'], [34, 'thunderbolt'], [45, 'overcharge']],
+    Ice: [[4, 'frost_nip'], [9, 'icicle_dart'], [13, ['hailstones', 'snowball']], [18, 'chill_bite'], [23, 'cold_snap'], [31, 'frost_breath'], [39, 'glacier_slam'], [47, 'whiteout']],
+    Brawl: [[5, 'quick_jab'], [9, 'karate_chop'], [13, ['low_sweep', 'double_kick']], [18, 'rock_smash'], [23, ['pump_iron', 'stance']], [29, 'uppercut'], [35, 'flying_knee'], [42, 'haymaker']],
+    Toxic: [[4, ['poison_sting', 'toxic_spit']], [9, 'poison_powder'], [13, 'venom_lash'], [18, 'smog_cloud'], [22, 'sludge_spray'], [27, 'toxic_fang'], [35, 'acid_bath'], [44, 'gunk_slam']],
+    Earth: [[5, 'mud_slap'], [9, 'sand_attack'], [13, ['mud_shot', 'sand_blast']], [18, 'pothole'], [22, 'bulldoze'], [26, 'dig_in'], [30, 'dig_strike'], [36, 'landslide'], [44, 'quake']],
+    Air: [[4, ['gust', 'peck']], [9, 'wing_attack'], [14, 'downdraft'], [19, ['aerial_ace', 'talon_rake']], [24, 'tailwind'], [29, 'air_blade'], [35, 'drill_peck'], [44, 'cyclone']],
+    Mind: [[5, 'confusion'], [10, 'hypno_gaze'], [15, 'brainwave'], [19, 'mind_fist'], [24, ['focus_up', 'barrier']], [28, 'daydream'], [34, 'mind_crush'], [41, 'kinetic_slam']],
+    Bug: [[3, 'string_shot'], [7, 'bug_bite'], [11, 'struggle_bug'], [15, ['stinger_volley', 'leech_bite']], [20, 'spin_cocoon'], [25, 'buzz_beam'], [30, 'swarm_strike'], [42, 'horn_charge']],
+    Stone: [[6, 'rock_throw'], [10, 'pebble_storm'], [14, ['smack_down', 'rock_tomb']], [19, 'crystal_shell'], [24, 'shard_spike'], [29, 'gem_beam'], [37, 'boulder_crash'], [45, 'geode_burst']],
+    Spirit: [[4, 'spook'], [9, 'haunt_touch'], [14, 'wail'], [18, 'soul_drain'], [23, ['wisp_fire', 'poltergeist']], [28, 'shade_ball'], [35, 'phantom_rush'], [45, 'ecto_blast']],
+    Mythic: [[5, 'rune_bolt'], [9, 'scale_swipe'], [15, 'wyrm_breath'], [21, 'mythic_claw'], [27, 'wyrm_dance'], [34, 'ancient_roar'], [42, 'starfall'], [48, 'wyrmrage']],
+    Shadow: [[5, ['bite', 'pickpocket']], [9, 'gloom_bolt'], [13, 'feint_attack'], [17, 'menace'], [21, 'shakedown'], [25, 'backstab'], [30, 'mug'], [35, 'blackout'], [45, 'nightfall']],
+    Metal: [[6, 'metal_claw'], [10, 'rivet_gun'], [14, 'gear_grind'], [18, 'plating'], [22, 'magnet_pulse'], [26, 'iron_ram'], [31, 'chrome_polish'], [36, 'steel_beam'], [45, 'wrecking_ball']]
   };
-  function autoLearn(types, extra) {
-    const out = [[1, types[0] === 'Fire' || types[0] === 'Shadow' ? 'scratch' : 'tackle'], [1, 'growl']];
-    (POOL[types[0]] || []).forEach(function (e) { out.push(e); });
-    if (types[1]) (POOL[types[1]] || []).forEach(function (e, i) { if (i > 0) out.push([e[0] + 3, e[1]]); });
-    if (types[0] !== 'Street') [[24, 'headbutt'], [38, 'body_slam']].forEach(function (e) { out.push(e); });
+  // A Tornie learns its main type's pool, four moves from its second type's pool (3 levels later) and one Street move.
+  // Where a slot offers two moves, the Tornie's number picks one, so Tornies of the same type don't all fight alike.
+  function autoLearn(types, extra, n) {
+    n = n || 0;
+    const pick = function (e, k) { return Array.isArray(e[1]) ? e[1][(n + k) % e[1].length] : e[1]; };
+    const out = [[1, n % 2 ? 'tackle' : 'scratch'], [1, ['growl', 'tail_whip', 'growl', 'smokescreen'][n % 4]]];
+    (POOL[types[0]] || []).forEach(function (e, k) { out.push([e[0], pick(e, k)]); });
+    if (types[1] && POOL[types[1]]) {
+      const P2 = POOL[types[1]], L = P2.length, idx = [];
+      [0.25, 0.5, 0.7, 0.9].forEach(function (f) { const k = Math.min(L - 1, Math.round(f * (L - 1))); if (idx.indexOf(k) < 0) idx.push(k); });
+      idx.forEach(function (k) { out.push([P2[k][0] + 3, pick(P2[k], k + 1)]); });
+    }
+    if (types[0] !== 'Street' && types[1] !== 'Street') out.push(n % 2 ? [24, 'headbutt'] : [30, 'body_slam']);
     (extra || []).forEach(function (e) { out.push(e); });
-    out.sort(function (a, b) { return a[0] - b[0]; });
-    return out;
+    const seen = {};
+    return out.filter(function (e) { if (seen[e[1]]) return false; seen[e[1]] = 1; return true; }).sort(function (a, b) { return a[0] - b[0]; });
   }
   // TN(): define a Tornie with an automatic learnset. evo: [level, to] or null.
   function TN(n, name, types, base, rate, exp, growth, evo, dex, design, extra) {
-    sp(n, name, types, base, rate, exp, growth, evo ? { lv: evo[0], to: evo[1] } : null, autoLearn(types, extra), dex, design);
+    // pick move variants by the first Tornie of the evolution line, so a Tornie keeps its style when it evolves
+    let root = n;
+    for (let guard = 0; guard < 4; guard++) { const k = Object.keys(SP).find(function (q) { return SP[q].evo && SP[q].evo.to === root; }); if (!k) break; root = +k; }
+    sp(n, name, types, base, rate, exp, growth, evo ? { lv: evo[0], to: evo[1] } : null, autoLearn(types, extra, root), dex, design);
   }
 
   /* ---------- More items ---------- */
@@ -2696,7 +2783,8 @@
   });
   // Training Discs teach one move. Any Tornie of the move's type (or any Tornie for Street moves) can learn it.
   const DISCS = ['headbutt', 'rock_tomb', 'shock_wave', 'water_pulse', 'dig_strike', 'aerial_ace', 'seed_bomb', 'iron_ram', 'brainwave', 'shade_ball', 'mythic_claw',
-    'flamethrower', 'thunderbolt', 'frost_breath', 'sludge_spray', 'uppercut', 'blackout', 'gem_beam', 'swarm_strike', 'body_slam', 'breather', 'quake', 'air_blade'];
+    'flamethrower', 'thunderbolt', 'frost_breath', 'sludge_spray', 'uppercut', 'blackout', 'gem_beam', 'swarm_strike', 'body_slam', 'breather', 'quake', 'air_blade',
+    'undertow', 'mug', 'live_wire', 'shard_spike', 'flare_kick', 'mind_fist', 'buzz_beam', 'gunk_slam'];
   DISCS.forEach(function (m) { ITEMS['disc_' + m] = { name: 'Disc: ' + MOVES[m].name, price: 1500 + MOVES[m].pow * 20, kind: 'disc', move: m, desc: 'A Training Disc that teaches ' + MOVES[m].name + ' (' + MOVES[m].type + ').' }; });
   ITEM_ORDER.splice(1, 0, 'capsule2', 'capsule3', 'federal');
   ITEM_ORDER.splice(ITEM_ORDER.indexOf('super_potion') + 1, 0, 'hyper_potion', 'revive', 'full_heal');
@@ -3364,7 +3452,65 @@
     wave_rider: 'Rides a rolling wave straight into the foe.',
     sky_lift: 'Carries the foe up high and drops it.',
     heavy_lift: 'Hoists the foe overhead and slams it down.',
-    floodlight: 'Blinds the foe with a dazzling floodlight.'
+    floodlight: 'Blinds the foe with a dazzling floodlight.',
+    smoulder: 'Leaves the foe smouldering with hidden embers.',
+    heat_haze: 'Shimmering heat that blurs the foe\'s view.',
+    flare_kick: 'A kick wrapped in roaring flame.',
+    torch_job: 'Sets everything ablaze, then burns out.',
+    salt_spray: 'Stinging salt water right in the eyes.',
+    undertow: 'Drags the foe under with a heavy current.',
+    hydrate: 'Takes a long drink and recovers.',
+    harpoon: 'Fires a dockyard harpoon at the foe.',
+    root_grip: 'Roots wrap the foe and sap its strength.',
+    spore_burst: 'A cloud of spores bursts over the foe.',
+    charge_up: 'Builds up a crackling charge.',
+    power_surge: 'A surge of power that can speed it up.',
+    live_wire: 'Grabs the foe with a sparking live wire.',
+    hailstones: 'Pelts the foe with hard hailstones.',
+    cold_snap: 'A sudden freeze that stiffens the foe.',
+    glacier_slam: 'Crashes down like a falling glacier.',
+    quick_jab: 'A jab thrown before the foe can blink.',
+    stance: 'Settles into a steady fighting stance.',
+    flying_knee: 'Leaps in with a flying knee.',
+    toxic_spit: 'Spits a glob of toxic slime.',
+    venom_lash: 'Whips the foe with a venom-coated tail.',
+    smog_cloud: 'Belches thick smog around the foe.',
+    gunk_slam: 'Slams the foe with a wave of sewer gunk.',
+    mud_shot: 'Fires heavy mud that clogs the foe up.',
+    pothole: 'Opens a pothole right under the foe.',
+    dig_in: 'Digs its feet in and holds firm.',
+    landslide: 'Brings a landslide down on the foe.',
+    downdraft: 'A sudden downdraft knocks the foe flat.',
+    talon_rake: 'Rakes the foe with hooked talons.',
+    tailwind: 'Rides a strong tailwind.',
+    mind_fist: 'A punch powered by pure thought.',
+    barrier: 'Puts up an invisible wall of mind power.',
+    kinetic_slam: 'Lifts the foe with its mind and slams it.',
+    leech_bite: 'Bites down and drinks the foe\'s energy.',
+    spin_cocoon: 'Wraps itself in tough silk.',
+    buzz_beam: 'A beam of buzzing energy from its wings.',
+    horn_charge: 'Charges horn-first at full speed.',
+    pebble_storm: 'Flings a storm of pebbles.',
+    crystal_shell: 'Grows a shell of hard crystals.',
+    shard_spike: 'Drives a sharp crystal shard into the foe.',
+    geode_burst: 'Cracks open a glowing geode in the foe\'s face.',
+    wail: 'A ghostly wail that shakes the foe\'s focus.',
+    wisp_fire: 'Sends eerie ghost flames at the foe.',
+    poltergeist: 'Hurls nearby objects with unseen hands.',
+    ecto_blast: 'A blast of glowing ectoplasm.',
+    rune_bolt: 'Fires a bolt of glowing ancient runes.',
+    scale_swipe: 'Swipes with hard, ancient scales.',
+    wyrm_dance: 'An ancient dance that stirs its power.',
+    starfall: 'Calls stars down from the sky, then tires.',
+    gloom_bolt: 'Fires a bolt of pure gloom.',
+    menace: 'Stares the foe down until it loses its nerve.',
+    shakedown: 'Roughs the foe up and checks its pockets.',
+    mug: 'Jumps the foe in a dark alley.',
+    nightfall: 'Plunges everything into total darkness.',
+    rivet_gun: 'Fires a rapid string of hot rivets.',
+    magnet_pulse: 'A magnetic pulse that drags the foe back.',
+    chrome_polish: 'Polishes its plating until it gleams.',
+    wrecking_ball: 'Swings in like a demolition ball.'
   };
   const MV_STAT = { atk: 'Power', def: 'Guard', spa: 'Focus', spd: 'Resolve', spe: 'Speed', acc: 'aim', eva: 'dodging' };
   const MV_ST = { brn: 'scorch', par: 'stun', psn: 'poison', slp: 'put to sleep', frz: 'freeze' };
@@ -3387,7 +3533,7 @@
       const t = (up ? 'Raises ' : 'Lowers ') + who + ' ' + MV_STAT[s[0]] + (n > 1 ? ' sharply' : '') + '.';
       out.push(M.cat === 'X' || c >= 100 ? t : c + '% chance: ' + t.charAt(0).toLowerCase() + t.slice(1));
     });
-    if (f.selfStat) f.selfStat.forEach(function (s) { out.push(c + '% chance to raise its own ' + MV_STAT[s[0]] + '.'); });
+    if (f.selfStat) f.selfStat.forEach(function (s) { const n = Math.abs(s[1]), t = (s[1] > 0 ? 'raise' : 'lower') + 's its own ' + MV_STAT[s[0]] + (n > 1 ? ' sharply' : '') + '.'; out.push(c >= 100 ? t.charAt(0).toUpperCase() + t.slice(1) : c + '% chance to ' + t.replace(/s its/, ' its')); });
     if (f.drain) out.push('Restores HP equal to ' + Math.round(f.drain * 100) + '% of the damage dealt.');
     if (f.heal) out.push('Restores ' + Math.round(f.heal * 100) + '% of its max HP.');
     if (f.recoil) out.push('The user takes ' + Math.round(f.recoil * 100) + '% of the damage dealt as recoil.');
@@ -4410,7 +4556,7 @@
     });
   })();
   makeClinic('docks', 'docks', 4, 6, 'docks');
-  makeShop('docks', 'docks', 9, 6, ['capsule', 'capsule2', 'potion', 'super_potion', 'antidote', 'parlyz_heal', 'burn_heal', 'awakening', 'ice_heal', 'repel', 'disc_dig_strike', 'disc_body_slam', 'disc_water_pulse']);
+  makeShop('docks', 'docks', 9, 6, ['capsule', 'capsule2', 'potion', 'super_potion', 'antidote', 'parlyz_heal', 'burn_heal', 'awakening', 'ice_heal', 'repel', 'disc_dig_strike', 'disc_body_slam', 'disc_water_pulse', 'disc_undertow', 'disc_mug']);
   makeArena('reef', { name: 'Docks Arena', outMap: 'docks', dx: 18, dy: 6, pal: 'reef', medal: 'reef', floor: 'O', deco: '~', bg: 'docks',
     guide: 'Captain Reef sails with Water Tornies. Plant and Electric moves will sink her ship!',
     trainers: [
@@ -4919,7 +5065,7 @@
     });
   })();
   makeClinic('ind', 'industrial', 4, 5, 'industrial');
-  makeShop('ind', 'industrial', 9, 5, ['capsule', 'capsule2', 'capsule3', 'potion', 'super_potion', 'antidote', 'parlyz_heal', 'burn_heal', 'awakening', 'ice_heal', 'repel', 'disc_iron_ram', 'disc_uppercut', 'disc_sludge_spray', 'disc_thunderbolt']);
+  makeShop('ind', 'industrial', 9, 5, ['capsule', 'capsule2', 'capsule3', 'potion', 'super_potion', 'antidote', 'parlyz_heal', 'burn_heal', 'awakening', 'ice_heal', 'repel', 'disc_iron_ram', 'disc_uppercut', 'disc_sludge_spray', 'disc_thunderbolt', 'disc_live_wire', 'disc_shard_spike']);
   makeArena('forge', { name: 'Industrial Arena', outMap: 'industrial', dx: 5, dy: 19, pal: 'forge', medal: 'forge', floor: 'M', deco: 'Q', bg: 'industrial',
     guide: 'Forge uses Metal Tornies. Fire, Earth and Brawl moves will melt them down!',
     trainers: [
@@ -5215,7 +5361,7 @@
     });
   })();
   makeClinic('casino', 'casino', 4, 5, 'casino');
-  makeShop('casino', 'casino', 9, 5, ['capsule', 'capsule2', 'capsule3', 'potion', 'super_potion', 'hyper_potion', 'revive', 'antidote', 'parlyz_heal', 'burn_heal', 'awakening', 'ice_heal', 'full_heal', 'repel', 'disc_brainwave', 'disc_blackout']);
+  makeShop('casino', 'casino', 9, 5, ['capsule', 'capsule2', 'capsule3', 'potion', 'super_potion', 'hyper_potion', 'revive', 'antidote', 'parlyz_heal', 'burn_heal', 'awakening', 'ice_heal', 'full_heal', 'repel', 'disc_brainwave', 'disc_blackout', 'disc_mind_fist', 'disc_flare_kick']);
   makeArena('ace', { name: 'Casino Arena', outMap: 'casino', dx: 5, dy: 19, pal: 'ace', medal: 'ace', floor: 'Y', deco: 'L', bg: 'neon',
     guide: 'Madame Ace plays with Mind Tornies. Shadow and Bug moves are your best bet. Mind moves won\'t do much!',
     trainers: [
@@ -5569,7 +5715,7 @@
     });
   })();
   makeClinic('hosp', 'hospdist', 4, 5, 'hospdist');
-  makeShop('hosp', 'hospdist', 9, 5, ['capsule', 'capsule2', 'capsule3', 'super_potion', 'hyper_potion', 'revive', 'antidote', 'parlyz_heal', 'burn_heal', 'awakening', 'ice_heal', 'full_heal', 'repel', 'disc_shade_ball', 'disc_mythic_claw']);
+  makeShop('hosp', 'hospdist', 9, 5, ['capsule', 'capsule2', 'capsule3', 'super_potion', 'hyper_potion', 'revive', 'antidote', 'parlyz_heal', 'burn_heal', 'awakening', 'ice_heal', 'full_heal', 'repel', 'disc_shade_ball', 'disc_mythic_claw', 'disc_buzz_beam', 'disc_gunk_slam']);
   makeArena('graves', { name: 'Hospital Arena', outMap: 'hospdist', dx: 5, dy: 19, pal: 'graves', medal: 'graves', floor: 'W', deco: 'D', bg: 'spooky',
     guide: 'Dr. Graves treats Spirit Tornies. Shadow and Spirit moves hit them hard. Street and Brawl moves go straight through them!',
     trainers: [
@@ -14256,6 +14402,7 @@
       if (M.cat === 'X') {
         s = 22;
         if (M.fx.st && (P.mon.st || effOf(M.type, typesOf(P)) === 0)) s = 0;
+        if (M.fx.heal) { const h = E.mon.hp / maxHp(E.mon); s = h < 0.4 ? 70 : h > 0.8 ? 0 : 20; }   // heal when hurt, never at full health
         if (M.fx.stat && M.fx.self && E.st[M.fx.stat[0][0]] >= 2) s = 3;
         if (M.fx.stat && !M.fx.self && P.st[M.fx.stat[0][0]] <= -2) s = 3;
       } else s = M.pow * effOf(M.type, typesOf(P)) * (typesOf(E).indexOf(M.type) >= 0 ? 1.5 : 1) * (M.acc ? M.acc / 100 : 1);
