@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.35.2
+// @version      2.35.3
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with eight game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -548,7 +548,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gift codes', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.35.2';
+  const VERSION = '2.35.3';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -18230,6 +18230,7 @@
       '.ta-tt-fav{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;background:var(--tp2);border-radius:8px;padding:5px 7px}',
       '.ta-tt-fav small{display:block;color:var(--tm);font-size:11px}',
       '.ta-tt-empty{color:var(--tm);font-size:12px}',
+      '.ta-tt-empty b,.ta-tt-ans b{color:#f1ecff}',
       '.ta-tt-btns{display:grid;grid-template-columns:1fr 1fr;gap:5px}',
       '.ta-tt-row{display:flex;flex-wrap:wrap;align-items:center;gap:4px;color:var(--tm);font-size:12px}',
       '.ta-tt-pls{display:grid;gap:5px}',
@@ -18290,7 +18291,7 @@
         '<div class="ta-tt-board"><div class="ta-tt-scroll" data-tt="scroll"><svg data-tt="svg" role="img" aria-label="The Torn City board" preserveAspectRatio="xMidYMid meet"></svg></div>' +
           '<div class="ta-tt-banner"><div class="ta-tt-prompt" data-tt="prompt"></div><div class="ta-tt-zoom"><button data-tt="zin" aria-label="Zoom in">+</button><button data-tt="zout" aria-label="Zoom out">−</button><button data-tt="mus" aria-label="Music" title="Music on or off">♪</button><button data-tt="full" aria-label="Full screen" title="Full screen">⛶</button></div><div class="ta-tt-dice"><div class="ta-tt-die" data-tt="d1">–</div><div class="ta-tt-die" data-tt="d2">–</div></div></div></div>' +
         '<div class="ta-tt-side">' +
-          '<div class="ta-tt-card" data-tt="meCard"><div class="ta-tt-me"><span data-tt="meName"></span><span>Respect<strong data-tt="myResp">0</strong> <small data-tt="secret"></small></span></div><div class="ta-tt-hand" data-tt="hand"></div><div class="ta-tt-favs" data-tt="favs"></div></div>' +
+          '<div class="ta-tt-card" data-tt="meCard"><div class="ta-tt-me"><span data-tt="meName"></span><span>Respect<strong data-tt="myResp">0</strong> <small data-tt="secret"></small></span></div><div class="ta-tt-hand" data-tt="hand"></div><div class="ta-tt-empty" data-tt="last" hidden></div><div class="ta-tt-favs" data-tt="favs"></div></div>' +
           '<div class="ta-tt-card" data-tt="acts"><button class="ta-tt-go" data-tt="roll">Roll the dice</button>' +
             '<div class="ta-tt-btns"><button data-tt="bRoute"><span>Road</span><small>Brick · Wood</small></button><button data-tt="bSafe"><span>Safehouse</span><small>Brick · Wood · Wheat · Cotton</small></button>' +
             '<button data-tt="bHQ"><span>Upgrade to HQ</span><small>2 Wheat · 3 Ore</small></button><button data-tt="bFav"><span>Favour card</span><small>Wheat · Ore · Cotton</small></button></div>' +
@@ -18309,7 +18310,7 @@
     function Q(id) { return box.querySelector('[data-tt="' + id + '"]'); }
     const svg = Q('svg');
     let G = null;   // the whole game (saved in Tampermonkey storage)
-    const UI = { aiTraded: false, zoom: 1, mode: null, viewer: -1, flash: [], dlg: null, timer: 0, aiActs: 0, asked: false, rolled: false, sawOver: false, live: false };
+    const UI = { last: null, aiTraded: false, zoom: 1, mode: null, viewer: -1, flash: [], dlg: null, timer: 0, aiActs: 0, asked: false, rolled: false, sawOver: false, live: false };
     const opts = Object.assign({ size: 'large', diff: 'normal', speed: 750, seats: [['human', 0], ['ai', 1], ['ai', 2], ['ai', 3]] }, store.get('territoriesOpts', null) || {});
     const stats = Object.assign({ games: 0, wins: 0, fastest: 0 }, store.get('territoriesStats', null) || {});
 
@@ -18584,7 +18585,7 @@
     function endTurn() {
       P(G.cur).favs.forEach(function (f) { f.fresh = false; });
       G.cur = (G.cur + 1) % G.players.length; G.turn++; G.phase = 'roll'; G.playedFav = false; G.dice = null; G.offer = null;
-      UI.mode = null; UI.aiActs = 0; UI.asked = false; UI.aiTraded = false;
+      UI.mode = null; UI.aiActs = 0; UI.asked = false; UI.aiTraded = false; if (UI.last && UI.last.who === G.cur) UI.last = null;
       if (G.hid) G.hid = G.hid.filter(function (h) { return G.turn - h.t < G.players.length * 2; });   // after a couple of rounds it no longer matters
     }
     function placeSafe(pi, v, setup) {
@@ -18852,7 +18853,7 @@
       if (!mine() || G.phase !== 'main') return;
       const g = Q('give').value, w = Q('get').value, pi = G.cur, k = rate(pi, g);
       if (P(pi).hand[g] < k || g === w) return;
-      P(pi).hand[g] -= k; P(pi).hand[w]++; UI.flash = [w]; snd('trade');
+      P(pi).hand[g] -= k; P(pi).hand[w]++; UI.flash = [w]; snd('trade'); UI.last = { who: pi, gave: (function () { const o = {}; o[g] = k; return o; })(), got: (function () { const o = {}; o[w] = 1; return o; })() };
       say(name(pi) + ' ' + verb(pi, 'trade') + ' ' + k + ' ' + RN[g] + ' for 1 ' + RN[w] + (k < 4 ? ' at a harbour.' : ' with the bank.'));
       tick();
     });
@@ -18918,8 +18919,8 @@
         bx.innerHTML = '<h3>TRADE WITH RIVALS</h3><div class="ta-tt-cols"><div class="ta-tt-steps"><p>You give</p>' + steppers('give', d.give, me.hand) + '</div><div class="ta-tt-steps"><p>You want</p>' + steppers('want', d.want, null) + '</div></div>' +
           (d.answers ? '<div class="ta-tt-pls">' + (d.answers.length ? d.answers.map(function (a, k) {
             const why = { cards: ' doesn\'t have that', leader: ' won\'t trade with the leader', threat: ' won\'t help you build', value: ' says no' }[a.why] || ' says no';
-            return '<div class="ta-tt-ans"><i style="background:' + P(a.i).col + '"></i><span>' + esc(P(a.i).name) + (a.ok ? ' will take that deal' : a.counter ? ' wants ' + list(a.counter) + ' instead' : why) + '</span>' +
-              (a.ok || a.counter ? '<button class="ta-tt-sm" data-a="accept" data-k2="' + k + '">Deal</button>' : '<span></span>') + '</div>';
+            return '<div class="ta-tt-ans"><i style="background:' + P(a.i).col + '"></i><span>' + esc(P(a.i).name) + (a.ok ? ' will take that deal' : a.counter ? ' says no, but counters: <b>you give ' + list(a.counter) + '</b>, you get ' + list(d.want) : why) + '</span>' +
+              (a.ok || a.counter ? '<button class="ta-tt-sm" data-a="accept" data-k2="' + k + '">' + (a.ok ? 'Deal' : 'Accept counter') + '</button>' : '<span></span>') + '</div>';
           }).join('') : '<p>No computer factions to trade with.</p>') + '</div>' : '') +
           '<div class="ta-tt-btns"><button class="ta-tt-go" data-a="offer"' + (ok ? '' : ' disabled') + '>Make the offer</button><button class="ta-tt-sm" data-a="close">Close</button></div>';
       } else if (d.kind === 'offer') {
@@ -18961,12 +18962,12 @@
         const ans = d.answers[+b.dataset.k2], v = ans.i, me = P(G.cur), them = P(v), give = ans.counter || d.give;
         if (RES.some(function (x) { return (give[x] || 0) > me.hand[x] || (d.want[x] || 0) > them.hand[x]; })) return;
         RES.forEach(function (x) { me.hand[x] += (d.want[x] || 0) - (give[x] || 0); them.hand[x] += (give[x] || 0) - (d.want[x] || 0); });
-        say(them.name + ' takes the deal: ' + list(give) + ' for ' + list(d.want) + '.'); UI.flash = Object.keys(d.want);
+        say(them.name + ' takes the deal: ' + list(give) + ' for ' + list(d.want) + '.'); UI.flash = Object.keys(d.want); UI.last = { who: G.cur, gave: give, got: d.want };
         UI.dlg = null; snd('deal'); tick(); return;
       }
       if (a === 'yes' || a === 'no') {
         const o = G.offer;
-        if (a === 'yes') { RES.forEach(function (x) { P(o.to).hand[x] += (o.give[x] || 0) - (o.want[x] || 0); P(o.from).hand[x] += (o.want[x] || 0) - (o.give[x] || 0); }); say(name(o.to) + ' ' + verb(o.to, 'take') + ' ' + P(o.from).name + '\'s deal.'); if (o.to === UI.viewer) UI.flash = Object.keys(o.give); snd('deal'); }
+        if (a === 'yes') { RES.forEach(function (x) { P(o.to).hand[x] += (o.give[x] || 0) - (o.want[x] || 0); P(o.from).hand[x] += (o.want[x] || 0) - (o.give[x] || 0); }); say(name(o.to) + ' ' + verb(o.to, 'take') + ' ' + P(o.from).name + '\'s deal.'); if (o.to === UI.viewer) UI.flash = Object.keys(o.give); UI.last = { who: o.to, gave: o.want, got: o.give }; snd('deal'); }
         else { say(name(o.to) + ' ' + verb(o.to, 'turn') + ' down ' + P(o.from).name + '.'); sfx.click(); }
         G.offer = null; G.phase = 'main'; UI.dlg = null; tick(); return;
       }
@@ -19077,6 +19078,7 @@
         Q('meName').textContent = me.name.toUpperCase(); Q('meName').style.color = me.col;
         Q('myResp').textContent = hide ? '?' : respect(vi, true);
         const sec = me.favs.filter(function (f) { return f.t === 'respect'; }).length;
+        Q('last').hidden = !UI.last || hide || UI.last.who !== vi; if (UI.last) Q('last').innerHTML = 'Last trade: you gave <b>' + list(UI.last.gave) + '</b> · you got <b>' + list(UI.last.got) + '</b>';
         Q('secret').textContent = !hide && sec ? '(' + sec + ' secret)' : '';
         Q('hand').innerHTML = RES.map(function (r) { return '<div class="ta-tt-res' + (UI.flash.indexOf(r) >= 0 && !hide ? ' ta-tt-got' : '') + '">' + icon(r) + '<b>' + (hide ? '?' : me.hand[r]) + '</b><small>' + RN[r] + '</small></div>'; }).join('');
         Q('favs').innerHTML = hide ? '' : me.favs.length ? me.favs.map(function (f, i) {
