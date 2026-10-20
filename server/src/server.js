@@ -5,9 +5,11 @@ const http = require('http');
 const crypto = require('crypto');
 const db = require('./db');
 const torn = require('./torn');
+const tt = require('./territories');
+const trades = require('./trades');
 
 const PORT = Number(process.env.PORT) || 8080;
-const VERSION = '1.1.0';
+const VERSION = '1.2.0';
 const GAMES = ['territories'];   // rated games, played on the server
 // Best-score leaderboards. These scores come from players' own devices, so each has limits that throw out
 // impossible values. dir: 'desc' = higher is better, 'asc' = lower is better (times).
@@ -156,6 +158,18 @@ async function route(req, res, url) {
     }
     return send(res, 200, out);
   }
+  // Online Territories, Tornie trades and the phone's notifications.
+  const ctx = { whoAsks: whoAsks, send: send, fail: fail, readBody: readBody, limited: limited, ip: ip };
+  if (path.indexOf('/v1/tt/') === 0) return tt.route(req, res, url, ctx);
+  if (path === '/v1/trades' || path.indexOf('/v1/trades/') === 0) return trades.route(req, res, url, ctx);
+  if (path === '/v1/inbox' && method === 'GET') {
+    const who = await whoAsks(req);
+    if (!who) return fail(res, 401, 'signed_out', 'Sign in to play online.');
+    if (!who.verified || who.banned) return send(res, 200, { invites: [], turns: [], trades: [] });
+    const box = await tt.inbox(who);
+    box.trades = await trades.waiting(who);
+    return send(res, 200, box);
+  }
   // Everything below needs a signed-in account.
   const me = await whoAsks(req);
   if (!me) return fail(res, 401, 'signed_out', 'Sign in to play online.');
@@ -167,6 +181,7 @@ async function route(req, res, url) {
     return send(res, 200, { ok: true });
   }
   if (path === '/v1/me' && method === 'DELETE') {   // wipes the account, its sign-ins and its ratings
+    tt.forget(me.id);
     await db.q('DELETE FROM accounts WHERE id = $1', [me.id]);
     return send(res, 200, { ok: true, deleted: true });
   }
@@ -195,7 +210,8 @@ const server = http.createServer(function (req, res) {
 server.requestTimeout = 15000;
 server.headersTimeout = 10000;
 
-db.migrate().then(function () {
+db.migrate().then(function () { return tt.migrate(); }).then(function () { return trades.migrate(); }).then(function () {
+  tt.start();
   server.listen(PORT, function () { console.log('Torn Arcade server ' + VERSION + ' on port ' + PORT); });
 }).catch(function (e) { console.error('database setup failed', e.message); process.exit(1); });
 

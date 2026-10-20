@@ -21,7 +21,7 @@ async function call(method, p, body, token, origin) {
   return { status: r.status, body: j, headers: r.headers };
 }
 (async () => {
-  sql('DROP TABLE IF EXISTS scores, ratings, tokens, accounts CASCADE');
+  sql('DROP TABLE IF EXISTS tornie_trades, tt_games, scores, ratings, tokens, accounts CASCADE');
   const srv = spawn('node', [path.join(__dirname, '../src/server.js')], { env: Object.assign({}, process.env, { PORT: '5870', DATABASE_URL: 'postgres://postgres@localhost:5433/arcade', TORN_API: 'http://127.0.0.1:5871', NODE_PATH: path.join(__dirname, 'shim') }), stdio: ['ignore', 'pipe', 'pipe'] });
   let logs = ''; srv.stdout.on('data', d => logs += d); srv.stderr.on('data', d => logs += d);
   for (let i = 0; i < 50 && !/port 5870/.test(logs); i++) await new Promise(r => setTimeout(r, 100));
