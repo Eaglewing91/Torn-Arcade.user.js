@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.28.2
+// @version      2.28.3
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with six game apps: Tornies (a creature-collecting RPG), Torn Invasion (a Doom-style alien shooter), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -12279,6 +12279,7 @@
   function gstat(k, n) { G.stats = G.stats || {}; G.stats[k] = (G.stats[k] || 0) + (n === undefined ? 1 : n); }
   function st(k) { return (G.stats && G.stats[k]) || 0; }
   function caughtWhere(f) { return Object.keys(G.caught || {}).filter(function (k) { return SP[k] && f(Number(k)); }).length; }
+  function trainerWinCount() { return st('trainerWins') + ((G.tower && G.tower.wins) || 0); }   // story trainers plus every Battle Tower win
   function bestLevel() { return G.party.concat(G.box || []).reduce(function (a, m) { return Math.max(a, m.lv); }, 0); }
   const LEGEND_IDS = Object.keys(SP).map(Number).filter(function (n) { return isLegend(n) && !SP[n].event && !SP[n].apex; });
   // [id, category, name, description, goal, progress(), reward [item, n] or ['money', amount] or ['bp', amount], points, secret]
@@ -12290,32 +12291,32 @@
     // Secret merit (9th field true): its description stays hidden as ??? until it is earned.
     ['codebreak', 'Story', 'Code Breaker', 'Crack the last Project Genesis password and free Mirabit.', 1, function () { return G.flags.pawlMira ? 1 : 0; }, ['energy_bar', 3], 50, true],
     ['secrets', 'Story', 'Secret Keeper', 'Find both of Torn City\'s secret places.', 2, function () { return (G.flags.clans ? 1 : 0) + (G.dump ? 1 : 0); }, ['xanax', 2], 25],
-    ['catch10', 'Collection', 'Collector', 'Catch 10 different Tornies.', 10, function () { return countKeys(G.caught); }, ['capsule2', 5], 10],
-    ['catch50', 'Collection', 'Researcher', 'Catch 50 different Tornies.', 50, function () { return countKeys(G.caught); }, ['capsule3', 5], 25],
-    ['catch100', 'Collection', 'Tornie Professor', 'Catch 100 different Tornies.', 100, function () { return countKeys(G.caught); }, ['energy_bar', 5], 50],
+    ['catch10', 'Collection', 'Collector', 'Catch 50 different Tornies.', 50, function () { return countKeys(G.caught); }, ['capsule3', 5], 25],
+    ['catch50', 'Collection', 'Researcher', 'Catch 100 different Tornies.', 100, function () { return countKeys(G.caught); }, ['energy_bar', 3], 50],
+    ['catch100', 'Collection', 'Tornie Professor', 'Catch 150 different Tornies.', 150, function () { return countKeys(G.caught); }, ['energy_bar', 5], 75],
     ['catchall', 'Collection', 'Completionist', 'Catch every Tornie in the Tornie Log.', DEX_GOAL, function () { return dexCount(); }, ['money', 50000], 100],
-    ['seen150', 'Collection', 'People Watcher', 'See 150 different Tornies.', 150, function () { return countKeys(G.seen); }, ['hyper_potion', 3], 25],
-    ['ranked1', 'Collection', 'Strike Gold', 'Catch a Golden Tornie.', 1, function () { return countKeys(G.ranked); }, ['capsule3', 3], 25],
-    ['ranked5', 'Collection', 'Gold Rush', 'Catch 5 different Golden Tornies.', 5, function () { return countKeys(G.ranked); }, ['energy_bar', 3], 50],
+    ['seen150', 'Collection', 'People Watcher', 'See every Tornie in the Tornie Log.', DEX_GOAL, function () { return countKeys(G.seen); }, ['hyper_potion', 3], 25],
+    ['ranked1', 'Collection', 'Strike Gold', 'Catch 3 different Golden Tornies.', 3, function () { return countKeys(G.ranked); }, ['capsule3', 3], 25],
+    ['ranked5', 'Collection', 'Gold Rush', 'Catch 10 different Golden Tornies.', 10, function () { return countKeys(G.ranked); }, ['energy_bar', 3], 50],
     ['legend1', 'Collection', 'Legend Hunter', 'Catch a Legendary Tornie.', 1, function () { return caughtWhere(isLegend); }, ['energy_bar', 2], 25],
-    ['legendall', 'Collection', 'Myth Maker', 'Catch every Legendary Tornie.', LEGEND_IDS.length, function () { return caughtWhere(function (n) { return LEGEND_IDS.indexOf(Number(n)) >= 0; }); }, ['money', 30000], 100],
-    ['wins10', 'Battle', 'Street Fighter', 'Beat 10 trainers.', 10, function () { return st('trainerWins'); }, ['super_potion', 5], 10],
-    ['wins50', 'Battle', 'Veteran Trainer', 'Beat 50 trainers.', 50, function () { return st('trainerWins'); }, ['energy_bar', 2], 25],
-    ['wins150', 'Battle', 'Warlord', 'Beat 150 trainers.', 150, function () { return st('trainerWins'); }, ['money', 15000], 50],
-    ['wild100', 'Battle', 'Wild Thing', 'Beat or catch 100 wild Tornies.', 100, function () { return st('wildWins'); }, ['capsule2', 10], 25],
-    ['lv50', 'Battle', 'Heavy Hitter', 'Raise a Tornie to level 50.', 50, bestLevel, ['energy_bar', 1], 25],
-    ['lv100', 'Battle', 'Maxed Out', 'Raise a Tornie to level 100.', 100, bestLevel, ['energy_bar', 5], 100],
+    ['legendall', 'Collection', 'Myth Maker', 'Catch every Legendary Tornie.', LEGEND_IDS.length, function () { return caughtWhere(function (n) { return LEGEND_IDS.indexOf(Number(n)) >= 0; }); }, ['money', 25000], 100],
+    ['wins10', 'Battle', 'Street Fighter', 'Beat 50 trainers. Tower wins count.', 50, trainerWinCount, ['super_potion', 5], 10],
+    ['wins50', 'Battle', 'Veteran Trainer', 'Beat 150 trainers. Tower wins count.', 150, trainerWinCount, ['energy_bar', 2], 25],
+    ['wins150', 'Battle', 'Warlord', 'Beat 300 trainers. Tower wins count.', 300, trainerWinCount, ['money', 15000], 50],
+    ['wild100', 'Battle', 'Wild Thing', 'Catch 100 wild Tornies.', 100, function () { return st('catches'); }, ['capsule2', 10], 25],
+    ['lv50', 'Battle', 'Heavy Hitter', 'Raise a Tornie to level 50.', 50, bestLevel, ['opium', 1], 25],
+    ['lv100', 'Battle', 'Maxed Out', 'Raise a Tornie to level 100.', 100, bestLevel, ['opium', 3], 100],
     ['evolve10', 'Battle', 'Metamorphosis', 'Watch your Tornies evolve 10 times.', 10, function () { return st('evolutions'); }, ['energy_bar', 2], 25],
     ['anton1', 'Battle', 'Bunny Buster', 'Fight off Anton The Bunnster.', 1, function () { return (G.anton && G.anton.won) || 0; }, ['vicodin', 1], 25],
     ['anton3', 'Battle', 'Anton\'s Nemesis', 'Fight off Anton The Bunnster 3 times.', 3, function () { return (G.anton && G.anton.won) || 0; }, ['vicodin', 2], 50],
     ['fish10', 'Side', 'Angler', 'Catch 10 Tornies on a fishing rod.', 10, function () { return st('fishCaught'); }, ['super_potion', 3], 10],
-    ['superrod', 'Side', 'Deep Diver', 'Catch a Tornie with the Super Rod.', 1, function () { return st('fish_super_rod'); }, ['capsule3', 3], 25],
+    ['superrod', 'Side', 'Deep Diver', 'Catch 5 Tornies with the Super Rod.', 5, function () { return st('fish_super_rod'); }, ['capsule3', 3], 25],
     ['hatch1', 'Side', 'New Arrival', 'Hatch an Egg.', 1, function () { return st('hatched'); }, ['energy_bar', 1], 10],
-    ['hatch10', 'Side', 'Egg Expert', 'Hatch 10 Eggs.', 10, function () { return st('hatched'); }, ['capsule3', 5], 50],
+    ['hatch10', 'Side', 'Egg Expert', 'Hatch 10 Eggs.', 10, function () { return st('hatched'); }, ['energy_bar', 5], 50],
     ['dc10', 'Side', 'Day Care Regular', 'Your Tornies grow 10 levels at the Day Care.', 10, function () { return st('dcLevels'); }, ['money', 5000], 25],
     ['trade1', 'Side', 'Trader', 'Send or receive a Tornie with a trade code.', 1, function () { return st('tradesOut') + st('tradesIn'); }, ['energy_bar', 1], 10],
     ['boost10', 'Side', 'Pharmacy Regular', 'Use 10 boosters on your Tornies.', 10, function () { return st('boosters'); }, ['opium', 1], 25],
-    ['steps10k', 'Side', 'Marathon', 'Walk 10,000 steps.', 10000, function () { return G.steps || 0; }, ['energy_bar', 2], 25],
+    ['steps10k', 'Side', 'Marathon', 'Walk 100,000 steps.', 100000, function () { return G.steps || 0; }, ['xanax', 2], 25],
     ['tower7', 'Battle Tower', 'Tower Climber', 'Win 7 Battle Tower battles in a row.', 7, function () { return (G.tower && G.tower.best) || 0; }, ['bp', 10], 25],
     ['tower21', 'Battle Tower', 'Silver Contender', 'Beat Duke for the Silver Print (21 in a row).', 1, function () { return G.tower && G.tower.silver ? 1 : 0; }, ['bp', 25], 50],
     ['tower49', 'Battle Tower', 'Tower Tycoon', 'Beat Duke for the Gold Print (49 in a row).', 1, function () { return G.tower && G.tower.gold ? 1 : 0; }, ['money', 50000], 100]
