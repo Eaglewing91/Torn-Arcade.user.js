@@ -94,6 +94,7 @@ A district-building board game. Torn City is split into districts (Brickworks, T
 
 - Play against up to three computer factions (Easy, Normal or Hard), pass-and-play with friends on one device, or watch the computer play. Rivals trade with each other, make counter-offers, and keep track of what you've collected so they won't hand you the last card for an HQ (on Hard they're strict about it).
 - Large map (37 districts) or Standard (19), with a new random board every game. Pick each faction's colour.
+- Plays by the classic Catan rules: 15 roads, 5 safehouses and 4 HQs per faction, a bank of 19 of each card (24 on the large map) with the bank-shortage rule, discard half on a 7 when holding more than 7, one favour card per turn and never on the turn you bought it. The build buttons show how many pieces you have left, and the bank trade shows how many of each card the bank holds.
 - Zoom buttons and a **full screen** button for the big map. Games save as you go, so you can leave and carry on later.
 - Soft background music and sound effects for building, upgrading, trading, favours and police raids, all generated live in your browser (no audio files). Music can be switched off in the game or on the new game screen.
 - Your wins and fastest win show in the Scores app. The illustrated districts come with the Character Art pack; without it, the districts are drawn by the script.

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.35.3
+// @version      2.35.4
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with eight game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -548,7 +548,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gift codes', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.35.3';
+  const VERSION = '2.35.4';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -18220,6 +18220,8 @@
       '.ta-tt-me{display:flex;align-items:center;justify-content:space-between;gap:6px;font-weight:800}',
       '.ta-tt-me strong{font-size:18px;color:var(--tg);margin-left:3px}',
       '.ta-tt-me small{color:var(--tm);font-weight:600}',
+      '.ta-tt button span:has(> em){display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;column-gap:4px}',
+      '.ta-tt button span em{font-style:normal;font-weight:600;font-size:10.5px;color:var(--tm);white-space:nowrap;margin-left:auto}',
       '.ta-tt-hand{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}',
       '.ta-tt-res{background:var(--tp2);border-radius:8px;padding:3px 1px;text-align:center;border:1px solid transparent;transition:border-color .3s,transform .3s}',
       '.ta-tt-res.ta-tt-got{border-color:var(--tg);transform:translateY(-2px)}',
@@ -18285,7 +18287,7 @@
           '<p>Every turn starts with a roll of the dice. Every district with that number pays out to the buildings on its corners: <b>1 card</b> for a safehouse, <b>2</b> for an HQ.</p>' +
           '<div class="ta-tt-costs"><span>Road</span><span>Brick + Wood. Roads link up your territory.</span><span>Safehouse</span><span>Brick + Wood + Wheat + Cotton. 1 Respect. Goes on one of your roads, two corners from any other building.</span><span>HQ</span><span>2 Wheat + 3 Ore. Upgrades a safehouse: 2 Respect, double pay.</span><span>Favour card</span><span>Wheat + Ore + Cotton. Crew, Supply Run, Street Deal, Road Crew or a secret +1 Respect.</span></div>' +
           '<p>Roll a <b>7</b> and the <b>police raid</b> moves: anyone holding more than 7 cards hands over half, the raided district stops paying, and the roller takes a card from a rival there.</p>' +
-          '<p>Trade with rivals, or with the bank at 4 for 1. Harbours give 3 for 1, or 2 for 1 in one resource. <b>Longest Road</b> (5+) and <b>Biggest Crew</b> (3+ Crew cards played) are worth 2 Respect each. First to <b>10 Respect</b> on their own turn wins.</p></div>' +
+          '<p>Trade with rivals, or with the bank at 4 for 1. The bank holds 19 of each card (24 on the large map); if it runs short, nobody collects that card unless only one faction is owed it. You have 15 roads, 5 safehouses and 4 HQs. Harbours give 3 for 1, or 2 for 1 in one resource. <b>Longest Road</b> (5+) and <b>Biggest Crew</b> (3+ Crew cards played) are worth 2 Respect each. First to <b>10 Respect</b> on their own turn wins.</p></div>' +
       '</div>' +
       '<div class="ta-tt-game" data-tt="game" hidden>' +
         '<div class="ta-tt-board"><div class="ta-tt-scroll" data-tt="scroll"><svg data-tt="svg" role="img" aria-label="The Torn City board" preserveAspectRatio="xMidYMid meet"></svg></div>' +
@@ -18293,8 +18295,8 @@
         '<div class="ta-tt-side">' +
           '<div class="ta-tt-card" data-tt="meCard"><div class="ta-tt-me"><span data-tt="meName"></span><span>Respect<strong data-tt="myResp">0</strong> <small data-tt="secret"></small></span></div><div class="ta-tt-hand" data-tt="hand"></div><div class="ta-tt-empty" data-tt="last" hidden></div><div class="ta-tt-favs" data-tt="favs"></div></div>' +
           '<div class="ta-tt-card" data-tt="acts"><button class="ta-tt-go" data-tt="roll">Roll the dice</button>' +
-            '<div class="ta-tt-btns"><button data-tt="bRoute"><span>Road</span><small>Brick · Wood</small></button><button data-tt="bSafe"><span>Safehouse</span><small>Brick · Wood · Wheat · Cotton</small></button>' +
-            '<button data-tt="bHQ"><span>Upgrade to HQ</span><small>2 Wheat · 3 Ore</small></button><button data-tt="bFav"><span>Favour card</span><small>Wheat · Ore · Cotton</small></button></div>' +
+            '<div class="ta-tt-btns"><button data-tt="bRoute"><span>Road <em data-tt="nRoute"></em></span><small>Brick · Wood</small></button><button data-tt="bSafe"><span>Safehouse <em data-tt="nSafe"></em></span><small>Brick · Wood · Wheat · Cotton</small></button>' +
+            '<button data-tt="bHQ"><span>Upgrade to HQ <em data-tt="nHQ"></em></span><small>2 Wheat · 3 Ore</small></button><button data-tt="bFav"><span>Favour card <em data-tt="nFav"></em></span><small>Wheat · Ore · Cotton</small></button></div>' +
             '<button data-tt="bDeal"><span>Trade with rivals</span><small>Offer some of your cards for theirs</small></button>' +
             '<div class="ta-tt-row"><span>Bank</span><select data-tt="give" aria-label="Give to the bank"></select><span>for</span><select data-tt="get" aria-label="Get from the bank"></select><button class="ta-tt-sm" data-tt="bTrade">Trade</button></div>' +
             '<button class="ta-tt-go" data-tt="end">End turn</button></div>' +
@@ -18458,6 +18460,7 @@
     /* ---------- Rules ---------- */
     function P(i) { return G.players[i]; }
     function cards(p) { return RES.reduce(function (s, r) { return s + p.hand[r]; }, 0); }
+    function stock(r) { return (G.size === 'large' ? 24 : 19) - G.players.reduce(function (s, q) { return s + q.hand[r]; }, 0); }   // the bank holds 19 of each (24 on the large map)
     function canAfford(p, c) { return Object.keys(c).every(function (r) { return p.hand[r] >= c[r]; }); }
     function pay(p, c) { Object.keys(c).forEach(function (r) { p.hand[r] -= c[r]; }); }
     function spaced(v) { return G.verts[v].owner < 0 && G.verts[v].adj.every(function (a) { return G.verts[a].owner < 0; }); }
@@ -18544,8 +18547,16 @@
       G.hexes.forEach(function (H, hi) {
         if (H.num !== n) return;
         if (hi === G.raid) { if (H.verts.some(function (v) { return G.verts[v].owner >= 0; })) say('The raided ' + DIST[H.res].name + ' pays nothing.'); return; }
-        H.verts.forEach(function (v) { const V = G.verts[v]; if (V.owner >= 0) { P(V.owner).hand[H.res] += V.lvl; got[V.owner][H.res] = (got[V.owner][H.res] || 0) + V.lvl; } });
+        H.verts.forEach(function (v) { const V = G.verts[v]; if (V.owner >= 0) got[V.owner][H.res] = (got[V.owner][H.res] || 0) + V.lvl; });
       });
+      RES.forEach(function (r) {   // the bank runs short: one faction owed gets what's left, two or more get nothing
+        const owed = got.map(function (g) { return g[r] || 0; }), total = owed.reduce(function (a, b) { return a + b; }, 0), left = stock(r);
+        if (!total || total <= left) return;
+        const who = owed.filter(function (x) { return x; }).length;
+        got.forEach(function (g, i) { if (!g[r]) return; if (who === 1 && left > 0) g[r] = left; else delete g[r]; });
+        say('The bank is short of ' + RN[r] + (who === 1 && left > 0 ? ': only ' + left + ' to hand out.' : '. Nobody collects it.'));
+      });
+      got.forEach(function (g, i) { Object.keys(g).forEach(function (r) { P(i).hand[r] += g[r]; }); });
       got.forEach(function (g, i) {
         const k = Object.keys(g); if (!k.length) return;
         say(name(i) + ' ' + verb(i, 'collect') + ' ' + k.map(function (r) { return g[r] + ' ' + RN[r]; }).join(', ') + '.');
@@ -18596,7 +18607,7 @@
       if (setup) {
         G.setup.last = v; G.setup.step = 'route';
         const got = [];
-        if (G.setup.i >= G.players.length) G.verts[v].hexes.forEach(function (h) { const r = G.hexes[h].res; if (r !== 'none') { p.hand[r]++; got.push(RN[r]); } });
+        if (G.setup.i >= G.players.length) G.verts[v].hexes.forEach(function (h) { const r = G.hexes[h].res; if (r !== 'none' && stock(r) > 0) { p.hand[r]++; got.push(RN[r]); } });
         say(name(pi) + ' ' + verb(pi, 'open') + ' a safehouse' + (got.length ? ' and ' + verb(pi, 'collect') + ' ' + got.join(', ') : '') + '.');
       } else say(name(pi) + ' ' + verb(pi, 'open') + ' a safehouse. +1 Respect.');
       awards();
@@ -18626,7 +18637,7 @@
       p.favs.push({ t: t, fresh: true }); snd('fav');
       say(name(pi) + ' ' + verb(pi, 'call') + ' in a favour' + (pi === UI.viewer ? ': ' + FAV[t].name : '') + '.');
     }
-    function canPlay(pi, f) { return f.t !== 'respect' && !f.fresh && !G.playedFav && G.cur === pi && (G.phase === 'main' || (G.phase === 'roll' && f.t === 'crew')); }
+    function canPlay(pi, f) { return f.t !== 'respect' && (f.t !== 'supply' || RES.reduce(function (a, r) { return a + Math.min(2, stock(r)); }, 0) >= 2) && !f.fresh && !G.playedFav && G.cur === pi && (G.phase === 'main' || (G.phase === 'roll' && f.t === 'crew')); }
     function useFav(pi, idx) {
       const f = P(pi).favs.splice(idx, 1)[0];
       G.playedFav = true;
@@ -18776,7 +18787,7 @@
       if (fi >= 0) {   // play a favour card when it helps
         const t = p.favs[fi].t, n = need(pi), short = RES.filter(function (r) { return n[r]; });
         if (t === 'roads' && p.routes && anyRoute(pi)) { useFav(pi, fi); G.free = 2; G.phase = 'roads'; return; }
-        if (t === 'supply' && short.length && short.reduce(function (s, r) { return s + n[r]; }, 0) <= 2) { useFav(pi, fi); const got = short.concat(short).slice(0, 2); got.forEach(function (r) { p.hand[r]++; }); say(p.name + ' brings in ' + got.map(function (r) { return RN[r]; }).join(' and ') + '.'); return; }
+        if (t === 'supply' && short.length && short.reduce(function (s, r) { return s + n[r]; }, 0) <= 2) { useFav(pi, fi); const got = []; short.concat(short, RES).forEach(function (r) { if (got.length < 2 && stock(r) > got.filter(function (x) { return x === r; }).length) got.push(r); }); got.forEach(function (r) { p.hand[r]++; }); say(p.name + ' brings in ' + got.map(function (r) { return RN[r]; }).join(' and ') + '.'); return; }
         if (t === 'deal' && short.length) {
           const r = short.slice().sort(function (a, b) { return others(pi, b) - others(pi, a); })[0];
           if (others(pi, r) >= 2) { useFav(pi, fi); streetDeal(pi, r); return; }
@@ -18798,7 +18809,7 @@
         const plain = planCost(pi);   // trade with the bank or a harbour for a missing card
         if (!UI.aiTraded) { UI.aiTraded = true; if (aiDeal(pi, short, plain)) return; }
         const spare = RES.filter(function (r) { return !n[r] && p.hand[r] - (plain[r] || 0) >= rate(pi, r); }).sort(function (a, b) { return p.hand[b] - p.hand[a]; })[0];
-        if (spare) { const k = rate(pi, spare); p.hand[spare] -= k; p.hand[short[0]]++; say(p.name + ' trades ' + k + ' ' + RN[spare] + ' for 1 ' + RN[short[0]] + (k < 4 ? ' at a harbour.' : ' with the bank.')); return; }
+        if (spare && stock(short[0]) > 0) { const k = rate(pi, spare); p.hand[spare] -= k; p.hand[short[0]]++; say(p.name + ' trades ' + k + ' ' + RN[spare] + ' for 1 ' + RN[short[0]] + (k < 4 ? ' at a harbour.' : ' with the bank.')); return; }
         if (!UI.asked && humans() === 1) {   // or ask the human player for it (one offer per turn)
           UI.asked = true;
           const hi = G.players.findIndex(function (q) { return !q.ai; }), r = short[0];
@@ -18843,7 +18854,7 @@
     /* ---------- Your moves ---------- */
     function mine() { return !!G && G.phase !== 'over' && !P(G.cur).ai && UI.viewer === G.cur && !(UI.dlg && UI.dlg.kind === 'pass'); }
     function on(id, fn) { Q(id).addEventListener('click', fn); }
-    on('roll', function () { if (!mine() || G.phase !== 'roll') return; rollDice(); tick(); });
+    on('roll', function () { if (!mine() || G.phase !== 'roll') return; rollDice(); if (G.phase === 'main') checkWin(G.cur); tick(); });
     function setMode(m) { if (!mine() || G.phase !== 'main') return; UI.mode = UI.mode === m ? null : m; sfx.click(); render(); }
     on('bRoute', function () { setMode('route'); });
     on('bSafe', function () { setMode('safe'); });
@@ -18852,7 +18863,7 @@
     on('bTrade', function () {
       if (!mine() || G.phase !== 'main') return;
       const g = Q('give').value, w = Q('get').value, pi = G.cur, k = rate(pi, g);
-      if (P(pi).hand[g] < k || g === w) return;
+      if (P(pi).hand[g] < k || g === w || stock(w) < 1) return;
       P(pi).hand[g] -= k; P(pi).hand[w]++; UI.flash = [w]; snd('trade'); UI.last = { who: pi, gave: (function () { const o = {}; o[g] = k; return o; })(), got: (function () { const o = {}; o[w] = 1; return o; })() };
       say(name(pi) + ' ' + verb(pi, 'trade') + ' ' + k + ' ' + RN[g] + ' for 1 ' + RN[w] + (k < 4 ? ' at a harbour.' : ' with the bank.'));
       tick();
@@ -18911,7 +18922,7 @@
         bx.innerHTML = '<h3>WHO DO YOU ROB?</h3><p>Take one card at random from a rival on this district.</p><div class="ta-tt-pls">' +
           victims(G.cur, G.raid).map(function (v) { return '<div class="ta-tt-ans"><i style="background:' + P(v).col + '"></i><span>' + esc(P(v).name) + ' · ' + cards(P(v)) + ' cards</span><button class="ta-tt-sm" data-a="rob" data-v="' + v + '">Rob</button></div>'; }).join('') + '</div>';
       } else if (d.kind === 'supply') {
-        bx.innerHTML = '<h3>SUPPLY RUN</h3><p>Pick 2 cards from the bank (' + d.picks.length + ' of 2 picked' + (d.picks.length ? ': ' + RN[d.picks[0]] : '') + ').</p><div class="ta-tt-picks">' + RES.map(function (r) { return '<button data-a="pick" data-r="' + r + '">' + icon(r) + RN[r] + '</button>'; }).join('') + '</div><button class="ta-tt-sm" data-a="close">Keep the card for later</button>';
+        bx.innerHTML = '<h3>SUPPLY RUN</h3><p>Pick 2 cards from the bank (' + d.picks.length + ' of 2 picked' + (d.picks.length ? ': ' + RN[d.picks[0]] : '') + ').</p><div class="ta-tt-picks">' + RES.map(function (r) { const n = stock(r) - d.picks.filter(function (x) { return x === r; }).length; return '<button data-a="pick" data-r="' + r + '"' + (n > 0 ? '' : ' disabled') + '>' + icon(r) + RN[r] + '<small>' + n + ' in the bank</small></button>'; }).join('') + '</div><button class="ta-tt-sm" data-a="close">Keep the card for later</button>';
       } else if (d.kind === 'deal') {
         bx.innerHTML = '<h3>STREET DEAL</h3><p>Name a resource. Every other faction hands you all of theirs.</p><div class="ta-tt-picks">' + RES.map(function (r) { return '<button data-a="deal" data-r="' + r + '">' + icon(r) + RN[r] + '</button>'; }).join('') + '</div><button class="ta-tt-sm" data-a="close">Keep the card for later</button>';
       } else if (d.kind === 'trade') {
@@ -19093,9 +19104,10 @@
         Q('bDeal').disabled = !(main && cards(me) > 0 && G.players.some(function (p) { return p.ai; }));
         const gv = Q('give').value, gt = Q('get').value;
         Q('give').innerHTML = RES.map(function (r) { return '<option value="' + r + '">' + rate(vi, r) + ' ' + RN[r] + ' (have ' + me.hand[r] + ')</option>'; }).join('');
-        Q('get').innerHTML = RES.map(function (r) { return '<option value="' + r + '">1 ' + RN[r] + '</option>'; }).join('');
+        Q('get').innerHTML = RES.map(function (r) { return '<option value="' + r + '">1 ' + RN[r] + ' (bank ' + stock(r) + ')</option>'; }).join('');
+        Q('nRoute').textContent = me.routes + ' left'; Q('nSafe').textContent = me.safes + ' left'; Q('nHQ').textContent = me.hqs + ' left'; Q('nFav').textContent = G.deck.length + ' left';
         Q('give').value = gv || 'brick'; Q('get').value = gt || 'ore';
-        Q('bTrade').disabled = !(main && me.hand[Q('give').value] >= rate(vi, Q('give').value) && Q('give').value !== Q('get').value);
+        Q('bTrade').disabled = !(main && me.hand[Q('give').value] >= rate(vi, Q('give').value) && Q('give').value !== Q('get').value && stock(Q('get').value) > 0);
         UI.flash = [];
       }
       Q('players').innerHTML = G.players.map(function (p, i) {
