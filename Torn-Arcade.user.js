@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.35.1
+// @version      2.35.2
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with eight game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -548,7 +548,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gift codes', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.35.1';
+  const VERSION = '2.35.2';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -18309,7 +18309,7 @@
     function Q(id) { return box.querySelector('[data-tt="' + id + '"]'); }
     const svg = Q('svg');
     let G = null;   // the whole game (saved in Tampermonkey storage)
-    const UI = { zoom: 1, mode: null, viewer: -1, flash: [], dlg: null, timer: 0, aiActs: 0, asked: false, rolled: false, sawOver: false, live: false };
+    const UI = { aiTraded: false, zoom: 1, mode: null, viewer: -1, flash: [], dlg: null, timer: 0, aiActs: 0, asked: false, rolled: false, sawOver: false, live: false };
     const opts = Object.assign({ size: 'large', diff: 'normal', speed: 750, seats: [['human', 0], ['ai', 1], ['ai', 2], ['ai', 3]] }, store.get('territoriesOpts', null) || {});
     const stats = Object.assign({ games: 0, wins: 0, fastest: 0 }, store.get('territoriesStats', null) || {});
 
@@ -18574,6 +18574,8 @@
     function steal(pi, vi) {
       const have = RES.filter(function (r) { return P(vi).hand[r] > 0; }), r = have[Math.floor(rnd() * have.length)];
       P(vi).hand[r]--; P(pi).hand[r]++;
+      if (!G.hid) G.hid = [];
+      G.hid.push({ p: pi, r: r, t: G.turn });   // the other factions don't see which card was taken
       const seen = pi === UI.viewer || vi === UI.viewer;
       say(name(pi) + ' ' + verb(pi, 'take') + (seen ? ' ' + RN[r] : ' a card') + ' from ' + (you(vi) ? 'you' : P(vi).name) + '.');
       if (pi === UI.viewer) { UI.flash = [r]; collectSound([r]); } else if (vi === UI.viewer) snd('lose');
@@ -18582,7 +18584,8 @@
     function endTurn() {
       P(G.cur).favs.forEach(function (f) { f.fresh = false; });
       G.cur = (G.cur + 1) % G.players.length; G.turn++; G.phase = 'roll'; G.playedFav = false; G.dice = null; G.offer = null;
-      UI.mode = null; UI.aiActs = 0; UI.asked = false;
+      UI.mode = null; UI.aiActs = 0; UI.asked = false; UI.aiTraded = false;
+      if (G.hid) G.hid = G.hid.filter(function (h) { return G.turn - h.t < G.players.length * 2; });   // after a couple of rounds it no longer matters
     }
     function placeSafe(pi, v, setup) {
       const p = P(pi);
@@ -18658,13 +18661,68 @@
     function planCost(pi) { const pl = plan(pi); return pl === 'route' ? { brick: 2, wood: 2, wheat: 1, cotton: 1 } : COST[pl]; }
     function need(pi) { const p = P(pi), c = planCost(pi), out = {}; RES.forEach(function (r) { out[r] = Math.max(0, (c[r] || 0) - p.hand[r]); }); return out; }
     function worth(pi, r) { const n = need(pi), p = P(pi); return 1 + (n[r] ? 1.6 : 0) - (p.hand[r] >= 4 ? 0.5 : 0); }
-    function wantsDeal(pi, give, want, from) {   // would computer faction pi swap? It gets `give` and hands over `want`.
+    // What faction `who` holds as far as faction `by` can tell: every card collected, traded and spent is announced,
+    // only the type of a card taken in a robbery stays hidden from everyone else.
+    function est(who, by) {
+      const h = Object.assign({}, P(who).hand);
+      if (who !== by) (G.hid || []).forEach(function (x) { if (x.p === who && h[x.r] > 0) h[x.r]--; });
+      return h;
+    }
+    // How much a hand lets a faction build that it couldn't before: an HQ matters most, then a safehouse.
+    function unlocks(who, before, after) {
+      let best = 0;
+      const can = function (h, c) { return Object.keys(c).every(function (r) { return (h[r] || 0) >= c[r]; }); };
+      if (P(who).hqs && G.verts.some(function (V) { return V.owner === who && V.lvl === 1; }) && !can(before, COST.hq) && can(after, COST.hq)) best = Math.max(best, 2);
+      if (P(who).safes && anySafe(who) && !can(before, COST.safe) && can(after, COST.safe)) best = Math.max(best, 1.5);
+      if (G.deck.length && !can(before, COST.fav) && can(after, COST.fav)) best = Math.max(best, 0.6);
+      if (P(who).routes && !can(before, COST.route) && can(after, COST.route)) best = Math.max(best, 0.3);
+      return best;
+    }
+    // Would computer faction pi make this swap? It gets `give` from `from` and hands over `want`.
+    // Answers { ok, why } with why: 'cards' (doesn't have them), 'leader' (won't feed the leader),
+    // 'threat' (the deal would let `from` build an HQ or safehouse) or 'value' (not worth it).
+    function wantsDeal(pi, give, want, from) {
       const p = P(pi);
-      if (RES.some(function (r) { return (want[r] || 0) > p.hand[r]; })) return false;
-      if (respect(from, false) >= (G.diff === 'hard' ? 7 : G.diff === 'normal' ? 8 : 9)) return false;
+      if (RES.some(function (r) { return (want[r] || 0) > p.hand[r]; })) return { ok: false, why: 'cards' };
+      const vis = respect(from, false), D = G.diff;
+      if (vis >= (D === 'hard' ? 7 : D === 'normal' ? 8 : 9)) return { ok: false, why: 'leader' };
       let gain = 0;
       RES.forEach(function (r) { gain += (give[r] || 0) * worth(pi, r) - (want[r] || 0) * worth(pi, r); });
-      return gain > (G.diff === 'easy' ? -0.2 : G.diff === 'normal' ? 0.4 : 0.9);
+      const before = est(from, pi), after = Object.assign({}, before);
+      RES.forEach(function (r) { after[r] = (after[r] || 0) + (want[r] || 0) - (give[r] || 0); });
+      const th = unlocks(from, before, after), worthIt = D === 'easy' ? -0.2 : D === 'normal' ? 0.4 : 0.9;
+      // never hand the last card for an HQ to someone close to winning; on Hard never hand anyone their HQ
+      if ((th >= 2 && (D === 'hard' || vis + 1 >= (D === 'normal' ? 8 : 9))) || (th >= 1.5 && vis + 1 >= (D === 'easy' ? 10 : 9))) return { ok: false, why: 'threat' };
+      const penalty = th * (D === 'easy' ? 0.25 : D === 'normal' ? 0.6 : 1);
+      if (gain - penalty > worthIt) return { ok: true };
+      return { ok: false, why: gain > worthIt ? 'threat' : 'value' };
+    }
+    // A counter-offer to a deal it turned down: ask for one or two more cards, starting with ones it needs.
+    function counter(pi, give, want, from) {
+      const have = P(from).hand, n = need(pi), tries = [];
+      const want1 = RES.filter(function (r) { return !want[r] && have[r] - (give[r] || 0) > 0; }).sort(function (a, b) { return (n[b] - n[a]) || (have[b] - have[a]); });
+      want1.forEach(function (r) { const g = Object.assign({}, give); g[r] = (g[r] || 0) + 1; tries.push(g); });
+      want1.forEach(function (r) { want1.forEach(function (q) { const g = Object.assign({}, give); g[r] = (g[r] || 0) + 1; g[q] = (g[q] || 0) + 1; if (RES.every(function (x) { return (g[x] || 0) <= have[x]; })) tries.push(g); }); });
+      for (let i = 0; i < tries.length; i++) if (wantsDeal(pi, tries[i], want, from).ok) return tries[i];
+      return null;
+    }
+    // Trade with another computer faction for a missing card: offer spare cards, see who bites.
+    function aiDeal(pi, short, plain) {
+      const p = P(pi), n = need(pi);
+      const spare = RES.filter(function (x) { return !n[x] && p.hand[x] > (plain[x] || 0); }).sort(function (a, b) { return p.hand[b] - p.hand[a]; });
+      if (!spare.length) return false;
+      const want = {}; want[short[0]] = 1;
+      for (let k = 1; k <= 2; k++) {
+        const give = {}; give[spare[0]] = Math.min(k, p.hand[spare[0]] - (plain[spare[0]] || 0)); if (!give[spare[0]]) continue;
+        const partners = G.players.map(function (q, i) { return i; }).filter(function (i) { return i !== pi && P(i).ai && P(i).hand[short[0]] > 0 && wantsDeal(i, give, want, pi).ok; });
+        if (partners.length) {
+          const o = partners[Math.floor(rnd() * partners.length)];
+          RES.forEach(function (x) { p.hand[x] += (want[x] || 0) - (give[x] || 0); P(o).hand[x] += (give[x] || 0) - (want[x] || 0); });
+          say(p.name + ' trades ' + list(give) + ' to ' + P(o).name + ' for ' + list(want) + '.');
+          return true;
+        }
+      }
+      return false;
     }
     function hurt(h, pi) {
       let s = 0;
@@ -18737,6 +18795,7 @@
       const n = need(pi), short = RES.filter(function (r) { return n[r]; });
       if (short.length && short.reduce(function (s, r) { return s + n[r]; }, 0) <= 3) {
         const plain = planCost(pi);   // trade with the bank or a harbour for a missing card
+        if (!UI.aiTraded) { UI.aiTraded = true; if (aiDeal(pi, short, plain)) return; }
         const spare = RES.filter(function (r) { return !n[r] && p.hand[r] - (plain[r] || 0) >= rate(pi, r); }).sort(function (a, b) { return p.hand[b] - p.hand[a]; })[0];
         if (spare) { const k = rate(pi, spare); p.hand[spare] -= k; p.hand[short[0]]++; say(p.name + ' trades ' + k + ' ' + RN[spare] + ' for 1 ' + RN[short[0]] + (k < 4 ? ' at a harbour.' : ' with the bank.')); return; }
         if (!UI.asked && humans() === 1) {   // or ask the human player for it (one offer per turn)
@@ -18857,7 +18916,11 @@
       } else if (d.kind === 'trade') {
         const me = P(G.cur), ok = sum(d.give) > 0 && sum(d.want) > 0 && RES.every(function (r) { return !(d.give[r] && d.want[r]); });
         bx.innerHTML = '<h3>TRADE WITH RIVALS</h3><div class="ta-tt-cols"><div class="ta-tt-steps"><p>You give</p>' + steppers('give', d.give, me.hand) + '</div><div class="ta-tt-steps"><p>You want</p>' + steppers('want', d.want, null) + '</div></div>' +
-          (d.answers ? '<div class="ta-tt-pls">' + (d.answers.length ? d.answers.map(function (a) { return '<div class="ta-tt-ans"><i style="background:' + P(a.i).col + '"></i><span>' + esc(P(a.i).name) + (a.ok ? ' will take that deal' : ' says no') + '</span>' + (a.ok ? '<button class="ta-tt-sm" data-a="accept" data-v="' + a.i + '">Deal</button>' : '<span></span>') + '</div>'; }).join('') : '<p>No computer factions to trade with.</p>') + '</div>' : '') +
+          (d.answers ? '<div class="ta-tt-pls">' + (d.answers.length ? d.answers.map(function (a, k) {
+            const why = { cards: ' doesn\'t have that', leader: ' won\'t trade with the leader', threat: ' won\'t help you build', value: ' says no' }[a.why] || ' says no';
+            return '<div class="ta-tt-ans"><i style="background:' + P(a.i).col + '"></i><span>' + esc(P(a.i).name) + (a.ok ? ' will take that deal' : a.counter ? ' wants ' + list(a.counter) + ' instead' : why) + '</span>' +
+              (a.ok || a.counter ? '<button class="ta-tt-sm" data-a="accept" data-k2="' + k + '">Deal</button>' : '<span></span>') + '</div>';
+          }).join('') : '<p>No computer factions to trade with.</p>') + '</div>' : '') +
           '<div class="ta-tt-btns"><button class="ta-tt-go" data-a="offer"' + (ok ? '' : ' disabled') + '>Make the offer</button><button class="ta-tt-sm" data-a="close">Close</button></div>';
       } else if (d.kind === 'offer') {
         const o = G.offer, can = RES.every(function (r) { return (o.want[r] || 0) <= P(o.to).hand[r]; });
@@ -18890,14 +18953,15 @@
       }
       if (a === 'deal') { useFav(G.cur, d.idx); streetDeal(G.cur, r); UI.dlg = null; snd('trade'); tick(); return; }
       if (a === 'offer') {
-        d.answers = G.players.map(function (p, i) { return i; }).filter(function (i) { return i !== G.cur && P(i).ai; }).map(function (i) { return { i: i, ok: wantsDeal(i, d.give, d.want, G.cur) }; });
+        d.answers = G.players.map(function (p, i) { return i; }).filter(function (i) { return i !== G.cur && P(i).ai; }).map(function (i) { const w = wantsDeal(i, d.give, d.want, G.cur); return { i: i, ok: w.ok, why: w.why, counter: !w.ok && (w.why === 'value' || w.why === 'threat') ? counter(i, d.give, d.want, G.cur) : null }; });
         say(name(G.cur) + ' ' + verb(G.cur, 'offer') + ' ' + list(d.give) + ' for ' + list(d.want) + '.');
         render(); return;
       }
       if (a === 'accept') {
-        const v = +b.dataset.v, me = P(G.cur), them = P(v);
-        RES.forEach(function (x) { me.hand[x] += (d.want[x] || 0) - (d.give[x] || 0); them.hand[x] += (d.give[x] || 0) - (d.want[x] || 0); });
-        say(them.name + ' takes the deal: ' + list(d.give) + ' for ' + list(d.want) + '.'); UI.flash = Object.keys(d.want);
+        const ans = d.answers[+b.dataset.k2], v = ans.i, me = P(G.cur), them = P(v), give = ans.counter || d.give;
+        if (RES.some(function (x) { return (give[x] || 0) > me.hand[x] || (d.want[x] || 0) > them.hand[x]; })) return;
+        RES.forEach(function (x) { me.hand[x] += (d.want[x] || 0) - (give[x] || 0); them.hand[x] += (give[x] || 0) - (d.want[x] || 0); });
+        say(them.name + ' takes the deal: ' + list(give) + ' for ' + list(d.want) + '.'); UI.flash = Object.keys(d.want);
         UI.dlg = null; snd('deal'); tick(); return;
       }
       if (a === 'yes' || a === 'no') {
