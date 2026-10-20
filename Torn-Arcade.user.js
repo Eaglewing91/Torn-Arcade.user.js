@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.30.1
+// @version      2.30.2
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with six game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -448,7 +448,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gift codes', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.30.1';
+  const VERSION = '2.30.2';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -15037,8 +15037,14 @@
     '<small class="tim-save">Tampermonkey opens and asks you to install it. Then reload this page.</small></div>';
   main.appendChild(root);
   const gameBox = $(root, '#ta-inv-root'), getBox = $(root, '.tim');
+  // Out of date: the game stays closed and the same page asks for the update instead (playing needs the latest version).
   function render() {
-    gameBox.hidden = !inv.ok; getBox.hidden = inv.ok;
+    const ready = inv.ok && !inv.old;
+    gameBox.hidden = !ready; getBox.hidden = ready;
+    $(root, 'h2').textContent = inv.old ? 'Update Torn Invasion 3D' : 'Torn Invasion 3D';
+    $(root, '.tim-get').textContent = inv.old ? 'Update to version ' + INV_WANT : 'Get Torn Invasion 3D';
+    $(root, '.tim p').textContent = inv.old ? 'A new version is out (you have ' + inv.ver + '). Update to keep playing. Your progress is kept.' : 'Torn Invasion is now a full 3D shooter, installed as its own free add-on so the phone stays small.';
+    if (inv.old) $(root, '.tim-save').textContent = 'Tampermonkey opens and asks you to update it. Then reload this page.';
     if (!inv.ok) {
       const d = invOld(), has = Object.keys(d).some(function (k) { return /^(best|reached):/.test(k) || k === 'stats'; });
       $(root, '.tim-save').textContent = 'Tampermonkey opens and asks you to install it. Then reload this page.' + (has ? ' Your old Invasion scores and achievement progress will carry over.' : '');
@@ -15047,20 +15053,20 @@
   document.addEventListener('ta-inv-hello', function (e) {
     let d; try { d = JSON.parse(e.detail); } catch (er) { return; }
     if (d.proto !== 1) return;
-    const first = !inv.ok; inv.ok = true; inv.ver = d.ver; inv.old = verLess(d.ver, INV_WANT); LAND_APPS.invasion = 1; render(); invBadge();
+    const first = !inv.ok; inv.ok = true; inv.ver = d.ver; inv.old = verLess(d.ver, INV_WANT); if (!inv.old) LAND_APPS.invasion = 1; render(); invBadge();
     if (d.needLegacy) send('legacy', { data: invOld() });
-    if (first && isOpen && current === 'invasion') { setOrientation(wantsLand('invasion'), true); send('enter', { muted: muted, update: inv.old ? INV_WANT : '' }); }
+    if (first && isOpen && current === 'invasion' && !inv.old) { setOrientation(wantsLand('invasion'), true); send('enter', { muted: muted }); }
   });
   document.addEventListener('ta-inv-state', function (e) { try { inv.playing = !!JSON.parse(e.detail).playing; } catch (er) {} });
   document.addEventListener('ta-inv-summary', function (e) { try { inv.summary = JSON.parse(e.detail); store.set('invSummary', inv.summary); } catch (er) {} });
   render(); invBadge();
   document.dispatchEvent(new CustomEvent('ta-inv-ping'));
   games.invasion = {
-    enter: function () { if (inv.ok) send('enter', { muted: muted, update: inv.old ? INV_WANT : '' }); else render(); },
+    enter: function () { if (inv.ok && !inv.old) send('enter', { muted: muted }); else render(); },
     leave: function () { if (inv.ok) send('leave'); inv.playing = false; },
     onKey: function () { return false; },          // the game reads its own keys
     onEscape: function () { return inv.ok && inv.playing; },   // while playing, Escape pauses the game instead of closing the app
-    landscape: function () { return inv.ok; },
+    landscape: function () { return inv.ok && !inv.old; },
     mute: function (m) { if (inv.ok) send('mute', { muted: m }); },
     summary: function () { return inv.summary; },
     // Settings > Delete Invasion progress: the new game's saves and the old ones (control settings are kept).
