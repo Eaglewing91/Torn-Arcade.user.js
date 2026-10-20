@@ -4,7 +4,7 @@
 
 > ⚠️ **For use on Torn only.** Torn Arcade and its Art Packs are licensed solely for use on [torn.com](https://www.torn.com) through a userscript manager. Using, hosting or embedding any part of them anywhere else, or copying, modifying, redistributing or reusing them, is not allowed without written permission from the author. See [Licence](#-licence).
 
-Torn Arcade is a Tampermonkey userscript that adds a **Mobile Phone** link to Torn's sidebar. Click it and a phone opens on top of the page with seven games, a scores screen and settings. Everything runs inside the phone, and every image, sound and piece of music is built into the script or its two optional Art Packs.
+Torn Arcade is a Tampermonkey userscript that adds a **Mobile Phone** link to Torn's sidebar. Click it and a phone opens on top of the page with eight games, a scores screen and settings. Everything runs inside the phone, and every image, sound and piece of music is built into the script or its two optional Art Packs.
 
 ---
 
@@ -18,12 +18,12 @@ Torn Arcade is a Tampermonkey userscript that adds a **Mobile Phone** link to To
 Your progress is saved in Tampermonkey's storage on your device. Updating the script keeps your saves.
 
 ### 🎨 Optional Art Packs
-The illustrated Tornie and character artwork comes in two separate, optional scripts. This keeps Torn Arcade itself small (about 1.5 MB), so it works on phones and apps that only accept scripts up to 2 MB. Without them, Tornies uses its pixel-art versions.
+The illustrated Tornie and character artwork comes in two separate, optional scripts. This keeps Torn Arcade itself small (about 1.6 MB), so it works on phones and apps that only accept scripts up to 2 MB. Without them, Tornies uses its pixel-art versions.
 
 | Script | What it adds | Size | Install |
 |---|---|---|---|
 | **Torn Arcade - Tornies Art** | Illustrated artwork for all 179 Tornies | about 1.4 MB | [Install](https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade-Tornies-Art.user.js) |
-| **Torn Arcade - Character Art** | Illustrated portraits of the gym leaders, story characters, trainers and your outfits, plus the six Faction Defence maps, the phone theme wallpapers and the Anton's Egg Dash artwork | about 1.2 MB | [Install](https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade-Character-Art.user.js) |
+| **Torn Arcade - Character Art** | Illustrated portraits of the gym leaders, story characters, trainers and your outfits, plus the six Faction Defence maps, the phone theme wallpapers and the Anton's Egg Dash and Torn Territories artwork | about 1.3 MB | [Install](https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade-Character-Art.user.js) |
 
 Install them like the main script, then reload Torn. The **Tornies Art** and **Character Art** apps on the bottom row of the phone show whether each pack is installed, a before/after preview, a gallery of the art you've unlocked and an on/off switch. Each pack updates itself separately.
 
@@ -57,6 +57,8 @@ From version 2.15.2, Tampermonkey checks this link for new versions (about once 
 
 ![Anton's Egg Dash: Downtown, Casino Strip, The Docks and the Industrial Zone](screenshots/anton-egg-dash.png)
 
+![Torn Territories](screenshots/torn-territories.png)
+
 ---
 
 ## 🎮 The games
@@ -86,6 +88,14 @@ A tower defence game. Racket raiders walk the roads towards your **Faction HQ**:
 
 ### 🐰 Anton's Egg Dash
 An endless rooftop runner. Anton, in his pink bunny onesie, runs across the rooftops of Torn City with a sack of Easter eggs while the police chase him, and it keeps getting faster. Jump the gaps between buildings (hold to jump higher), jump the air-conditioning units and chimneys (or land on top and run across them), and slide under the washing lines or clear them with a held jump. Painted eggs score points, **gold eggs** are worth 10 eggs, and **rotten eggs** break your combo; grab eggs in a row for up to a **x5 combo**. Slip once and the police close in; slip again before they drop back and you're caught. Police drones sweep a searchlight over the roofs: slide to hide, or the heat meter fills up and you're busted. **Carrot Bursts** make Anton fast and unstoppable for a few seconds and carry him over gaps, and the **Bunny suit** saves you from one slip or fall. When a run ends you can spend eggs on a **second chance** (25, then 50, then 100 eggs). The run passes through Downtown, the Casino Strip, the Docks and the Industrial Zone. The **double jump** unlocks after 200 eggs in total, and there are 10 achievements and Bronze, Silver, Gold and Platinum medals. Anton and the backgrounds are custom illustrated artwork made specifically for Torn Arcade and come with the Character Art pack; without it, Anton and the city are drawn by the script.
+
+### 🏘️ Torn Territories
+A district-building board game. Torn City is split into districts (Brickworks, Timber Yards, Wheat Fields, Ore Mines and Cotton Mills), each with a number. Every turn the dice are rolled and every district with that number pays out **Brick, Wood, Wheat, Ore or Cotton** to the safehouses and HQs on its corners. Spend them on **roads**, **safehouses** (1 Respect) and **HQs** (2 Respect, double pay), or on **Favour cards**: Call in the Crew, Supply Run, Street Deal, Road Crew and the secret Councillor's Favour. Roll a 7 and the **police raid** moves: big hands lose half, the raided district stops paying and the roller robs a rival there. Trade with rival factions, or with the bank and the harbours. **Longest Road** and **Biggest Crew** are worth 2 Respect each, and the first faction to **10 Respect** takes over Torn City.
+
+- Play against up to three computer factions (Easy, Normal or Hard), pass-and-play with friends on one device, or watch the computer play.
+- Large map (37 districts) or Standard (19), with a new random board every game. Pick each faction's colour.
+- Zoom buttons and a **full screen** button for the big map. Games save as you go, so you can leave and carry on later.
+- Your wins and fastest win show in the Scores app. The illustrated districts come with the Character Art pack; without it, the districts are drawn by the script.
 
 ### 💣 Dirty Bombs
 A minesweeper-style puzzle. Clear the city block by block without setting off a dirty bomb. Numbers show how many bombs are hidden next to each block.
@@ -120,7 +130,7 @@ If you add a **Limited** access API key in Settings, the phone checks the offici
 |---|---|---|---|---|
 | Only locally | Nobody | Public amusement (games) and event notifications on the phone | Stored locally / Used only for automation (event checks while the phone is open). Never shared. | Limited (user → events). Optional: only needed for event notifications |
 
-- **Data Storage:** settings, theme, wallpaper, best scores, your Tornies save, Torn Invasion progress, Angry Bogies stars, Faction Defence progress (stars, War Chest and Armoury), Egg Dash eggs and achievements and your API key are kept in Tampermonkey storage on your device. Events are shown on the phone but never saved. With **Save maps on this device** on (Settings → Tornies), pictures of the Tornies maps the game has drawn are also kept in your browser's own storage for torn.com (IndexedDB, `torn-arcade-maps`). They are drawn by the script on your device, contain no personal data, are never uploaded or shared, and **Clear saved maps** deletes them.
+- **Data Storage:** settings, theme, wallpaper, best scores, your Tornies save, Torn Invasion progress, Angry Bogies stars, Faction Defence progress (stars, War Chest and Armoury), Egg Dash eggs and achievements, a Torn Territories game in progress and your API key are kept in Tampermonkey storage on your device. Events are shown on the phone but never saved. With **Save maps on this device** on (Settings → Tornies), pictures of the Tornies maps the game has drawn are also kept in your browser's own storage for torn.com (IndexedDB, `torn-arcade-maps`). They are drawn by the script on your device, contain no personal data, are never uploaded or shared, and **Clear saved maps** deletes them.
 - **Data Sharing:** nothing is sent anywhere except event requests to `api.torn.com`.
 - **Where it may be used:** Torn (torn.com) only. See [Licence](#-licence).
 - The same table is shown next to the API key box in Settings and at the top of the script.

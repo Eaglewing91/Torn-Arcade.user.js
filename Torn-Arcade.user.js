@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.34.0
-// @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with seven game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps and Egg Dash artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
+// @version      2.35.0
+// @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with eight game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
 // @license      All Rights Reserved - for use on Torn (torn.com) only; no copying, modifying, redistribution or use elsewhere (see LICENCE below)
@@ -82,7 +82,7 @@
  * HOW IT WORKS
  * - Adds a "Mobile Phone" link under Calendar in Torn's sidebar (Areas). It is
  *   a copy of Torn's own Calendar row, so it matches the other links. Clicking
- *   it opens a mobile phone on top of the page with seven game apps, plus Scores
+ *   it opens a mobile phone on top of the page with eight game apps, plus Scores
  *   and Settings. Everything runs inside that phone. On pages without the
  *   sidebar, a small floating "Phone" button is shown instead.
  * - On pages where you don't open the phone, only the small part that adds
@@ -132,7 +132,8 @@
  * - Data Storage:          Only locally (settings, wallpaper, best scores, your
  *                          Tornies save, Torn Invasion progress, Angry Bogies
  *                          stars, Faction Defence progress, Egg Dash
- *                          eggs and achievements and your API
+ *                          eggs and achievements, a Torn Territories game
+ *                          in progress and your API
  *                          key, in Tampermonkey storage). Events are only
  *                          shown, never saved. With "Save maps on this
  *                          device" on (Settings > Tornies), pictures of the
@@ -159,7 +160,7 @@
 
   /* ================= Starter =================
    * On every Torn page only this small part runs: it adds the "Mobile Phone" link (or a small floating
-   * button where there is no sidebar). The phone and all seven games are set up the first time you open it,
+   * button where there is no sidebar). The phone and all eight games are set up the first time you open it,
    * so pages where you never open the phone pay almost nothing. */
   let arcade = null;
   function startArcade() { if (!arcade) arcade = TA_MAIN(); return arcade; }
@@ -522,7 +523,8 @@
     { id: 'defence', name: 'Faction Defence', icon: '🛡️', bg: ['#7fb0ff', '#2a4f9a'], desc: 'Hold your Faction HQ against Racket raids. Build and upgrade defenders beside the road, survive 40 waves on 6 maps and spend your War Chest in the Armoury.' },
     { id: 'bombs',  name: 'Dirty Bombs',    icon: '☢️', bg: ['#ffe066', '#c99a10'] , desc: 'Clear the city block by block without setting off a dirty bomb. Numbers show how many bombs are nearby.' },
     { id: 'flappy', name: 'Flappy Torn',    icon: '🐦', bg: ['#6cc8ff', '#1f72c8'] , desc: 'Fly through the gaps in the pipes over Torn City. Every pipe you pass is a point.' },
-    { id: 'eggdash', name: 'Egg Dash', title: "Anton's Egg Dash", icon: '🐰', bg: ['#8a5ae8', '#2a1458'], desc: 'Run the rooftops of Torn City as Anton in his bunny onesie. Grab the Easter eggs, jump the gaps and stay ahead of the police. One endless run that keeps getting faster.' }
+    { id: 'eggdash', name: 'Egg Dash', title: "Anton's Egg Dash", icon: '🐰', bg: ['#8a5ae8', '#2a1458'], desc: 'Run the rooftops of Torn City as Anton in his bunny onesie. Grab the Easter eggs, jump the gaps and stay ahead of the police. One endless run that keeps getting faster.' },
+    { id: 'territories', name: 'Territories', title: 'Torn Territories', icon: '🏘️', bg: ['#4a8ad8', '#1a3a6a'], desc: 'A district-building board game. Build roads, safehouses and HQs across Torn City, trade with rival factions and dodge the police raids. First to 10 Respect wins. Play against the computer or pass-and-play.' }
   ];
   // Home-screen icons for the games: small WebP pictures stored as text in the script (nothing is downloaded).
   const APP_ART = {
@@ -531,6 +533,7 @@
     bogies: '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',
     defence: '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',
     bombs: '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',
+    territories: 'UklGRsYMAABXRUJQVlA4ILoMAACQMQCdASqAAIAAPmEmkEUkIiGXDbXEQAYEtQHYDmZffXIdJ715u9h/t/4y5lGhvOU5w85n+p9R/6Q9gD9T/1e63nmE/mfo6+lz+0eot/jOo89C/pU/7N/1fSqrFPO/8Jkzd62od2v/vv7p6I99Pxw1Dnc/hbMI9wr4jVE779Fn/B8H2gF+nPVk/y/IT9bewTuzaTWfAMAfCWT97sL7fCqb0/umE7lL1Uw/NmewoYIx/xsjnBAwBwkLNTVo0E6VJq0bAhRXj4VpvYkAOrK5vi3uRKXY7+nmVFxyn7L8Rv6Tcv+sV1kUtV0IJkFy7m/DJH9rXm6rI81uL7pv7nZlLRAA+1iDdDShkDurzuSHx1CeH8/tcaghc1mRQLgVS9vBqOqWjaHqYgI2h9xKrQhWGv5uSEZAM9sqt4tDS3Kf/kttcluJwQXMH1gB3v6aHXn8rQT42FVxuYwKFm5lZq9Jw8I0A+Ul3IAIuNVcdUCURiHtqh6NCWoVJz4m3AaYDuIf+RrRlJXCzIlFz9eUdsp6gr1yjys6JgAA/vnpN75AcBu3x9ps95/d7shvOJwjN48o+6VvOXgFghpN8rNIsKQisSJSvL9xAaOJrowwf/kOz/7EXqPZ76L+CwyMDtEjlY/Pa+K5l52k0gdQ8dwtQZ962dHV/ZAJ0hq93rCUblDH7aMZOKQOb9lvMjZbhnVRCzu43jdoi/3NYF3OhOXVVFmlhGEa4Vj39WZ+HO9o+TEHBfWHtgn9KmXmcNXBsuX6vRbaSHzSm04lL0mOoyP+QvH8y+R8adyeiaIoEDCfaIMTL1fiQP9Y60d50NrzhazY8lMZQzzqD+n3wgDCYpSf93Ei2FUJUwpGzwuMOl5rcqhInL7vTlXAkNxBaOxzVI6V7vulWuZKLqhlJjgN6GjxwuPsfPKRyklrQo1Hw7VHEPYfFavRxcaiZ7qGWD+vxuNxQXF2EQXerZslivH4Ya+oGz2+jhiBThVu7t1RAFud92+gZaeShPPUltsfDoBHbzbGpBtuezM1UHyg9hS9Hii3KuzLzd4x7Nc5tmMIh2TntgCd29BWC00w8vwHqXhxAzpsqiomMdGgw+AfESOHc+AuK38uGLYq4vz/H/N4Jms0u/TfJCsnVPJorGFDnu8csKjctnAc9ifeccjWA3rSPu0joXyf3+0IudNl/w/v4MSKpUVf1SHi89xDUeh7u6MAp0V+yHyLK+PdaAh7iR+Q887JoJO7fmERhvZWZJ0w+jUUCxRFnP1qrAvwFcuXuULaHqEivRoH0siRPTHSAvnya1jwehUG8y12+NOVFpessvV7TcazeLE+RU0OvUWIZ1cXhusvR2JTvHoRMfgoda4tYzqggB6gMbfGFDdTQ5UwgkG5ybJ9kSFX057Y5HTksepTCuIRTSwcuBqXmerJseuzRShelCxRmvasBkc40A8q0ABr8+Rg23RTyvH0erJ6l8USgGM2TspvcEXF7yzKNNRIjUZtxjKh2eHP5UfWYn4zBON2QqJ6FVeCBf4wX7mZfFhp8ZRztd2vnLynJdbOvRgrcvsGuz0i6zLYWSrwh58RrpXvQe1E8LMbbrWwXIO8cH/Sj/QPNCg2F7YE9waTq1hGv5mNrOS1mYThkQ2plHHn3pZZfSiknfK7lRaVPkSwRQ+uozaBpbMEIA+Wq+QJ2f7Kc+Yg2u5zPtFzfgZIX2T7U8Ak6if9WmGPOOo4dTG82czgE2BLk6RlhM2BhITWtgasMlHxr2/TMNsijtnbCvfHqALFVVihm7X08uH++IBrPRLX0grsNn8dnoZ3KFjU1qSGid7OAjB8DoUtaBJ79RFxcAMXMcBbSCXsJoROfyrHV0iD1QRoQtqT8Nlni7DViC2PFGYarYA+kOK5MOSwOSQ6Y/qA1o2rYtoy7VaNbhDNi9bI2Hwt6rv6lprdf+5NB6axyQFt1yzud3p/IhfTYZzWRKfy8cMbmXfHNXU1alKkWDJEyfnmVJRKJdT976KB/j5fkrW6PTmiNxuf6yBIS0gTqS8DkZw+l1Hur2NDhTNOWzjc5Oknq4m8N9J3i9WXGPAXv4loKz2QCEvaHRcxCqhTxHitzrZEFcDVgCG7pKxr8ZCapSXrDM8p8z/SfuubhRgOIkaYVkM6Ei52gynFtWlSX9FAMEOWU5UUg+GmLaiIP9rKqUKUpW7YKF2CB/cDEnBRq9TshVJjRVedIulMZM012iM9btqN/EfAimjpa/fNaRqn1jM6BHhx/Xzpl8c3lOm/C4DKDAqjbd4wQArZz00PPMadVXh6T4sQIoRP04j02NGjNkj/gkL5N/pa816ZWCtJixTxZ4njIMUAvoGGtaHT5sw8IRLr2C/TFWo8/FZsGF9/f3zLZqA1SaSLVZvABzdtR0mFtHmoQlyFjsbiEKb4tDQAvmb6HX0rv4LF6WccK6BHcTmD/aNRd/kNqB8n4nDLqsNU3GlpW4MXG6/bc4mAVJgvaVt7k6b2ROVinCtyNBJ5MaF9cLwLndR6cQC6plwpjYqJbfROO3ikgc8evN8wgu1WLACGXmqFZyItwLlzz6lJwKxGGogCcufpF9YWYzvuAyZK+4TBm5m5DSF7WJmnjynyBECruvH4h9FzVDCPVRXUw8BGmtwyr3zymx1tgbc4ifufxMhOHpkXltUmnYY24CvgscE/NZ8PVGZ12LJTZYuMwd9HTM4qbwhdXVLR4jlOsTYu0mzVJnd+XKu96nz0CVmb28SQPE4RD+jT75WeBc5I8oOKwOzq3u20cncnYl0FLgTCiPl+QTR6DZUTJtdsn5AIXCJhM4CWjEI1Tze7bZJ9bLyzseIFP009ufLRBO55Yd0MCz3Kzag+Zqkwm9JLNFDA4Ojjs691YrTxNt0Qmj9Wt0F+tF8sAnDomtRZn9kHqQ5R8hBqWoze90d+D3sx3jqGzGxj1uOxl+XYfBpuUX3j1RLzXPc6QCiXohF37uSr7dR80wSKgLqLmqRJi2H/LIMZCZ1ottx1s5gxofSWkgzhCpoyKuHozuiShqv+vu5Wj9cNG9YTXxXbS/5/yRsnFS3bdx4KyV+uHmOmkPqM9zXBpZGDd9EE6pKFUKs7HPq2umQIkPGhrtCFTy3/VyoNBonP3hyfC/lSCHhUjIkbhjRV0ZFQX0RoIf+QBaLVCRKg6+PIv2mqdU20rDjem8sKsBg/Mnfn//XA0Z3ftodAWw7KwtWtEPXIXd8AglA76BpGHPvf3Mqliee/n6PPRrwirOeM+rY7jg7nPb6RFtsrUBheDnsapZY3BIxMR3sv4Ia2aknlp2Cve+OJ2j14UEVQ/yZM3ydaxQZb6GqDipSVDYMrf2RDXq4LW/1fRaYDPLLfxiHzMMI38+yzmYigaW14ifutCBswpQfMe1yh3H3Cn8429kj4jrJKegkH4KvTVtyRDkvr/bwXPBaYaLzd9WdvXc46Wsl+lDqajlREO8EXCQ8/ZLqPR+PJ2tO9nUrqo/V47PQi6MBN9lVbwplC6Q712I6tEhS8eaaFuTR//8MaoLpFLTUoIa7zXxkP1+wQ4VS5629pZ5dWY+dh7Q5gXlGVdBAWO1V/YcAk7aTQBBCjYBXvXrWFSsXtVBKSFjU6lxIthTzTcv5lPlpjxHi3YLFzPnJHbiMd/mAi9GyMcasmo9LVZ7gT7OQIH6BiAA6dB6+6s+s5u0yEyfY6yek+F3jeBS7oTqnHyayfgokxjAgkbJ4YxK04m73ewX9eW06heCtFgRpNGh0UuXSfHgMfSegPw3RZk34yttW5CXIuJbJeInXLRskEwL0u8TzmPdjzby5F2gHsK8g3GtJwW4XogcvtCGCFJSIfKXl3OgKg4DOiIt1e4LcEW2EmnrfNwRZSNaaOuyJYPeGS05J0zirgm2T2m0t1i/XZu+rPpS9buZr28B7nSExH+AGZXj+jzr9xqgMDvwdv8Ks872lL850Gx9ezcm6IoZw6Q8Abw8E/3h0fl2CF8pKTv4Ro+e4og4KvHbY1WARqqhVtxgJsq3CMNv5Ur9Fgj0ZNXg68ho+DD+ULrbW2hIdgW9oFpviJVejnFSrs3VqEVcm7UduVKtEucTLtZHMVL2aGe62ZbOvSbp90xk1bWt7n38cIleHW54mHHGP00+HfG60yjt5OUgA2BLldHWWUGt5gSgId3GLrb1d1f5/To6+PPuALM0vJb36+EsAFB5iQ004+4U1r77iqzaPlm3YhxZ8wk/JY16stWzygLMMytaQzzS+VIbABcpZWOUXcGKiCiHPtmzSuC0YCHf2yLlc9phFB4wHtVTjsEYun91YsNCcFp/5ROl05A0oEMjz+D7ABmlB7tZ2w4g5Hq9SdctEy17HFrI6K/78BA0ANMAAAAAA=',
     eggdash: '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',
     flappy: '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'
   };
@@ -541,11 +544,11 @@
   // The optional Art Pack scripts, as apps on the bottom row of the home screen (see renderArt).
   const ART_APPS = [
     { id: 'artT', pack: 'tornies', name: 'Tornies Art', title: 'Tornies Art Pack', icon: '🎨', bg: ['#7ad8a8', '#1f7a5a'], size: '1.4 MB', what: 'the illustrated artwork for all 179 Tornies' },
-    { id: 'artC', pack: 'chars', name: 'Character Art', title: 'Character Art Pack', icon: '🖌️', bg: ['#c39bff', '#5a3ab8'], size: '1.2 MB', what: 'illustrated portraits for the gym leaders, story characters, trainers and your outfits, plus the Faction Defence maps and the Egg Dash artwork' }
+    { id: 'artC', pack: 'chars', name: 'Character Art', title: 'Character Art Pack', icon: '🖌️', bg: ['#c39bff', '#5a3ab8'], size: '1.3 MB', what: 'illustrated portraits for the gym leaders, story characters, trainers and your outfits, plus the Faction Defence maps and the Egg Dash and Torn Territories artwork' }
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gift codes', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
-  const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.34.0';
+  const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
+  const VERSION = '2.35.0';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -778,7 +781,7 @@
           '<span class="ta-sicons"><span class="ta-bars"><i style="height:4px"></i><i style="height:6px"></i><i style="height:8.5px"></i><i style="height:11px"></i></span><span>TornTel</span><span class="ta-batt"><i></i></span></span></div>' +
         '<div class="ta-home">' +
           '<div class="ta-widget"><button type="button" class="ta-lock" data-act="close" title="Lock phone (Esc)">🔒</button><b class="ta-wclock">00:00</b><span class="ta-wdate"></span><em>Torn City Time</em></div>' +
-          '<div class="ta-note" hidden><span class="ta-noteicon">👋</span><div class="ta-notetext"><b>Welcome to Torn Arcade v' + VERSION + '!</b><small>Seven games in your pocket. Start with Tornies, and grab the free Art Packs on the bottom row for illustrated artwork. Bugs or ideas? Message Eaglewing [571041].</small></div><button type="button" class="ta-notex" title="Dismiss">✕</button></div>' +
+          '<div class="ta-note" hidden><span class="ta-noteicon">👋</span><div class="ta-notetext"><b>Welcome to Torn Arcade v' + VERSION + '!</b><small>Eight games in your pocket. Start with Tornies, and grab the free Art Packs on the bottom row for illustrated artwork. Bugs or ideas? Message Eaglewing [571041].</small></div><button type="button" class="ta-notex" title="Dismiss">✕</button></div>' +
           '<div class="ta-grid">' + GAMES.map(appButton).join('') + '</div>' +
           '<div class="ta-grid ta-artrow">' + ART_APPS.map(appButton).join('') + '</div>' +
           '<div class="ta-dock">' + SYS_APPS.map(function (a) { return (a.id === 'settings' ? appButton(DEV_APP).replace('<button ', '<button hidden ') : '') + appButton(a); }).join('') + '</div>' +
@@ -986,6 +989,7 @@
     bombs:  function (k, v) { return [cap(k[1]), v + 's']; },
     flappy: function (k, v) { return [cap(k[1]), v]; },
     eggdash: function (k, v) { return ['Endless', Number(v).toLocaleString('en-GB')]; },
+    territories: function (k, v) { return k[1] === 'wins' ? ['Wins', v] : ['Fastest win', v + ' turns']; },
     bogies: function (k, v) { return ['Level ' + k[1], Number(v).toLocaleString('en-GB')]; },
     defence: function (k, v) { return [['Westgate', 'The Docks', 'Midtown', 'Casino Strip', 'Industrial Zone', 'Racket HQ'][k[1] - 1] || 'Map ' + k[1], 'Wave ' + v]; }
   };
@@ -8106,17 +8110,17 @@
      The illustrated Tornie and character artwork lives in two separate, optional userscripts, so the main script
      stays small (some phones and apps only accept scripts up to 2 MB):
        "Torn Arcade - Tornies Art"    (pack 'tornies': PIX[1..179])
-       "Torn Arcade - Character Art"  (pack 'chars':   PORTRAIT[key], plus the Faction Defence maps 'fd…', theme wallpapers 'wp…' and Egg Dash art 'ed…')
+       "Torn Arcade - Character Art"  (pack 'chars':   PORTRAIT[key], plus the Faction Defence maps 'fd…', theme wallpapers 'wp…', Egg Dash art 'ed…' and Torn Territories districts 'tt…')
      How they link: userscripts can't see each other's variables, so they talk with browser events on the Torn
      page itself. This script fires 'ta-art-request'; each pack answers (and also announces itself when it loads)
      with a 'ta-art-pack' event whose detail is a JSON string { pack, ver, items }. Nothing is downloaded and no
      request is made. Every item is checked before it is used: only known names, and only base64 WebP images of a
      sensible size. Anything else is ignored. */
-  const ART_WANT = { tornies: 1, chars: 8 };   // newest pack versions this script knows about
+  const ART_WANT = { tornies: 1, chars: 9 };   // newest pack versions this script knows about
   const ARTP = {};                              // packs received: { ver, n }
   const ART_KEYS = {
     tornies: function (k) { return /^\d{1,3}$/.test(k) && +k >= 1 && +k <= DEX_SIZE; },
-    chars: function (k) { return /^[a-z0-9]{2,16}$/.test(k) && (k in PAL || /^outfit[0-3]$/.test(k) || /^fd(westgate|docks|midtown|casino|industrial|hideout)$/.test(k) || /^wp(neon|crimson|casino|jungle|riviera)$/.test(k) || /^ed(head|body|arm|leg|egg|gold|rotten|carrot|drone|ac|sack|bg(downtown|casino|docks|industrial))$/.test(k)); }
+    chars: function (k) { return /^[a-z0-9]{2,16}$/.test(k) && (k in PAL || /^outfit[0-3]$/.test(k) || /^fd(westgate|docks|midtown|casino|industrial|hideout)$/.test(k) || /^wp(neon|crimson|casino|jungle|riviera)$/.test(k) || /^ed(head|body|arm|leg|egg|gold|rotten|carrot|drone|ac|sack|bg(downtown|casino|docks|industrial))$/.test(k) || /^tt(brick|wood|wheat|ore|cotton|none)$/.test(k)); }
   };
   const ART_B64 = /^UklGR[A-Za-z0-9+/]+={0,2}$/;   // base64 of a RIFF/WebP file
   function artOn(pack) { return store.get('art_' + pack, true) !== false; }
@@ -8138,13 +8142,13 @@
     let n = 0; const good = {};
     Object.keys(d.items).forEach(function (k) {
       const v = d.items[k];
-      if (ok(k) && typeof v === 'string' && v.length < (/^(fd|wp|ed)/.test(k) ? 130000 : 80000) && ART_B64.test(v)) { good[k] = v; n++; }
+      if (ok(k) && typeof v === 'string' && v.length < (/^(fd|wp|ed|tt)/.test(k) ? 130000 : 80000) && ART_B64.test(v)) { good[k] = v; n++; }
     });
     ARTP[pack] = { ver: Math.floor(d.ver), n: n, on: artOn(pack) };
     if (artOn(pack)) {
       artClear(pack);
       const t = artTable(pack); Object.keys(good).forEach(function (k) { t[k] = good[k]; });
-      if (pack === 'chars') { const ks = Object.keys(good).filter(function (k) { return !/^(fd|wp|ed)/.test(k); }); let i = 0; (function warm() { for (let j = 0; j < 6 && i < ks.length; j++, i++) portWant(ks[i]); if (i < ks.length) setTimeout(warm, 30); })(); }
+      if (pack === 'chars') { const ks = Object.keys(good).filter(function (k) { return !/^(fd|wp|ed|tt)/.test(k); }); let i = 0; (function warm() { for (let j = 0; j < 6 && i < ks.length; j++, i++) portWant(ks[i]); if (i < ks.length) setTimeout(warm, 30); })(); }
       else [1, 4, 7].forEach(pixWant);   // the title screen starters
     }
     if (artNotify) artNotify();
@@ -8161,7 +8165,7 @@
   };
   const artApi = {
     url: ART_URL, want: ART_WANT,
-    get: function (k) { return artOn('chars') && /^(fd|wp|ed)/.test(k) ? PORTRAIT[k] || null : null; },   // Faction Defence maps, theme wallpapers and Egg Dash art
+    get: function (k) { return artOn('chars') && /^(fd|wp|ed|tt)/.test(k) ? PORTRAIT[k] || null : null; },   // Faction Defence maps, theme wallpapers, Egg Dash and Torn Territories art
     info: function (pack) { const p = ARTP[pack]; return { installed: !!p, ver: p ? p.ver : 0, n: p ? p.n : 0, on: artOn(pack), old: !!p && p.ver < ART_WANT[pack] }; },
     setOn: function (pack, on) {
       store.set('art_' + pack, !!on);
@@ -8178,7 +8182,7 @@
         return out;
       }
       const met = (d && d.metArt) || {};
-      return Object.keys(PORTRAIT).filter(function (k) { return !/^(outfit|fd|wp|ed)/.test(k); }).sort().map(function (k) {
+      return Object.keys(PORTRAIT).filter(function (k) { return !/^(outfit|fd|wp|ed|tt)/.test(k); }).sort().map(function (k) {
         const nm = ART_LABEL[k] || k.charAt(0).toUpperCase() + k.slice(1);
         return { src: 'data:image/webp;base64,' + PORTRAIT[k], name: met[k] ? nm : '???', known: !!met[k] };
       });
@@ -18132,6 +18136,924 @@
       },
       wipe: function () { Object.assign(save, { eggs: 0, gold: 0, runs: 0, drones: 0, carrots: 0, ach: {}, far: 0 }); persist(); },
       summary: function () { return { eggs: save.eggs, far: save.far || 0, ach: achCount(), all: ACH.length }; }
+    };
+  })();
+
+  /* ================= Torn Territories (district-building board game) =================
+     Build roads, safehouses and HQs across a map of Torn City districts. Districts pay out Brick, Wood, Wheat, Ore
+     and Cotton when their number is rolled. First faction to 10 Respect wins. You against computer factions, or
+     pass-and-play on one device. Illustrated districts come from the Character Art pack (keys 'tt…'); without it
+     the districts are drawn by the script. Everything runs inside the phone: no requests, nothing on Torn's page. */
+  (function () {
+    const RES = ['brick', 'wood', 'wheat', 'ore', 'cotton'];
+    const RN = { brick: 'Brick', wood: 'Wood', wheat: 'Wheat', ore: 'Ore', cotton: 'Cotton' };
+    const DIST = {
+      brick: { name: 'Brickworks', fill: ['#d0603e', '#8a3420'] },
+      wood: { name: 'Timber Yard', fill: ['#4f9a4a', '#25602a'] },
+      wheat: { name: 'Wheat Fields', fill: ['#efc64a', '#b0861a'] },
+      ore: { name: 'Ore Mine', fill: ['#7f8aa0', '#434b5e'] },
+      cotton: { name: 'Cotton Mill', fill: ['#cdbfe6', '#7d6ea8'] },
+      none: { name: 'Racket HQ', fill: ['#4a4458', '#2a2636'] }
+    };
+    const COST = { route: { brick: 1, wood: 1 }, safe: { brick: 1, wood: 1, wheat: 1, cotton: 1 }, hq: { wheat: 2, ore: 3 }, fav: { wheat: 1, ore: 1, cotton: 1 } };
+    const FAV = {
+      crew: { name: 'Call in the Crew', text: 'Send the police raid to any district and take a card from a rival there.' },
+      supply: { name: 'Supply Run', text: 'Take any 2 cards from the bank.' },
+      deal: { name: 'Street Deal', text: 'Name a resource. Every rival hands over all they have of it.' },
+      roads: { name: 'Road Crew', text: 'Claim 2 roads for free.' },
+      respect: { name: 'Councillor\'s Favour', text: '+1 Respect, kept secret until you win.' }
+    };
+    const COLOURS = [['#3fd17a', 'Green'], ['#ff4a5a', 'Red'], ['#ffb02e', 'Orange'], ['#5aa8ff', 'Blue'], ['#b07aff', 'Purple'], ['#ff7ac8', 'Pink'], ['#2fd0c0', 'Teal'], ['#f2f2f2', 'White']];
+    const NAMES = ['Your faction', 'The Racket', 'Southside Crew', 'Neon Syndicate'];
+    const MAPS = {
+      standard: { rows: [3, 4, 5, 4, 3], tiles: { brick: 3, wood: 4, wheat: 4, ore: 3, cotton: 4, none: 1 },
+        nums: [2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12], ports: ['any', 'any', 'any', 'any', 'brick', 'wood', 'wheat', 'ore', 'cotton'] },
+      large: { rows: [4, 5, 6, 7, 6, 5, 4], tiles: { brick: 6, wood: 8, wheat: 8, ore: 6, cotton: 7, none: 2 },
+        nums: [2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 8, 8, 8, 8, 9, 9, 9, 9, 10, 10, 10, 10, 11, 11, 11, 12, 12], ports: ['any', 'any', 'any', 'any', 'any', 'any', 'brick', 'wood', 'wheat', 'ore', 'cotton', 'wood', 'wheat'] }
+    };
+    const R = 58, CX = 380, CY = 290, NS = 'http://www.w3.org/2000/svg', FONT = 'system-ui,Arial,sans-serif';
+    const ICON = {
+      brick: '<rect x="3" y="6" width="11" height="7" rx="1" fill="#e2704a"/><rect x="16" y="6" width="11" height="7" rx="1" fill="#c75a36"/><rect x="9" y="15" width="11" height="7" rx="1" fill="#d6643f"/><rect x="3" y="24" width="11" height="3" rx="1" fill="#a8452a"/><rect x="16" y="24" width="11" height="3" rx="1" fill="#b84e2f"/>',
+      wood: '<rect x="3" y="15" width="24" height="8" rx="4" fill="#9a6232"/><circle cx="25" cy="19" r="4" fill="#d8a868"/><circle cx="25" cy="19" r="1.6" fill="#9a6232"/><rect x="6" y="6" width="20" height="8" rx="4" fill="#b07440"/><circle cx="24" cy="10" r="4" fill="#e4b878"/><circle cx="24" cy="10" r="1.6" fill="#b07440"/>',
+      wheat: '<path d="M15 28V8" stroke="#c8962a" stroke-width="2"/><ellipse cx="12" cy="10" rx="2.5" ry="4" fill="#f0c040" transform="rotate(-25 12 10)"/><ellipse cx="18" cy="10" rx="2.5" ry="4" fill="#f0c040" transform="rotate(25 18 10)"/><ellipse cx="12" cy="17" rx="2.5" ry="4" fill="#e8b830" transform="rotate(-25 12 17)"/><ellipse cx="18" cy="17" rx="2.5" ry="4" fill="#e8b830" transform="rotate(25 18 17)"/><ellipse cx="15" cy="5" rx="2.2" ry="3.5" fill="#f6cc50"/>',
+      ore: '<path d="M4 24l5-11l7-4l8 5l3 10z" fill="#7f8aa0"/><path d="M9 13l7-4l8 5l-7 3z" fill="#a8b2c6"/><path d="M12 19l3-2l3 3l-3 2z" fill="#ffd060"/><path d="M19 21l2-1l2 2l-2 1z" fill="#ffd060"/>',
+      cotton: '<path d="M15 26v-8" stroke="#7a5a3a" stroke-width="2"/><path d="M9 21l6 3l6-3" fill="none" stroke="#6a8a3a" stroke-width="2"/><circle cx="11" cy="12" r="5" fill="#fff"/><circle cx="19" cy="12" r="5" fill="#f4f0fa"/><circle cx="15" cy="8" r="5" fill="#fff"/><circle cx="15" cy="15" r="4.5" fill="#ece6f6"/>'
+    };
+    function icon(r) { return '<svg viewBox="0 0 30 30" aria-hidden="true">' + ICON[r] + '</svg>'; }
+
+    GM_addStyle([
+      '.ta-panel[data-game="territories"] .ta-bar,.ta-panel[data-game="territories"] .ta-stats,.ta-panel[data-game="territories"] .ta-help{display:none}',
+      '.ta-land .ta-panel[data-game="territories"].ta-on{grid-template-columns:minmax(0,1fr)}',
+      '.ta-land .ta-panel[data-game="territories"] .ta-stage{grid-column:1}',
+      '.ta-panel[data-game="territories"] .ta-stage{padding:6px;align-items:stretch;justify-content:stretch;background:#100c1f}',
+      '.ta-tt{position:absolute;inset:6px;--tp:#1a1530;--tp2:#231c40;--tl:#342b5c;--tm:#a59bc8;--tg:#ffcf4a;color:#f1ecff;font-size:13px;line-height:1.3}',
+      '.ta-tt [hidden]{display:none!important}',
+      '.ta-tt button{appearance:none;font:inherit;font-weight:700;font-size:13px;color:#f1ecff;background:var(--tp2);border:1px solid var(--tl);border-radius:9px;padding:6px 8px;margin:0;cursor:pointer;text-align:left;display:grid;gap:1px;line-height:1.2}',
+      '.ta-tt button:hover:not(:disabled){border-color:var(--tm)}',
+      '.ta-tt button:disabled{opacity:.38;cursor:default}',
+      '.ta-tt button.ta-tt-on{border-color:var(--tg);background:#3a2f12}',
+      '.ta-tt button small{font-size:11px;color:var(--tm);font-weight:600}',
+      '.ta-tt button.ta-tt-sm{padding:4px 9px;text-align:center}',
+      '.ta-tt .ta-tt-go{background:var(--tg);color:#1a1530;border-color:var(--tg);text-align:center;font-size:14px}',
+      '.ta-tt select{font:inherit;font-size:12.5px;font-weight:600;background:var(--tp2);color:#f1ecff;border:1px solid var(--tl);border-radius:7px;padding:3px 4px;margin:0;height:auto}',
+      '.ta-tt-game{position:absolute;inset:0;display:grid;grid-template-columns:minmax(0,1fr) 272px;gap:8px}',
+      '.ta-tt.ta-tt-narrow .ta-tt-game{grid-template-columns:1fr;grid-template-rows:minmax(0,1.1fr) minmax(0,1fr)}',
+      '.ta-tt-board{position:relative;min-width:0;min-height:0;border-radius:12px;border:1px solid var(--tl);overflow:hidden;background:radial-gradient(ellipse at 50% 50%,#1d3a5c 0%,#142a46 45%,#0c1830 75%)}',
+      '.ta-tt-scroll{position:absolute;inset:0;overflow:auto;overscroll-behavior:contain}',
+      '.ta-tt-scroll svg{display:block;width:100%;height:100%;touch-action:manipulation}',
+      '.ta-tt-zoom{display:flex;gap:4px;pointer-events:auto}',
+      '.ta-tt.ta-tt-full{position:fixed;inset:0;z-index:5;padding:10px max(10px,env(safe-area-inset-right,0px)) 10px max(10px,env(safe-area-inset-left,0px));background:#100c1f}',
+      '.ta-tt.ta-tt-full .ta-tt-title,.ta-tt.ta-tt-full .ta-tt-game{inset:10px}',
+      '.ta-tt.ta-tt-full .ta-tt-game{grid-template-columns:minmax(0,1fr) 330px}',
+      '.ta-tt.ta-tt-full.ta-tt-narrow .ta-tt-game{grid-template-columns:1fr}',
+      '.ta-tt .ta-tt-zoom button{width:26px;height:26px;padding:0;text-align:center;place-items:center;font-size:16px;line-height:1}',
+      '.ta-tt-banner{position:absolute;left:8px;top:8px;right:8px;display:flex;justify-content:space-between;gap:6px;pointer-events:none}',
+      '.ta-tt-prompt{background:rgba(16,12,31,.86);border:1px solid var(--tl);border-radius:8px;padding:4px 9px;font-weight:700;max-width:74%}',
+      '.ta-tt-dice{display:flex;gap:4px}',
+      '.ta-tt-die{width:26px;height:26px;border-radius:6px;background:#f6f1ff;color:#1a1530;display:grid;place-items:center;font-weight:800;font-size:15px;box-shadow:0 2px 0 #9a8fbf}',
+      '.ta-tt-die.ta-tt-roll{animation:ta-tt-shake .35s ease}',
+      '@keyframes ta-tt-shake{30%{transform:rotate(-14deg) scale(1.08)}60%{transform:rotate(10deg)}}',
+      '.ta-tt-side{min-width:0;min-height:0;overflow-y:auto;display:grid;gap:8px;align-content:start;padding-right:2px}',
+      '.ta-tt-card{background:var(--tp);border:1px solid var(--tl);border-radius:11px;padding:8px;display:grid;gap:7px}',
+      '.ta-tt-card h4{margin:0;font-size:11px;letter-spacing:.08em;color:var(--tm);font-weight:800}',
+      '.ta-tt-me{display:flex;align-items:center;justify-content:space-between;gap:6px;font-weight:800}',
+      '.ta-tt-me strong{font-size:18px;color:var(--tg);margin-left:3px}',
+      '.ta-tt-me small{color:var(--tm);font-weight:600}',
+      '.ta-tt-hand{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}',
+      '.ta-tt-res{background:var(--tp2);border-radius:8px;padding:3px 1px;text-align:center;border:1px solid transparent;transition:border-color .3s,transform .3s}',
+      '.ta-tt-res.ta-tt-got{border-color:var(--tg);transform:translateY(-2px)}',
+      '.ta-tt-res svg{width:22px;height:22px;display:block;margin:0 auto}',
+      '.ta-tt-res b{display:block;font-size:15px;font-variant-numeric:tabular-nums}',
+      '.ta-tt-res small{color:var(--tm);font-size:10.5px}',
+      '.ta-tt-favs{display:grid;gap:4px}',
+      '.ta-tt-fav{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;background:var(--tp2);border-radius:8px;padding:5px 7px}',
+      '.ta-tt-fav small{display:block;color:var(--tm);font-size:11px}',
+      '.ta-tt-empty{color:var(--tm);font-size:12px}',
+      '.ta-tt-btns{display:grid;grid-template-columns:1fr 1fr;gap:5px}',
+      '.ta-tt-row{display:flex;flex-wrap:wrap;align-items:center;gap:4px;color:var(--tm);font-size:12px}',
+      '.ta-tt-pls{display:grid;gap:5px}',
+      '.ta-tt-pl{display:grid;grid-template-columns:10px 1fr auto;gap:1px 6px;align-items:center}',
+      '.ta-tt-pl i{width:10px;height:10px;border-radius:3px;display:block}',
+      '.ta-tt-pl .ta-tt-r{font-weight:800;color:var(--tg);font-size:15px;font-variant-numeric:tabular-nums}',
+      '.ta-tt-pl .ta-tt-meta{grid-column:2/4;color:var(--tm);font-size:11px}',
+      '.ta-tt-pl.ta-tt-turn>span:nth-child(2){color:var(--tg)}',
+      '.ta-tt-badge{display:inline-block;background:#3a2f12;color:var(--tg);border-radius:5px;padding:0 4px;margin-left:4px;font-size:10.5px;font-weight:800}',
+      '.ta-tt-log{color:var(--tm);font-size:11.5px;max-height:96px;overflow-y:auto;display:grid;gap:2px}',
+      '.ta-tt-log p{margin:0}',
+      '.ta-tt-log p:first-child{color:#f1ecff}',
+      '.ta-tt-dlg{position:absolute;inset:0;z-index:4;background:rgba(10,8,20,.74);display:grid;place-items:center;padding:10px;border-radius:12px}',
+      '.ta-tt-box{background:var(--tp);border:1px solid var(--tl);border-radius:13px;padding:12px;display:grid;gap:9px;width:min(440px,100%);max-height:100%;overflow-y:auto}',
+      '.ta-tt-box h3{margin:0;font-size:16px;font-weight:900;color:var(--tg);letter-spacing:.02em}',
+      '.ta-tt-box p{margin:0;color:var(--tm)}',
+      '.ta-tt-box p b{color:#f1ecff}',
+      '.ta-tt-steps{display:grid;gap:4px}',
+      '.ta-tt-step{display:grid;grid-template-columns:22px 1fr auto 22px auto;gap:5px;align-items:center}',
+      '.ta-tt-step svg{width:20px;height:20px}',
+      '.ta-tt-step b{text-align:center;font-variant-numeric:tabular-nums}',
+      '.ta-tt-step span span{color:var(--tm);font-size:11.5px}',
+      '.ta-tt-cols{display:grid;grid-template-columns:1fr 1fr;gap:10px}',
+      '.ta-tt-picks{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}',
+      '.ta-tt-picks button{text-align:center;justify-items:center;font-size:11.5px;padding:4px 1px}',
+      '.ta-tt-picks svg{width:22px;height:22px}',
+      '.ta-tt-ans{display:grid;grid-template-columns:10px 1fr auto;gap:6px;align-items:center}',
+      '.ta-tt-ans i{width:10px;height:10px;border-radius:3px}',
+      '.ta-tt-title{position:absolute;inset:0;overflow-y:auto;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:8px;align-content:start}',
+      '.ta-tt.ta-tt-narrow .ta-tt-title{grid-template-columns:1fr}',
+      '.ta-tt-title h2{margin:0;font-size:22px;font-weight:900;letter-spacing:.02em}',
+      '.ta-tt-title h2 span{color:var(--tg)}',
+      '.ta-tt-seat{display:grid;grid-template-columns:12px 1fr auto auto;gap:5px;align-items:center}',
+      '.ta-tt-seat i{width:12px;height:12px;border-radius:3px}',
+      '.ta-tt-rules p{margin:0;font-size:12.5px}',
+      '.ta-tt-rules b{color:var(--tg)}',
+      '.ta-tt-costs{display:grid;grid-template-columns:auto 1fr;gap:3px 9px;font-size:12px}',
+      '.ta-tt-costs span:nth-child(odd){font-weight:800;white-space:nowrap}',
+      '.ta-tt-costs span:nth-child(even){color:var(--tm)}'
+    ].join('\n'));
+
+    const panel = makePanel('territories', 'Torn Territories', 'Build roads, safehouses and HQs across Torn City. First to 10 Respect wins.', '', [],
+      '<div class="ta-tt">' +
+      '<div class="ta-tt-title" data-tt="title">' +
+        '<div class="ta-tt-card"><h2>TORN <span>TERRITORIES</span></h2><h4>NEW GAME</h4><div class="ta-tt-pls" data-tt="seats"></div>' +
+          '<div class="ta-tt-row"><span>Map</span><select data-tt="size" aria-label="Map size"><option value="large">Large: 37 districts</option><option value="standard">Standard: 19 districts</option></select></div>' +
+          '<div class="ta-tt-row"><span>Rivals</span><select data-tt="diff" aria-label="Rival difficulty"><option value="easy">Easy</option><option value="normal">Normal</option><option value="hard">Hard</option></select><span>Speed</span><select data-tt="speed" aria-label="Rival speed"><option value="750">Normal</option><option value="300">Fast</option><option value="40">Instant</option></select></div>' +
+          '<button class="ta-tt-sm" data-tt="full2">Play full screen</button><button class="ta-tt-go" data-tt="start">Start a new game</button><button class="ta-tt-sm" data-tt="cont" hidden>Continue your saved game</button>' +
+          '<div class="ta-tt-empty" data-tt="record"></div>' +
+          '<div class="ta-tt-empty">More than one Human seat plays pass-and-play on this device. All Computer seats lets you watch.</div></div>' +
+        '<div class="ta-tt-card ta-tt-rules"><h4>HOW TO PLAY</h4>' +
+          '<p>Every turn starts with a roll of the dice. Every district with that number pays out to the buildings on its corners: <b>1 card</b> for a safehouse, <b>2</b> for an HQ.</p>' +
+          '<div class="ta-tt-costs"><span>Road</span><span>Brick + Wood. Roads link up your territory.</span><span>Safehouse</span><span>Brick + Wood + Wheat + Cotton. 1 Respect. Goes on one of your roads, two corners from any other building.</span><span>HQ</span><span>2 Wheat + 3 Ore. Upgrades a safehouse: 2 Respect, double pay.</span><span>Favour card</span><span>Wheat + Ore + Cotton. Crew, Supply Run, Street Deal, Road Crew or a secret +1 Respect.</span></div>' +
+          '<p>Roll a <b>7</b> and the <b>police raid</b> moves: anyone holding more than 7 cards hands over half, the raided district stops paying, and the roller takes a card from a rival there.</p>' +
+          '<p>Trade with rivals, or with the bank at 4 for 1. Harbours give 3 for 1, or 2 for 1 in one resource. <b>Longest Road</b> (5+) and <b>Biggest Crew</b> (3+ Crew cards played) are worth 2 Respect each. First to <b>10 Respect</b> on their own turn wins.</p></div>' +
+      '</div>' +
+      '<div class="ta-tt-game" data-tt="game" hidden>' +
+        '<div class="ta-tt-board"><div class="ta-tt-scroll" data-tt="scroll"><svg data-tt="svg" role="img" aria-label="The Torn City board" preserveAspectRatio="xMidYMid meet"></svg></div>' +
+          '<div class="ta-tt-banner"><div class="ta-tt-prompt" data-tt="prompt"></div><div class="ta-tt-zoom"><button data-tt="zin" aria-label="Zoom in">+</button><button data-tt="zout" aria-label="Zoom out">−</button><button data-tt="full" aria-label="Full screen" title="Full screen">⛶</button></div><div class="ta-tt-dice"><div class="ta-tt-die" data-tt="d1">–</div><div class="ta-tt-die" data-tt="d2">–</div></div></div></div>' +
+        '<div class="ta-tt-side">' +
+          '<div class="ta-tt-card" data-tt="meCard"><div class="ta-tt-me"><span data-tt="meName"></span><span>Respect<strong data-tt="myResp">0</strong> <small data-tt="secret"></small></span></div><div class="ta-tt-hand" data-tt="hand"></div><div class="ta-tt-favs" data-tt="favs"></div></div>' +
+          '<div class="ta-tt-card" data-tt="acts"><button class="ta-tt-go" data-tt="roll">Roll the dice</button>' +
+            '<div class="ta-tt-btns"><button data-tt="bRoute"><span>Road</span><small>Brick · Wood</small></button><button data-tt="bSafe"><span>Safehouse</span><small>Brick · Wood · Wheat · Cotton</small></button>' +
+            '<button data-tt="bHQ"><span>Upgrade to HQ</span><small>2 Wheat · 3 Ore</small></button><button data-tt="bFav"><span>Favour card</span><small>Wheat · Ore · Cotton</small></button></div>' +
+            '<button data-tt="bDeal"><span>Trade with rivals</span><small>Offer some of your cards for theirs</small></button>' +
+            '<div class="ta-tt-row"><span>Bank</span><select data-tt="give" aria-label="Give to the bank"></select><span>for</span><select data-tt="get" aria-label="Get from the bank"></select><button class="ta-tt-sm" data-tt="bTrade">Trade</button></div>' +
+            '<button class="ta-tt-go" data-tt="end">End turn</button></div>' +
+          '<div class="ta-tt-card"><h4>FACTIONS</h4><div class="ta-tt-pls" data-tt="players"></div></div>' +
+          '<div class="ta-tt-card"><h4>STREET TALK</h4><div class="ta-tt-log" data-tt="log"></div></div>' +
+          '<button class="ta-tt-sm" data-tt="quit">Back to the new game screen</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="ta-tt-dlg" data-tt="dlg" hidden><div class="ta-tt-box" data-tt="dlgBox"></div></div>' +
+      '</div>',
+      '');
+    const box = $(panel, '.ta-tt');
+    function Q(id) { return box.querySelector('[data-tt="' + id + '"]'); }
+    const svg = Q('svg');
+    let G = null;   // the whole game (saved in Tampermonkey storage)
+    const UI = { zoom: 1, mode: null, viewer: -1, flash: [], dlg: null, timer: 0, aiActs: 0, asked: false, rolled: false, sawOver: false, live: false };
+    const opts = Object.assign({ size: 'large', diff: 'normal', speed: 750, seats: [['human', 0], ['ai', 1], ['ai', 2], ['ai', 3]] }, store.get('territoriesOpts', null) || {});
+    const stats = Object.assign({ games: 0, wins: 0, fastest: 0 }, store.get('territoriesStats', null) || {});
+
+    const rnd = Math.random;
+    function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); const t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+    function pips(n) { return n ? 6 - Math.abs(7 - n) : 0; }
+
+    /* ---------- Pictures from the Character Art pack (data URIs, or null) ---------- */
+    function art(res) {
+      const api = games.pocket && games.pocket.art, b64 = api && api.get ? api.get('tt' + res) : null;
+      return b64 ? 'data:image/webp;base64,' + b64 : null;
+    }
+
+    /* ---------- New game ---------- */
+    function makeBoard(size) {
+      const M = MAPS[size] || MAPS.large, centres = [];
+      M.rows.forEach(function (L, ri) {
+        const r = ri - (M.rows.length - 1) / 2;
+        for (let k = 0; k < L; k++) centres.push([CX + (k - (L - 1) / 2) * R * Math.sqrt(3), CY + r * 1.5 * R]);
+      });
+      const near = function (a, b) { return Math.hypot(a.cx - b.cx, a.cy - b.cy) < R * 1.9; };
+      let hexes, ok = false;
+      while (!ok) {   // keep the busiest numbers (6 and 8) apart
+        const pool = []; Object.keys(M.tiles).forEach(function (t) { for (let i = 0; i < M.tiles[t]; i++) pool.push(t); });
+        const tiles = shuffle(pool), nums = shuffle(M.nums.slice());
+        let k = 0;
+        hexes = centres.map(function (c, i) { return { cx: c[0], cy: c[1], res: tiles[i], num: tiles[i] === 'none' ? 0 : nums[k++], verts: [] }; });
+        ok = hexes.every(function (h) { return !(h.num === 6 || h.num === 8) || hexes.every(function (o) { return o === h || !(o.num === 6 || o.num === 8) || !near(h, o); }); });
+      }
+      const verts = [], edges = [], vk = {}, ek = {};
+      hexes.forEach(function (h, hi) {
+        const ids = [];
+        for (let i = 0; i < 6; i++) {
+          const a = Math.PI / 180 * (60 * i - 30), x = h.cx + R * Math.cos(a), y = h.cy + R * Math.sin(a), key = Math.round(x) + ',' + Math.round(y);
+          if (vk[key] === undefined) { vk[key] = verts.length; verts.push({ x: x, y: y, hexes: [], adj: [], edges: [], owner: -1, lvl: 0, port: null }); }
+          ids.push(vk[key]); verts[vk[key]].hexes.push(hi);
+        }
+        h.verts = ids;
+        for (let i = 0; i < 6; i++) {
+          const a = ids[i], b = ids[(i + 1) % 6], key = Math.min(a, b) + '-' + Math.max(a, b);
+          if (ek[key] === undefined) { ek[key] = edges.length; edges.push({ a: a, b: b, owner: -1, hn: 0, hx: hi }); verts[a].adj.push(b); verts[b].adj.push(a); verts[a].edges.push(ek[key]); verts[b].edges.push(ek[key]); }
+          edges[ek[key]].hn++;
+        }
+      });
+      function ang(E) { return Math.atan2((verts[E.a].y + verts[E.b].y) / 2 - CY, (verts[E.a].x + verts[E.b].x) / 2 - CX); }
+      const coast = edges.map(function (E, i) { return i; }).filter(function (i) { return edges[i].hn === 1; }).sort(function (a, b) { return ang(edges[a]) - ang(edges[b]); });
+      const kinds = shuffle(M.ports.slice()), np = kinds.length, ports = [], off = Math.floor(rnd() * 3);
+      for (let i = 0; i < np; i++) {
+        const e = coast[(off + Math.round(i * coast.length / np)) % coast.length], E = edges[e], H = hexes[E.hx];
+        const mx = (verts[E.a].x + verts[E.b].x) / 2, my = (verts[E.a].y + verts[E.b].y) / 2, dx = mx - H.cx, dy = my - H.cy, d = Math.hypot(dx, dy);
+        ports.push({ e: e, kind: kinds[i], x: mx + dx / d * 30, y: my + dy / d * 30 });
+        verts[E.a].port = kinds[i]; verts[E.b].port = kinds[i];
+      }
+      return { hexes: hexes, verts: verts, edges: edges, ports: ports };
+    }
+    function newGame() {
+      const size = opts.size, B = makeBoard(size), seats = opts.seats.filter(function (s) { return s[0] !== 'off'; });
+      const players = seats.map(function (s) { const i = opts.seats.indexOf(s); return { name: NAMES[i], col: COLOURS[s[1]][0], ai: s[0] === 'ai', hand: { brick: 0, wood: 0, wheat: 0, ore: 0, cotton: 0 }, favs: [], crew: 0, routes: 15, safes: 5, hqs: 4 }; });
+      const big = size === 'large';
+      const deck = shuffle(Array(big ? 20 : 14).fill('crew').concat(Array(5).fill('respect'), Array(big ? 3 : 2).fill('supply'), Array(big ? 3 : 2).fill('deal'), Array(big ? 3 : 2).fill('roads')));
+      const n = players.length, order = [];
+      for (let i = 0; i < n; i++) order.push(i);
+      for (let i = n - 1; i >= 0; i--) order.push(i);
+      const xs = B.hexes.map(function (h) { return h.cx; }).concat(B.ports.map(function (p) { return p.x; })), ys = B.hexes.map(function (h) { return h.cy; }).concat(B.ports.map(function (p) { return p.y; }));
+      const x0 = Math.min.apply(null, xs) - R - 14, x1 = Math.max.apply(null, xs) + R + 14, y0 = Math.min.apply(null, ys) - R - 34, y1 = Math.max.apply(null, ys) + R + 12;
+      G = { v: 1, size: size, vb: [x0, y0, x1 - x0, y1 - y0].map(Math.round).join(' '), hexes: B.hexes, verts: B.verts, edges: B.edges, ports: B.ports, players: players, deck: deck, diff: opts.diff, speed: opts.speed,
+        raid: B.hexes.findIndex(function (h) { return h.res === 'none'; }), cur: order[0], phase: 'setup', setup: { order: order, i: 0, step: 'safe', last: -1 },
+        dice: null, turn: 0, playedFav: false, free: 0, discardQ: [], afterRaid: 'main', longest: -1, bigCrew: -1, winner: -1, log: [], offer: null, counted: false };
+      UI.mode = null; UI.viewer = -1; UI.dlg = null; UI.aiActs = 0; UI.asked = false; UI.sawOver = false;
+      say('A new game begins. Each faction opens two safehouses, each with a road. The second safehouse pays its starting cards.');
+      sfx.win();
+      tick();
+    }
+
+    /* ---------- Rules ---------- */
+    function P(i) { return G.players[i]; }
+    function cards(p) { return RES.reduce(function (s, r) { return s + p.hand[r]; }, 0); }
+    function canAfford(p, c) { return Object.keys(c).every(function (r) { return p.hand[r] >= c[r]; }); }
+    function pay(p, c) { Object.keys(c).forEach(function (r) { p.hand[r] -= c[r]; }); }
+    function spaced(v) { return G.verts[v].owner < 0 && G.verts[v].adj.every(function (a) { return G.verts[a].owner < 0; }); }
+    function safeOK(pi, v, setup) { return spaced(v) && (setup || G.verts[v].edges.some(function (e) { return G.edges[e].owner === pi; })); }
+    function routeOK(pi, e) {
+      const E = G.edges[e]; if (E.owner >= 0) return false;
+      if (G.phase === 'setup') return E.a === G.setup.last || E.b === G.setup.last;
+      return [E.a, E.b].some(function (v) { const V = G.verts[v]; return V.owner === pi || (V.owner < 0 && V.edges.some(function (x) { return x !== e && G.edges[x].owner === pi; })); });
+    }
+    function anyRoute(pi) { return G.edges.some(function (E, e) { return routeOK(pi, e); }); }
+    function anySafe(pi) { return G.verts.some(function (V, v) { return safeOK(pi, v); }); }
+    function rate(pi, r) {
+      let best = 4;
+      G.verts.forEach(function (V) { if (V.owner === pi && V.port) { if (V.port === r) best = 2; else if (V.port === 'any') best = Math.min(best, 3); } });
+      return best;
+    }
+    function routeLen(pi) {
+      let best = 0;
+      function dfs(v, used, len) {
+        if (len > best) best = len;
+        if (len > 0 && G.verts[v].owner >= 0 && G.verts[v].owner !== pi) return;   // a rival's building cuts the road
+        G.verts[v].edges.forEach(function (e) {
+          const E = G.edges[e]; if (E.owner !== pi || used[e]) return;
+          used[e] = 1; dfs(E.a === v ? E.b : E.a, used, len + 1); used[e] = 0;
+        });
+      }
+      G.edges.forEach(function (E) { if (E.owner === pi) { dfs(E.a, {}, 0); dfs(E.b, {}, 0); } });
+      return best;
+    }
+    function awards() {
+      const lens = G.players.map(function (p, i) { return routeLen(i); });
+      const h = G.longest, top = Math.max.apply(null, lens);
+      if (!(h >= 0 && lens[h] >= 5 && lens[h] === top)) {   // the holder keeps it on a tie
+        const leaders = lens.map(function (l, i) { return l === top ? i : -1; }).filter(function (i) { return i >= 0; });
+        const nw = top >= 5 && leaders.length === 1 ? leaders[0] : -1;
+        if (nw !== h) { G.longest = nw; if (nw >= 0) say(name(nw) + ' now ' + verb(nw, 'hold') + ' Longest Road (' + top + '). +2 Respect.'); }
+      }
+      G.players.forEach(function (p, i) { if (p.crew >= 3 && G.bigCrew !== i && (G.bigCrew < 0 || p.crew > P(G.bigCrew).crew)) { G.bigCrew = i; say(name(i) + ' now ' + (you(i) ? 'have' : 'has') + ' the Biggest Crew. +2 Respect.'); } });
+    }
+    function respect(pi, all) {
+      let s = 0;
+      G.verts.forEach(function (V) { if (V.owner === pi) s += V.lvl; });
+      if (G.longest === pi) s += 2;
+      if (G.bigCrew === pi) s += 2;
+      if (all) s += P(pi).favs.filter(function (f) { return f.t === 'respect'; }).length;
+      return s;
+    }
+    function humans() { return G.players.filter(function (p) { return !p.ai; }).length; }
+    function you(i) { return i === UI.viewer && humans() === 1; }
+    function name(i) { return you(i) ? 'You' : P(i).name; }
+    function verb(i, v) { return you(i) ? v : v + (/(s|sh|ch)$/.test(v) ? 'es' : 's'); }
+    function say(t) { G.log.unshift(t); if (G.log.length > 80) G.log.pop(); }
+    function checkWin(pi) {
+      if (G.phase === 'over' || respect(pi, true) < 10) return false;
+      G.phase = 'over'; G.winner = pi;
+      say(name(pi) + ' ' + verb(pi, 'reach') + ' 10 Respect and take' + (you(pi) ? '' : 's') + ' over Torn City!');
+      if (!G.counted && humans() === 1) {   // best scores: wins, and the fastest win in turns
+        G.counted = true; stats.games++;
+        if (!P(pi).ai) {
+          stats.wins++; const turns = Math.floor(G.turn / G.players.length) + 1;
+          if (!stats.fastest || turns < stats.fastest) stats.fastest = turns;
+          record('territories:wins', stats.wins); record('territories:fastest', turns, true);
+          confetti(panel.querySelector('.ta-stage')); sfx.win();
+        } else sfx.over();
+        store.set('territoriesStats', stats);
+      }
+      return true;
+    }
+
+    /* ---------- Turn flow ---------- */
+    function rollDice() {
+      const a = 1 + Math.floor(rnd() * 6), b = 1 + Math.floor(rnd() * 6), n = a + b;
+      G.dice = [a, b]; UI.rolled = true;
+      if (UI.live) seq([[0, 520, 0.04, 'square', 0.03], [60, 380, 0.04, 'square', 0.03], [120, 640, 0.05, 'square', 0.03]]);
+      say(name(G.cur) + ' ' + verb(G.cur, 'roll') + ' ' + n + '.');
+      if (n === 7) {
+        G.discardQ = G.players.map(function (p, i) { return i; }).filter(function (i) { return cards(P(i)) > 7; });
+        G.afterRaid = 'main'; G.phase = G.discardQ.length ? 'discard' : 'raid';
+        if (UI.live) seq([[200, 760, 0.18, 'square', 0.025], [380, 600, 0.18, 'square', 0.025]]);
+      } else { produce(n); G.phase = 'main'; }
+    }
+    function produce(n) {
+      const got = G.players.map(function () { return {}; });
+      G.hexes.forEach(function (H, hi) {
+        if (H.num !== n) return;
+        if (hi === G.raid) { if (H.verts.some(function (v) { return G.verts[v].owner >= 0; })) say('The raided ' + DIST[H.res].name + ' pays nothing.'); return; }
+        H.verts.forEach(function (v) { const V = G.verts[v]; if (V.owner >= 0) { P(V.owner).hand[H.res] += V.lvl; got[V.owner][H.res] = (got[V.owner][H.res] || 0) + V.lvl; } });
+      });
+      got.forEach(function (g, i) {
+        const k = Object.keys(g); if (!k.length) return;
+        say(name(i) + ' ' + verb(i, 'collect') + ' ' + k.map(function (r) { return g[r] + ' ' + RN[r]; }).join(', ') + '.');
+        if (i === UI.viewer) { UI.flash = k; if (UI.live) sfx.point(); }
+      });
+    }
+    function discard(pi, take) {
+      Object.keys(take).forEach(function (r) { P(pi).hand[r] -= take[r]; });
+      say(name(pi) + ' ' + verb(pi, 'hand') + ' ' + Object.keys(take).reduce(function (a, r) { return a + take[r]; }, 0) + ' cards to the police.');
+      G.discardQ.shift();
+      if (!G.discardQ.length) G.phase = 'raid';
+    }
+    function victims(pi, h) {
+      const out = [];
+      G.hexes[h].verts.forEach(function (v) { const o = G.verts[v].owner; if (o >= 0 && o !== pi && cards(P(o)) > 0 && out.indexOf(o) < 0) out.push(o); });
+      return out;
+    }
+    function moveRaid(pi, h) {
+      G.raid = h;
+      say(name(pi) + ' ' + verb(pi, 'send') + ' the police raid to the ' + DIST[G.hexes[h].res].name + (G.hexes[h].num ? ' (' + G.hexes[h].num + ')' : '') + '.');
+      const v = victims(pi, h);
+      if (!v.length) G.phase = G.afterRaid;
+      else if (v.length === 1) steal(pi, v[0]);
+      else G.phase = 'steal';
+    }
+    function steal(pi, vi) {
+      const have = RES.filter(function (r) { return P(vi).hand[r] > 0; }), r = have[Math.floor(rnd() * have.length)];
+      P(vi).hand[r]--; P(pi).hand[r]++;
+      const seen = pi === UI.viewer || vi === UI.viewer;
+      say(name(pi) + ' ' + verb(pi, 'take') + (seen ? ' ' + RN[r] : ' a card') + ' from ' + (you(vi) ? 'you' : P(vi).name) + '.');
+      if (pi === UI.viewer) UI.flash = [r];
+      G.phase = G.afterRaid;
+    }
+    function endTurn() {
+      P(G.cur).favs.forEach(function (f) { f.fresh = false; });
+      G.cur = (G.cur + 1) % G.players.length; G.turn++; G.phase = 'roll'; G.playedFav = false; G.dice = null; G.offer = null;
+      UI.mode = null; UI.aiActs = 0; UI.asked = false;
+    }
+    function placeSafe(pi, v, setup) {
+      const p = P(pi);
+      if (!setup) pay(p, COST.safe);
+      G.verts[v].owner = pi; G.verts[v].lvl = 1; p.safes--;
+      if (UI.live) sfx.match();
+      if (setup) {
+        G.setup.last = v; G.setup.step = 'route';
+        const got = [];
+        if (G.setup.i >= G.players.length) G.verts[v].hexes.forEach(function (h) { const r = G.hexes[h].res; if (r !== 'none') { p.hand[r]++; got.push(RN[r]); } });
+        say(name(pi) + ' ' + verb(pi, 'open') + ' a safehouse' + (got.length ? ' and ' + verb(pi, 'collect') + ' ' + got.join(', ') : '') + '.');
+      } else say(name(pi) + ' ' + verb(pi, 'open') + ' a safehouse. +1 Respect.');
+      awards();
+    }
+    function placeRoute(pi, e, free) {
+      const p = P(pi);
+      if (!free) pay(p, COST.route);
+      G.edges[e].owner = pi; p.routes--;
+      if (UI.live) sfx.flip();
+      if (G.phase === 'setup') {
+        G.setup.i++; G.setup.step = 'safe'; G.setup.last = -1;
+        if (G.setup.i >= G.setup.order.length) { G.phase = 'roll'; G.cur = 0; say('The city is carved up. ' + name(0) + ' ' + verb(0, 'roll') + ' first.'); }
+        else G.cur = G.setup.order[G.setup.i];
+        return;
+      }
+      say(name(pi) + ' ' + verb(pi, 'build') + ' a road' + (free ? ' for free' : '') + '.');
+      if (G.phase === 'roads') { G.free--; if (G.free <= 0 || !p.routes || !anyRoute(pi)) G.phase = 'main'; }
+      awards();
+    }
+    function upgrade(pi, v) {
+      const p = P(pi); pay(p, COST.hq); G.verts[v].lvl = 2; p.safes++; p.hqs--;
+      if (UI.live) sfx.win();
+      say(name(pi) + ' ' + verb(pi, 'turn') + ' a safehouse into an HQ. +1 Respect.');
+    }
+    function buyFav(pi) {
+      const p = P(pi); pay(p, COST.fav); const t = G.deck.pop();
+      p.favs.push({ t: t, fresh: true });
+      say(name(pi) + ' ' + verb(pi, 'call') + ' in a favour' + (pi === UI.viewer ? ': ' + FAV[t].name : '') + '.');
+    }
+    function canPlay(pi, f) { return f.t !== 'respect' && !f.fresh && !G.playedFav && G.cur === pi && (G.phase === 'main' || (G.phase === 'roll' && f.t === 'crew')); }
+    function useFav(pi, idx) {
+      const f = P(pi).favs.splice(idx, 1)[0];
+      G.playedFav = true;
+      say(name(pi) + ' ' + verb(pi, 'play') + ' ' + FAV[f.t].name + '.');
+      return f.t;
+    }
+    function others(pi, r) { return G.players.reduce(function (s, q, i) { return i === pi ? s : s + q.hand[r]; }, 0); }
+    function streetDeal(pi, r) {
+      let n = 0; G.players.forEach(function (q, i) { if (i !== pi) { n += q.hand[r]; q.hand[r] = 0; } });
+      P(pi).hand[r] += n; say(name(pi) + ' ' + verb(pi, 'collect') + ' ' + n + ' ' + RN[r] + ' from the other factions.');
+      if (pi === UI.viewer) UI.flash = [r];
+    }
+
+    /* ---------- Computer factions ---------- */
+    function owns(pi, r) { return G.verts.some(function (V) { return V.owner === pi && V.hexes.some(function (h) { return G.hexes[h].res === r; }); }); }
+    function vScore(v, pi) {
+      const seen = {}; let s = 0;
+      G.verts[v].hexes.forEach(function (h) { const H = G.hexes[h]; if (h === G.raid) return; s += pips(H.num); if (H.res !== 'none' && !seen[H.res]) { seen[H.res] = 1; s += 1.2; } });
+      if (G.verts[v].port) s += G.verts[v].port === 'any' ? 0.8 : 0.5;
+      if (pi !== undefined) RES.forEach(function (r) { if (seen[r] && !owns(pi, r)) s += 0.6; });
+      return s + (G.diff === 'easy' ? rnd() * 4 : G.diff === 'normal' ? rnd() * 1.2 : rnd() * 0.3);
+    }
+    function shortOf(p, c) { return RES.reduce(function (t, r) { return t + Math.max(0, (c[r] || 0) - p.hand[r]); }, 0); }
+    function plan(pi) {   // what it saves up for: whichever build it is closest to affording
+      const p = P(pi), hasSafe = G.verts.some(function (V) { return V.owner === pi && V.lvl === 1; }), o = [];
+      if (hasSafe && p.hqs) o.push(['hq', shortOf(p, COST.hq) - 0.3]);
+      if (p.safes && anySafe(pi)) o.push(['safe', shortOf(p, COST.safe) - 0.5]);
+      else if (p.routes && p.safes) o.push(['route', shortOf(p, { brick: 2, wood: 2, wheat: 1, cotton: 1 }) - 0.4]);
+      if (G.deck.length) o.push(['fav', shortOf(p, COST.fav) + 1.2]);
+      if (!o.length) return 'fav';
+      return o.sort(function (a, b) { return a[1] - b[1]; })[0][0];
+    }
+    function planCost(pi) { const pl = plan(pi); return pl === 'route' ? { brick: 2, wood: 2, wheat: 1, cotton: 1 } : COST[pl]; }
+    function need(pi) { const p = P(pi), c = planCost(pi), out = {}; RES.forEach(function (r) { out[r] = Math.max(0, (c[r] || 0) - p.hand[r]); }); return out; }
+    function worth(pi, r) { const n = need(pi), p = P(pi); return 1 + (n[r] ? 1.6 : 0) - (p.hand[r] >= 4 ? 0.5 : 0); }
+    function wantsDeal(pi, give, want, from) {   // would computer faction pi swap? It gets `give` and hands over `want`.
+      const p = P(pi);
+      if (RES.some(function (r) { return (want[r] || 0) > p.hand[r]; })) return false;
+      if (respect(from, false) >= (G.diff === 'hard' ? 7 : G.diff === 'normal' ? 8 : 9)) return false;
+      let gain = 0;
+      RES.forEach(function (r) { gain += (give[r] || 0) * worth(pi, r) - (want[r] || 0) * worth(pi, r); });
+      return gain > (G.diff === 'easy' ? -0.2 : G.diff === 'normal' ? 0.4 : 0.9);
+    }
+    function hurt(h, pi) {
+      let s = 0;
+      G.hexes[h].verts.forEach(function (v) { const o = G.verts[v].owner; if (o >= 0 && o !== pi) s += pips(G.hexes[h].num) * G.verts[v].lvl * (1 + respect(o, false) / 5) + (cards(P(o)) ? 1 : 0); });
+      return s + (G.diff === 'easy' ? rnd() * 6 : 0);
+    }
+    function bestRaid(pi) {
+      return G.hexes.map(function (H, i) { return i; }).filter(function (i) { return i !== G.raid && G.hexes[i].verts.every(function (v) { return G.verts[v].owner !== pi; }); })
+        .sort(function (a, b) { return hurt(b, pi) - hurt(a, pi); })[0];
+    }
+    function bestRoute(pi) {
+      let best = -1, bs = -Infinity;
+      G.edges.forEach(function (E, e) {
+        if (!routeOK(pi, e)) return;
+        let s = -1;
+        [E.a, E.b].forEach(function (v) {
+          if (spaced(v)) s = Math.max(s, vScore(v, pi));
+          G.verts[v].adj.forEach(function (w) { if (spaced(w)) s = Math.max(s, vScore(w, pi) * 0.75); });
+        });
+        if (s > bs) { bs = s; best = e; }
+      });
+      return best;
+    }
+    function aiDiscard(pi) {
+      const p = P(pi), take = {}, left = Object.assign({}, p.hand); let n = Math.floor(cards(p) / 2);
+      while (n > 0) { const r = RES.filter(function (x) { return left[x] > 0; }).sort(function (a, b) { return (left[b] - worth(pi, b)) - (left[a] - worth(pi, a)); })[0]; left[r]--; take[r] = (take[r] || 0) + 1; n--; }
+      discard(pi, take);
+    }
+    function aiStep() {
+      const pi = G.cur, p = P(pi);
+      if (G.phase === 'setup') {
+        if (G.setup.step === 'safe') {
+          const v = G.verts.map(function (V, i) { return i; }).filter(function (i) { return safeOK(pi, i, true); }).sort(function (a, b) { return vScore(b, pi) - vScore(a, pi); })[0];
+          placeSafe(pi, v, true);
+        } else placeRoute(pi, bestRoute(pi), true);
+        return;
+      }
+      if (G.phase === 'roll') {
+        const fi = p.favs.findIndex(function (f) { return f.t === 'crew' && canPlay(pi, f); });
+        if (fi >= 0 && G.hexes[G.raid].verts.some(function (v) { return G.verts[v].owner === pi; })) { useFav(pi, fi); p.crew++; awards(); G.afterRaid = 'roll'; G.phase = 'raid'; return; }
+        rollDice(); return;
+      }
+      if (G.phase === 'raid') { const h = bestRaid(pi); if (h === undefined) { G.phase = G.afterRaid; return; } moveRaid(pi, h); return; }
+      if (G.phase === 'steal') { const v = victims(pi, G.raid).sort(function (a, b) { return respect(b, false) - respect(a, false); }); steal(pi, v[0]); return; }
+      if (G.phase === 'roads') { const e = p.routes ? bestRoute(pi) : -1; if (e < 0) { G.phase = 'main'; return; } placeRoute(pi, e, true); return; }
+      if (G.phase !== 'main') return;
+      if (checkWin(pi)) return;
+      if (++UI.aiActs > 14) { endTurn(); return; }
+      const fi = p.favs.findIndex(function (f) { return canPlay(pi, f); });
+      if (fi >= 0) {   // play a favour card when it helps
+        const t = p.favs[fi].t, n = need(pi), short = RES.filter(function (r) { return n[r]; });
+        if (t === 'roads' && p.routes && anyRoute(pi)) { useFav(pi, fi); G.free = 2; G.phase = 'roads'; return; }
+        if (t === 'supply' && short.length && short.reduce(function (s, r) { return s + n[r]; }, 0) <= 2) { useFav(pi, fi); const got = short.concat(short).slice(0, 2); got.forEach(function (r) { p.hand[r]++; }); say(p.name + ' brings in ' + got.map(function (r) { return RN[r]; }).join(' and ') + '.'); return; }
+        if (t === 'deal' && short.length) {
+          const r = short.slice().sort(function (a, b) { return others(pi, b) - others(pi, a); })[0];
+          if (others(pi, r) >= 2) { useFav(pi, fi); streetDeal(pi, r); return; }
+        }
+        const tgt = t === 'crew' ? bestRaid(pi) : undefined;
+        if (t === 'crew' && ((p.crew + 1 >= 3 && (G.bigCrew < 0 || p.crew + 1 > P(G.bigCrew).crew)) || G.hexes[G.raid].verts.some(function (v) { return G.verts[v].owner === pi; }) || (tgt !== undefined && hurt(tgt, pi) >= 6 && rnd() < 0.6))) { useFav(pi, fi); p.crew++; awards(); G.afterRaid = 'main'; G.phase = 'raid'; return; }
+      }
+      if (p.hqs && canAfford(p, COST.hq)) {
+        const v = G.verts.map(function (V, i) { return i; }).filter(function (i) { return G.verts[i].owner === pi && G.verts[i].lvl === 1; }).sort(function (a, b) { return vScore(b) - vScore(a); })[0];
+        if (v !== undefined) { upgrade(pi, v); return; }
+      }
+      if (p.safes && canAfford(p, COST.safe)) {
+        const v = G.verts.map(function (V, i) { return i; }).filter(function (i) { return safeOK(pi, i); }).sort(function (a, b) { return vScore(b, pi) - vScore(a, pi); })[0];
+        if (v !== undefined) { placeSafe(pi, v, false); return; }
+      }
+      if (p.routes && canAfford(p, COST.route) && (plan(pi) === 'route' || (cards(p) > 7 && plan(pi) !== 'hq' && !anySafe(pi)))) { const e = bestRoute(pi); if (e >= 0) { placeRoute(pi, e, false); return; } }
+      const n = need(pi), short = RES.filter(function (r) { return n[r]; });
+      if (short.length && short.reduce(function (s, r) { return s + n[r]; }, 0) <= 3) {
+        const plain = planCost(pi);   // trade with the bank or a harbour for a missing card
+        const spare = RES.filter(function (r) { return !n[r] && p.hand[r] - (plain[r] || 0) >= rate(pi, r); }).sort(function (a, b) { return p.hand[b] - p.hand[a]; })[0];
+        if (spare) { const k = rate(pi, spare); p.hand[spare] -= k; p.hand[short[0]]++; say(p.name + ' trades ' + k + ' ' + RN[spare] + ' for 1 ' + RN[short[0]] + (k < 4 ? ' at a harbour.' : ' with the bank.')); return; }
+        if (!UI.asked && humans() === 1) {   // or ask the human player for it (one offer per turn)
+          UI.asked = true;
+          const hi = G.players.findIndex(function (q) { return !q.ai; }), r = short[0];
+          const giveR = RES.filter(function (x) { return !n[x] && p.hand[x] > (plain[x] || 0); }).sort(function (a, b) { return p.hand[b] - p.hand[a]; })[0];
+          if (giveR && P(hi).hand[r] > 0 && rnd() < (G.diff === 'easy' ? 0.55 : 0.4)) {
+            const give = {}; give[giveR] = p.hand[giveR] - (plain[giveR] || 0) >= 3 ? 2 : 1;
+            const want = {}; want[r] = 1;
+            G.offer = { from: pi, to: hi, give: give, want: want }; G.phase = 'offer';
+            say(p.name + ' offers you a trade.'); return;
+          }
+        }
+      }
+      if (G.deck.length && canAfford(p, COST.fav) && (plan(pi) === 'fav' || cards(p) > 7)) { buyFav(pi); return; }
+      if (checkWin(pi)) return;
+      endTurn();
+    }
+
+    /* ---------- The loop ---------- */
+    function waitingHuman() {
+      if (G.phase === 'over') return -1;
+      if (G.phase === 'discard') return P(G.discardQ[0]).ai ? -1 : G.discardQ[0];
+      if (G.phase === 'offer') return G.offer.to;
+      return P(G.cur).ai ? -1 : G.cur;
+    }
+    function tick() {
+      clearTimeout(UI.timer);
+      while (G.phase === 'discard' && G.discardQ.length && P(G.discardQ[0]).ai) aiDiscard(G.discardQ[0]);
+      const w = waitingHuman(), hu = humans();
+      if (hu === 1) UI.viewer = G.players.findIndex(function (p) { return !p.ai; });
+      if (w >= 0 && hu > 1 && UI.viewer !== w) UI.dlg = { kind: 'pass', who: w };
+      else if (UI.dlg && UI.dlg.kind === 'pass') UI.dlg = null;
+      if (w >= 0 && !UI.dlg) {
+        if (G.phase === 'discard') UI.dlg = { kind: 'discard', take: {} };
+        else if (G.phase === 'steal') UI.dlg = { kind: 'steal' };
+        else if (G.phase === 'offer') UI.dlg = { kind: 'offer' };
+      }
+      store.set('territories', G.phase === 'over' ? null : G);
+      render();
+      if (w < 0 && G.phase !== 'over' && UI.live) UI.timer = setTimeout(function () { if (!UI.live) return; aiStep(); tick(); }, G.phase === 'setup' ? Math.min(G.speed, 450) : G.speed);
+    }
+
+    /* ---------- Your moves ---------- */
+    function mine() { return !!G && G.phase !== 'over' && !P(G.cur).ai && UI.viewer === G.cur && !(UI.dlg && UI.dlg.kind === 'pass'); }
+    function on(id, fn) { Q(id).addEventListener('click', fn); }
+    on('roll', function () { if (!mine() || G.phase !== 'roll') return; rollDice(); tick(); });
+    function setMode(m) { if (!mine() || G.phase !== 'main') return; UI.mode = UI.mode === m ? null : m; sfx.click(); render(); }
+    on('bRoute', function () { setMode('route'); });
+    on('bSafe', function () { setMode('safe'); });
+    on('bHQ', function () { setMode('hq'); });
+    on('bFav', function () { if (!mine() || G.phase !== 'main' || !G.deck.length || !canAfford(P(G.cur), COST.fav)) return; buyFav(G.cur); sfx.match(); checkWin(G.cur); tick(); });
+    on('bTrade', function () {
+      if (!mine() || G.phase !== 'main') return;
+      const g = Q('give').value, w = Q('get').value, pi = G.cur, k = rate(pi, g);
+      if (P(pi).hand[g] < k || g === w) return;
+      P(pi).hand[g] -= k; P(pi).hand[w]++; UI.flash = [w]; sfx.point();
+      say(name(pi) + ' ' + verb(pi, 'trade') + ' ' + k + ' ' + RN[g] + ' for 1 ' + RN[w] + (k < 4 ? ' at a harbour.' : ' with the bank.'));
+      tick();
+    });
+    on('bDeal', function () { if (!mine() || G.phase !== 'main') return; UI.dlg = { kind: 'trade', give: {}, want: {}, answers: null }; sfx.click(); render(); });
+    on('end', function () { if (!mine() || G.phase !== 'main') return; sfx.click(); if (!checkWin(G.cur)) endTurn(); tick(); });
+    on('quit', function () { clearTimeout(UI.timer); sfx.click(); showTitle(); });
+    function clickHex(hi) { if (!mine() || G.phase !== 'raid' || hi === G.raid) return; moveRaid(G.cur, hi); tick(); }
+    function clickVert(v) {
+      if (!mine()) return;
+      const pi = G.cur, p = P(pi);
+      if (G.phase === 'setup' && G.setup.step === 'safe' && safeOK(pi, v, true)) placeSafe(pi, v, true);
+      else if (UI.mode === 'safe' && G.phase === 'main' && safeOK(pi, v) && canAfford(p, COST.safe) && p.safes) { placeSafe(pi, v, false); UI.mode = canAfford(p, COST.safe) && p.safes && anySafe(pi) ? 'safe' : null; }
+      else if (UI.mode === 'hq' && G.phase === 'main' && G.verts[v].owner === pi && G.verts[v].lvl === 1 && canAfford(p, COST.hq) && p.hqs) { upgrade(pi, v); UI.mode = null; }
+      else return;
+      checkWin(pi); tick();
+    }
+    function clickEdge(e) {
+      if (!mine()) return;
+      const pi = G.cur, p = P(pi);
+      if (G.phase === 'setup' && G.setup.step === 'route' && routeOK(pi, e)) placeRoute(pi, e, true);
+      else if (G.phase === 'roads' && routeOK(pi, e) && p.routes) placeRoute(pi, e, true);
+      else if (UI.mode === 'route' && G.phase === 'main' && routeOK(pi, e) && canAfford(p, COST.route) && p.routes) { placeRoute(pi, e, false); UI.mode = canAfford(p, COST.route) && p.routes && anyRoute(pi) ? 'route' : null; }
+      else return;
+      checkWin(pi); tick();
+    }
+    function playFav(idx) {
+      const pi = G.cur, f = P(pi).favs[idx];
+      if (!mine() || !f || !canPlay(pi, f)) return;
+      UI.mode = null; sfx.click();
+      if (f.t === 'crew') { useFav(pi, idx); P(pi).crew++; awards(); G.afterRaid = G.phase; G.phase = 'raid'; checkWin(pi); tick(); }
+      else if (f.t === 'roads') { useFav(pi, idx); G.free = 2; G.phase = anyRoute(pi) && P(pi).routes ? 'roads' : 'main'; tick(); }
+      else if (f.t === 'supply') { UI.dlg = { kind: 'supply', idx: idx, picks: [] }; render(); }
+      else if (f.t === 'deal') { UI.dlg = { kind: 'deal', idx: idx }; render(); }
+    }
+
+    /* ---------- Dialogs ---------- */
+    function sum(o) { return Object.keys(o).reduce(function (a, k) { return a + o[k]; }, 0); }
+    function list(o) { return Object.keys(o).filter(function (r) { return o[r]; }).map(function (r) { return o[r] + ' ' + RN[r]; }).join(' + '); }
+    function steppers(key, obj, have) {
+      return '<div class="ta-tt-steps">' + RES.map(function (r) {
+        return '<div class="ta-tt-step">' + icon(r) + '<span>' + RN[r] + (have ? ' <span>(' + have[r] + ')</span>' : '') + '</span><button class="ta-tt-sm" data-a="dec" data-k="' + key + '" data-r="' + r + '" aria-label="Fewer ' + RN[r] + '">−</button><b>' + (obj[r] || 0) + '</b><button class="ta-tt-sm" data-a="inc" data-k="' + key + '" data-r="' + r + '" aria-label="More ' + RN[r] + '">+</button></div>';
+      }).join('') + '</div>';
+    }
+    function dlgHTML() {
+      const d = UI.dlg, bx = Q('dlgBox');
+      if (!d) { Q('dlg').hidden = true; return; }
+      Q('dlg').hidden = false;
+      if (d.kind === 'pass') {
+        bx.innerHTML = '<h3>PASS THE PHONE</h3><p>Hand the device to <b style="color:' + P(d.who).col + '">' + esc(P(d.who).name) + '</b>. Everyone else, look away from their cards.</p><button class="ta-tt-go" data-a="show">Show ' + esc(P(d.who).name) + '\'s cards</button>';
+      } else if (d.kind === 'discard') {
+        const pi = G.discardQ[0], need = Math.floor(cards(P(pi)) / 2), sel = sum(d.take);
+        bx.innerHTML = '<h3>POLICE RAID</h3><p>' + (humans() > 1 ? esc(P(pi).name) + ' is' : 'You\'re') + ' holding <b>' + cards(P(pi)) + ' cards</b>. Hand over ' + need + ' of them.</p>' + steppers('take', d.take, P(pi).hand) +
+          '<button class="ta-tt-go" data-a="discard"' + (sel === need ? '' : ' disabled') + '>Hand over ' + sel + ' of ' + need + '</button>';
+      } else if (d.kind === 'steal') {
+        bx.innerHTML = '<h3>WHO DO YOU ROB?</h3><p>Take one card at random from a rival on this district.</p><div class="ta-tt-pls">' +
+          victims(G.cur, G.raid).map(function (v) { return '<div class="ta-tt-ans"><i style="background:' + P(v).col + '"></i><span>' + esc(P(v).name) + ' · ' + cards(P(v)) + ' cards</span><button class="ta-tt-sm" data-a="rob" data-v="' + v + '">Rob</button></div>'; }).join('') + '</div>';
+      } else if (d.kind === 'supply') {
+        bx.innerHTML = '<h3>SUPPLY RUN</h3><p>Pick 2 cards from the bank (' + d.picks.length + ' of 2 picked' + (d.picks.length ? ': ' + RN[d.picks[0]] : '') + ').</p><div class="ta-tt-picks">' + RES.map(function (r) { return '<button data-a="pick" data-r="' + r + '">' + icon(r) + RN[r] + '</button>'; }).join('') + '</div><button class="ta-tt-sm" data-a="close">Keep the card for later</button>';
+      } else if (d.kind === 'deal') {
+        bx.innerHTML = '<h3>STREET DEAL</h3><p>Name a resource. Every other faction hands you all of theirs.</p><div class="ta-tt-picks">' + RES.map(function (r) { return '<button data-a="deal" data-r="' + r + '">' + icon(r) + RN[r] + '</button>'; }).join('') + '</div><button class="ta-tt-sm" data-a="close">Keep the card for later</button>';
+      } else if (d.kind === 'trade') {
+        const me = P(G.cur), ok = sum(d.give) > 0 && sum(d.want) > 0 && RES.every(function (r) { return !(d.give[r] && d.want[r]); });
+        bx.innerHTML = '<h3>TRADE WITH RIVALS</h3><div class="ta-tt-cols"><div class="ta-tt-steps"><p>You give</p>' + steppers('give', d.give, me.hand) + '</div><div class="ta-tt-steps"><p>You want</p>' + steppers('want', d.want, null) + '</div></div>' +
+          (d.answers ? '<div class="ta-tt-pls">' + (d.answers.length ? d.answers.map(function (a) { return '<div class="ta-tt-ans"><i style="background:' + P(a.i).col + '"></i><span>' + esc(P(a.i).name) + (a.ok ? ' will take that deal' : ' says no') + '</span>' + (a.ok ? '<button class="ta-tt-sm" data-a="accept" data-v="' + a.i + '">Deal</button>' : '<span></span>') + '</div>'; }).join('') : '<p>No computer factions to trade with.</p>') + '</div>' : '') +
+          '<div class="ta-tt-btns"><button class="ta-tt-go" data-a="offer"' + (ok ? '' : ' disabled') + '>Make the offer</button><button class="ta-tt-sm" data-a="close">Close</button></div>';
+      } else if (d.kind === 'offer') {
+        const o = G.offer, can = RES.every(function (r) { return (o.want[r] || 0) <= P(o.to).hand[r]; });
+        bx.innerHTML = '<h3>' + esc(P(o.from).name.toUpperCase()) + ' WANTS A DEAL</h3><p>They give you <b>' + list(o.give) + '</b> for your <b>' + list(o.want) + '</b>.</p>' +
+          '<div class="ta-tt-btns"><button class="ta-tt-go" data-a="yes"' + (can ? '' : ' disabled') + '>Deal</button><button class="ta-tt-sm" data-a="no">No thanks</button></div>';
+      } else if (d.kind === 'over') {
+        const w = G.winner;
+        bx.innerHTML = '<h3>' + (you(w) ? 'TORN CITY IS YOURS' : esc(P(w).name.toUpperCase()) + ' WINS') + '</h3><p>Final Respect, counting secret Councillor\'s Favours: ' + G.players.map(function (p, i) { return esc(p.name) + ' <b>' + respect(i, true) + '</b>'; }).join(' · ') + '</p><div class="ta-tt-btns"><button class="ta-tt-go" data-a="again">New game</button><button class="ta-tt-sm" data-a="close">Look at the board</button></div>';
+      }
+    }
+    Q('dlgBox').addEventListener('click', function (e) {
+      const b = e.target.closest('button'); if (!b || b.disabled) return;
+      const a = b.dataset.a, d = UI.dlg, r = b.dataset.r;
+      if (a === 'show') { UI.viewer = d.who; UI.dlg = null; sfx.click(); tick(); return; }
+      if (a === 'close') { UI.dlg = null; render(); return; }
+      if (a === 'again') { UI.dlg = null; showTitle(); return; }
+      if (a === 'inc' || a === 'dec') {
+        const k = b.dataset.k, o = d[k], lim = k === 'take' ? P(G.discardQ[0]).hand[r] : k === 'give' ? P(G.cur).hand[r] : 19;
+        o[r] = Math.max(0, Math.min(lim, (o[r] || 0) + (a === 'inc' ? 1 : -1)));
+        if (k === 'take' && sum(o) > Math.floor(cards(P(G.discardQ[0])) / 2)) o[r]--;
+        d.answers = null; render(); return;
+      }
+      if (a === 'discard') { const t = d.take; UI.dlg = null; discard(G.discardQ[0], t); tick(); return; }
+      if (a === 'rob') { UI.dlg = null; steal(G.cur, +b.dataset.v); tick(); return; }
+      if (a === 'pick') {
+        d.picks.push(r);
+        if (d.picks.length === 2) { useFav(G.cur, d.idx); d.picks.forEach(function (x) { P(G.cur).hand[x]++; }); UI.flash = d.picks.slice(); say(name(G.cur) + ' ' + verb(G.cur, 'bring') + ' in ' + RN[d.picks[0]] + ' and ' + RN[d.picks[1]] + '.'); UI.dlg = null; sfx.point(); tick(); }
+        else render();
+        return;
+      }
+      if (a === 'deal') { useFav(G.cur, d.idx); streetDeal(G.cur, r); UI.dlg = null; sfx.point(); tick(); return; }
+      if (a === 'offer') {
+        d.answers = G.players.map(function (p, i) { return i; }).filter(function (i) { return i !== G.cur && P(i).ai; }).map(function (i) { return { i: i, ok: wantsDeal(i, d.give, d.want, G.cur) }; });
+        say(name(G.cur) + ' ' + verb(G.cur, 'offer') + ' ' + list(d.give) + ' for ' + list(d.want) + '.');
+        render(); return;
+      }
+      if (a === 'accept') {
+        const v = +b.dataset.v, me = P(G.cur), them = P(v);
+        RES.forEach(function (x) { me.hand[x] += (d.want[x] || 0) - (d.give[x] || 0); them.hand[x] += (d.give[x] || 0) - (d.want[x] || 0); });
+        say(them.name + ' takes the deal: ' + list(d.give) + ' for ' + list(d.want) + '.'); UI.flash = Object.keys(d.want);
+        UI.dlg = null; sfx.match(); tick(); return;
+      }
+      if (a === 'yes' || a === 'no') {
+        const o = G.offer;
+        if (a === 'yes') { RES.forEach(function (x) { P(o.to).hand[x] += (o.give[x] || 0) - (o.want[x] || 0); P(o.from).hand[x] += (o.want[x] || 0) - (o.give[x] || 0); }); say(name(o.to) + ' ' + verb(o.to, 'take') + ' ' + P(o.from).name + '\'s deal.'); if (o.to === UI.viewer) UI.flash = Object.keys(o.give); sfx.match(); }
+        else { say(name(o.to) + ' ' + verb(o.to, 'turn') + ' down ' + P(o.from).name + '.'); sfx.click(); }
+        G.offer = null; G.phase = 'main'; UI.dlg = null; tick(); return;
+      }
+    });
+
+    /* ---------- Drawing ---------- */
+    function el(tag, attrs, parent) { const n = document.createElementNS(NS, tag); Object.keys(attrs).forEach(function (k) { n.setAttribute(k, attrs[k]); }); (parent || svg).appendChild(n); return n; }
+    function txt(x, y, s, size, fill, parent) { const t = el('text', { x: x, y: y, 'text-anchor': 'middle', 'font-family': FONT, 'font-weight': 800, 'font-size': size, fill: fill }, parent); t.textContent = s; return t; }
+    function pictogram(g, res, x, y) {
+      const a = {
+        brick: [['rect', { x: -14, y: -9, width: 12, height: 7, rx: 1 }], ['rect', { x: 1, y: -9, width: 12, height: 7, rx: 1 }], ['rect', { x: -7, y: 0, width: 12, height: 7, rx: 1 }]],
+        wood: [['rect', { x: -14, y: -2, width: 26, height: 9, rx: 4.5 }], ['rect', { x: -10, y: -12, width: 22, height: 9, rx: 4.5 }]],
+        cotton: [['circle', { cx: -6, cy: -4, r: 6 }], ['circle', { cx: 6, cy: -4, r: 6 }], ['circle', { cx: 0, cy: -10, r: 6 }], ['rect', { x: -1, y: 1, width: 2, height: 10 }]],
+        wheat: [['rect', { x: -1, y: -12, width: 2, height: 24 }], ['ellipse', { cx: -4, cy: -6, rx: 3, ry: 5 }], ['ellipse', { cx: 4, cy: -6, rx: 3, ry: 5 }], ['ellipse', { cx: -4, cy: 3, rx: 3, ry: 5 }], ['ellipse', { cx: 4, cy: 3, rx: 3, ry: 5 }]],
+        ore: [['path', { d: 'M-14 9l6-13l8-5l10 6l4 12z' }]],
+        none: [['path', { d: 'M-12 8h24v-12l-6 -6l-6 6l-6 -6l-6 6z' }]]
+      }[res];
+      const gg = el('g', { transform: 'translate(' + x + ' ' + y + ')', fill: 'rgba(255,255,255,.38)' }, g);
+      a.forEach(function (p) { el(p[0], p[1], gg); });
+    }
+    function render() {
+      if (!G || Q('game').hidden) return;
+      box.classList.toggle('ta-tt-narrow', box.clientWidth < 560);
+      const V = G.verts, E = G.edges, H = G.hexes, act = mine();
+      svg.innerHTML = ''; svg.setAttribute('viewBox', G.vb);
+      svg.style.width = svg.style.height = (UI.zoom * 100) + '%';
+      const sc = Q('scroll'), small = sc.clientWidth / +G.vb.split(' ')[2] < 0.75;   // hexes small on screen: bigger tap targets
+      Q('zout').disabled = UI.zoom <= 1; Q('zin').disabled = UI.zoom >= 3;
+      const defs = el('defs', {});
+      Object.keys(DIST).forEach(function (k) {
+        const lg = el('linearGradient', { id: 'ta-tt-g-' + k, x1: 0, y1: 0, x2: 0, y2: 1 }, defs);
+        el('stop', { offset: '0', 'stop-color': DIST[k].fill[0] }, lg); el('stop', { offset: '1', 'stop-color': DIST[k].fill[1] }, lg);
+      });
+      const hexPts = []; for (let i = 0; i < 6; i++) { const a = Math.PI / 180 * (60 * i - 30); hexPts.push((R * Math.cos(a)).toFixed(1) + ',' + (R * Math.sin(a)).toFixed(1)); }
+      el('polygon', { points: hexPts.join(' '), id: 'ta-tt-hex' }, el('clipPath', { id: 'ta-tt-clip' }, defs));
+      G.ports.forEach(function (pt) {
+        const e = E[pt.e], a = V[e.a], b = V[e.b];
+        el('line', { x1: a.x, y1: a.y, x2: pt.x, y2: pt.y, stroke: '#8a7a5a', 'stroke-width': 4 }); el('line', { x1: b.x, y1: b.y, x2: pt.x, y2: pt.y, stroke: '#8a7a5a', 'stroke-width': 4 });
+        el('circle', { cx: pt.x, cy: pt.y, r: 16, fill: '#f6f1ff', stroke: '#8a7a5a', 'stroke-width': 2 });
+        if (pt.kind === 'any') txt(pt.x, pt.y + 4.5, '3:1', 13, '#1a1530');
+        else { const g = el('g', { transform: 'translate(' + (pt.x - 8) + ' ' + (pt.y - 14) + ') scale(.55)' }); g.innerHTML = ICON[pt.kind]; txt(pt.x, pt.y + 12, '2:1', 9.5, '#1a1530'); }
+      });
+      const gB = el('g', {});
+      H.forEach(function (h) {
+        const pts = []; for (let i = 0; i < 6; i++) { const a = Math.PI / 180 * (60 * i - 30); pts.push((h.cx + (R + 9) * Math.cos(a)).toFixed(1) + ',' + (h.cy + (R + 9) * Math.sin(a)).toFixed(1)); }
+        el('polygon', { points: pts.join(' '), fill: '#2a2440' }, gB);
+      });
+      const raidPick = act && G.phase === 'raid', roll = G.dice ? G.dice[0] + G.dice[1] : 0;
+      H.forEach(function (h, hi) {
+        const g = el('g', {}), img = art(h.res);
+        const poly = el('polygon', { points: h.verts.map(function (v) { return V[v].x.toFixed(1) + ',' + V[v].y.toFixed(1); }).join(' '), fill: 'url(#ta-tt-g-' + h.res + ')', stroke: '#1a1530', 'stroke-width': 3 }, g);
+        if (img) {
+          const ig = el('g', { transform: 'translate(' + h.cx + ' ' + h.cy + ')', 'clip-path': 'url(#ta-tt-clip)' }, g);
+          el('image', { href: img, x: -R, y: -R, width: 2 * R, height: 2 * R, preserveAspectRatio: 'xMidYMid slice' }, ig);
+          el('polygon', { points: hexPts.join(' '), fill: 'none', stroke: '#1a1530', 'stroke-width': 3 }, ig);
+          const lb = el('rect', { x: h.cx - 40, y: h.cy + 28, width: 80, height: 12, rx: 6, fill: 'rgba(16,12,31,.62)' }, g); lb.setAttribute('pointer-events', 'none');
+        } else pictogram(g, h.res, h.cx, h.cy - 24);
+        txt(h.cx, h.cy + 37.5, DIST[h.res].name.toUpperCase(), 9.5, 'rgba(255,255,255,.88)', g);
+        if (h.num) {
+          const hot = h.num === 6 || h.num === 8, lit = roll === h.num && hi !== G.raid;
+          el('circle', { cx: h.cx, cy: h.cy + 6, r: 17, fill: lit ? '#ffcf4a' : '#f6f1ff', stroke: hot ? '#ff4a5a' : '#1a1530', 'stroke-width': hot ? 2.5 : 1.5 }, g);
+          txt(h.cx, h.cy + 11, h.num, 15, hot ? '#d0283a' : '#1a1530', g);
+          const pp = pips(h.num); for (let k = 0; k < pp; k++) el('circle', { cx: h.cx - (pp - 1) * 2.5 + k * 5, cy: h.cy + 16, r: 1.4, fill: hot ? '#d0283a' : '#1a1530' }, g);
+        }
+        if (hi === G.raid) {   // the police raid: a patrol car
+          const pg = el('g', { transform: 'translate(' + (h.cx + 27) + ' ' + (h.cy - 2) + ')' }, g);
+          el('rect', { x: -14, y: -7, width: 28, height: 13, rx: 4, fill: '#1c2a5a', stroke: '#fff', 'stroke-width': 1.5 }, pg);
+          el('rect', { x: -7, y: -12, width: 6, height: 5, fill: '#ff3a4a' }, pg); el('rect', { x: 1, y: -12, width: 6, height: 5, fill: '#3a7aff' }, pg);
+          el('circle', { cx: -8, cy: 7, r: 3, fill: '#111' }, pg); el('circle', { cx: 8, cy: 7, r: 3, fill: '#111' }, pg);
+        }
+        if (raidPick && hi !== G.raid) {
+          const ring = el('polygon', { points: poly.getAttribute('points'), fill: 'rgba(0,0,0,0)', stroke: '#ffcf4a', 'stroke-width': 4 }, g);
+          ring.setAttribute('class', 'ta-tt-pick'); g.style.cursor = 'pointer'; g.addEventListener('click', function () { clickHex(hi); });
+        }
+      });
+      const pickRoute = act && ((G.phase === 'setup' && G.setup.step === 'route') || G.phase === 'roads' || (G.phase === 'main' && UI.mode === 'route'));
+      E.forEach(function (e, i) {
+        const a = V[e.a], b = V[e.b];
+        if (e.owner >= 0) {
+          el('line', { x1: a.x, y1: a.y, x2: b.x, y2: b.y, stroke: '#0c0a16', 'stroke-width': 10, 'stroke-linecap': 'round' });
+          el('line', { x1: a.x, y1: a.y, x2: b.x, y2: b.y, stroke: P(e.owner).col, 'stroke-width': 6, 'stroke-linecap': 'round' });
+        } else if (pickRoute && routeOK(G.cur, i)) {
+          el('line', { x1: a.x, y1: a.y, x2: b.x, y2: b.y, stroke: '#ffcf4a', 'stroke-width': 7, 'stroke-linecap': 'round', 'stroke-dasharray': '4 6' });
+          const hit = el('line', { x1: a.x, y1: a.y, x2: b.x, y2: b.y, stroke: 'rgba(0,0,0,0)', 'stroke-width': small ? 34 : 24, style: 'cursor:pointer', class: 'ta-tt-pick' });
+          hit.addEventListener('click', function () { clickEdge(i); });
+        }
+      });
+      const pickSafe = act && ((G.phase === 'setup' && G.setup.step === 'safe') || (G.phase === 'main' && UI.mode === 'safe'));
+      V.forEach(function (v, i) {
+        if (v.owner >= 0) {
+          const c = P(v.owner).col, g = el('g', { transform: 'translate(' + v.x + ' ' + v.y + ')' });
+          if (v.lvl === 1) el('path', { d: 'M-9 7v-9l9-8l9 8v9z', fill: c, stroke: '#0c0a16', 'stroke-width': 2.5, 'stroke-linejoin': 'round' }, g);
+          else { el('path', { d: 'M-13 9v-12h7v-7h8v-5h7v24z', fill: c, stroke: '#0c0a16', 'stroke-width': 2.5, 'stroke-linejoin': 'round' }, g); el('rect', { x: -2, y: -8, width: 3, height: 3, fill: '#0c0a16' }, g); el('rect', { x: 4, y: -8, width: 3, height: 3, fill: '#0c0a16' }, g); }
+          if (act && G.phase === 'main' && UI.mode === 'hq' && v.owner === G.cur && v.lvl === 1) { el('circle', { r: 16, fill: 'rgba(0,0,0,0)', stroke: '#ffcf4a', 'stroke-width': 2.5, 'stroke-dasharray': '4 4' }, g); g.style.cursor = 'pointer'; g.setAttribute('class', 'ta-tt-pick'); g.addEventListener('click', function () { clickVert(i); }); }
+        } else if (pickSafe && safeOK(G.cur, i, G.phase === 'setup')) {
+          const c = el('circle', { cx: v.x, cy: v.y, r: small ? 16 : 11, fill: 'rgba(255,207,74,.35)', stroke: '#ffcf4a', 'stroke-width': 2.5, style: 'cursor:pointer', class: 'ta-tt-pick' });
+          c.addEventListener('click', function () { clickVert(i); });
+        }
+      });
+      if (G.dice) {
+        [Q('d1'), Q('d2')].forEach(function (d, i) { d.textContent = G.dice[i]; if (UI.rolled) { d.classList.remove('ta-tt-roll'); void d.offsetWidth; d.classList.add('ta-tt-roll'); } });
+        UI.rolled = false;
+      } else { Q('d1').textContent = '–'; Q('d2').textContent = '–'; }
+      const vi = UI.viewer, hide = !!(UI.dlg && UI.dlg.kind === 'pass');
+      Q('meCard').hidden = vi < 0; Q('acts').hidden = vi < 0;
+      if (vi >= 0) {
+        const me = P(vi), main = act && G.phase === 'main';
+        Q('meName').textContent = me.name.toUpperCase(); Q('meName').style.color = me.col;
+        Q('myResp').textContent = hide ? '?' : respect(vi, true);
+        const sec = me.favs.filter(function (f) { return f.t === 'respect'; }).length;
+        Q('secret').textContent = !hide && sec ? '(' + sec + ' secret)' : '';
+        Q('hand').innerHTML = RES.map(function (r) { return '<div class="ta-tt-res' + (UI.flash.indexOf(r) >= 0 && !hide ? ' ta-tt-got' : '') + '">' + icon(r) + '<b>' + (hide ? '?' : me.hand[r]) + '</b><small>' + RN[r] + '</small></div>'; }).join('');
+        Q('favs').innerHTML = hide ? '' : me.favs.length ? me.favs.map(function (f, i) {
+          return '<div class="ta-tt-fav"><div><b>' + FAV[f.t].name + '</b><small>' + FAV[f.t].text + (f.fresh && f.t !== 'respect' ? ' Ready next turn.' : '') + '</small></div>' + (f.t === 'respect' ? '<span class="ta-tt-badge">+1</span>' : '<button class="ta-tt-sm" data-f="' + i + '"' + (act && canPlay(vi, f) ? '' : ' disabled') + '>Play</button>') + '</div>';
+        }).join('') : '<div class="ta-tt-empty">No favour cards yet.</div>';
+        Q('roll').disabled = !(act && G.phase === 'roll');
+        Q('end').disabled = !main;
+        [['bRoute', 'route', me.routes && anyRoute(vi)], ['bSafe', 'safe', me.safes && anySafe(vi)], ['bHQ', 'hq', me.hqs && V.some(function (v) { return v.owner === vi && v.lvl === 1; })]].forEach(function (b) {
+          Q(b[0]).disabled = !(main && canAfford(me, COST[b[1]]) && b[2]); Q(b[0]).classList.toggle('ta-tt-on', UI.mode === b[1]);
+        });
+        Q('bFav').disabled = !(main && canAfford(me, COST.fav) && G.deck.length);
+        Q('bDeal').disabled = !(main && cards(me) > 0 && G.players.some(function (p) { return p.ai; }));
+        const gv = Q('give').value, gt = Q('get').value;
+        Q('give').innerHTML = RES.map(function (r) { return '<option value="' + r + '">' + rate(vi, r) + ' ' + RN[r] + ' (have ' + me.hand[r] + ')</option>'; }).join('');
+        Q('get').innerHTML = RES.map(function (r) { return '<option value="' + r + '">1 ' + RN[r] + '</option>'; }).join('');
+        Q('give').value = gv || 'brick'; Q('get').value = gt || 'ore';
+        Q('bTrade').disabled = !(main && me.hand[Q('give').value] >= rate(vi, Q('give').value) && Q('give').value !== Q('get').value);
+        UI.flash = [];
+      }
+      Q('players').innerHTML = G.players.map(function (p, i) {
+        const b = (G.longest === i ? '<span class="ta-tt-badge">Longest Road</span>' : '') + (G.bigCrew === i ? '<span class="ta-tt-badge">Biggest Crew</span>' : '');
+        return '<div class="ta-tt-pl' + (G.cur === i && G.phase !== 'over' ? ' ta-tt-turn' : '') + '"><i style="background:' + p.col + '"></i><span>' + esc(p.name) + (p.ai ? '' : ' (human)') + b + '</span><span class="ta-tt-r">' + respect(i, (i === vi && !hide) || G.phase === 'over') + '</span>' +
+          '<span class="ta-tt-meta">' + cards(p) + ' cards · ' + p.favs.length + ' favours · road ' + routeLen(i) + ' · crew ' + p.crew + '</span></div>';
+      }).join('');
+      Q('log').innerHTML = G.log.slice(0, 40).map(function (t) { return '<p>' + esc(t) + '</p>'; }).join('');
+      const c = P(G.cur);
+      Q('prompt').textContent = G.phase === 'over' ? (you(G.winner) ? 'You win!' : P(G.winner).name + ' wins.') :
+        !act ? (G.phase === 'discard' ? 'Police raid: handing over cards…' : G.phase === 'offer' ? P(G.offer.from).name + ' wants a deal.' : c.name + (G.phase === 'setup' ? ' is picking a spot…' : ' is moving…')) :
+        G.phase === 'setup' ? (G.setup.step === 'safe' ? 'Tap a gold spot for your ' + (G.setup.i < G.players.length ? 'first' : 'second') + ' safehouse.' : 'Tap a gold road next to it.') :
+        G.phase === 'roll' ? 'Your turn. Roll the dice' + (c.favs.some(function (f) { return canPlay(G.cur, f); }) ? ', or play a Crew card first.' : '.') :
+        G.phase === 'raid' ? 'Tap a district to send the police raid there.' : G.phase === 'roads' ? 'Road Crew: build ' + G.free + ' more road' + (G.free > 1 ? 's' : '') + ' for free.' :
+        UI.mode === 'route' ? 'Tap a gold road to build it.' : UI.mode === 'safe' ? 'Tap a gold spot to open a safehouse.' : UI.mode === 'hq' ? 'Tap one of your safehouses to upgrade it.' : 'Build, trade or end your turn.';
+      if (G.phase === 'over' && !UI.dlg && !UI.sawOver) { UI.sawOver = true; UI.dlg = { kind: 'over' }; }
+      dlgHTML();
+    }
+    Q('favs').addEventListener('click', function (e) { const b = e.target.closest('button[data-f]'); if (b && !b.disabled) playFav(+b.dataset.f); });
+    Q('give').addEventListener('change', render); Q('get').addEventListener('change', render);
+    function zoomTo(z) {   // keep the middle of the view in the middle while zooming
+      const sc = Q('scroll'), fx = (sc.scrollLeft + sc.clientWidth / 2) / sc.scrollWidth, fy = (sc.scrollTop + sc.clientHeight / 2) / sc.scrollHeight;
+      UI.zoom = Math.max(1, Math.min(3, z)); render();
+      sc.scrollLeft = fx * sc.scrollWidth - sc.clientWidth / 2; sc.scrollTop = fy * sc.scrollHeight - sc.clientHeight / 2;
+    }
+    /* Full screen: the game leaves the phone and fills the browser window (and the whole screen where the browser
+       allows it). The phone itself stays open underneath; press the button again or Escape to go back. */
+    let home = null;
+    function setFull(onOff) {
+      if (onOff === box.classList.contains('ta-tt-full')) return;
+      if (onOff) {
+        home = box.parentNode; root.appendChild(box); box.classList.add('ta-tt-full');
+        try { if (box.requestFullscreen && !document.fullscreenElement) { const pr = box.requestFullscreen(); if (pr && pr.catch) pr.catch(function () {}); } } catch (e) {}
+      } else {
+        box.classList.remove('ta-tt-full'); if (home) home.appendChild(box);
+        try { if (document.fullscreenElement === box) document.exitFullscreen(); } catch (e) {}
+      }
+      Q('full').textContent = onOff ? '✕' : '⛶'; Q('full').setAttribute('aria-label', onOff ? 'Leave full screen' : 'Full screen');
+      Q('full2').textContent = onOff ? 'Leave full screen' : 'Play full screen';
+      sfx.click(); render();
+    }
+    on('full', function () { setFull(!box.classList.contains('ta-tt-full')); });
+    on('full2', function () { setFull(!box.classList.contains('ta-tt-full')); });
+    document.addEventListener('fullscreenchange', function () { if (!document.fullscreenElement && box.classList.contains('ta-tt-full')) setFull(false); });
+    window.addEventListener('resize', function () { if (box.classList.contains('ta-tt-full')) render(); });
+    on('zin', function () { zoomTo(UI.zoom + 0.5); });
+    on('zout', function () { zoomTo(UI.zoom - 0.5); });
+
+    /* ---------- New game screen ---------- */
+    function seatsHTML() {
+      Q('seats').innerHTML = opts.seats.map(function (s, i) {
+        return '<div class="ta-tt-seat"><i style="background:' + COLOURS[s[1]][0] + '"></i><span>' + esc(NAMES[i]) + '</span>' +
+          '<select data-s="' + i + '" data-w="kind" aria-label="' + esc(NAMES[i]) + ' player"><option value="human"' + (s[0] === 'human' ? ' selected' : '') + '>Human</option><option value="ai"' + (s[0] === 'ai' ? ' selected' : '') + '>Computer</option>' + (i === 3 ? '<option value="off"' + (s[0] === 'off' ? ' selected' : '') + '>Not playing</option>' : '') + '</select>' +
+          '<select data-s="' + i + '" data-w="col" aria-label="' + esc(NAMES[i]) + ' colour">' + COLOURS.map(function (c, k) { return '<option value="' + k + '"' + (s[1] === k ? ' selected' : '') + '>' + c[1] + '</option>'; }).join('') + '</select></div>';
+      }).join('');
+      Q('size').value = opts.size; Q('diff').value = opts.diff; Q('speed').value = String(opts.speed);
+      Q('record').textContent = stats.games ? 'Your record against the computer: ' + stats.wins + ' win' + (stats.wins === 1 ? '' : 's') + ' in ' + stats.games + ' game' + (stats.games === 1 ? '' : 's') + (stats.fastest ? ' · fastest win in ' + stats.fastest + ' turns' : '') + '.' : '';
+    }
+    Q('seats').addEventListener('change', function (e) {
+      const i = +e.target.dataset.s, w = e.target.dataset.w;
+      if (w === 'kind') opts.seats[i][0] = e.target.value;
+      else {   // colours stay unique: picking one already taken swaps the two seats' colours
+        const k = +e.target.value, other = opts.seats.findIndex(function (s, j) { return j !== i && s[1] === k; });
+        if (other >= 0) opts.seats[other][1] = opts.seats[i][1];
+        opts.seats[i][1] = k;
+      }
+      store.set('territoriesOpts', opts); seatsHTML();
+    });
+    ['size', 'diff', 'speed'].forEach(function (k) { Q(k).addEventListener('change', function () { opts[k] = k === 'speed' ? +Q(k).value : Q(k).value; store.set('territoriesOpts', opts); }); });
+    function showTitle() {
+      clearTimeout(UI.timer);
+      Q('game').hidden = true; Q('title').hidden = false; Q('dlg').hidden = true; UI.dlg = null; seatsHTML();
+      const saved = store.get('territories', null);
+      Q('cont').hidden = !(saved && saved.v === 1 && saved.phase && saved.phase !== 'over');
+    }
+    on('start', function () { sfx.click(); Q('title').hidden = true; Q('game').hidden = false; newGame(); });
+    on('cont', function () {
+      const s = store.get('territories', null); if (!s) return;
+      G = s; UI.viewer = -1; UI.dlg = null; UI.mode = null; UI.sawOver = false; UI.aiActs = 0; UI.asked = false;
+      sfx.click(); Q('title').hidden = true; Q('game').hidden = false; tick();
+    });
+    showTitle();
+    
+    games.territories = {
+      enter: function () { UI.live = true; if (G && !Q('game').hidden) tick(); else showTitle(); },
+      leave: function () { UI.live = false; clearTimeout(UI.timer); setFull(false); },
+      onEscape: function () { if (box.classList.contains('ta-tt-full')) { setFull(false); return true; } return false; },
+      relayout: function () { if (G && !Q('game').hidden) render(); },
+      bestText: function () { return stats.games ? stats.wins + ' win' + (stats.wins === 1 ? '' : 's') + ' in ' + stats.games + ' games' : 'No games yet'; },
+      onKey: function (e) {
+        if (!G || Q('game').hidden || !mine()) return false;
+        const k = keyName(e);
+        if ((k === 'r' || k === ' ') && G.phase === 'roll' && !UI.dlg) { Q('roll').click(); return true; }
+        if (k === 'e' && G.phase === 'main' && !UI.dlg) { Q('end').click(); return true; }
+        return false;
+      }
     };
   })();
 
