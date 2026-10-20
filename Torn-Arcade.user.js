@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.36.0
+// @version      2.36.1
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with eight game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -574,7 +574,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gift codes', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.36.0';
+  const VERSION = '2.36.1';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -612,7 +612,7 @@
     '.ta-batt i{display:block;height:100%;width:78%;border-radius:1.5px;background:#fff}',
     '.ta-land .ta-status{display:none}',
     /* Home screen */
-    '.ta-home{position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;padding-top:48px;background-size:cover;background-position:center}',
+    '.ta-home{position:absolute;left:0;top:0;width:calc(100% / var(--hs,1));height:calc(100% / var(--hs,1));transform:scale(var(--hs,1));transform-origin:0 0;z-index:1;display:flex;flex-direction:column;padding-top:calc(48px / var(--hs,1));padding-left:max(0px, calc((100% / var(--hs,1) - 480px) / 2));padding-right:max(0px, calc((100% / var(--hs,1) - 480px) / 2));background-size:cover;background-position:center}',
     '.ta-home::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.25),transparent 30%,transparent 70%,rgba(0,0,0,.35));pointer-events:none}',
     '.ta-widget{position:relative;margin:14px 18px 6px;padding:14px 16px;border-radius:22px;background:rgba(10,18,30,.42);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.12);color:#fff}',
     '.ta-widget b{display:block;font:300 52px/1 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;letter-spacing:-1px}',
@@ -782,7 +782,8 @@
     '.ta-full .ta-screen{border-radius:0}',
     '.ta-full .ta-island,.ta-full .ta-side,.ta-full .ta-homebar{display:none}',
     '.ta-full .ta-status{height:34px;padding:0 16px}',
-    '.ta-full .ta-home,.ta-full .ta-app{padding-top:34px}',
+    '.ta-full .ta-app{padding-top:34px}',
+    '.ta-full .ta-home{padding-top:calc(34px / var(--hs,1))}',
     /* Floating fallback button (only on pages without Torn\'s sidebar) */
     '.ta-launch{position:fixed;left:12px;bottom:12px;z-index:2147482999;display:flex;align-items:center;gap:6px;padding:7px 13px 7px 10px;margin:0;border-radius:999px;border:1px solid #2f7bd1;background:rgba(12,20,31,.92);color:#e6f2ff;font:700 13px/1 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.35);opacity:.85}',
     '.ta-launch:hover{opacity:1}',
@@ -829,7 +830,7 @@
   // (Anyone who already used the beta has a saved setting such as betaSeen, so they don't see it.)
   const noteEl = $(root, '.ta-note');
   if (!store.get('welcomed', false) && !store.get('betaSeen', '')) noteEl.hidden = false;
-  $(noteEl, '.ta-notex').addEventListener('click', function (e) { e.stopPropagation(); noteEl.hidden = true; store.set('welcomed', true); try { sfx.click(); } catch (e2) {} });
+  $(noteEl, '.ta-notex').addEventListener('click', function (e) { e.stopPropagation(); noteEl.hidden = true; store.set('welcomed', true); fitHome(); try { sfx.click(); } catch (e2) {} });
 
 
   function makePanel(id, title, desc, controls, stats, stage, help) {
@@ -973,12 +974,27 @@
   function sizePhone() {
     const full = isFull(), land = root.classList.contains('ta-land');
     root.classList.toggle('ta-full', full);
-    if (full) return;
-    const vw = window.innerWidth, vh = window.innerHeight;
-    let pw, ph;
-    if (land) { pw = Math.min(vw - 40, (vh - 40) / 0.5, 1120); ph = pw * 0.5; }
-    else { ph = Math.min(880, vh - 32); pw = ph * 0.485; if (pw > vw - 24) { pw = vw - 24; ph = pw / 0.485; } }
-    root.style.setProperty('--pw', Math.round(pw) + 'px'); root.style.setProperty('--ph', Math.round(ph) + 'px');
+    if (!full) {
+      const vw = window.innerWidth, vh = window.innerHeight;
+      let pw, ph;
+      if (land) { pw = Math.min(vw - 40, (vh - 40) / 0.5, 1120); ph = pw * 0.5; }
+      else { ph = Math.min(880, vh - 32); pw = ph * 0.485; if (pw > vw - 24) { pw = vw - 24; ph = pw / 0.485; } }
+      root.style.setProperty('--pw', Math.round(pw) + 'px'); root.style.setProperty('--ph', Math.round(ph) + 'px');
+    }
+    fitHome();
+  }
+  // On a short screen the home screen (clock, welcome note, apps and the Scores/Settings dock) can be taller than the
+  // phone. Shrink the whole home screen evenly until it fits, so every icon, including Settings, is always on screen.
+  function fitHome() {
+    try { if (!homeEl || root.hidden) return; } catch (e) { return; }
+    let sc = 1;
+    homeEl.style.setProperty('--hs', '1');
+    for (let i = 0; i < 3; i++) {
+      const need = homeEl.scrollHeight, have = homeEl.clientHeight;
+      if (!have || need <= have + 1) break;
+      sc = Math.max(0.45, sc * have / need - 0.005);
+      homeEl.style.setProperty('--hs', sc.toFixed(3));
+    }
   }
   function setOrientation(land, animate) {
     const was = root.classList.contains('ta-land');
@@ -1269,7 +1285,7 @@
     renderDev();
   });
   devBox.addEventListener('keydown', function (e) { if (e.key === 'Enter' && e.target.dataset && e.target.dataset.f === 'pass') { const b = $(devBox, '[data-dev="unlock"]'); if (b) devAction(b); } });
-  function refreshDevIcon() { const b = $(root, '.ta-dock [data-app="dev"]'); if (b) b.hidden = !devIsMe(); }
+  function refreshDevIcon() { const b = $(root, '.ta-dock [data-app="dev"]'); if (b) b.hidden = !devIsMe(); fitHome(); }
 
   function artThemesReady() { const api = games.pocket && games.pocket.art; return !!(api && api.get && api.get('wpneon')); }
   function renderSettings() {
