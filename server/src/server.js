@@ -7,8 +7,21 @@ const db = require('./db');
 const torn = require('./torn');
 
 const PORT = Number(process.env.PORT) || 8080;
-const VERSION = '1.0.0';
-const GAMES = ['territories'];
+const VERSION = '1.1.0';
+const GAMES = ['territories'];   // rated games, played on the server
+// Best-score leaderboards. These scores come from players' own devices, so each has limits that throw out
+// impossible values. dir: 'desc' = higher is better, 'asc' = lower is better (times).
+const BOARDS = {};
+['easy', 'normal', 'hard'].forEach(function (d) { BOARDS['flappy:' + d] = { dir: 'desc', min: 1, max: 100000 }; });
+BOARDS['bombs:easy'] = { dir: 'asc', min: 1, max: 86400 };
+BOARDS['bombs:normal'] = { dir: 'asc', min: 7, max: 86400 };
+BOARDS['bombs:hard'] = { dir: 'asc', min: 25, max: 86400 };
+BOARDS['eggdash:endless'] = { dir: 'desc', min: 1, max: 100000000 };
+BOARDS['bogies:total'] = { dir: 'desc', min: 1, max: 100000000 };
+for (let i = 1; i <= 6; i++) BOARDS['defence:' + i] = { dir: 'desc', min: 1, max: 40 };
+BOARDS['tornies:caught'] = { dir: 'desc', min: 1, max: 179 };
+BOARDS['tornies:medals'] = { dir: 'desc', min: 1, max: 8 };
+BOARDS['invasion:standard'] = { dir: 'desc', min: 1, max: 100000000 };
 const ORIGINS = ['https://www.torn.com', 'https://torn.com'];
 
 /* ---------- Rate limits: per IP, in memory (one server instance) ---------- */
@@ -86,8 +99,46 @@ async function route(req, res, url) {
     const acc = (await db.q('INSERT INTO accounts (name) VALUES ($1) RETURNING *', [name])).rows[0];
     return send(res, 200, { token: await newToken(acc.id), account: pub(acc) });
   }
-  // The global leaderboard (verified players only).
+  // Best-score leaderboards (verified players only).
   let m;
+  if ((m = /^\/v1\/leaderboard\/([a-z]+:[a-z0-9]+)$/.exec(path)) && method === 'GET') {
+    const B = BOARDS[m[1]];
+    if (!B) return fail(res, 404, 'no_game', 'Unknown leaderboard.');
+    const limit = Math.max(1, Math.min(100, Number(url.searchParams.get('limit')) || 50)), ord = B.dir === 'asc' ? 'ASC' : 'DESC';
+    const rows = (await db.q(
+      'SELECT a.name, a.torn_id, s.value FROM scores s JOIN accounts a ON a.id = s.account_id ' +
+      'WHERE s.board = $1 AND a.verified AND NOT a.banned ORDER BY s.value ' + ord + ', s.updated_at, a.id LIMIT $2', [m[1], limit])).rows;
+    const out = { board: m[1], dir: B.dir, players: rows.map(function (r, i) { return { rank: i + 1, name: r.name, tornId: r.torn_id, value: Number(r.value) }; }) };
+    const me = await whoAsks(req);
+    if (me) {
+      const mine = (await db.q('SELECT value FROM scores WHERE account_id = $1 AND board = $2', [me.id, m[1]])).rows[0];
+      if (mine && me.verified) {
+        const better = (await db.q('SELECT count(*)::int AS n FROM scores s JOIN accounts a ON a.id = s.account_id WHERE s.board = $1 AND a.verified AND NOT a.banned AND s.value ' + (B.dir === 'asc' ? '<' : '>') + ' $2', [m[1], mine.value])).rows[0].n;
+        out.me = { rank: better + 1, value: Number(mine.value) };
+      } else out.me = { rank: null, value: null };
+    }
+    return send(res, 200, out);
+  }
+  // Send your best scores: keeps whichever is better, yours or the one already saved. Verified players only.
+  if (path === '/v1/scores' && method === 'POST') {
+    if (limited(ip, 'scores', 30, 60000)) return fail(res, 429, 'slow_down', 'Too many score updates. Wait a minute.');
+    const me = await whoAsks(req);
+    if (!me) return fail(res, 401, 'signed_out', 'Sign in to play online.');
+    if (me.banned) return fail(res, 403, 'banned', 'This account can\'t play online.');
+    if (!me.verified) return fail(res, 403, 'verify_first', 'Verify your Torn ID to join the global leaderboards.');
+    const body = await readBody(req), sc = body && body.scores;
+    if (!sc || typeof sc !== 'object' || Array.isArray(sc) || Object.keys(sc).length > 40) return fail(res, 400, 'bad_scores', 'Bad request.');
+    let saved = 0; const rejected = [];
+    for (const k of Object.keys(sc)) {
+      const B = BOARDS[k], v = Number(sc[k]);
+      if (!B || !Number.isFinite(v) || v < B.min || v > B.max || Math.floor(v) !== v) { rejected.push(k); continue; }
+      await db.q('INSERT INTO scores (account_id, board, value) VALUES ($1, $2, $3) ON CONFLICT (account_id, board) DO UPDATE SET value = ' +
+        (B.dir === 'asc' ? 'LEAST' : 'GREATEST') + '(scores.value, EXCLUDED.value), updated_at = CASE WHEN EXCLUDED.value ' + (B.dir === 'asc' ? '<' : '>') + ' scores.value THEN now() ELSE scores.updated_at END', [me.id, k, v]);
+      saved++;
+    }
+    return send(res, 200, { saved: saved, rejected: rejected });
+  }
+  // The rated leaderboard (verified players only).
   if ((m = /^\/v1\/leaderboard\/([a-z]+)$/.exec(path)) && method === 'GET') {
     if (GAMES.indexOf(m[1]) < 0) return fail(res, 404, 'no_game', 'Unknown game.');
     const limit = Math.max(1, Math.min(100, Number(url.searchParams.get('limit')) || 50));

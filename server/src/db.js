@@ -35,6 +35,14 @@ CREATE TABLE IF NOT EXISTS ratings (
   PRIMARY KEY (account_id, game)
 );
 CREATE INDEX IF NOT EXISTS ratings_board ON ratings(game, rating DESC);
+CREATE TABLE IF NOT EXISTS scores (
+  account_id  BIGINT NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+  board       TEXT NOT NULL,                   -- e.g. 'flappy:hard', 'defence:3', 'tornies:caught'
+  value       DOUBLE PRECISION NOT NULL,
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (account_id, board)
+);
+CREATE INDEX IF NOT EXISTS scores_board ON scores(board, value);
 `;
 
 async function migrate() { await pool.query(SCHEMA); }
