@@ -27,6 +27,15 @@ The illustrated Tornie and character artwork comes in two separate, optional scr
 
 Install them like the main script, then reload Torn. The **Tornies Art** and **Character Art** apps on the bottom row of the phone show whether each pack is installed, a before/after preview, a gallery of the art you've unlocked and an on/off switch. Each pack updates itself separately.
 
+### 👽 Torn Invasion 3D (optional add-on)
+Torn Invasion is a full 3D shooter, so it comes as its own optional script and keeps Torn Arcade small.
+
+| Script | What it adds | Size | Install |
+|---|---|---|---|
+| **Torn Arcade - Invasion** | Torn Invasion 3D: the 3D alien shooter that opens in the phone's Invasion app | about 1.4 MB | [Install](https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade-Invasion.user.js) |
+
+Install it like the main script, then reload Torn. Without it, the Invasion app shows an install button. If you played the old Torn Invasion, your kill counts, achievement progress and best scores carry over the first time it opens.
+
 How they link: the packs hand their pictures to Torn Arcade using browser events on the Torn page you're viewing. Torn Arcade checks every picture (known names, WebP images only) before using it. The packs make **no requests of any kind**, store nothing and need no API key.
 
 ### 🔄 Automatic updates
@@ -42,7 +51,7 @@ From version 2.15.2, Tampermonkey checks this link for new versions (about once 
 | ![Route 1](screenshots/tornies-route.png) | ![A Tornies battle](screenshots/tornies-battle.png) |
 | ![Westgate](screenshots/tornies-town.png) | ![The beach](screenshots/tornies-beach.png) |
 | ![Tornie Clinic](screenshots/tornies-clinic.png) | ![Golden Torn Casino](screenshots/tornies-casino.png) |
-| ![Frostbite Cave](screenshots/tornies-ice-cave.png) | ![Torn Invasion](screenshots/torn-invasion.png) |
+| ![Frostbite Cave](screenshots/tornies-ice-cave.png) | ![Torn Invasion 3D](screenshots/torn-invasion-3d.png) |
 | ![Angry Bogies](screenshots/angry-bogies.png) | ![Flappy Torn](screenshots/flappy-torn.png) |
 | ![Faction Defence, Casino Strip](screenshots/faction-defence.png) | ![Faction Defence, Racket HQ](screenshots/faction-defence-racket-hq.png) |
 
@@ -65,7 +74,7 @@ A creature-collecting RPG set in Torn City. You start in Maple Hollow with one o
 - Running Shoes: sold in every Tornie Supplies shop once you have three medals ($10,000). Hold B (or Shift) to run. Map options in Settings → Tornies: **Detailed maps** (off for classic pixel maps on slower phones), **Save maps on this device** (maps you have visited open instantly next time), **Prepare all maps** (a one-off that draws and saves every map, indoors and out; about 40–100 MB of browser storage and a few minutes) and **Clear saved maps**.
 
 ### 👽 Torn Invasion
-**Under maintenance.** Torn Invasion is being rebuilt in full 3D as its own companion script, with real 3D streets and alien hives, new weapons and upgrades, smarter aliens and a bigger boss. Until then the app shows a notice on the phone. Your existing progress (unlocked levels, best scores and achievements) is kept and will carry over.
+A 3D first-person shooter (optional add-on, see [Install](#-install)). Aliens have taken Downtown: fight up the main street past neon shops, street lamps and crashed cars to the alien crash site and its green exit beam. Grunts rush you, Spitters fire goo, Drones hover and zap, and an armoured Brute guards the crash site. You start with a **pistol**, then find a pump-action **shotgun** and the **plasma rifle**; headshots do double damage. Three difficulties, mouse speed, invert look and graphics quality (Low for older phones), a pause menu and tiered achievements. On a phone, your left thumb moves, your right thumb looks, with fire, reload and swap buttons. The aliens and guns are custom illustrated 3D models made specifically for Torn Arcade, and the aliens walk, attack and fall with their own skeletons. More levels are on the way.
 
 ### 🐦 Angry Bogies
 Bogie versus the Racket. Pull back the slingshot, fling Bogies (the green Slime, the Fuzz that splits into three, the hard-hitting Brawler and the explosive Bot) into the gang's hideouts, smash the structures and knock out every thug. **Fifteen levels with three stars each**, from the backstreets to Racket HQ, with more structures and more thugs as you go. Stars are scored on thugs knocked out, blocks smashed and Bogies left over.
@@ -92,6 +101,7 @@ Torn Arcade is built to follow Torn's scripting rules:
 - It **never loads Torn pages** and makes **no non-API requests** to Torn.
 - It doesn't talk to any website other than the official Torn API, and only does that if you turn on event notifications. The Art Pack install buttons are plain links to this GitHub page that only open when you tap them.
 - The optional Art Packs make no requests at all. They only pass pictures to Torn Arcade on the page.
+- The optional **Torn Arcade - Invasion** script makes no requests at all. It only draws the game inside the phone and talks to Torn Arcade through events on the page.
 - Games only react to keys while the phone is open, and never while you're typing in a text box.
 
 ### Optional event notifications
@@ -109,6 +119,12 @@ If you add a **Limited** access API key in Settings, the phone checks the offici
 - **Data Sharing:** nothing is sent anywhere except event requests to `api.torn.com`.
 - **Where it may be used:** Torn (torn.com) only. See [Licence](#-licence).
 - The same table is shown next to the API key box in Settings and at the top of the script.
+
+**Torn Arcade - Invasion:**
+
+| Data Storage | Data Sharing | Purpose of Use | Key Storage & Sharing | Key Access Level |
+|---|---|---|---|---|
+| Only locally (settings, best scores and achievement progress) | Nobody | Public amusement (Torn Invasion 3D) | Not stored / Not shared (no key used) | None (no API key needed) |
 
 **Art Packs** (Tornies Art and Character Art):
 

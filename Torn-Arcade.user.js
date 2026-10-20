@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.29.0
-// @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with six game apps: Tornies (a creature-collecting RPG), Torn Invasion (an alien shooter, under maintenance while a new 3D version is built), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
+// @version      2.30.0
+// @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with six game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
 // @license      All Rights Reserved - for use on Torn (torn.com) only; no copying, modifying, redistribution or use elsewhere (see LICENCE below)
@@ -23,7 +23,8 @@
  * Copyright (c) 2026 Eaglewing [571041]. All rights reserved.
  *
  * This licence covers the author's own work in Torn Arcade and its optional
- * Art Packs (Torn Arcade - Tornies Art and Torn Arcade - Character Art): the
+ * companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art
+ * and Torn Arcade - Invasion): the
  * code, the games and their design, the original characters and creatures
  * (including the Tornies), the artwork, the music and the original text
  * ("the Author's Work"). The Author's Work belongs to Eaglewing [571041].
@@ -105,6 +106,15 @@
  *   pixel-art versions are used. The "Tornies Art" and "Character Art" apps
  *   on the phone show their status and link to them on GitHub (the link only
  *   opens when you tap it).
+ * - TORN INVASION (optional): the 3D shooter is its own script, "Torn Arcade -
+ *   Invasion". Both scripts run on the Torn page you are viewing and talk only
+ *   through browser events on that page ('ta-inv-ping', 'ta-inv-hello',
+ *   'ta-inv-cmd', 'ta-inv-state', 'ta-inv-summary') carrying plain text. The
+ *   phone gives the game an empty box to draw in, tells it when the app opens,
+ *   closes or is muted, shows its scores, and once hands it your old Torn
+ *   Invasion progress (kept in this script's storage) so it carries over.
+ *   Neither script makes any request. Without it, the Invasion app shows a
+ *   link to install it on GitHub (the link only opens when you tap it).
  * - EVENT NOTIFICATIONS (optional, off until you add an API key in
  *   Settings): while the phone is open, it asks the official Torn API
  *   (api.torn.com, /v2/user/events) for your new events every 5 seconds
@@ -412,7 +422,7 @@
   /* ================= Shell: the Mobile Phone ================= */
   const GAMES = [
     { id: 'pocket', name: 'Tornies',        icon: '🐾', bg: ['#4fd8b8', '#0f7a6a'] , desc: 'A creature-collecting adventure across Torn City. Catch 178 Tornies, win 8 Arena medals and take on the Torn Council.' },
-    { id: 'invasion', name: 'Invasion', title: 'Torn Invasion', icon: '👽', bg: ['#6be38a', '#14532a'] , desc: 'Under maintenance. A brand-new 3D version of the alien shooter is on the way.' },
+    { id: 'invasion', name: 'Invasion', title: 'Torn Invasion', icon: '👽', bg: ['#6be38a', '#14532a'] , desc: 'A 3D alien shooter. Fight through alien-infested Torn City with pistol, shotgun and plasma rifle. Needs the free Torn Invasion add-on.' },
     { id: 'bogies', name: 'Angry Bogies', icon: '😠', bg: ['#ff9a5a', '#c8382a'] , desc: 'Bogie versus the Racket. Fling Bogies from a slingshot, smash the hideouts and knock out every thug. Fifteen levels, three stars each.' },
     { id: 'defence', name: 'Faction Defence', icon: '🛡️', bg: ['#7fb0ff', '#2a4f9a'], desc: 'Hold your Faction HQ against Racket raids. Build and upgrade defenders beside the road, survive 40 waves on 6 maps and spend your War Chest in the Armoury.' },
     { id: 'bombs',  name: 'Dirty Bombs',    icon: '☢️', bg: ['#ffe066', '#c99a10'] , desc: 'Clear the city block by block without setting off a dirty bomb. Numbers show how many bombs are nearby.' },
@@ -438,7 +448,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gift codes', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.29.0';
+  const VERSION = '2.30.0';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -902,9 +912,11 @@
         '</div></div></div></div>';
     }
     const invApp = appInfo('invasion');
-    if (invApp && games.invasion && games.invasion.summary) {
-      const s = games.invasion.summary();
-      const chips = s.diffs.map(function (d) { return '<span class="ta-chip">' + esc(d.name) + ' <b>' + (d.best ? d.best.toLocaleString('en-GB') : '–') + '</b> · level ' + d.level + '/' + s.levels + '</span>'; }).join('');
+    const invSum = invApp && games.invasion && games.invasion.summary ? games.invasion.summary() : null;
+    if (invSum) {
+      const s = invSum;
+      const chips = s.diffs.map(function (d) { return '<span class="ta-chip">' + esc(d.name) + ' <b>' + (d.best ? d.best.toLocaleString('en-GB') : '–') + '</b> · level ' + d.level + '/' + s.levels + '</span>'; }).join('') +
+        (s.classic ? Object.keys(s.classic).map(function (d) { return '<span class="ta-chip">Classic ' + esc(d.charAt(0).toUpperCase() + d.slice(1)) + ' <b>' + Number(s.classic[d]).toLocaleString('en-GB') + '</b></span>'; }).join('') : '');
       html += '<div class="ta-group"><h3>Torn Invasion</h3><div class="ta-list"><div class="ta-row">' + iconSmall(invApp) + '<div class="ta-rtext"><b>Torn Invasion</b>' +
         (chips ? '' : '<small>No runs yet. Clear a level to unlock the next one.</small>') +
         '<div class="ta-chips">' + chips + '<span class="ta-chip">🏆 Achievements <b>' + s.ach.n + '/' + s.ach.all + '</b></span></div></div></div></div></div>';
@@ -1343,6 +1355,7 @@
   function arcadeShows(id) { return isOpen && current === id; }
   function setMuted(m) {
     muted = !!m; store.set('muted', muted);
+    if (games.invasion && games.invasion.mute) games.invasion.mute(muted);
     muteBtn.textContent = muted ? '🔇' : '🔊';
     muteBtn.title = muted ? 'Sound off (click to turn on)' : 'Sound on (click to mute)';
   }
@@ -14982,44 +14995,71 @@
   };
   })();
 
-  /* ================= Torn Invasion: under maintenance ================= */
-  // Torn Invasion is moving into its own script and being rebuilt in 3D. Until then the app shows a notice.
-  // Existing progress stays in this script's 'invasion' storage so it can be handed to the new version.
+  /* ================= Torn Invasion: link to the separate Invasion script ================= */
+  // Torn Invasion is its own optional script ("Torn Arcade - Invasion"). Both scripts run on the Torn page you
+  // are viewing and talk with page events carrying JSON text; nothing is downloaded and no request is made.
+  // The phone gives the game an empty box to draw in, and tells it when the app opens, closes or is muted.
+  // Old Torn Invasion progress (kept in this script's storage) is handed over once when the new game asks.
   (function () {
-  function invStore() { try { return GM_getValue('invasion', {}) || {}; } catch (e) { return {}; } }
+  const INV_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade-Invasion.user.js';
+  const inv = { ok: false, ver: '', playing: false, summary: store.get('invSummary', null) };
+  function invOld() { try { return GM_getValue('invasion', {}) || {}; } catch (e) { return {}; } }
+  function send(cmd, extra) { const o = Object.assign({ cmd: cmd }, extra || {}); document.dispatchEvent(new CustomEvent('ta-inv-cmd', { detail: JSON.stringify(o) })); }
   GM_addStyle([
-    '.tim{display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;height:100%;min-height:0;padding:24px 22px;text-align:center;overflow:auto}',
-    '.ta-phone .ta-panel.tim.ta-on{display:flex}',
-    '.tim-badge{width:84px;height:84px;border-radius:22px;display:grid;place-items:center;font-size:44px;background:linear-gradient(135deg,#6be38a,#14532a);box-shadow:0 10px 26px rgba(20,83,42,.45);position:relative}',
-    '.tim-badge i{position:absolute;right:-8px;bottom:-8px;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:18px;font-style:normal;background:#ffd65a;box-shadow:0 3px 8px rgba(0,0,0,.35)}',
+    '.ta-phone .ta-panel.tim-wrap.ta-on{display:block;height:100%;min-height:0}',
+    '.tim-wrap #ta-inv-root{height:100%}',
+    '.tim{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;height:100%;min-height:0;padding:24px 22px;text-align:center;overflow:auto}',
+    '.tim[hidden]{display:none}',
+    '.tim-badge{width:84px;height:84px;border-radius:22px;display:grid;place-items:center;font-size:44px;background:linear-gradient(135deg,#6be38a,#14532a);box-shadow:0 10px 26px rgba(20,83,42,.45)}',
     '.tim h2{margin:0;font-size:19px;line-height:1.25;color:var(--text,#fff)}',
-    '.tim p{margin:0;max-width:320px;font-size:13.5px;line-height:1.5;color:var(--muted,#9aa6b8)}',
-    '.tim ul{margin:0;padding:0;list-style:none;display:grid;gap:6px;max-width:320px;width:100%}',
+    '.tim p{margin:0;max-width:340px;font-size:13.5px;line-height:1.5;color:var(--muted,#9aa6b8)}',
+    '.tim ul{margin:0;padding:0;list-style:none;display:grid;gap:6px;max-width:340px;width:100%}',
     '.tim li{font-size:13px;padding:8px 12px;border-radius:10px;background:rgba(255,255,255,.06);color:var(--text,#fff);text-align:left}',
-    '.tim small{font-size:12px;color:var(--muted,#9aa6b8);max-width:320px;line-height:1.45}'
+    '.tim small{font-size:12px;color:var(--muted,#9aa6b8);max-width:340px;line-height:1.45}',
+    '.tim-get{display:inline-block;text-decoration:none!important;border-radius:12px;padding:11px 20px;font:800 14px system-ui,Arial,sans-serif;color:#04140a!important;background:#3fbf6a}'
   ].join(''));
   const root = document.createElement('section');
-  root.className = 'ta-panel tim'; root.dataset.game = 'invasion';
-  root.innerHTML = '<div class="tim-badge">👽<i>🛠️</i></div>' +
-    '<h2>Torn Invasion is under maintenance</h2>' +
-    '<p>A brand-new version is on the way, rebuilt in full 3D.</p>' +
-    '<ul><li>🏙️ Real 3D streets, buildings and alien hives</li><li>🔫 New weapons and upgrades</li><li>👾 Smarter aliens and a bigger boss</li></ul>' +
-    '<small class="tim-save"></small>';
+  root.className = 'ta-panel tim-wrap'; root.dataset.game = 'invasion';
+  root.innerHTML = '<div id="ta-inv-root" hidden></div><div class="tim"><div class="tim-badge">👽</div>' +
+    '<h2>Torn Invasion 3D</h2><p>Torn Invasion is now a full 3D shooter, installed as its own free add-on so the phone stays small.</p>' +
+    '<ul><li>🏙️ Real 3D streets and alien hives</li><li>🔫 Pistol, shotgun and plasma rifle</li><li>👾 Animated aliens, from Grunts to the armoured Brute</li></ul>' +
+    '<a class="tim-get" href="' + INV_URL + '" target="_blank" rel="noopener noreferrer">Get Torn Invasion 3D</a>' +
+    '<small class="tim-save">Tampermonkey opens and asks you to install it. Then reload this page.</small></div>';
   main.appendChild(root);
-  function saveNote() {
-    const d = invStore(), has = Object.keys(d).some(function (k) { return /^(best|reached):/.test(k) || /^ach/.test(k) || k === 'stats'; });
-    $(root, '.tim-save').textContent = has ? 'Your unlocked levels, best scores and achievements are saved and will carry over.' : 'Check back soon.';
+  const gameBox = $(root, '#ta-inv-root'), getBox = $(root, '.tim');
+  function render() {
+    gameBox.hidden = !inv.ok; getBox.hidden = inv.ok;
+    if (!inv.ok) {
+      const d = invOld(), has = Object.keys(d).some(function (k) { return /^(best|reached):/.test(k) || k === 'stats'; });
+      $(root, '.tim-save').textContent = 'Tampermonkey opens and asks you to install it. Then reload this page.' + (has ? ' Your old Invasion scores and achievement progress will carry over.' : '');
+    }
   }
+  document.addEventListener('ta-inv-hello', function (e) {
+    let d; try { d = JSON.parse(e.detail); } catch (er) { return; }
+    if (d.proto !== 1) return;
+    const first = !inv.ok; inv.ok = true; inv.ver = d.ver; LAND_APPS.invasion = 1; render();
+    if (d.needLegacy) send('legacy', { data: invOld() });
+    if (first && isOpen && current === 'invasion') { setOrientation(wantsLand('invasion'), true); send('enter', { muted: muted }); }
+  });
+  document.addEventListener('ta-inv-state', function (e) { try { inv.playing = !!JSON.parse(e.detail).playing; } catch (er) {} });
+  document.addEventListener('ta-inv-summary', function (e) { try { inv.summary = JSON.parse(e.detail); store.set('invSummary', inv.summary); } catch (er) {} });
+  render();
+  document.dispatchEvent(new CustomEvent('ta-inv-ping'));
   games.invasion = {
-    enter: saveNote,
-    leave: function () {},
-    onKey: function () { return false; },
-    maintenance: true,
-    // Settings > Delete Invasion progress. Keeps the control settings.
+    enter: function () { if (inv.ok) send('enter', { muted: muted }); else render(); },
+    leave: function () { if (inv.ok) send('leave'); inv.playing = false; },
+    onKey: function () { return false; },          // the game reads its own keys
+    onEscape: function () { return inv.ok && inv.playing; },   // while playing, Escape pauses the game instead of closing the app
+    landscape: function () { return inv.ok; },
+    mute: function (m) { if (inv.ok) send('mute', { muted: m }); },
+    summary: function () { return inv.summary; },
+    // Settings > Delete Invasion progress: the new game's saves and the old ones (control settings are kept).
     wipe: function () {
-      const d = invStore(), k = {};
+      if (inv.ok) send('wipe');
+      const d = invOld(), k = {};
       ['difficulty', 'sensitivity', 'invertY', 'gfx'].forEach(function (n) { if (d[n] !== undefined) k[n] = d[n]; });
       try { GM_setValue('invasion', k); } catch (e) {}
+      inv.summary = null; store.set('invSummary', null);
     }
   };
   })();
