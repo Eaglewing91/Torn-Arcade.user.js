@@ -95,6 +95,7 @@ A district-building board game. Torn City is split into districts (Brickworks, T
 - Play against up to three computer factions (Easy, Normal or Hard), pass-and-play with friends on one device, or watch the computer play.
 - Large map (37 districts) or Standard (19), with a new random board every game. Pick each faction's colour.
 - Zoom buttons and a **full screen** button for the big map. Games save as you go, so you can leave and carry on later.
+- Soft background music and sound effects for building, upgrading, trading, favours and police raids, all generated live in your browser (no audio files). Music can be switched off in the game or on the new game screen.
 - Your wins and fastest win show in the Scores app. The illustrated districts come with the Character Art pack; without it, the districts are drawn by the script.
 
 ### 💣 Dirty Bombs

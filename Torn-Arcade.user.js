@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.35.0
+// @version      2.35.1
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with eight game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -548,7 +548,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gift codes', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.35.0';
+  const VERSION = '2.35.1';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -1457,6 +1457,7 @@
   function setMuted(m) {
     muted = !!m; store.set('muted', muted);
     if (games.invasion && games.invasion.mute) games.invasion.mute(muted);
+    if (games.territories && games.territories.mute) games.territories.mute(muted);
     muteBtn.textContent = muted ? '🔇' : '🔊';
     muteBtn.title = muted ? 'Sound off (click to turn on)' : 'Sound on (click to mute)';
   }
@@ -18275,7 +18276,7 @@
       '<div class="ta-tt-title" data-tt="title">' +
         '<div class="ta-tt-card"><h2>TORN <span>TERRITORIES</span></h2><h4>NEW GAME</h4><div class="ta-tt-pls" data-tt="seats"></div>' +
           '<div class="ta-tt-row"><span>Map</span><select data-tt="size" aria-label="Map size"><option value="large">Large: 37 districts</option><option value="standard">Standard: 19 districts</option></select></div>' +
-          '<div class="ta-tt-row"><span>Rivals</span><select data-tt="diff" aria-label="Rival difficulty"><option value="easy">Easy</option><option value="normal">Normal</option><option value="hard">Hard</option></select><span>Speed</span><select data-tt="speed" aria-label="Rival speed"><option value="750">Normal</option><option value="300">Fast</option><option value="40">Instant</option></select></div>' +
+          '<div class="ta-tt-row"><span>Rivals</span><select data-tt="diff" aria-label="Rival difficulty"><option value="easy">Easy</option><option value="normal">Normal</option><option value="hard">Hard</option></select><span>Speed</span><select data-tt="speed" aria-label="Rival speed"><option value="750">Normal</option><option value="300">Fast</option><option value="40">Instant</option></select><span>Music</span><select data-tt="music" aria-label="Background music"><option value="on">On</option><option value="off">Off</option></select></div>' +
           '<button class="ta-tt-sm" data-tt="full2">Play full screen</button><button class="ta-tt-go" data-tt="start">Start a new game</button><button class="ta-tt-sm" data-tt="cont" hidden>Continue your saved game</button>' +
           '<div class="ta-tt-empty" data-tt="record"></div>' +
           '<div class="ta-tt-empty">More than one Human seat plays pass-and-play on this device. All Computer seats lets you watch.</div></div>' +
@@ -18287,7 +18288,7 @@
       '</div>' +
       '<div class="ta-tt-game" data-tt="game" hidden>' +
         '<div class="ta-tt-board"><div class="ta-tt-scroll" data-tt="scroll"><svg data-tt="svg" role="img" aria-label="The Torn City board" preserveAspectRatio="xMidYMid meet"></svg></div>' +
-          '<div class="ta-tt-banner"><div class="ta-tt-prompt" data-tt="prompt"></div><div class="ta-tt-zoom"><button data-tt="zin" aria-label="Zoom in">+</button><button data-tt="zout" aria-label="Zoom out">−</button><button data-tt="full" aria-label="Full screen" title="Full screen">⛶</button></div><div class="ta-tt-dice"><div class="ta-tt-die" data-tt="d1">–</div><div class="ta-tt-die" data-tt="d2">–</div></div></div></div>' +
+          '<div class="ta-tt-banner"><div class="ta-tt-prompt" data-tt="prompt"></div><div class="ta-tt-zoom"><button data-tt="zin" aria-label="Zoom in">+</button><button data-tt="zout" aria-label="Zoom out">−</button><button data-tt="mus" aria-label="Music" title="Music on or off">♪</button><button data-tt="full" aria-label="Full screen" title="Full screen">⛶</button></div><div class="ta-tt-dice"><div class="ta-tt-die" data-tt="d1">–</div><div class="ta-tt-die" data-tt="d2">–</div></div></div></div>' +
         '<div class="ta-tt-side">' +
           '<div class="ta-tt-card" data-tt="meCard"><div class="ta-tt-me"><span data-tt="meName"></span><span>Respect<strong data-tt="myResp">0</strong> <small data-tt="secret"></small></span></div><div class="ta-tt-hand" data-tt="hand"></div><div class="ta-tt-favs" data-tt="favs"></div></div>' +
           '<div class="ta-tt-card" data-tt="acts"><button class="ta-tt-go" data-tt="roll">Roll the dice</button>' +
@@ -18315,6 +18316,76 @@
     const rnd = Math.random;
     function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); const t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
     function pips(n) { return n ? 6 - Math.abs(7 - n) : 0; }
+
+    /* ---------- Sound: effects and soft background music, all generated live (no audio files) ---------- */
+    const FX = {
+      road: [[0, 310, 0.05, 'triangle', 0.05, 220], [90, 280, 0.05, 'triangle', 0.05, 200], [180, 140, 0.12, 'sine', 0.05, 90]],                       // two knocks and a thud: laying a road
+      safe: [[0, 330, 0.04, 'square', 0.025, 260], [110, 330, 0.04, 'square', 0.025, 260], [220, 330, 0.04, 'square', 0.025, 260], [340, 784, 0.18, 'triangle', 0.05], [420, 1047, 0.26, 'triangle', 0.045]],   // hammering, then a chime
+      hq: [[0, 523, 0.12, 'triangle', 0.05], [90, 659, 0.12, 'triangle', 0.05], [180, 784, 0.12, 'triangle', 0.05], [270, 1047, 0.3, 'triangle', 0.05], [300, 2093, 0.25, 'sine', 0.02]],   // a rising fanfare
+      fav: [[0, 1400, 0.12, 'sine', 0.025, 500], [130, 988, 0.3, 'sine', 0.04], [130, 1480, 0.3, 'sine', 0.02]],                                       // a card swish and a bell
+      trade: [[0, 1568, 0.06, 'square', 0.02], [70, 2093, 0.12, 'square', 0.02]],                                                                     // coins
+      deal: [[0, 659, 0.1, 'triangle', 0.045], [100, 880, 0.18, 'triangle', 0.045]],
+      dice: [[0, 520, 0.04, 'square', 0.03], [60, 380, 0.04, 'square', 0.03], [120, 640, 0.05, 'square', 0.03]],
+      raid: [[150, 2200, 0.12, 'sine', 0.03, 2600], [300, 2200, 0.3, 'sine', 0.03, 1800], [500, 760, 0.18, 'square', 0.022], [690, 600, 0.18, 'square', 0.022], [880, 760, 0.18, 'square', 0.022]],   // a whistle and a siren
+      lose: [[0, 520, 0.12, 'triangle', 0.04, 260]],
+      pick: [[0, 700, 0.05, 'triangle', 0.03]]
+    };
+    const PLUCK = { brick: 392, wood: 440, wheat: 523, ore: 587, cotton: 659 };   // collecting: one soft note per resource
+    function snd(k) { if (UI.live && FX[k]) seq(FX[k]); }
+    function collectSound(list) { if (!UI.live) return; list.forEach(function (r, i) { setTimeout(function () { tone(PLUCK[r] || 600, 0.22, 'triangle', 0.04); tone((PLUCK[r] || 600) * 2, 0.16, 'sine', 0.012); }, i * 90); }); }
+    // A slow, soft piece that never quite repeats: warm pads, a gentle bass and a few music-box notes from a C major
+    // pentatonic scale, at 66 beats a minute, through a low-pass filter and a soft echo.
+    const PROG = [[36, [60, 64, 67, 71]], [33, [57, 60, 64, 67]], [41, [57, 60, 64, 65]], [43, [55, 59, 62, 64]], [40, [55, 59, 64, 67]], [33, [57, 60, 64, 67]], [38, [57, 60, 62, 65]], [43, [55, 60, 62, 67]]];
+    const MEL = [72, 74, 76, 79, 81, 84], BEAT = 60 / 66, BAR = BEAT * 4;
+    const MUS = { bus: null, mel: null, timer: 0, next: 0, bar: 0 };
+    function hz(m) { return 440 * Math.pow(2, (m - 69) / 12); }
+    function musicOn() { return opts.music !== false && !muted && UI.live; }
+    function musicStart() {
+      if (MUS.timer || !musicOn()) return;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const c = audioCtx, gr = musicGraph(c, outFor(c));
+        MUS.bus = gr.bus; MUS.mel = gr.mel; MUS.next = c.currentTime + 0.15; MUS.bar = 0;
+        MUS.timer = setInterval(musicTick, 250); musicTick();
+      } catch (e) { MUS.timer = 0; }
+    }
+    function musicGraph(c, dest) {
+      const lp = c.createBiquadFilter(), bus = c.createGain(), mel = c.createGain(), dl = c.createDelay(1), fb = c.createGain();
+      lp.type = 'lowpass'; lp.frequency.value = 1500; lp.Q.value = 0.4;
+      bus.gain.setValueAtTime(0, c.currentTime); bus.gain.linearRampToValueAtTime(0.9, c.currentTime + 2.5);
+      dl.delayTime.value = BEAT * 0.75; fb.gain.value = 0.32;
+      mel.connect(lp); mel.connect(dl); dl.connect(fb); fb.connect(dl); dl.connect(lp);
+      lp.connect(bus); bus.connect(dest);
+      return { bus: bus, mel: mel };
+    }
+    function musicStop() {
+      clearInterval(MUS.timer); MUS.timer = 0;
+      const bus = MUS.bus; MUS.bus = null;
+      if (bus) { try { bus.gain.cancelScheduledValues(audioCtx.currentTime); bus.gain.setTargetAtTime(0, audioCtx.currentTime, 0.25); setTimeout(function () { try { bus.disconnect(); } catch (e) {} }, 1500); } catch (e) {} }
+    }
+    function note(f, at, dur, type, vol, attack, dest) {
+      const c = dest.context, o = c.createOscillator(), g = c.createGain();
+      o.type = type; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, at); g.gain.linearRampToValueAtTime(vol, at + attack); g.gain.setTargetAtTime(0.0001, at + Math.max(attack, dur - 0.4), dur / 4);
+      o.connect(g); g.connect(dest); o.start(at); o.stop(at + dur + 1.5);
+    }
+    function musicTick() {
+      if (!musicOn()) { musicStop(); return; }
+      scheduleBars(MUS, audioCtx.currentTime + 1.5);
+    }
+    function scheduleBars(M, until) {
+      while (M.next < until) {
+        const t = M.next, ch = PROG[M.bar % PROG.length];
+        ch[1].forEach(function (m, i) { note(hz(m), t, BAR + 1.2, i % 2 ? 'triangle' : 'sine', 0.014, 1.3, M.bus); });   // pads
+        note(hz(ch[0]), t, BAR, 'sine', 0.05, 0.08, M.bus);   // bass
+        if (rnd() < 0.5) note(hz(ch[0] + 7), t + BEAT * 2, BEAT * 2, 'sine', 0.03, 0.08, M.bus);
+        for (let b = 0; b < 4; b++) {   // a few music-box notes, more likely on the stronger beats
+          if (rnd() < (b === 0 ? 0.55 : b === 2 ? 0.45 : 0.25)) note(hz(MEL[Math.floor(rnd() * MEL.length)] - (rnd() < 0.3 ? 12 : 0)), t + b * BEAT + (rnd() < 0.3 ? BEAT / 2 : 0), 1.4, 'triangle', 0.03, 0.01, M.mel);
+        }
+        M.next += BAR; M.bar++;
+      }
+    }
 
     /* ---------- Pictures from the Character Art pack (data URIs, or null) ---------- */
     function art(res) {
@@ -18449,7 +18520,7 @@
           if (!stats.fastest || turns < stats.fastest) stats.fastest = turns;
           record('territories:wins', stats.wins); record('territories:fastest', turns, true);
           confetti(panel.querySelector('.ta-stage')); sfx.win();
-        } else sfx.over();
+        } else snd('lose');
         store.set('territoriesStats', stats);
       }
       return true;
@@ -18459,12 +18530,12 @@
     function rollDice() {
       const a = 1 + Math.floor(rnd() * 6), b = 1 + Math.floor(rnd() * 6), n = a + b;
       G.dice = [a, b]; UI.rolled = true;
-      if (UI.live) seq([[0, 520, 0.04, 'square', 0.03], [60, 380, 0.04, 'square', 0.03], [120, 640, 0.05, 'square', 0.03]]);
+      snd('dice');
       say(name(G.cur) + ' ' + verb(G.cur, 'roll') + ' ' + n + '.');
       if (n === 7) {
         G.discardQ = G.players.map(function (p, i) { return i; }).filter(function (i) { return cards(P(i)) > 7; });
         G.afterRaid = 'main'; G.phase = G.discardQ.length ? 'discard' : 'raid';
-        if (UI.live) seq([[200, 760, 0.18, 'square', 0.025], [380, 600, 0.18, 'square', 0.025]]);
+        snd('raid');
       } else { produce(n); G.phase = 'main'; }
     }
     function produce(n) {
@@ -18477,10 +18548,11 @@
       got.forEach(function (g, i) {
         const k = Object.keys(g); if (!k.length) return;
         say(name(i) + ' ' + verb(i, 'collect') + ' ' + k.map(function (r) { return g[r] + ' ' + RN[r]; }).join(', ') + '.');
-        if (i === UI.viewer) { UI.flash = k; if (UI.live) sfx.point(); }
+        if (i === UI.viewer) { UI.flash = k; collectSound(k); }
       });
     }
     function discard(pi, take) {
+      if (pi === UI.viewer) snd('lose');
       Object.keys(take).forEach(function (r) { P(pi).hand[r] -= take[r]; });
       say(name(pi) + ' ' + verb(pi, 'hand') + ' ' + Object.keys(take).reduce(function (a, r) { return a + take[r]; }, 0) + ' cards to the police.');
       G.discardQ.shift();
@@ -18504,7 +18576,7 @@
       P(vi).hand[r]--; P(pi).hand[r]++;
       const seen = pi === UI.viewer || vi === UI.viewer;
       say(name(pi) + ' ' + verb(pi, 'take') + (seen ? ' ' + RN[r] : ' a card') + ' from ' + (you(vi) ? 'you' : P(vi).name) + '.');
-      if (pi === UI.viewer) UI.flash = [r];
+      if (pi === UI.viewer) { UI.flash = [r]; collectSound([r]); } else if (vi === UI.viewer) snd('lose');
       G.phase = G.afterRaid;
     }
     function endTurn() {
@@ -18516,7 +18588,7 @@
       const p = P(pi);
       if (!setup) pay(p, COST.safe);
       G.verts[v].owner = pi; G.verts[v].lvl = 1; p.safes--;
-      if (UI.live) sfx.match();
+      snd('safe');
       if (setup) {
         G.setup.last = v; G.setup.step = 'route';
         const got = [];
@@ -18529,7 +18601,7 @@
       const p = P(pi);
       if (!free) pay(p, COST.route);
       G.edges[e].owner = pi; p.routes--;
-      if (UI.live) sfx.flip();
+      snd('road');
       if (G.phase === 'setup') {
         G.setup.i++; G.setup.step = 'safe'; G.setup.last = -1;
         if (G.setup.i >= G.setup.order.length) { G.phase = 'roll'; G.cur = 0; say('The city is carved up. ' + name(0) + ' ' + verb(0, 'roll') + ' first.'); }
@@ -18542,12 +18614,12 @@
     }
     function upgrade(pi, v) {
       const p = P(pi); pay(p, COST.hq); G.verts[v].lvl = 2; p.safes++; p.hqs--;
-      if (UI.live) sfx.win();
+      snd('hq');
       say(name(pi) + ' ' + verb(pi, 'turn') + ' a safehouse into an HQ. +1 Respect.');
     }
     function buyFav(pi) {
       const p = P(pi); pay(p, COST.fav); const t = G.deck.pop();
-      p.favs.push({ t: t, fresh: true });
+      p.favs.push({ t: t, fresh: true }); snd('fav');
       say(name(pi) + ' ' + verb(pi, 'call') + ' in a favour' + (pi === UI.viewer ? ': ' + FAV[t].name : '') + '.');
     }
     function canPlay(pi, f) { return f.t !== 'respect' && !f.fresh && !G.playedFav && G.cur === pi && (G.phase === 'main' || (G.phase === 'roll' && f.t === 'crew')); }
@@ -18716,12 +18788,12 @@
     on('bRoute', function () { setMode('route'); });
     on('bSafe', function () { setMode('safe'); });
     on('bHQ', function () { setMode('hq'); });
-    on('bFav', function () { if (!mine() || G.phase !== 'main' || !G.deck.length || !canAfford(P(G.cur), COST.fav)) return; buyFav(G.cur); sfx.match(); checkWin(G.cur); tick(); });
+    on('bFav', function () { if (!mine() || G.phase !== 'main' || !G.deck.length || !canAfford(P(G.cur), COST.fav)) return; buyFav(G.cur); checkWin(G.cur); tick(); });
     on('bTrade', function () {
       if (!mine() || G.phase !== 'main') return;
       const g = Q('give').value, w = Q('get').value, pi = G.cur, k = rate(pi, g);
       if (P(pi).hand[g] < k || g === w) return;
-      P(pi).hand[g] -= k; P(pi).hand[w]++; UI.flash = [w]; sfx.point();
+      P(pi).hand[g] -= k; P(pi).hand[w]++; UI.flash = [w]; snd('trade');
       say(name(pi) + ' ' + verb(pi, 'trade') + ' ' + k + ' ' + RN[g] + ' for 1 ' + RN[w] + (k < 4 ? ' at a harbour.' : ' with the bank.'));
       tick();
     });
@@ -18812,11 +18884,11 @@
       if (a === 'rob') { UI.dlg = null; steal(G.cur, +b.dataset.v); tick(); return; }
       if (a === 'pick') {
         d.picks.push(r);
-        if (d.picks.length === 2) { useFav(G.cur, d.idx); d.picks.forEach(function (x) { P(G.cur).hand[x]++; }); UI.flash = d.picks.slice(); say(name(G.cur) + ' ' + verb(G.cur, 'bring') + ' in ' + RN[d.picks[0]] + ' and ' + RN[d.picks[1]] + '.'); UI.dlg = null; sfx.point(); tick(); }
+        if (d.picks.length === 2) { useFav(G.cur, d.idx); d.picks.forEach(function (x) { P(G.cur).hand[x]++; }); UI.flash = d.picks.slice(); say(name(G.cur) + ' ' + verb(G.cur, 'bring') + ' in ' + RN[d.picks[0]] + ' and ' + RN[d.picks[1]] + '.'); UI.dlg = null; collectSound(d.picks); tick(); }
         else render();
         return;
       }
-      if (a === 'deal') { useFav(G.cur, d.idx); streetDeal(G.cur, r); UI.dlg = null; sfx.point(); tick(); return; }
+      if (a === 'deal') { useFav(G.cur, d.idx); streetDeal(G.cur, r); UI.dlg = null; snd('trade'); tick(); return; }
       if (a === 'offer') {
         d.answers = G.players.map(function (p, i) { return i; }).filter(function (i) { return i !== G.cur && P(i).ai; }).map(function (i) { return { i: i, ok: wantsDeal(i, d.give, d.want, G.cur) }; });
         say(name(G.cur) + ' ' + verb(G.cur, 'offer') + ' ' + list(d.give) + ' for ' + list(d.want) + '.');
@@ -18826,11 +18898,11 @@
         const v = +b.dataset.v, me = P(G.cur), them = P(v);
         RES.forEach(function (x) { me.hand[x] += (d.want[x] || 0) - (d.give[x] || 0); them.hand[x] += (d.give[x] || 0) - (d.want[x] || 0); });
         say(them.name + ' takes the deal: ' + list(d.give) + ' for ' + list(d.want) + '.'); UI.flash = Object.keys(d.want);
-        UI.dlg = null; sfx.match(); tick(); return;
+        UI.dlg = null; snd('deal'); tick(); return;
       }
       if (a === 'yes' || a === 'no') {
         const o = G.offer;
-        if (a === 'yes') { RES.forEach(function (x) { P(o.to).hand[x] += (o.give[x] || 0) - (o.want[x] || 0); P(o.from).hand[x] += (o.want[x] || 0) - (o.give[x] || 0); }); say(name(o.to) + ' ' + verb(o.to, 'take') + ' ' + P(o.from).name + '\'s deal.'); if (o.to === UI.viewer) UI.flash = Object.keys(o.give); sfx.match(); }
+        if (a === 'yes') { RES.forEach(function (x) { P(o.to).hand[x] += (o.give[x] || 0) - (o.want[x] || 0); P(o.from).hand[x] += (o.want[x] || 0) - (o.give[x] || 0); }); say(name(o.to) + ' ' + verb(o.to, 'take') + ' ' + P(o.from).name + '\'s deal.'); if (o.to === UI.viewer) UI.flash = Object.keys(o.give); snd('deal'); }
         else { say(name(o.to) + ' ' + verb(o.to, 'turn') + ' down ' + P(o.from).name + '.'); sfx.click(); }
         G.offer = null; G.phase = 'main'; UI.dlg = null; tick(); return;
       }
@@ -19013,7 +19085,7 @@
           '<select data-s="' + i + '" data-w="kind" aria-label="' + esc(NAMES[i]) + ' player"><option value="human"' + (s[0] === 'human' ? ' selected' : '') + '>Human</option><option value="ai"' + (s[0] === 'ai' ? ' selected' : '') + '>Computer</option>' + (i === 3 ? '<option value="off"' + (s[0] === 'off' ? ' selected' : '') + '>Not playing</option>' : '') + '</select>' +
           '<select data-s="' + i + '" data-w="col" aria-label="' + esc(NAMES[i]) + ' colour">' + COLOURS.map(function (c, k) { return '<option value="' + k + '"' + (s[1] === k ? ' selected' : '') + '>' + c[1] + '</option>'; }).join('') + '</select></div>';
       }).join('');
-      Q('size').value = opts.size; Q('diff').value = opts.diff; Q('speed').value = String(opts.speed);
+      Q('size').value = opts.size; Q('diff').value = opts.diff; Q('speed').value = String(opts.speed); Q('music').value = opts.music === false ? 'off' : 'on';
       Q('record').textContent = stats.games ? 'Your record against the computer: ' + stats.wins + ' win' + (stats.wins === 1 ? '' : 's') + ' in ' + stats.games + ' game' + (stats.games === 1 ? '' : 's') + (stats.fastest ? ' · fastest win in ' + stats.fastest + ' turns' : '') + '.' : '';
     }
     Q('seats').addEventListener('change', function (e) {
@@ -19026,6 +19098,9 @@
       }
       store.set('territoriesOpts', opts); seatsHTML();
     });
+    function setMusic(onOff) { opts.music = onOff; store.set('territoriesOpts', opts); Q('music').value = onOff ? 'on' : 'off'; Q('mus').style.opacity = onOff ? '' : '.45'; if (onOff) musicStart(); else musicStop(); }
+    Q('music').addEventListener('change', function () { setMusic(Q('music').value === 'on'); });
+    on('mus', function () { setMusic(opts.music === false); });
     ['size', 'diff', 'speed'].forEach(function (k) { Q(k).addEventListener('change', function () { opts[k] = k === 'speed' ? +Q(k).value : Q(k).value; store.set('territoriesOpts', opts); }); });
     function showTitle() {
       clearTimeout(UI.timer);
@@ -19042,8 +19117,9 @@
     showTitle();
     
     games.territories = {
-      enter: function () { UI.live = true; if (G && !Q('game').hidden) tick(); else showTitle(); },
-      leave: function () { UI.live = false; clearTimeout(UI.timer); setFull(false); },
+      enter: function () { UI.live = true; Q('mus').style.opacity = opts.music === false ? '.45' : ''; musicStart(); if (G && !Q('game').hidden) tick(); else showTitle(); },
+      leave: function () { UI.live = false; clearTimeout(UI.timer); musicStop(); setFull(false); },
+      mute: function (m) { if (m) musicStop(); else musicStart(); },
       onEscape: function () { if (box.classList.contains('ta-tt-full')) { setFull(false); return true; } return false; },
       relayout: function () { if (G && !Q('game').hidden) render(); },
       bestText: function () { return stats.games ? stats.wins + ' win' + (stats.wins === 1 ? '' : 's') + ' in ' + stats.games + ' games' : 'No games yet'; },
