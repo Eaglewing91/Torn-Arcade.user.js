@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.32.2
+// @version      2.32.3
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with seven game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps and Egg Dash artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -545,7 +545,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gift codes', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.32.2';
+  const VERSION = '2.32.3';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -17445,10 +17445,10 @@
         const roll = Math.random();
         if (roll < 0.58) {
           const pick = Math.random(), type = (m > 120 && pick < 0.3) ? 'line' : pick < 0.66 ? 'ac' : 'chim';
-          const o = type === 'ac' ? { w: 54, h: 50 } : type === 'chim' ? { w: 32, h: 62 } : { w: 130, h: 0 };
+          const o = type === 'ac' ? { w: 54, h: 50 } : type === 'chim' ? { w: 32, h: 56 } : { w: 100, h: 0 };
           o.type = type; o.x = x; o.y = r.y; obs.push(o);
           if (type === 'line') {
-            for (let i = 0; i < 4; i++) eggs.push({ x: x + 10 + i * 34, y: r.y - 18, kind: 'egg' });   // under the washing: slide for them
+            for (let i = 0; i < 3; i++) eggs.push({ x: x + 16 + i * 34, y: r.y - 18, kind: 'egg' });   // under the washing: slide for them
           } else {
             for (let i = 0; i < 3; i++) eggs.push({ x: x + o.w / 2 + (i - 1) * 34, y: r.y - o.h - 34 - (i === 1 ? 26 : 0), kind: (i === 1 && Math.random() < 0.05) ? 'gold' : 'egg' });
           }
@@ -17502,7 +17502,7 @@
     }
     function obsBox(o) {
       const x = o.x - cam;
-      if (o.type === 'line') return { l: x + 6, r: x + o.w - 6, t: o.y - 122, b: o.y - 52 };
+      if (o.type === 'line') return { l: x + 8, r: x + o.w - 8, t: o.y - 94, b: o.y - 52 };
       return { l: x + 3, r: x + o.w - 3, t: o.y - o.h + 4, b: o.y };
     }
     function overlap(a, b) { return a.l < b.r && a.r > b.l && a.t < b.b && a.b > b.t; }
@@ -17578,10 +17578,12 @@
 
       // Anton
       const wx = cam + AX, under = roofAt(wx);
+      let top = under ? under.y : null;   // the highest thing under his feet: the roof, or an air-con unit or chimney he is on
+      obs.forEach(function (o) { if (!o.gone && o.type !== 'line' && wx + 12 > o.x && wx - 10 < o.x + o.w && (top === null || o.y - o.h < top) && o.y - o.h >= ant.y - 3) top = o.y - o.h; });
       if (ant.mode === 'slide') { ant.slideT += dt; if (!slideHeld && ant.slideT > 0.45) ant.mode = 'run'; }
       if (ant.ground) {
-        if (!under || under.y > ant.y + 2) { ant.ground = false; ant.vy = 0; jumps = 1; if (ant.mode === 'slide') ant.mode = 'run'; }
-        else ant.y = under.y;
+        if (top === null || top > ant.y + 2) { ant.ground = false; ant.vy = 0; jumps = 1; if (ant.mode === 'slide') ant.mode = 'run'; }
+        else ant.y = top;
         ant.stride += v * dt / 26;
       }
       if (!ant.ground) {
@@ -17591,12 +17593,12 @@
         ant.hover = false;
         if (carrot > 0 && !under && ant.vy >= 0 && ant.lastRoofY !== undefined && ant.y >= ant.lastRoofY - 4) { ant.vy = 0; ant.y = ant.lastRoofY - 4; ant.hover = true; ant.stride += v * dt / 26; }   // the carrot carries him over gaps (only gaps: over a lower roof he drops onto it)
         const ny = ant.y + ant.vy * dt;
-        if (under && ant.vy >= 0 && ant.y <= under.y + 12 && ny >= under.y) {   // lands, stepping up onto a ledge a little higher if he has to
-          ant.y = under.y; ant.vy = 0; ant.ground = true; jumps = 0; puff(AX, ant.y, 4);
+        if (top !== null && ant.vy >= 0 && ant.y <= top + 12 && ny >= top) {   // lands, stepping up onto a ledge a little higher if he has to
+          ant.y = top; ant.vy = 0; ant.ground = true; jumps = 0; puff(AX, ant.y, 4);
           if (slideHeld) { ant.mode = 'slide'; ant.slideT = 0; } else ant.mode = 'run';
         } else ant.y = ny;
       }
-      if (ant.ground) ant.lastRoofY = ant.y;
+      if (ant.ground && under && ant.y === under.y) ant.lastRoofY = ant.y;
       // a wall: running into the side of a higher building
       const front = roofAt(wx + 18);
       if (front && front !== under && ant.y > front.y + 12 && wx + 18 >= front.x - 6 && wx < front.x) {
@@ -17609,7 +17611,7 @@
 
       // obstacles, eggs and power-ups
       const hb = hitBox();
-      obs.forEach(function (o) { if (!o.gone && overlap(hb, obsBox(o))) bump(o); });
+      obs.forEach(function (o) { if (!o.gone && overlap(hb, obsBox(o)) && (o.type === 'line' || ant.y > o.y - o.h + 6)) bump(o); });   // standing on top of a box is fine
       if (state !== 'playing') return;
       const mag = carrot > 0 ? 110 : 0;
       eggs.forEach(function (e) {
@@ -17712,14 +17714,14 @@
         ctx.fillStyle = '#5c3022'; ctx.fillRect(x - 4, y - o.h - 7, o.w + 8, 9); ctx.strokeRect(x - 4, y - o.h - 7, o.w + 8, 9);
         const sm = (t * 0.6 + o.x * 0.01) % 1; ctx.globalAlpha = 0.35 * (1 - sm); ctx.fillStyle = D === DISTRICTS[3] ? '#aaa' : '#ccc';
         ctx.beginPath(); ctx.arc(x + o.w / 2 - sm * 20, y - o.h - 14 - sm * 36, 7 + sm * 10, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
-      } else {   // washing line between two poles; the hanging clothes are what he must slide under
-        ctx.strokeStyle = INK; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y - 132); ctx.moveTo(x + o.w, y); ctx.lineTo(x + o.w, y - 132); ctx.stroke();
-        ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x, y - 126); ctx.quadraticCurveTo(x + o.w / 2, y - 116, x + o.w, y - 126); ctx.stroke();
+      } else {   // washing line between two poles: slide under the clothes or hold a jump to clear them
+        ctx.strokeStyle = INK; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y - 104); ctx.moveTo(x + o.w, y); ctx.lineTo(x + o.w, y - 104); ctx.stroke();
+        ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x, y - 99); ctx.quadraticCurveTo(x + o.w / 2, y - 91, x + o.w, y - 99); ctx.stroke();
         const cl = ['#e04848', '#4a90e0', '#f0d040', '#50c070', '#e070c0'];
-        for (let i = 0; i < 4; i++) {
-          const cx = x + 12 + i * 29, top = y - 123 + Math.sin(i / 3 * Math.PI) * 4, sw = Math.sin(t * 4 + i) * 2;
+        for (let i = 0; i < 3; i++) {
+          const cx = x + 10 + i * 28, top = y - 97 + Math.sin(i / 2 * Math.PI) * 3, sw = Math.sin(t * 4 + i) * 2;
           ctx.fillStyle = cl[(i + Math.floor(o.x)) % cl.length]; ctx.strokeStyle = INK; ctx.lineWidth = 1.5;
-          ctx.beginPath(); ctx.moveTo(cx, top); ctx.lineTo(cx + 24, top); ctx.lineTo(cx + 24 + sw, top + (i % 2 ? 66 : 58)); ctx.lineTo(cx + sw, top + (i % 2 ? 66 : 58)); ctx.closePath(); ctx.fill(); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(cx, top); ctx.lineTo(cx + 24, top); ctx.lineTo(cx + 24 + sw, top + (i % 2 ? 44 : 38)); ctx.lineTo(cx + sw, top + (i % 2 ? 44 : 38)); ctx.closePath(); ctx.fill(); ctx.stroke();
         }
       }
     }
@@ -17808,7 +17810,7 @@
       ot('EGG DASH', W / 2, 100, 50, '#ff8cc6');
       ctx.fillStyle = 'rgba(20,8,30,.55)'; roundRect(ctx, W / 2 - 40, 130, 300, 132, 14); ctx.fill();
       ctx.fillStyle = '#fff'; ctx.font = '700 13px system-ui,Arial,sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-      const lines = ['🥚 Grab eggs · 🥇 gold eggs are worth 10', '🤢 Rotten eggs break your combo', '⬆️ Jump the gaps, ⬇️ slide under washing', '🚓 Two slips close together: caught', '🔦 Slide to hide from the searchlight', '🥕 Carrot Burst · 🐰 Bunny suit saves you once'];
+      const lines = ['🥚 Grab eggs · 🥇 gold eggs are worth 10', '🤢 Rotten eggs break your combo', '⬆️ Hold to jump high, ⬇️ slide under washing', '🚓 Two slips close together: caught', '🔦 Slide to hide from the searchlight', '🥕 Carrot Burst · 🐰 Bunny suit saves you once'];
       lines.forEach(function (l, i) { ctx.fillText(l, W / 2 - 28, 148 + i * 19); });
       const b = getBest('eggdash:endless');
       ctx.globalAlpha = 0.6 + 0.4 * Math.sin(t * 5);
