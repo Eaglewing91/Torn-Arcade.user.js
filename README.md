@@ -130,6 +130,15 @@ Torn Arcade is built to follow Torn's scripting rules:
 - Games only react to keys while the phone is open, and never while you're typing in a text box.
 - **No game needs an API key or Online play.** Both are optional extras.
 
+### 🗝️ Which API key for what
+| Feature | Key needed | What it reads | Where the key goes |
+|---|---|---|---|
+| All games | **None** | Nothing | Nowhere |
+| Event notifications (optional) | **Limited** | `user → events` | Only `api.torn.com`, every 5 seconds while the phone is open |
+| Online play (optional) | **Public** | `user → basic` (your name and Torn ID) | Once to the Torn Arcade server, which asks `api.torn.com` who owns it and forgets it |
+
+You can verify for Online play with the Limited key you saved for notifications (**Use my saved key**); only your name and Torn ID are read. If you'd rather not send it, make a separate Public key and paste that instead.
+
 ### Optional event notifications
 If you add a **Limited** access API key in Settings, the phone checks the official Torn API (`api.torn.com`, `/v2/user/events`) for new events **every 5 seconds while the phone is open**. That's 12 calls a minute, well under Torn's limit of 100. Nothing is requested while the phone is closed. The key is only ever sent to `api.torn.com`. See the Torn API terms on Torn's API page (on [Torn](https://www.torn.com), under the API section).
 

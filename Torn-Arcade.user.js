@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.38.0
+// @version      2.38.1
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with eight game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -151,6 +151,11 @@
  *   The server keeps your Torn ID, name, best scores, online rating, online
  *   game records and trades until you delete your online account (Settings >
  *   Online). With Online play off, nothing is ever sent.
+ * - WHICH API KEY FOR WHAT: no game needs a key. Event notifications need a
+ *   Limited key (user > events; sent only to api.torn.com). Online play
+ *   needs only a Public key (user > basic; sent once to the Torn Arcade
+ *   server to confirm your Torn ID). A saved Limited key can be used to
+ *   verify too, but only your name and ID are read.
  * - Keys only control a game while the phone is open, and never while you
  *   are typing in a text box.
  *
@@ -592,7 +597,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gift codes', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.38.0';
+  const VERSION = '2.38.1';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -1340,7 +1345,7 @@
       '</div></div>' +
       '<div class="ta-group"><h3>Notifications</h3><div class="ta-list">' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#d0453a">🔔</span><div class="ta-rtext"><b>Torn event notifications</b><small>Shows your new Torn events on the phone while it is open</small></div><button type="button" class="ta-switch' + (store.get('evNotify', true) ? ' ta-on' : '') + '" data-set="evNotify"></button></div>' +
-        '<div class="ta-row"><span class="ta-ricon" style="background:#2f7bd1">🗝️</span><div class="ta-rtext"><b>Torn API key</b><small class="ta-evmsg' + (evState.ok === true ? ' ta-good' : evState.ok === false ? ' ta-bad' : '') + '">' + esc(evState.msg || (store.get('apiKey', '') ? 'Key saved.' : 'Needs a Limited access key. Make one in Torn under Settings → API Keys.')) + '</small>' +
+        '<div class="ta-row"><span class="ta-ricon" style="background:#2f7bd1">🗝️</span><div class="ta-rtext"><b>Torn API key for event notifications</b><small>Needs a <strong style="display:inline;color:#ffd27a">Limited</strong> access key (it reads user → events). Optional: no game needs it, and Online play uses a separate Public key below.</small><small class="ta-evmsg' + (evState.ok === true ? ' ta-good' : evState.ok === false ? ' ta-bad' : '') + '">' + esc(evState.msg || (store.get('apiKey', '') ? 'Key saved.' : 'No key saved. Make a Limited key in Torn under Settings → API Keys.')) + '</small>' +
           '<div class="ta-cheat"><input type="password" class="ta-cheatin ta-keyin" autocomplete="off" spellcheck="false" maxlength="16" placeholder="' + (store.get('apiKey', '') ? '••••••••••••••••' : 'Paste your API key') + '"><button type="button" class="ta-btn" data-set="keySave">Save</button>' + (store.get('apiKey', '') ? '<button type="button" class="ta-danger" data-set="keyDel">Remove</button>' : '') + '</div>' +
           '<table class="ta-tos"><tbody>' +
             '<tr><td>Data storage</td><td>Only locally (events are shown, never saved; Tornies map images can be saved in this browser\'s storage)</td></tr>' +
@@ -1504,8 +1509,8 @@
     if (a) h += '<div class="ta-row"><span class="ta-ricon" style="background:' + (a.verified ? '#1c9a5a' : '#7a7f8a') + '">' + (a.verified ? '✔️' : '👤') + '</span><div class="ta-rtext"><b>' + onlWho(a) + '</b><small>' +
       (a.verified ? 'Verified Torn ID · on the global leaderboards' : 'Guest · not on the global leaderboards until you verify') + '</small>' + (a.verified ? msg : '') + '</div><button type="button" class="ta-btn" data-set="onlOut">Sign out</button></div>';
     if (!a || !a.verified) {
-      h += '<div class="ta-row"><span class="ta-ricon" style="background:#2f7bd1">🗝️</span><div class="ta-rtext"><b>Verify your Torn ID</b><small>Proves who you are, so nobody can play as you and your results count on the global leaderboard.</small>' + msg +
-        (saved ? '<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="ta-btn" data-set="onlSaved"' + (onlBusy ? ' disabled' : '') + '>Use my saved key</button></div>' : '') +
+      h += '<div class="ta-row"><span class="ta-ricon" style="background:#2f7bd1">🗝️</span><div class="ta-rtext"><b>Verify your Torn ID</b><small>Proves who you are, so nobody can play as you and your results count on the global leaderboards.</small><small>Needs only a <strong style="display:inline;color:#ffd27a">Public</strong> access key (it reads user → basic: your name and Torn ID). ' + (saved ? 'Your saved event key is a Limited key: it works too, and still only your name and ID are read. If you\'d rather not send it, make a separate Public key in Torn under Settings → API Keys and paste it here.' : 'Make one in Torn under Settings → API Keys.') + '</small>' + msg +
+        (saved ? '<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="ta-btn" data-set="onlSaved"' + (onlBusy ? ' disabled' : '') + '>Use my saved key (Limited)</button></div>' : '') +
         '<div class="ta-cheat"><input type="password" class="ta-cheatin ta-onlkey" autocomplete="off" spellcheck="false" maxlength="16" placeholder="' + (saved ? 'Or paste a Public API key' : 'Paste a Public API key') + '"><button type="button" class="ta-btn" data-set="onlVerify"' + (onlBusy ? ' disabled' : '') + '>Verify</button></div>' +
         (!a ? '<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="ta-btn" data-set="onlGuest"' + (onlBusy ? ' disabled' : '') + '>Play as a guest instead</button></div>' : '') +
         '<table class="ta-tos"><tbody>' +
