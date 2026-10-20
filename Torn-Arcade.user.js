@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.35.5
+// @version      2.36.0
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with eight game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -15,6 +15,8 @@
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_registerMenuCommand
+// @grant        GM_xmlhttpRequest
+// @connect      arcade-server-production-8ebd.up.railway.app
 // @noframes
 // ==/UserScript==
 
@@ -125,6 +127,16 @@
  *   requested while the phone is closed. Your key is only ever sent to
  *   api.torn.com. The clock shows Torn City Time (UTC) from your
  *   device's own clock.
+ * - ONLINE PLAY (optional, off until you turn it on in Settings > Online):
+ *   the phone talks to the Torn Arcade server (arcade-server-production-8ebd.up.railway.app,
+ *   hosted on Railway, declared above with @connect) and to nothing else. Only
+ *   requests you start are made: verifying your Torn ID, playing as a guest,
+ *   signing out, deleting your online account and opening the global
+ *   leaderboard in Scores. To verify, your API key is sent to the Torn Arcade
+ *   server once; it asks api.torn.com who owns the key (user > basic) and then
+ *   forgets it. The key is never stored or logged there. The server keeps your
+ *   Torn ID, name and online results until you delete your online account.
+ *   With Online play off, nothing is ever sent to the server.
  * - Keys only control a game while the phone is open, and never while you
  *   are typing in a text box.
  *
@@ -149,6 +161,20 @@
  *                          checks while the phone is open). Never shared.
  * - Key Access Level:      Limited (user > events). Optional: only needed
  *                          for event notifications.
+ *
+ * TERMS OF SERVICE: ONLINE PLAY (optional, off by default)
+ * - Data Storage:          Persistent - until account deletion (on the Torn
+ *                          Arcade server: your Torn ID, name and online game
+ *                          results; on this device: a sign-in token)
+ * - Data Sharing:          General public (your name, rating and results on
+ *                          the global leaderboard)
+ * - Purpose of Use:        Public community tools (online games and the
+ *                          global leaderboard)
+ * - Key Storage & Sharing: Not stored / Not shared (sent once to the Torn
+ *                          Arcade server to confirm your Torn ID with
+ *                          api.torn.com, then forgotten)
+ * - Key Access Level:      Public (user > basic). A Limited key also works;
+ *                          only your name and Torn ID are read.
  * - Where it may be used:  Torn (www.torn.com) only. See the LICENCE above.
  */
 
@@ -548,7 +574,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gift codes', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.35.5';
+  const VERSION = '2.36.0';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -594,6 +620,9 @@
     '.ta-widget em{display:inline-block;margin-top:8px;font-style:normal;font-size:10.5px;font-weight:800;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:rgba(47,123,209,.55)}',
     '.ta-lock{position:absolute;right:12px;top:12px;height:30px;border-radius:15px;border:0;padding:0 11px 0 9px;margin:0;background:rgba(255,255,255,.14);color:#fff;font:700 13px system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;cursor:pointer;display:flex;align-items:center;gap:4px}',
     '.ta-lock:hover{background:rgba(255,255,255,.26)}',
+    '.ta-lbrank{flex:none;width:30px;text-align:center;font-weight:800;font-size:13px;color:var(--muted,#9aa7b8)}',
+    '.ta-lbr{flex:none;font-weight:800;font-variant-numeric:tabular-nums;color:#ffcf4a}',
+    '.ta-lbme{background:rgba(47,123,209,.16)}',
     '.ta-note{position:relative;z-index:2;display:flex;align-items:center;gap:9px;margin:4px 12px 0;padding:8px 10px;border-radius:14px;background:rgba(18,24,34,.78);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.12);box-shadow:0 4px 14px rgba(0,0,0,.35)}',
     '.ta-note[hidden]{display:none}',
     '.ta-noteicon{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;background:#e8a020;font-size:16px;flex:none}',
@@ -1030,6 +1059,7 @@
       rows += '<div class="ta-row">' + iconSmall(a) + '<div class="ta-rtext"><b>' + a.name + '</b>' + (chips ? '<div class="ta-chips">' + chips + '</div>' : '<small>No scores yet</small>') + '</div></div>';
     });
     html += '<div class="ta-group"><h3>Best scores</h3><div class="ta-list">' + rows + '</div></div>';
+    html += onlBoardHTML();
     scoresBox.innerHTML = html;
   }
 
@@ -1266,9 +1296,10 @@
             '<tr><td>Key storage &amp; sharing</td><td>Stored locally / Used only for automation (event checks while the phone is open). Never shared.</td></tr>' +
             '<tr><td>Key access level</td><td>Limited (user → events)</td></tr>' +
           '</tbody></table>' +
-          '<small>Your key stays on this device and is only sent to api.torn.com. Nothing is shared. See the top of the script for the full Terms of Service. Licensed for use on Torn only. <a class="ta-evlink" href="https://www.torn.com/api.html" target="_blank" rel="noopener">Torn API terms</a></small>' +
+          '<small>Your key stays on this device and is only sent to api.torn.com, unless you choose to use it to verify for Online play below. Nothing is shared. See the top of the script for the full Terms of Service. Licensed for use on Torn only. <a class="ta-evlink" href="https://www.torn.com/api.html" target="_blank" rel="noopener">Torn API terms</a></small>' +
         '</div></div>' +
       '</div></div>' +
+      onlHTML() +
       '<div class="ta-group"><h3>Games</h3><div class="ta-list">' +
         GAMES.map(function (g) { return '<div class="ta-row">' + iconSmall(g) + '<div class="ta-rtext"><b>' + (g.title || g.name) + '</b><small>' + g.desc + '</small></div></div>'; }).join('') +
       '</div></div>' +
@@ -1290,7 +1321,7 @@
       '<div class="ta-group"><h3>About</h3><div class="ta-list">' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#2f7bd1">⬇️</span><div class="ta-rtext"><b>Check for updates</b><small>You have version ' + VERSION + '. Tampermonkey shows if a newer one is ready.</small></div><a class="ta-upd" href="' + UPDATE_URL + '" target="_blank" rel="noopener noreferrer">Check</a></div>' +
         '<div class="ta-about"><b>Torn Arcade · Mobile Phone</b><br>Version ' + VERSION + ' by Eaglewing [571041]<br>' +
-        'Everything runs on your device. The phone never loads Torn pages and talks to no other websites. If you add an API key, it only asks the official Torn API for your new events while the phone is open.<br><br>&copy; 2026 Eaglewing [571041]. All rights reserved. This script may not be copied, modified or redistributed without permission.</div></div></div>';
+        'Everything runs on your device. The phone never loads Torn pages. If you add an API key, it only asks the official Torn API for your new events while the phone is open. It talks to no other websites unless you turn on Online play, which uses the Torn Arcade server.<br><br>&copy; 2026 Eaglewing [571041]. All rights reserved. This script may not be copied, modified or redistributed without permission.</div></div></div>';
   }
   /* Cheat codes. Only a SHA-256 fingerprint of each code is stored here, never the code itself.
      Codes are not case-sensitive. Each one works once per Tornies save. */
@@ -1337,6 +1368,7 @@
   settingsBox.addEventListener('keydown', function (e) {
     if (e.key !== 'Enter') return;
     if (e.target.classList.contains('ta-keyin')) { e.preventDefault(); saveKey(); }
+    else if (e.target.classList.contains('ta-onlkey')) { e.preventDefault(); onlAction('onlVerify'); }
     else if (e.target.classList.contains('ta-cheatin')) { e.preventDefault(); tryCheat(); }
   });
   settingsBox.addEventListener('click', function (e) {
@@ -1347,6 +1379,7 @@
     const k = t.dataset.set;
     if (k === 'cheat') { tryCheat(); return; }
     if (k === 'keySave') { saveKey(); return; }
+    if (k && k.indexOf('onl') === 0) { onlAction(k, t); return; }
     if (k === 'keyDel') { store.set('apiKey', ''); evState = { msg: 'Key removed. Event notifications are off.' }; evStop(); sfx.click(); renderSettings(); return; }
     if (k === 'saveMaps') { const on = !store.get('saveMaps', true); store.set('saveMaps', on); t.classList.toggle('ta-on', on); sfx.click(); if (on && games.pocket && games.pocket.maps) games.pocket.maps.open(); else if (games.pocket && games.pocket.maps) games.pocket.maps.stop(); mapProgress(); return; }
     if (k === 'mapPrep') {
@@ -1382,6 +1415,127 @@
     }
   });
 
+  /* ================= Online play (optional, off until you turn it on in Settings > Online) =================
+     Talks only to the Torn Arcade server (declared with @connect) and only for things you start: verifying,
+     playing as a guest, signing out, deleting your online account, or opening Scores. With Online play off,
+     nothing is sent. To verify, the key goes to the server once; it asks api.torn.com who owns it, then forgets it. */
+  const ONLINE_URL = 'https://arcade-server-production-8ebd.up.railway.app';
+  let onlMsg = null, onlBoard = null, onlBusy = false;
+  function onl() { return store.get('online', null) || { on: false }; }
+  function onlReq(method, path, body) {
+    return new Promise(function (resolve) {
+      const o = onl();
+      const bad = function () { resolve({ status: 0, body: { error: 'offline', message: 'Couldn\'t reach the Torn Arcade server. Try again in a minute.' } }); };
+      if (!o.on) return resolve({ status: 0, body: { error: 'off', message: 'Online play is off.' } });
+      if (typeof GM_xmlhttpRequest !== 'function') return bad();
+      const h = { 'Content-Type': 'application/json' };
+      if (o.token) h.Authorization = 'Bearer ' + o.token;
+      try {
+        GM_xmlhttpRequest({ method: method, url: ONLINE_URL + path, headers: h, data: body ? JSON.stringify(body) : undefined, timeout: 15000, anonymous: true,
+          onload: function (r) {
+            let j = null; try { j = JSON.parse(r.responseText); } catch (e) {}
+            if (r.status === 401 && o.token) { const n = onl(); delete n.token; delete n.account; store.set('online', n); }   // signed out on the server
+            resolve({ status: r.status, body: j || {} });
+          },
+          onerror: bad, ontimeout: bad });
+      } catch (e) { bad(); }
+    });
+  }
+  function onlWho(a) { return esc(a.name) + (a.tornId ? ' [' + a.tornId + ']' : ''); }
+  function onlHTML() {
+    const o = onl(), a = o.account, saved = /^[A-Za-z0-9]{16}$/.test(store.get('apiKey', ''));
+    const msg = onlMsg ? '<small class="ta-evmsg ta-onlmsg ' + (onlMsg.ok ? 'ta-good' : onlMsg.ok === false ? 'ta-bad' : '') + '">' + esc(onlMsg.text) + '</small>' : '';
+    let h = '<div class="ta-group"><h3>Online</h3><div class="ta-list">' +
+      '<div class="ta-row"><span class="ta-ricon" style="background:#1c7ad0">🌐</span><div class="ta-rtext"><b>Online play</b><small>Play Torn Territories against other players and join the global leaderboard. Off until you turn it on; while on, the phone talks to the Torn Arcade server.</small></div><button type="button" class="ta-switch' + (o.on ? ' ta-on' : '') + '" data-set="onlOn" aria-label="Online play"></button></div>';
+    if (!o.on) return h + (msg ? '<div class="ta-row"><div class="ta-rtext">' + msg + '</div></div>' : '') + '</div></div>';
+    if (a) h += '<div class="ta-row"><span class="ta-ricon" style="background:' + (a.verified ? '#1c9a5a' : '#7a7f8a') + '">' + (a.verified ? '✔️' : '👤') + '</span><div class="ta-rtext"><b>' + onlWho(a) + '</b><small>' +
+      (a.verified ? 'Verified Torn ID · on the global leaderboard' : 'Guest · not on the global leaderboard until you verify') + '</small>' + (a.verified ? msg : '') + '</div><button type="button" class="ta-btn" data-set="onlOut">Sign out</button></div>';
+    if (!a || !a.verified) {
+      h += '<div class="ta-row"><span class="ta-ricon" style="background:#2f7bd1">🗝️</span><div class="ta-rtext"><b>Verify your Torn ID</b><small>Proves who you are, so nobody can play as you and your results count on the global leaderboard.</small>' + msg +
+        (saved ? '<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="ta-btn" data-set="onlSaved"' + (onlBusy ? ' disabled' : '') + '>Use my saved key</button></div>' : '') +
+        '<div class="ta-cheat"><input type="password" class="ta-cheatin ta-onlkey" autocomplete="off" spellcheck="false" maxlength="16" placeholder="' + (saved ? 'Or paste a Public API key' : 'Paste a Public API key') + '"><button type="button" class="ta-btn" data-set="onlVerify"' + (onlBusy ? ' disabled' : '') + '>Verify</button></div>' +
+        (!a ? '<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="ta-btn" data-set="onlGuest"' + (onlBusy ? ' disabled' : '') + '>Play as a guest instead</button></div>' : '') +
+        '<table class="ta-tos"><tbody>' +
+          '<tr><td>Data storage</td><td>Persistent - until account deletion (on the Torn Arcade server: your Torn ID, name and online game results)</td></tr>' +
+          '<tr><td>Data sharing</td><td>General public (your name, rating and results on the global leaderboard)</td></tr>' +
+          '<tr><td>Purpose of use</td><td>Public community tools (online games and the global leaderboard)</td></tr>' +
+          '<tr><td>Key storage &amp; sharing</td><td>Not stored / Not shared (sent once to the Torn Arcade server to confirm your Torn ID with api.torn.com, then forgotten)</td></tr>' +
+          '<tr><td>Key access level</td><td>Public (user → basic). A Limited key also works; only your name and Torn ID are read.</td></tr>' +
+        '</tbody></table>' +
+        '<small>The Torn Arcade server is run by Eaglewing [571041] and hosted on Railway. Guests need no key. Delete your online account at any time below. <a class="ta-evlink" href="https://www.torn.com/api.html" target="_blank" rel="noopener">Torn API terms</a> · <a class="ta-evlink" href="https://railway.com/legal/privacy" target="_blank" rel="noopener noreferrer">Railway privacy policy</a></small>' +
+        '</div></div>';
+    }
+    if (a) h += '<div class="ta-row"><span class="ta-ricon" style="background:#c0392b">🗑️</span><div class="ta-rtext"><b>Delete my online account</b><small>Removes your Torn ID, name and online results from the Torn Arcade server.</small></div><button type="button" class="ta-danger" data-set="onlDel"' + (onlBusy ? ' disabled' : '') + '>Delete</button></div>';
+    return h + '</div></div>';
+  }
+  async function onlVerify(key) {
+    if (!/^[A-Za-z0-9]{16}$/.test(key)) { onlMsg = { ok: false, text: 'An API key is 16 letters and numbers.' }; sfx.miss(); renderSettings(); return; }
+    onlBusy = true; onlMsg = { text: 'Checking with Torn…' }; renderSettings();
+    const r = await onlReq('POST', '/v1/auth/torn', { key: key });
+    onlBusy = false;
+    if (r.status === 200 && r.body.token) { const o = onl(); o.token = r.body.token; o.account = r.body.account; store.set('online', o); onlMsg = { ok: true, text: 'Verified as ' + r.body.account.name + '. Welcome!' }; onlBoard = null; sfx.win(); }
+    else { onlMsg = { ok: false, text: r.body.message || 'Couldn\'t verify. Try again.' }; sfx.miss(); }
+    renderSettings();
+  }
+  async function onlAction(k, t) {
+    if (onlBusy && k !== 'onlOn') return;
+    const o = onl();
+    if (k === 'onlOn') {
+      if (o.on) {   // turning it off signs you out on this device
+        if (o.token) onlReq('POST', '/v1/auth/logout');
+        store.set('online', { on: false }); onlMsg = null; onlBoard = null;
+      } else { o.on = true; store.set('online', o); onlMsg = null; }
+      sfx.click(); renderSettings(); return;
+    }
+    if (k === 'onlSaved') { onlVerify(store.get('apiKey', '')); return; }
+    if (k === 'onlVerify') { const i = $(settingsBox, '.ta-onlkey'); const key = i ? i.value.trim() : ''; if (i) i.value = ''; onlVerify(key); return; }
+    if (k === 'onlGuest') {
+      onlBusy = true; onlMsg = { text: 'Setting up a guest account…' }; renderSettings();
+      const r = await onlReq('POST', '/v1/auth/guest'); onlBusy = false;
+      if (r.status === 200 && r.body.token) { o.token = r.body.token; o.account = r.body.account; store.set('online', o); onlMsg = { ok: true, text: 'You\'re playing as ' + r.body.account.name + '.' }; sfx.click(); }
+      else { onlMsg = { ok: false, text: r.body.message || 'Couldn\'t set up a guest account.' }; sfx.miss(); }
+      renderSettings(); return;
+    }
+    if (k === 'onlOut') {
+      onlReq('POST', '/v1/auth/logout');
+      delete o.token; delete o.account; store.set('online', o); onlMsg = { text: 'Signed out.' }; onlBoard = null; sfx.click(); renderSettings(); return;
+    }
+    if (k === 'onlDel') {
+      if (!t.classList.contains('ta-sure')) { t.classList.add('ta-sure'); t.textContent = 'Tap again'; setTimeout(function () { if (t.isConnected) { t.classList.remove('ta-sure'); t.textContent = 'Delete'; } }, 3000); return; }
+      onlBusy = true; t.disabled = true;
+      const r = await onlReq('DELETE', '/v1/me'); onlBusy = false;
+      if (r.status === 200 || r.status === 401) { const n = onl(); delete n.token; delete n.account; store.set('online', n); onlMsg = { ok: true, text: 'Your online account was deleted from the server.' }; onlBoard = null; sfx.click(); }
+      else { onlMsg = { ok: false, text: r.body.message || 'Couldn\'t delete it. Try again.' }; sfx.miss(); }
+      renderSettings(); return;
+    }
+  }
+  // Global leaderboard in Scores. Loaded when you open Scores (only with Online play on).
+  async function onlLoadBoard() {
+    if (!onl().on) return;
+    if (onlBoard && onlBoard.at > Date.now() - 30000) return;
+    onlBoard = { loading: true, at: Date.now() };
+    const r = await onlReq('GET', '/v1/leaderboard/territories?limit=50');
+    onlBoard = r.status === 200 ? { at: Date.now(), data: r.body } : { at: Date.now() - 25000, error: r.body.message || 'Couldn\'t load the leaderboard.' };
+    if (current === 'scores') renderScores();
+  }
+  function onlBoardHTML() {
+    const o = onl();
+    if (!o.on) return '';
+    let body;
+    if (!onlBoard || onlBoard.loading) body = '<div class="ta-row"><div class="ta-rtext"><small>Loading the global leaderboard…</small></div></div>';
+    else if (onlBoard.error) body = '<div class="ta-row"><div class="ta-rtext"><small>' + esc(onlBoard.error) + '</small></div></div>';
+    else {
+      const d = onlBoard.data, list = d.players || [];
+      body = list.length ? list.map(function (p) {
+        const mine = o.account && o.account.tornId === p.tornId;
+        return '<div class="ta-row ta-lb' + (mine ? ' ta-lbme' : '') + '"><span class="ta-lbrank">' + (p.rank <= 3 ? ['🥇', '🥈', '🥉'][p.rank - 1] : '#' + p.rank) + '</span><div class="ta-rtext"><b>' + esc(p.name) + ' [' + p.tornId + ']</b><small>' + p.wins + ' wins from ' + p.games + ' games</small></div><span class="ta-lbr">' + p.rating + '</span></div>';
+      }).join('') : '<div class="ta-row"><div class="ta-rtext"><b>No ranked games yet</b><small>Online Torn Territories games are coming in the next update. Your rating starts at 1200.</small></div></div>';
+      const me = d.me;
+      body += '<div class="ta-row"><div class="ta-rtext"><small>' + (!o.account ? 'Sign in under Settings > Online to see your rank.' : !o.account.verified ? 'Verify your Torn ID under Settings > Online to appear here.' : me && me.rank ? 'You: #' + me.rank + ' · rating ' + me.rating + ' · ' + me.wins + ' wins from ' + me.games + ' games' : 'You: not ranked yet. Play an online game to get a rank.') + '</small></div></div>';
+    }
+    return '<div class="ta-group"><h3>Global leaderboard · Torn Territories</h3><div class="ta-list">' + body + '</div></div>';
+  }
+
   /* Saved maps (Tornies). Everything happens on this device; the game draws the maps itself, nothing is downloaded. */
   function mapInfo() { try { return games.pocket && games.pocket.maps ? games.pocket.maps.info() : null; } catch (e) { return null; } }
   function mapMsg(p) {
@@ -1409,7 +1563,7 @@
     if (!a) return;
     if (current && games[current]) games[current].leave();
     current = id; root.dataset.app = id;
-    if (id === 'scores') renderScores();
+    if (id === 'scores') { renderScores(); onlLoadBoard(); }
     if (id === 'settings') renderSettings();
     if (id === 'artT' || id === 'artC') renderArt(id);
     if (id === 'dev') renderDev();

@@ -118,13 +118,22 @@ Torn Arcade is built to follow Torn's scripting rules:
 
 - Apart from adding the **Mobile Phone** link to the sidebar, it never reads, clicks or changes anything on Torn's page.
 - It **never loads Torn pages** and makes **no non-API requests** to Torn.
-- It doesn't talk to any website other than the official Torn API, and only does that if you turn on event notifications. The Art Pack install buttons are plain links to this GitHub page that only open when you tap them.
+- It doesn't talk to any website other than the official Torn API (only if you turn on event notifications) and, only if you turn on **Online play**, the Torn Arcade server. The Art Pack install buttons are plain links to this GitHub page that only open when you tap them.
+- It uses **no websockets**.
 - The optional Art Packs make no requests at all. They only pass pictures to Torn Arcade on the page.
 - The optional **Torn Arcade - Invasion** script makes no requests at all. It only draws the game inside the phone and talks to Torn Arcade through events on the page.
 - Games only react to keys while the phone is open, and never while you're typing in a text box.
 
 ### Optional event notifications
 If you add a **Limited** access API key in Settings, the phone checks the official Torn API (`api.torn.com`, `/v2/user/events`) for new events **every 5 seconds while the phone is open**. That's 12 calls a minute, well under Torn's limit of 100. Nothing is requested while the phone is closed. The key is only ever sent to `api.torn.com`. See the Torn API terms on Torn's API page (on [Torn](https://www.torn.com), under the API section).
+
+### 🌐 Optional online play
+**Off until you turn it on** in Settings → Online. While it's on, the phone talks to the Torn Arcade server (`arcade-server-production-8ebd.up.railway.app`, run by Eaglewing [571041] and hosted on Railway). The server address is declared in the script header with `@connect`. Every request is one you start: verifying your Torn ID, playing as a guest, signing out, deleting your online account, or opening Scores to see the global leaderboard. With Online play off, nothing is ever sent.
+
+- **Verify your Torn ID** with your saved key or a pasted **Public** key. The key goes to the Torn Arcade server once; the server asks `api.torn.com` who owns it (`/v2/user/basic`), then forgets it. The key is never stored or logged.
+- **Play as a guest** with no key at all. Guests aren't on the global leaderboard until they verify.
+- **Delete my online account** removes your Torn ID, name and online results from the server.
+- The global leaderboard for Torn Territories is in Scores. Online Territories games are coming in the next update. The server's code is in the [`server`](server) folder.
 
 ---
 
@@ -135,9 +144,17 @@ If you add a **Limited** access API key in Settings, the phone checks the offici
 | Only locally | Nobody | Public amusement (games) and event notifications on the phone | Stored locally / Used only for automation (event checks while the phone is open). Never shared. | Limited (user → events). Optional: only needed for event notifications |
 
 - **Data Storage:** settings, theme, wallpaper, best scores, your Tornies save, Torn Invasion progress, Angry Bogies stars, Faction Defence progress (stars, War Chest and Armoury), Egg Dash eggs and achievements, a Torn Territories game in progress and your API key are kept in Tampermonkey storage on your device. Events are shown on the phone but never saved. With **Save maps on this device** on (Settings → Tornies), pictures of the Tornies maps the game has drawn are also kept in your browser's own storage for torn.com (IndexedDB, `torn-arcade-maps`). They are drawn by the script on your device, contain no personal data, are never uploaded or shared, and **Clear saved maps** deletes them.
-- **Data Sharing:** nothing is sent anywhere except event requests to `api.torn.com`.
+- **Data Sharing:** nothing is sent anywhere except event requests to `api.torn.com` and, only if you turn on Online play, requests to the Torn Arcade server (see below).
 - **Where it may be used:** Torn (torn.com) only. See [Licence](#-licence).
 - The same table is shown next to the API key box in Settings and at the top of the script.
+
+**Online play** (optional, off by default):
+
+| Data Storage | Data Sharing | Purpose of Use | Key Storage & Sharing | Key Access Level |
+|---|---|---|---|---|
+| Persistent - until account deletion (on the Torn Arcade server: your Torn ID, name and online game results; on your device: a sign-in token) | General public (your name, rating and results on the global leaderboard) | Public community tools (online games and the global leaderboard) | Not stored / Not shared (sent once to the Torn Arcade server to confirm your Torn ID with `api.torn.com`, then forgotten) | Public (user → basic). A Limited key also works; only your name and Torn ID are read |
+
+The same table is shown in Settings → Online wherever you can enter a key. The server is hosted on Railway ([Railway privacy policy](https://railway.com/legal/privacy)); see also the Torn API terms on Torn's API page.
 
 **Torn Arcade - Invasion:**
 
