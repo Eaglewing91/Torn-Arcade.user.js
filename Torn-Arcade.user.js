@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.31.0
-// @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with six game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
+// @version      2.32.0
+// @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with seven game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps and Egg Dash artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
 // @license      All Rights Reserved - for use on Torn (torn.com) only; no copying, modifying, redistribution or use elsewhere (see LICENCE below)
@@ -82,7 +82,7 @@
  * HOW IT WORKS
  * - Adds a "Mobile Phone" link under Calendar in Torn's sidebar (Areas). It is
  *   a copy of Torn's own Calendar row, so it matches the other links. Clicking
- *   it opens a mobile phone on top of the page with six game apps, plus Scores
+ *   it opens a mobile phone on top of the page with seven game apps, plus Scores
  *   and Settings. Everything runs inside that phone. On pages without the
  *   sidebar, a small floating "Phone" button is shown instead.
  * - On pages where you don't open the phone, only the small part that adds
@@ -131,7 +131,8 @@
  * TERMS OF SERVICE
  * - Data Storage:          Only locally (settings, wallpaper, best scores, your
  *                          Tornies save, Torn Invasion progress, Angry Bogies
- *                          stars, Faction Defence progress and your API
+ *                          stars, Faction Defence progress, Egg Dash
+ *                          eggs and achievements and your API
  *                          key, in Tampermonkey storage). Events are only
  *                          shown, never saved. With "Save maps on this
  *                          device" on (Settings > Tornies), pictures of the
@@ -158,7 +159,7 @@
 
   /* ================= Starter =================
    * On every Torn page only this small part runs: it adds the "Mobile Phone" link (or a small floating
-   * button where there is no sidebar). The phone and all six games are set up the first time you open it,
+   * button where there is no sidebar). The phone and all seven games are set up the first time you open it,
    * so pages where you never open the phone pay almost nothing. */
   let arcade = null;
   function startArcade() { if (!arcade) arcade = TA_MAIN(); return arcade; }
@@ -520,7 +521,8 @@
     { id: 'bogies', name: 'Angry Bogies', icon: '😠', bg: ['#ff9a5a', '#c8382a'] , desc: 'Bogie versus the Racket. Fling Bogies from a slingshot, smash the hideouts and knock out every thug. Fifteen levels, three stars each.' },
     { id: 'defence', name: 'Faction Defence', icon: '🛡️', bg: ['#7fb0ff', '#2a4f9a'], desc: 'Hold your Faction HQ against Racket raids. Build and upgrade defenders beside the road, survive 40 waves on 6 maps and spend your War Chest in the Armoury.' },
     { id: 'bombs',  name: 'Dirty Bombs',    icon: '☢️', bg: ['#ffe066', '#c99a10'] , desc: 'Clear the city block by block without setting off a dirty bomb. Numbers show how many bombs are nearby.' },
-    { id: 'flappy', name: 'Flappy Torn',    icon: '🐦', bg: ['#6cc8ff', '#1f72c8'] , desc: 'Fly through the gaps in the pipes over Torn City. Every pipe you pass is a point.' }
+    { id: 'flappy', name: 'Flappy Torn',    icon: '🐦', bg: ['#6cc8ff', '#1f72c8'] , desc: 'Fly through the gaps in the pipes over Torn City. Every pipe you pass is a point.' },
+    { id: 'eggdash', name: 'Egg Dash', title: "Anton's Egg Dash", icon: '🐰', bg: ['#8a5ae8', '#2a1458'], desc: 'Run the rooftops of Torn City as Anton in his bunny onesie. Grab the Easter eggs, jump the gaps and stay ahead of the police. One endless run that keeps getting faster.' }
   ];
   // Home-screen icons for the games: small WebP pictures stored as text in the script (nothing is downloaded).
   const APP_ART = {
@@ -529,6 +531,7 @@
     bogies: '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',
     defence: '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',
     bombs: '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',
+    eggdash: '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',
     flappy: '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'
   };
   const SYS_APPS = [
@@ -538,11 +541,11 @@
   // The optional Art Pack scripts, as apps on the bottom row of the home screen (see renderArt).
   const ART_APPS = [
     { id: 'artT', pack: 'tornies', name: 'Tornies Art', title: 'Tornies Art Pack', icon: '🎨', bg: ['#7ad8a8', '#1f7a5a'], size: '1.4 MB', what: 'the illustrated artwork for all 179 Tornies' },
-    { id: 'artC', pack: 'chars', name: 'Character Art', title: 'Character Art Pack', icon: '🖌️', bg: ['#c39bff', '#5a3ab8'], size: '0.75 MB', what: 'illustrated portraits for the gym leaders, story characters, trainers and your outfits, plus the Faction Defence maps' }
+    { id: 'artC', pack: 'chars', name: 'Character Art', title: 'Character Art Pack', icon: '🖌️', bg: ['#c39bff', '#5a3ab8'], size: '1.2 MB', what: 'illustrated portraits for the gym leaders, story characters, trainers and your outfits, plus the Faction Defence maps and the Egg Dash artwork' }
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gift codes', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
-  const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.31.0';
+  const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1 };   // apps that turn the phone sideways
+  const VERSION = '2.32.0';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -775,7 +778,7 @@
           '<span class="ta-sicons"><span class="ta-bars"><i style="height:4px"></i><i style="height:6px"></i><i style="height:8.5px"></i><i style="height:11px"></i></span><span>TornTel</span><span class="ta-batt"><i></i></span></span></div>' +
         '<div class="ta-home">' +
           '<div class="ta-widget"><button type="button" class="ta-lock" data-act="close" title="Lock phone (Esc)">🔒</button><b class="ta-wclock">00:00</b><span class="ta-wdate"></span><em>Torn City Time</em></div>' +
-          '<div class="ta-note" hidden><span class="ta-noteicon">👋</span><div class="ta-notetext"><b>Welcome to Torn Arcade v' + VERSION + '!</b><small>Six games in your pocket. Start with Tornies, and grab the free Art Packs on the bottom row for illustrated artwork. Bugs or ideas? Message Eaglewing [571041].</small></div><button type="button" class="ta-notex" title="Dismiss">✕</button></div>' +
+          '<div class="ta-note" hidden><span class="ta-noteicon">👋</span><div class="ta-notetext"><b>Welcome to Torn Arcade v' + VERSION + '!</b><small>Seven games in your pocket. Start with Tornies, and grab the free Art Packs on the bottom row for illustrated artwork. Bugs or ideas? Message Eaglewing [571041].</small></div><button type="button" class="ta-notex" title="Dismiss">✕</button></div>' +
           '<div class="ta-grid">' + GAMES.map(appButton).join('') + '</div>' +
           '<div class="ta-grid ta-artrow">' + ART_APPS.map(appButton).join('') + '</div>' +
           '<div class="ta-dock">' + SYS_APPS.map(function (a) { return (a.id === 'settings' ? appButton(DEV_APP).replace('<button ', '<button hidden ') : '') + appButton(a); }).join('') + '</div>' +
@@ -982,6 +985,7 @@
   const SCORE_FMT = {
     bombs:  function (k, v) { return [cap(k[1]), v + 's']; },
     flappy: function (k, v) { return [cap(k[1]), v]; },
+    eggdash: function (k, v) { return ['Endless', Number(v).toLocaleString('en-GB')]; },
     bogies: function (k, v) { return ['Level ' + k[1], Number(v).toLocaleString('en-GB')]; },
     defence: function (k, v) { return [['Westgate', 'The Docks', 'Midtown', 'Casino Strip', 'Industrial Zone', 'Racket HQ'][k[1] - 1] || 'Map ' + k[1], 'Wave ' + v]; }
   };
@@ -1277,6 +1281,7 @@
         '<div class="ta-row"><span class="ta-ricon" style="background:#1c9a8a">🐾</span><div class="ta-rtext"><b>Delete Tornies save</b><small>Your team, medals and Tornie Log</small></div><button type="button" class="ta-danger" data-set="resetPocket">Delete</button></div>' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#1c6a32">👽</span><div class="ta-rtext"><b>Delete Invasion progress</b><small>Unlocked levels, best scores and achievements</small></div><button type="button" class="ta-danger" data-set="resetInvasion">Delete</button></div>' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#2a4f9a">🛡️</span><div class="ta-rtext"><b>Delete Faction Defence progress</b><small>Stars, War Chest and Armoury upgrades</small></div><button type="button" class="ta-danger" data-set="resetDefence">Delete</button></div>' +
+        '<div class="ta-row"><span class="ta-ricon" style="background:#5a3ab8">🐰</span><div class="ta-rtext"><b>Delete Egg Dash progress</b><small>Lifetime eggs, double jump and achievements</small></div><button type="button" class="ta-danger" data-set="resetEggdash">Delete</button></div>' +
       '</div></div>' +
       '<div class="ta-group"><h3>About</h3><div class="ta-list">' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#2f7bd1">⬇️</span><div class="ta-rtext"><b>Check for updates</b><small>You have version ' + VERSION + '. Tampermonkey shows if a newer one is ready.</small></div><a class="ta-upd" href="' + UPDATE_URL + '" target="_blank" rel="noopener noreferrer">Check</a></div>' +
@@ -1362,11 +1367,12 @@
     if (k === 'detailMaps') { const on = !store.get('detailMaps', true); store.set('detailMaps', on); t.classList.toggle('ta-on', on); sfx.click(); return; }
     if (k === 'evNotify') { const on = !store.get('evNotify', true); store.set('evNotify', on); t.classList.toggle('ta-on', on); sfx.click(); if (on) evStart(); else evStop(); return; }
     if (k === 'sound') { setMuted(!muted); t.classList.toggle('ta-on', !muted); if (!muted) sfx.click(); return; }
-    if (k === 'resetBest' || k === 'resetPocket' || k === 'resetInvasion' || k === 'resetDefence') {
+    if (k === 'resetBest' || k === 'resetPocket' || k === 'resetInvasion' || k === 'resetDefence' || k === 'resetEggdash') {
       if (!t.classList.contains('ta-sure')) { t.classList.add('ta-sure'); t.textContent = 'Tap again'; setTimeout(function () { if (t.isConnected) { t.classList.remove('ta-sure'); t.textContent = k === 'resetBest' ? 'Reset' : 'Delete'; } }, 3000); return; }
       if (k === 'resetBest') { store.set('best', {}); t.textContent = 'Done'; }
       else if (k === 'resetInvasion') { if (games.invasion) games.invasion.wipe(); t.textContent = 'Deleted'; }
       else if (k === 'resetDefence') { if (games.defence) games.defence.wipe(); t.textContent = 'Deleted'; }
+      else if (k === 'resetEggdash') { if (games.eggdash) games.eggdash.wipe(); t.textContent = 'Deleted'; }
       else { if (games.pocket && games.pocket.wipe) games.pocket.wipe(); else store.set('pocket', null); t.textContent = 'Deleted'; }
       t.classList.remove('ta-sure'); t.disabled = true; sfx.click(); refreshNav();
     }
@@ -7921,17 +7927,17 @@
      The illustrated Tornie and character artwork lives in two separate, optional userscripts, so the main script
      stays small (some phones and apps only accept scripts up to 2 MB):
        "Torn Arcade - Tornies Art"    (pack 'tornies': PIX[1..179])
-       "Torn Arcade - Character Art"  (pack 'chars':   PORTRAIT[key], plus the Faction Defence maps 'fd…' and theme wallpapers 'wp…')
+       "Torn Arcade - Character Art"  (pack 'chars':   PORTRAIT[key], plus the Faction Defence maps 'fd…', theme wallpapers 'wp…' and Egg Dash art 'ed…')
      How they link: userscripts can't see each other's variables, so they talk with browser events on the Torn
      page itself. This script fires 'ta-art-request'; each pack answers (and also announces itself when it loads)
      with a 'ta-art-pack' event whose detail is a JSON string { pack, ver, items }. Nothing is downloaded and no
      request is made. Every item is checked before it is used: only known names, and only base64 WebP images of a
      sensible size. Anything else is ignored. */
-  const ART_WANT = { tornies: 1, chars: 7 };   // newest pack versions this script knows about
+  const ART_WANT = { tornies: 1, chars: 8 };   // newest pack versions this script knows about
   const ARTP = {};                              // packs received: { ver, n }
   const ART_KEYS = {
     tornies: function (k) { return /^\d{1,3}$/.test(k) && +k >= 1 && +k <= DEX_SIZE; },
-    chars: function (k) { return /^[a-z0-9]{2,16}$/.test(k) && (k in PAL || /^outfit[0-3]$/.test(k) || /^fd(westgate|docks|midtown|casino|industrial|hideout)$/.test(k) || /^wp(neon|crimson|casino|jungle|riviera)$/.test(k)); }
+    chars: function (k) { return /^[a-z0-9]{2,16}$/.test(k) && (k in PAL || /^outfit[0-3]$/.test(k) || /^fd(westgate|docks|midtown|casino|industrial|hideout)$/.test(k) || /^wp(neon|crimson|casino|jungle|riviera)$/.test(k) || /^ed(head|body|arm|leg|egg|gold|rotten|carrot|drone|ac|sack|bg(downtown|casino|docks|industrial))$/.test(k)); }
   };
   const ART_B64 = /^UklGR[A-Za-z0-9+/]+={0,2}$/;   // base64 of a RIFF/WebP file
   function artOn(pack) { return store.get('art_' + pack, true) !== false; }
@@ -7953,13 +7959,13 @@
     let n = 0; const good = {};
     Object.keys(d.items).forEach(function (k) {
       const v = d.items[k];
-      if (ok(k) && typeof v === 'string' && v.length < (/^(fd|wp)/.test(k) ? 130000 : 80000) && ART_B64.test(v)) { good[k] = v; n++; }
+      if (ok(k) && typeof v === 'string' && v.length < (/^(fd|wp|ed)/.test(k) ? 130000 : 80000) && ART_B64.test(v)) { good[k] = v; n++; }
     });
     ARTP[pack] = { ver: Math.floor(d.ver), n: n, on: artOn(pack) };
     if (artOn(pack)) {
       artClear(pack);
       const t = artTable(pack); Object.keys(good).forEach(function (k) { t[k] = good[k]; });
-      if (pack === 'chars') { const ks = Object.keys(good).filter(function (k) { return !/^(fd|wp)/.test(k); }); let i = 0; (function warm() { for (let j = 0; j < 6 && i < ks.length; j++, i++) portWant(ks[i]); if (i < ks.length) setTimeout(warm, 30); })(); }
+      if (pack === 'chars') { const ks = Object.keys(good).filter(function (k) { return !/^(fd|wp|ed)/.test(k); }); let i = 0; (function warm() { for (let j = 0; j < 6 && i < ks.length; j++, i++) portWant(ks[i]); if (i < ks.length) setTimeout(warm, 30); })(); }
       else [1, 4, 7].forEach(pixWant);   // the title screen starters
     }
     if (artNotify) artNotify();
@@ -7976,7 +7982,7 @@
   };
   const artApi = {
     url: ART_URL, want: ART_WANT,
-    get: function (k) { return artOn('chars') && /^(fd|wp)/.test(k) ? PORTRAIT[k] || null : null; },   // Faction Defence maps and theme wallpapers
+    get: function (k) { return artOn('chars') && /^(fd|wp|ed)/.test(k) ? PORTRAIT[k] || null : null; },   // Faction Defence maps, theme wallpapers and Egg Dash art
     info: function (pack) { const p = ARTP[pack]; return { installed: !!p, ver: p ? p.ver : 0, n: p ? p.n : 0, on: artOn(pack), old: !!p && p.ver < ART_WANT[pack] }; },
     setOn: function (pack, on) {
       store.set('art_' + pack, !!on);
@@ -7993,7 +7999,7 @@
         return out;
       }
       const met = (d && d.metArt) || {};
-      return Object.keys(PORTRAIT).filter(function (k) { return !/^(outfit|fd|wp)/.test(k); }).sort().map(function (k) {
+      return Object.keys(PORTRAIT).filter(function (k) { return !/^(outfit|fd|wp|ed)/.test(k); }).sort().map(function (k) {
         const nm = ART_LABEL[k] || k.charAt(0).toUpperCase() + k.slice(1);
         return { src: 'data:image/webp;base64,' + PORTRAIT[k], name: met[k] ? nm : '???', known: !!met[k] };
       });
@@ -17139,6 +17145,810 @@
         if (st === 'select' && /^[1-6]$/.test(k)) { const i = Number(k) - 1; if (i <= save.open && !e.repeat) startMap(i, true); return true; }
         return false;
       }
+    };
+  })();
+
+  /* ================= Anton's Egg Dash (endless rooftop runner) =================
+     Anton, in his pink bunny onesie, runs across the rooftops of Torn City at night grabbing Easter eggs, with
+     the police on his tail. One endless run that keeps getting faster.
+     Anton is a cut-out puppet: head, body, arms and legs are separate pictures (from the optional Character Art
+     pack, keys 'ed…') moved by code. Without the pack he is drawn by code in the same poses.
+     Everything happens inside this canvas: no requests of any kind, nothing on Torn's page is read or touched. */
+  (function () {
+    const W = 720, H = 440, STEP = 1 / 120, AX = 170;
+    const K = 0.126;                                  // puppet units (source pixels) to game pixels
+    const GRAV = 2050, JUMP_V = 660, HOLD_G = 0.42, HOLD_MAX = 0.24, DJUMP_V = 600;
+    const SPEED0 = 270, SPEED_MAX = 610, SPEED_UP = 5.5;
+    const DIST = 25;                                  // game pixels per metre
+    const DISTRICT_M = 700;                           // metres per district
+    const CHANCE_COST = [25, 50, 100];                // eggs for each second chance in one run
+    const DJ_EGGS = 200;                              // lifetime eggs that unlock the double jump
+    // Puppet layout in source pixels (facing right): where each part sits and where it turns.
+    const PART = {
+      head: { x: 0, y: 0, w: 340, h: 440, px: 200, py: 420 },
+      body: { x: 0, y: 405, w: 340, h: 395, px: 190, py: 325 },
+      arm:  { x: 100, y: 440, w: 180, h: 320, px: 80, py: 30 },
+      leg:  { x: 100, y: 700, w: 240, h: 230, px: 90, py: 20 }
+    };
+    const HIP = [190, 730], NECK = [200, 420], SHOULDER = [180, 470], LEGHIP = [190, 720], SOLE = 915;
+    const DISTRICTS = [
+      { name: 'Downtown', art: 'edbgdowntown', sky: ['#120c3a', '#3a1f7a', '#6a3aa0'], city: '#241a56', lit: '#ffe39a',
+        wall: ['#3a3f5c', '#2a2e45'], ledge: '#59607f', win: '#ffd77a', dark: '#1c2033', trim: null },
+      { name: 'Casino Strip', art: 'edbgcasino', sky: ['#2a0630', '#6a1050', '#a02860'], city: '#3a0c3a', lit: '#ffc84a',
+        wall: ['#4a2448', '#331834'], ledge: '#7a3a70', win: '#ffcf6a', dark: '#241024', trim: ['#ff4fb0', '#ffd34a', '#4ae0ff'] },
+      { name: 'The Docks', art: 'edbgdocks', sky: ['#f08a6a', '#f2a07a', '#f6c08a'], city: '#2c3460', lit: '#ffd9a0',
+        wall: ['#3d4f6a', '#2c3a50'], ledge: '#5c7090', win: '#ffd59a', dark: '#1e2838', trim: null, metal: 1 },
+      { name: 'Industrial Zone', art: 'edbgindustrial', sky: ['#3a8a88', '#7aa08a', '#e0b07a'], city: '#17303a', lit: '#ffc070',
+        wall: ['#5a3a30', '#432a24'], ledge: '#7a5446', win: '#ffb860', dark: '#2a1c18', trim: null, brick: 1 }
+    ];
+    const MEDALS = [[20000, 'Platinum', '#e8f3ff', '#8fb0d6'], [10000, 'Gold', '#ffd65a', '#c48e12'], [5000, 'Silver', '#e4e9f0', '#8d99a8'], [2000, 'Bronze', '#e3a06a', '#94532a']];
+    const ACH = [
+      ['hop', 'First Hop', 'Run 100 m'],
+      ['regular', 'Rooftop Regular', 'Run 1,000 m in one run'],
+      ['marathon', 'Marathon Bunny', 'Run 3,000 m in one run'],
+      ['hoard', 'Egg Hoarder', 'Grab 100 eggs in one run'],
+      ['golden', 'Golden Touch', 'Grab 10 gold eggs (all runs)'],
+      ['combo', 'Combo King', 'Reach a x5 combo'],
+      ['shadow', 'Shadow Bunny', 'Escape 10 police drones (all runs)'],
+      ['carrot', 'Carrot Cruiser', 'Use 10 Carrot Bursts (all runs)'],
+      ['wind', 'Second Wind', 'Use a second chance'],
+      ['tour', 'Tour of Torn', 'Reach the Industrial Zone in one run']
+    ];
+
+    const panel = makePanel('eggdash', "Anton's Egg Dash", 'Run the rooftops of Torn City, grab the Easter eggs and stay ahead of the police.',
+      '<button type="button" class="ta-btn ta-ed-start">New run</button>',
+      [['score', 'Score'], ['eggs', 'Eggs'], ['dist', 'Distance', '0 m'], ['best', 'Best', '–']],
+      '<canvas class="ta-canvas"></canvas>',
+      '<span class="ta-kbd">Space</span> / <span class="ta-kbd">↑</span> / click to jump (hold to jump higher) · <span class="ta-kbd">↓</span> to slide · on touch: tap the right side to jump, hold the left side to slide · <span class="ta-kbd">P</span> pause');
+    const canvas = $(panel, 'canvas'), ctx = setupCanvas(canvas, W, H);
+    canvas.style.touchAction = 'none';
+
+    /* ---------- Saved progress ---------- */
+    const save = Object.assign({ eggs: 0, gold: 0, runs: 0, drones: 0, carrots: 0, ach: {}, far: 0 }, store.get('eggdash', null) || {});
+    function persist() { store.set('eggdash', save); }
+    function djOn() { return save.eggs >= DJ_EGGS; }
+    let toasts = [];
+    function unlock(id) {
+      if (save.ach[id]) return;
+      save.ach[id] = Date.now(); persist();
+      const a = ACH.find(function (x) { return x[0] === id; });
+      toasts.push({ text: '🏆 ' + a[1], sub: a[2], t: 0 });
+      seq([[0, 660, 0.08, 'triangle', 0.05], [90, 880, 0.08, 'triangle', 0.05], [180, 1320, 0.14, 'triangle', 0.05]]);
+    }
+    function achCount() { return ACH.filter(function (a) { return save.ach[a[0]]; }).length; }
+
+    /* ---------- Pictures from the Character Art pack (or null) ---------- */
+    const imgs = {};
+    function art(key) {
+      const api = games.pocket && games.pocket.art, b64 = api && api.get ? api.get(key) : null;
+      if (!b64) return null;
+      if (!imgs[key] || imgs[key].b !== b64.length) { const im = new Image(); im.src = 'data:image/webp;base64,' + b64; imgs[key] = { im: im, b: b64.length, dark: null }; }
+      const r = imgs[key];
+      return r.im.complete && r.im.naturalWidth ? r : null;
+    }
+    function darkOf(r) {   // the far arm and leg are drawn a little darker
+      if (!r.dark) {
+        const c = document.createElement('canvas'); c.width = r.im.naturalWidth; c.height = r.im.naturalHeight;
+        const g = c.getContext('2d'); g.drawImage(r.im, 0, 0);
+        g.globalCompositeOperation = 'source-atop'; g.fillStyle = 'rgba(70,20,60,.32)'; g.fillRect(0, 0, c.width, c.height);
+        r.dark = c;
+      }
+      return r.dark;
+    }
+
+    /* ---------- Code-drawn stand-ins (no art pack) ---------- */
+    const INK = '#141018', PINK = '#fb9bc6', PINK2 = '#e9649e', SKIN = '#f7c59a', BEARD = '#6b3a1e';
+    function blob(g, fn, fill, lw) { g.beginPath(); fn(); g.fillStyle = fill; g.fill(); g.lineWidth = lw || 12; g.strokeStyle = INK; g.stroke(); }
+    const DRAW = {
+      head: function (g) {
+        g.save(); g.translate(-PART.head.px, -PART.head.py);
+        blob(g, function () { g.ellipse(160, 120, 34, 95, -0.08, 0, Math.PI * 2); }, PINK2);
+        blob(g, function () { g.ellipse(210, 110, 36, 100, 0.06, 0, Math.PI * 2); }, PINK);
+        blob(g, function () { g.ellipse(180, 290, 140, 132, 0, 0, Math.PI * 2); }, PINK);
+        blob(g, function () { g.ellipse(262, 300, 62, 92, 0, 0, Math.PI * 2); }, SKIN, 8);
+        blob(g, function () { g.ellipse(270, 355, 60, 58, 0, 0, Math.PI * 2); }, BEARD, 8);
+        g.fillStyle = INK; g.fillRect(222, 248, 100, 16);
+        blob(g, function () { g.roundRect ? g.roundRect(268, 248, 52, 56, 12) : g.rect(268, 248, 52, 56); }, '#ff4fa8', 8);
+        g.restore();
+      },
+      body: function (g) {
+        g.save(); g.translate(-PART.body.px, -PART.body.py);
+        blob(g, function () { g.ellipse(170, 200, 120, 190, 0, 0, Math.PI * 2); }, PINK);
+        g.beginPath(); g.ellipse(250, 200, 40, 140, 0, 0, Math.PI * 2); g.fillStyle = '#fff'; g.fill();
+        blob(g, function () { g.arc(52, 250, 40, 0, Math.PI * 2); }, '#fff', 9);
+        g.restore();
+      },
+      arm: function (g) {
+        g.save(); g.translate(-PART.arm.px, -PART.arm.py);
+        blob(g, function () { g.roundRect ? g.roundRect(40, 0, 84, 240, 40) : g.rect(40, 0, 84, 240); }, PINK, 9);
+        g.fillStyle = PINK2; g.fillRect(44, 200, 76, 30);
+        blob(g, function () { g.ellipse(84, 268, 52, 44, 0, 0, Math.PI * 2); }, SKIN, 9);
+        g.restore();
+      },
+      leg: function (g) {
+        g.save(); g.translate(-PART.leg.px, -PART.leg.py);
+        blob(g, function () { g.roundRect ? g.roundRect(30, 0, 120, 150, 40) : g.rect(30, 0, 120, 150); }, PINK, 9);
+        blob(g, function () { g.roundRect ? g.roundRect(20, 128, 200, 84, 34) : g.rect(20, 128, 200, 84); }, '#ef5aa0', 9);
+        g.fillStyle = '#fff'; g.fillRect(28, 190, 186, 16);
+        g.restore();
+      }
+    };
+    function part(name, rot, far) {   // draw one puppet part at the current origin (its pivot), turned by rot
+      const P = PART[name], r = art('ed' + name);
+      ctx.save(); ctx.rotate(rot || 0);
+      if (r) ctx.drawImage(far ? darkOf(r) : r.im, -P.px, -P.py, P.w, P.h);
+      else { DRAW[name](ctx); if (far) { /* stand-in far limbs are fine as they are */ } }
+      ctx.restore();
+    }
+    function sprite(key, x, y, w, h, fallback) {
+      const r = art(key);
+      if (r) ctx.drawImage(r.im, x, y, w, h); else fallback(x, y, w, h);
+    }
+    function eggShape(x, y, w, h, fill, stripes) {
+      ctx.beginPath(); ctx.ellipse(x + w / 2, y + h * 0.54, w / 2, h / 2, 0, 0, Math.PI * 2);
+      ctx.fillStyle = fill; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = INK; ctx.stroke();
+      if (stripes) { ctx.save(); ctx.clip(); ctx.fillStyle = '#7ad0ff'; ctx.fillRect(x, y + h * 0.42, w, h * 0.14); ctx.fillStyle = '#ffe06a'; ctx.fillRect(x, y + h * 0.66, w, h * 0.1); ctx.restore(); }
+    }
+
+    /* ---------- Anton's puppet ---------- */
+    // Pose: lean (body), head, armF/armB (near/far arm), legF/legB, all in radians; positive turns clockwise.
+    function drawAnton(x, feetY, pose, alpha) {
+      ctx.save(); ctx.globalAlpha = alpha === undefined ? 1 : alpha;
+      ctx.translate(x, feetY); ctx.scale(K, K);
+      ctx.translate(0, -(SOLE - HIP[1]) + (pose.drop || 0));   // origin at the hip
+      ctx.rotate(pose.spin || 0);
+      const lean = pose.lean || 0;
+      function at(p, fn) { // a point of the body (source pixels), turned with the body lean
+        const dx = p[0] - HIP[0], dy = p[1] - HIP[1], c = Math.cos(lean), s = Math.sin(lean);
+        ctx.save(); ctx.translate(dx * c - dy * s, dx * s + dy * c); fn(); ctx.restore();
+      }
+      // far side first: far arm, sack, far leg
+      at(SHOULDER, function () { ctx.translate(-14, 0); part('arm', lean + pose.armB, true); });
+      at([96, 520], function () {   // the sack of eggs over his back
+        ctx.rotate(lean - 0.25 + (pose.sack || 0));
+        sprite('edsack', -88, -96, 176, 183, function (x, y, w, h) { ctx.beginPath(); ctx.ellipse(0, 0, 80, 86, 0, 0, Math.PI * 2); ctx.fillStyle = '#a77a4a'; ctx.fill(); ctx.lineWidth = 10; ctx.strokeStyle = INK; ctx.stroke(); });
+      });
+      ctx.save(); ctx.translate(LEGHIP[0] - HIP[0] - 18, LEGHIP[1] - HIP[1]); part('leg', pose.legB, true); ctx.restore();
+      ctx.save(); ctx.translate(LEGHIP[0] - HIP[0], LEGHIP[1] - HIP[1]); part('leg', pose.legF); ctx.restore();
+      part('body', lean);
+      at(NECK, function () { part('head', lean + (pose.head || 0)); });
+      if (pose.cuffed) {   // hands behind his back, cuffed
+        at([70, 680], function () {
+          ctx.lineWidth = 14; ctx.strokeStyle = '#c9d2dc'; ctx.beginPath(); ctx.arc(-20, 0, 26, 0, Math.PI * 2); ctx.stroke();
+          ctx.beginPath(); ctx.arc(30, 4, 26, 0, Math.PI * 2); ctx.stroke(); ctx.lineWidth = 6; ctx.strokeStyle = INK; ctx.beginPath(); ctx.moveTo(6, 2); ctx.lineTo(4, 2); ctx.stroke();
+        });
+      } else at(SHOULDER, function () { part('arm', lean + pose.armF); });
+      ctx.restore();
+    }
+    function poseFor(a, tt) {
+      if (a.mode === 'slide') return { lean: -1.15, head: 0.55, armF: -0.2, armB: 0.3, legF: -1.45, legB: -1.25, drop: 136, sack: 0.6 };
+      if (a.mode === 'caught') return { lean: 0.05, head: 0.1 + Math.sin(tt * 3) * 0.05, armF: 0.6, armB: 0.6, legF: 0, legB: 0, cuffed: true };
+      if (a.mode === 'fall') return { lean: -0.3, head: -0.3, armF: -2.8 + Math.sin(tt * 18) * 0.5, armB: -2.6 - Math.sin(tt * 18) * 0.5, legF: Math.sin(tt * 14) * 0.6, legB: -Math.sin(tt * 14) * 0.6, spin: Math.min(0.6, tt) };
+      if (a.mode === 'idle') return { lean: 0.02, head: Math.sin(tt * 1.7) * 0.06, armF: Math.sin(tt * 2) * 0.06, armB: -0.05, legF: -0.08, legB: 0.12, drop: Math.sin(tt * 3.4) * 6 };
+      if (!a.ground) {
+        if (a.vy < 0) return { lean: 0.18, head: -0.12, armF: -2.3, armB: -1.7, legF: -0.9, legB: 0.55, sack: -0.2 };
+        return { lean: 0.1, head: 0.05, armF: -1.3, armB: -0.9, legF: -0.5, legB: 0.35, sack: 0.25 };
+      }
+      const p = a.stride, s = Math.sin(p);
+      return { lean: 0.16, head: -0.05 + Math.cos(p * 2) * 0.03, armF: -s * 0.95, armB: s * 0.85, legF: -s * 0.75, legB: s * 0.75,
+        drop: Math.abs(s) * 38 - 8, sack: Math.cos(p * 2) * 0.08 };
+    }
+
+    /* ---------- Police officer (code-drawn) ---------- */
+    function drawCop(x, feetY, p) {
+      ctx.save(); ctx.translate(x, feetY);
+      const s = Math.sin(p);
+      function limb(ox, oy, len, rot, col, w) { ctx.save(); ctx.translate(ox, oy); ctx.rotate(rot); ctx.fillStyle = col; ctx.strokeStyle = INK; ctx.lineWidth = 2; roundRect(ctx, -w / 2, 0, w, len, w / 2); ctx.fill(); ctx.stroke(); ctx.restore(); }
+      limb(-2, -40, 40, s * 0.7, '#1a2a50', 12); limb(-2, -86, 34, -s * 0.9, '#22386a', 10);
+      ctx.fillStyle = '#26407a'; ctx.strokeStyle = INK; ctx.lineWidth = 2; roundRect(ctx, -15, -92, 30, 54, 10); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#ffd65a'; ctx.beginPath(); ctx.arc(7, -78, 3.5, 0, Math.PI * 2); ctx.fill();
+      limb(2, -40, 40, -s * 0.7, '#22386a', 12); limb(2, -86, 34, s * 0.9 - 0.4, '#2c4a86', 10);
+      ctx.beginPath(); ctx.arc(2, -104, 13, 0, Math.PI * 2); ctx.fillStyle = '#e8b48a'; ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#1a2a50'; ctx.beginPath(); ctx.moveTo(-14, -108); ctx.lineTo(16, -108); ctx.lineTo(22, -104); ctx.lineTo(16, -112); ctx.quadraticCurveTo(2, -128, -12, -112); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#ffd65a'; ctx.fillRect(-1, -118, 5, 5);
+      ctx.restore();
+    }
+
+    /* ---------- Backdrops ---------- */
+    function seeded(seed) { return function () { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+    const plainBg = {};
+    function plainBackdrop(i) {   // drawn sky and skyline when the art pack isn't installed
+      if (plainBg[i]) return plainBg[i];
+      const D = DISTRICTS[i], dpr = Math.min(2, window.devicePixelRatio || 1), c = document.createElement('canvas');
+      c.width = Math.round(W * dpr); c.height = Math.round(H * dpr);
+      const g = c.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const s = g.createLinearGradient(0, 0, 0, H); s.addColorStop(0, D.sky[0]); s.addColorStop(0.6, D.sky[1]); s.addColorStop(1, D.sky[2]);
+      g.fillStyle = s; g.fillRect(0, 0, W, H);
+      const r = seeded(31 + i * 7);
+      if (i < 2) for (let k = 0; k < 60; k++) { g.globalAlpha = 0.3 + r() * 0.6; g.fillStyle = '#fff'; g.fillRect(r() * W, r() * 200, 1.5, 1.5); }
+      g.globalAlpha = 1; let x = 0;
+      while (x < W) {
+        const bw = 30 + r() * 60, bh = 60 + r() * 150; g.fillStyle = D.city; g.fillRect(x, 330 - bh, bw, bh + 120);
+        g.fillStyle = D.lit; g.globalAlpha = 0.6;
+        for (let wy = 330 - bh + 8; wy < 320; wy += 12) for (let wx = x + 5; wx < x + bw - 6; wx += 9) if (r() < 0.22) g.fillRect(wx, wy, 4, 5);
+        g.globalAlpha = 1; x += bw + r() * 8;
+      }
+      return (plainBg[i] = c);
+    }
+    function drawBackdrop(i, scroll, alpha) {
+      const r = art(DISTRICTS[i].art);
+      ctx.save(); ctx.globalAlpha = alpha;
+      if (r) {
+        const h = H + 70, w = r.im.naturalWidth * h / r.im.naturalHeight, off = (scroll * 0.08) % (w * 2);
+        for (let k = 0; k < 3; k++) {     // tiles mirrored every other time so the join never shows
+          const x = -off + k * w;
+          if (x > W || x + w < 0) continue;
+          ctx.save();
+          if (k % 2) { ctx.translate(x + w, -55); ctx.scale(-1, 1); ctx.drawImage(r.im, 0, 0, w, h); }
+          else ctx.drawImage(r.im, x, -55, w, h);
+          ctx.restore();
+        }
+      } else {
+        const im = plainBackdrop(i), off = (scroll * 0.08) % W;
+        ctx.drawImage(im, -off, 0, W, H); ctx.drawImage(im, W - off, 0, W, H);
+      }
+      ctx.restore();
+    }
+
+    /* ---------- Run state ---------- */
+    let state = 'ready', t = 0, raf = 0, last = 0, acc = 0;
+    let cam, speed, ant, roofs, obs, eggs, powers, bits, drone, nextDrone, nextPower, score, eggPts, eggsRun, goldRun, combo, mult, bestMult,
+      chase, heat, shield, carrot, blink, stumble, chances, district, distFade, banner, overAt, reason, newBest, cop, held, slideHeld, holdT, jumps, showAch, runT, droneHeat, carrotsRun;
+    function reset() {
+      cam = 0; speed = SPEED0; t = 0; runT = 0;
+      ant = { y: 300, vy: 0, ground: true, mode: 'idle', stride: 0, slideT: 0 };
+      roofs = []; obs = []; eggs = []; powers = []; bits = []; drone = null;
+      nextDrone = 26 + rand(0, 8); nextPower = 14 + rand(0, 6);
+      score = 0; eggPts = 0; eggsRun = 0; goldRun = 0; combo = 0; mult = 1; bestMult = 1;
+      chase = 0; heat = 0; shield = false; carrot = 0; blink = 0; stumble = 0; chances = 0; carrotsRun = 0;
+      district = 0; distFade = 0; banner = null; reason = ''; newBest = false; cop = null; held = false; slideHeld = false; holdT = 0; jumps = 0;
+      roofs.push({ x: -200, w: 1500, y: 300, seed: 1 });
+      genTo(W * 3);
+      updateStats();
+    }
+    function metres() { return Math.floor(cam / DIST); }
+    function totalScore() { return metres() + eggPts; }
+    function updateStats() {
+      stat(panel, 'score', totalScore().toLocaleString('en-GB'));
+      stat(panel, 'eggs', eggsRun);
+      stat(panel, 'dist', metres().toLocaleString('en-GB') + ' m');
+    }
+    function showBest() { const b = getBest('eggdash:endless'); stat(panel, 'best', b === undefined ? '–' : Number(b).toLocaleString('en-GB')); }
+    function medalFor(s) { for (let i = 0; i < MEDALS.length; i++) if (s >= MEDALS[i][0]) return MEDALS[i]; return null; }
+
+    /* ---------- Building the rooftops ahead ---------- */
+    function genTo(xMax) {
+      while (true) {
+        const prev = roofs[roofs.length - 1], end = prev.x + prev.w;
+        if (end > xMax) break;
+        const m = end / DIST, v = Math.min(SPEED_MAX, speed + 40);
+        let gap = clamp(rand(0.3, 0.9) * v * 0.62, 70, 340);
+        let y = clamp(prev.y + rand(-70, 60), 250, 368);
+        if (y < prev.y - 20) gap *= 0.78;          // climbing: a shorter gap
+        if (m < 40) { gap = Math.min(gap, 110); y = Math.max(y, prev.y - 25); }
+        const w = rand(380, 760) + v * 0.5;
+        const r = { x: end + gap, w: w, y: y, seed: Math.floor(rand(1, 1e6)) };
+        roofs.push(r);
+        // eggs in an arc over the gap (the arc follows a jump, so it doubles as a guide)
+        const n = Math.max(4, Math.round(gap / 45)), x0 = end - 30, x1 = r.x + 40, base = Math.min(prev.y, y) - 34, peak = 62 + gap * 0.18;
+        for (let i = 0; i < n; i++) {
+          const s = i / (n - 1);
+          eggs.push({ x: x0 + (x1 - x0) * s, y: base - peak * 4 * s * (1 - s), kind: (i === Math.floor(n / 2) && Math.random() < 0.07) ? 'gold' : 'egg' });
+        }
+        decorate(r, m);
+      }
+    }
+    function decorate(r, m) {
+      const minGap = Math.max(240, speed * 0.85);
+      let x = r.x + Math.max(190, speed * 0.6);   // room to land after a gap
+      while (x < r.x + r.w - 180) {
+        const roll = Math.random();
+        if (roll < 0.58) {
+          const pick = Math.random(), type = (m > 120 && pick < 0.3) ? 'line' : pick < 0.66 ? 'ac' : 'chim';
+          const o = type === 'ac' ? { w: 54, h: 50 } : type === 'chim' ? { w: 32, h: 62 } : { w: 130, h: 0 };
+          o.type = type; o.x = x; o.y = r.y; obs.push(o);
+          if (type === 'line') {
+            for (let i = 0; i < 4; i++) eggs.push({ x: x + 10 + i * 34, y: r.y - 18, kind: 'egg' });   // under the washing: slide for them
+          } else {
+            for (let i = 0; i < 3; i++) eggs.push({ x: x + o.w / 2 + (i - 1) * 34, y: r.y - o.h - 34 - (i === 1 ? 26 : 0), kind: (i === 1 && Math.random() < 0.05) ? 'gold' : 'egg' });
+          }
+          x += o.w + minGap * rand(1, 1.6);
+        } else {
+          const n = 4 + Math.floor(Math.random() * 3);
+          for (let i = 0; i < n; i++) {
+            const rotten = m > 300 && i > 0 && Math.random() < 0.14;
+            eggs.push({ x: x + i * 34, y: r.y - 30, kind: rotten ? 'rotten' : 'egg' });
+          }
+          x += n * 34 + minGap * rand(0.7, 1.2);
+        }
+      }
+    }
+
+    /* ---------- Controls ---------- */
+    function jumpPress() {
+      run();
+      if (state === 'ready') { start(); return; }
+      if (state === 'paused') { state = 'playing'; return; }
+      if (state === 'over') { if (t - overAt > 0.8) { reset(); start(); } return; }
+      if (state !== 'playing') return;
+      held = true;
+      if (ant.mode === 'slide') ant.mode = 'run';
+      if (ant.ground) { ant.vy = -JUMP_V; ant.ground = false; holdT = 0; jumps = 1; tone(420, 0.09, 'triangle', 0.045, 760); puff(AX, ant.y, 5); }
+      else if (djOn() && jumps < 2) { ant.vy = -DJUMP_V; holdT = HOLD_MAX; jumps = 2; tone(620, 0.09, 'triangle', 0.045, 1040); puff(AX, ant.y, 4); }
+    }
+    function jumpRelease() { held = false; }
+    function slidePress() {
+      run();
+      if (state === 'ready') { start(); return; }
+      if (state !== 'playing') return;
+      slideHeld = true;
+      if (ant.ground) { if (ant.mode !== 'slide') { ant.mode = 'slide'; ant.slideT = 0; tone(300, 0.12, 'sawtooth', 0.025, 160); } }
+      else ant.vy = Math.max(ant.vy, 900);   // in the air: drop fast, then slide on landing
+    }
+    function slideRelease() { slideHeld = false; }
+    function start() { reset(); state = 'playing'; ant.mode = 'run'; save.runs++; persist(); banner = { text: DISTRICTS[0].name, t: 0 }; sfx.click(); }
+    function pause() { if (state === 'playing') { state = 'paused'; held = false; slideHeld = false; render(); } }
+
+    /* ---------- Effects ---------- */
+    function puff(x, y, n) { for (let i = 0; i < n; i++) bits.push({ x: x + rand(-10, 10), y: y - rand(0, 6), vx: rand(-140, -40), vy: rand(-60, 10), age: 0, life: rand(0.25, 0.45), r: rand(2, 4.5), col: 'rgba(255,255,255,.6)' }); }
+    function sparkle(x, y, col, n) { for (let i = 0; i < n; i++) { const a = rand(0, Math.PI * 2), s = rand(60, 200); bits.push({ x: x, y: y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, age: 0, life: rand(0.3, 0.55), r: rand(1.5, 3.5), col: col }); } }
+    function popText(x, y, text, col) { bits.push({ x: x, y: y, vx: 0, vy: -50, age: 0, life: 0.8, text: text, col: col }); }
+
+    /* ---------- Update ---------- */
+    function roofAt(x) { for (let i = 0; i < roofs.length; i++) { const r = roofs[i]; if (x >= r.x - 6 && x <= r.x + r.w + 6) return r; } return null; }
+    function hitBox() {
+      const sl = ant.mode === 'slide';
+      return sl ? { l: AX - 26, r: AX + 30, t: ant.y - 36, b: ant.y - 2 } : { l: AX - 16, r: AX + 20, t: ant.y - 100, b: ant.y - 4 };
+    }
+    function obsBox(o) {
+      const x = o.x - cam;
+      if (o.type === 'line') return { l: x + 6, r: x + o.w - 6, t: o.y - 122, b: o.y - 52 };
+      return { l: x + 3, r: x + o.w - 3, t: o.y - o.h + 4, b: o.y };
+    }
+    function overlap(a, b) { return a.l < b.r && a.r > b.l && a.t < b.b && a.b > b.t; }
+    function bump(o) {   // ran into a rooftop obstacle
+      if (carrot > 0) { o.gone = true; eggPts += 20 * mult; popText(o.x - cam + o.w / 2, o.y - 70, '+' + 20 * mult, '#ffb347'); sparkle(o.x - cam + o.w / 2, o.y - 30, '#ffb347', 14); sfx.hit(); return; }
+      if (blink > 0) return;
+      o.gone = true; sparkle(o.x - cam + o.w / 2, o.y - 30, '#c9d2dc', 12);
+      combo = 0; mult = 1;
+      if (shield) { shield = false; blink = 1.2; tone(520, 0.2, 'sine', 0.06, 220); popText(AX, ant.y - 120, 'Bunny suit saved you!', '#ff9bd0'); return; }
+      if (chase > 0) { caught('Caught after a second slip!'); return; }
+      chase = 1; blink = 1.2; stumble = 0.6; sfx.thud(); seq([[150, 760, 0.18, 'square', 0.025], [330, 600, 0.18, 'square', 0.025]]);
+      popText(AX, ant.y - 120, 'The police are on to you!', '#7ab8ff');
+    }
+    function caught(why) {
+      state = 'dying'; reason = why; ant.mode = 'caught'; ant.vy = 0; cop = { x: -60, t: 0 }; overAt = t;
+      if (!ant.ground) { const r = roofAt(cam + AX); if (r) ant.y = r.y; }
+      seq([[0, 760, 0.2, 'square', 0.03], [220, 600, 0.2, 'square', 0.03], [440, 760, 0.2, 'square', 0.03], [660, 600, 0.2, 'square', 0.03]]);
+    }
+    function fell() { state = 'dying'; reason = 'Anton fell off the roof!'; ant.mode = 'fall'; overAt = t; sfx.miss(); }
+    function toOver() {
+      state = 'over'; overAt = t; held = false; slideHeld = false;
+      const s = totalScore();
+      newBest = s > 0 && record('eggdash:endless', s); showBest();
+      if (metres() > (save.far || 0)) save.far = metres();
+      persist();
+      if (newBest) confetti(canvas.parentNode);
+      setTimeout(sfx.over, 120);
+    }
+    function grab(e) {
+      e.taken = true;
+      const x = e.x - cam;
+      if (e.kind === 'rotten') {
+        combo = 0; mult = 1; eggPts = Math.max(0, eggPts - 25); popText(x, e.y - 20, 'Rotten! -25', '#9be05a'); sparkle(x, e.y, '#8ac040', 12);
+        tone(160, 0.25, 'sawtooth', 0.05, 90); return;
+      }
+      combo++; mult = Math.min(5, 1 + Math.floor(combo / 10)); bestMult = Math.max(bestMult, mult);
+      if (mult >= 5) unlock('combo');
+      const gold = e.kind === 'gold', pts = (gold ? 50 : 5) * mult;
+      eggPts += pts; eggsRun += gold ? 10 : 1; save.eggs += gold ? 10 : 1;
+      if (gold) { goldRun++; save.gold++; if (save.gold >= 10) unlock('golden'); seq([[0, 1046, 0.07, 'triangle', 0.05], [70, 1318, 0.07, 'triangle', 0.05], [140, 1568, 0.12, 'triangle', 0.05]]); sparkle(x, e.y, '#ffd65a', 16); popText(x, e.y - 24, '+' + pts, '#ffd65a'); }
+      else { tone(880 + Math.min(combo % 10, 9) * 70, 0.06, 'square', 0.03); sparkle(x, e.y, '#ffffff', 5); }
+      if (eggsRun >= 100) unlock('hoard');
+    }
+    function update(dt) {
+      t += dt;
+      toasts.forEach(function (q) { q.t += dt; }); toasts = toasts.filter(function (q) { return q.t < 3.2; });
+      bits.forEach(function (p) { p.age += dt; p.x += p.vx * dt; p.y += p.vy * dt; if (!p.text) p.vy += 300 * dt; });
+      bits = bits.filter(function (p) { return p.age < p.life; });
+      if (state === 'paused' || state === 'over') return;
+      if (state === 'ready') { ant.mode = 'idle'; return; }
+      if (state === 'dying') {
+        if (ant.mode === 'fall') { ant.vy += GRAV * dt; ant.y += ant.vy * dt; if (t - overAt > 1.1) toOver(); }
+        else { cop.t += dt; cop.x = Math.min(AX - 46, cop.x + 360 * dt); if (t - overAt > 1.6) toOver(); }
+        return;
+      }
+      runT += dt;
+      // speed: steady ramp, slowed by a stumble, boosted by a Carrot Burst
+      speed = Math.min(SPEED_MAX, SPEED0 + runT * SPEED_UP);
+      let v = speed * (stumble > 0 ? 0.65 : 1) * (carrot > 0 ? 1.45 : 1);
+      stumble = Math.max(0, stumble - dt); blink = Math.max(0, blink - dt);
+      cam += v * dt;
+      const m = metres();
+      if (m >= 100) unlock('hop'); if (m >= 1000) unlock('regular'); if (m >= 3000) unlock('marathon');
+      const d = Math.floor(m / DISTRICT_M) % DISTRICTS.length;
+      if (d !== district) { district = d; distFade = 1; banner = { text: DISTRICTS[d].name, t: 0 }; tone(660, 0.25, 'sine', 0.04, 990); if (d === 3) unlock('tour'); }
+      distFade = Math.max(0, distFade - dt / 1.6);
+      if (banner) { banner.t += dt; if (banner.t > 2.4) banner = null; }
+      genTo(cam + W * 2.5);
+      roofs = roofs.filter(function (r) { return r.x + r.w > cam - 300; });
+      obs = obs.filter(function (o) { return o.x + o.w > cam - 100 && !o.gone; });
+      eggs = eggs.filter(function (e) { return e.x > cam - 60 && !e.taken; });
+      powers = powers.filter(function (p) { return p.x > cam - 60 && !p.taken; });
+
+      // Anton
+      const wx = cam + AX, under = roofAt(wx);
+      if (ant.mode === 'slide') { ant.slideT += dt; if (!slideHeld && ant.slideT > 0.45) ant.mode = 'run'; }
+      if (ant.ground) {
+        if (!under || under.y > ant.y + 2) { ant.ground = false; ant.vy = 0; jumps = 1; if (ant.mode === 'slide') ant.mode = 'run'; }
+        else ant.y = under.y;
+        ant.stride += v * dt / 26;
+      }
+      if (!ant.ground) {
+        const g = (held && ant.vy < 0 && holdT < HOLD_MAX) ? GRAV * HOLD_G : GRAV;
+        holdT += dt;
+        ant.vy += g * dt;
+        if (carrot > 0 && ant.vy > 0 && ant.lastRoofY !== undefined && ant.y >= ant.lastRoofY - 4 && (!under || under.y > ant.y + 4)) { ant.vy = 0; ant.y = ant.lastRoofY - 4; }   // the carrot carries him over gaps
+        const ny = ant.y + ant.vy * dt;
+        if (under && ant.vy >= 0 && ant.y <= under.y + 1 && ny >= under.y) {
+          ant.y = under.y; ant.vy = 0; ant.ground = true; jumps = 0; puff(AX, ant.y, 4);
+          if (slideHeld) { ant.mode = 'slide'; ant.slideT = 0; } else ant.mode = 'run';
+        } else ant.y = ny;
+      }
+      if (ant.ground) ant.lastRoofY = ant.y;
+      // a wall: running into the side of a higher building
+      const front = roofAt(wx + 18);
+      if (front && front !== under && ant.y > front.y + 10 && wx + 18 >= front.x - 6 && wx < front.x) {
+        if (shield || carrot > 0) { if (carrot <= 0) { shield = false; blink = 1; popText(AX, front.y - 120, 'Bunny suit saved you!', '#ff9bd0'); } ant.y = front.y; ant.vy = -380; ant.ground = false; }
+        else { cam = Math.min(cam, front.x - 24 - AX); ant.vy = Math.max(ant.vy, 60); }   // he slides down the wall
+      }
+      if (carrot > 0) { carrot -= dt; if (carrot <= 0 && !ant.ground && !under) carrot = 0.05; }
+      if (ant.y > H - 30 && shield) { shield = false; blink = 1.2; ant.vy = -1080; popText(AX, H - 80, 'Bunny suit saved you!', '#ff9bd0'); tone(520, 0.3, 'sine', 0.06, 1200); }
+      if (ant.y > H + 60) { fell(); return; }
+
+      // obstacles, eggs and power-ups
+      const hb = hitBox();
+      obs.forEach(function (o) { if (!o.gone && overlap(hb, obsBox(o))) bump(o); });
+      if (state !== 'playing') return;
+      const mag = carrot > 0 ? 110 : 0;
+      eggs.forEach(function (e) {
+        if (e.taken) return;
+        const x = e.x - cam;
+        if (mag && e.kind !== 'rotten') { const dx = AX - x, dy = (ant.y - 50) - e.y, dd = Math.hypot(dx, dy); if (dd < mag) { e.x += dx / dd * 520 * dt; e.y += dy / dd * 520 * dt; } }
+        if (x > hb.l - 10 && x < hb.r + 10 && e.y > hb.t - 12 && e.y < hb.b + 12) grab(e);
+      });
+      powers.forEach(function (p) {
+        const x = p.x - cam;
+        if (!p.taken && x > hb.l - 16 && x < hb.r + 16 && p.y > hb.t - 18 && p.y < hb.b + 18) {
+          p.taken = true; sparkle(x, p.y, p.kind === 'carrot' ? '#ff9a3a' : '#ff9bd0', 18);
+          if (p.kind === 'carrot') { carrot = 3.5; carrotsRun++; save.carrots++; if (save.carrots >= 10) unlock('carrot'); seq([[0, 520, 0.08, 'sawtooth', 0.04], [80, 780, 0.08, 'sawtooth', 0.04], [160, 1040, 0.16, 'sawtooth', 0.04]]); popText(x, p.y - 26, 'CARROT BURST!', '#ffb347'); }
+          else { shield = true; seq([[0, 660, 0.1, 'sine', 0.05], [100, 990, 0.16, 'sine', 0.05]]); popText(x, p.y - 26, 'Bunny suit!', '#ff9bd0'); }
+        }
+      });
+      nextPower -= dt;
+      if (nextPower <= 0) {
+        const r = roofAt(cam + W + 120);
+        if (r && cam + W + 120 < r.x + r.w - 60) { powers.push({ x: cam + W + 120, y: r.y - 64, kind: (shield || Math.random() < 0.5) ? 'carrot' : 'suit' }); nextPower = rand(16, 26); }
+        else nextPower = 0.3;
+      }
+      // the police: catch-up after a slip, and a searchlight drone now and then
+      if (chase > 0) { chase = Math.max(0, chase - dt / 7); }
+      nextDrone -= dt;
+      if (!drone && nextDrone <= 0 && m > 350) { drone = { x: W + 90, t: 0, dur: 8.5, max: 0 }; tone(200, 0.6, 'sawtooth', 0.02, 260); }
+      if (drone) {
+        drone.t += dt;
+        const leave = drone.t > drone.dur;
+        drone.x += ((leave ? -160 : W * 0.56) - drone.x) * Math.min(1, dt * (leave ? 0.9 : 1.4));
+        drone.y = 70 + Math.sin(drone.t * 2.2) * 8;
+        drone.bx = drone.x + Math.sin(drone.t * 1.25) * 230;
+        const lit = drone.t > 1 && !leave && Math.abs(drone.bx - AX) < 40 && ant.mode !== 'slide';
+        heat = clamp(heat + (lit ? dt / 1.15 : -dt / 3.2), 0, 1);
+        drone.max = Math.max(drone.max, heat);
+        if (heat >= 1) { caught('Spotted by the police drone!'); return; }
+        if (leave && drone.x < -120) { drone = null; nextDrone = rand(18, 30); save.drones++; persist(); if (save.drones >= 10) unlock('shadow'); }
+      } else heat = Math.max(0, heat - dt / 2);
+      updateStats();
+    }
+
+    /* ---------- Second chance ---------- */
+    function chanceCost() { return CHANCE_COST[chances]; }
+    function canChance() { return state === 'over' && chances < CHANCE_COST.length && eggsRun >= chanceCost(); }
+    function secondChance() {
+      if (!canChance()) return;
+      eggsRun -= chanceCost(); chances++; unlock('wind');
+      // back on a rooftop: the one under him, or the next one along
+      let r = roofs.find(function (q) { return q.x + q.w > cam + AX + 80; });
+      if (r.x > cam + AX - 20) cam = r.x - AX + 60;
+      obs = obs.filter(function (o) { return o.x > cam + AX + 520 || o.x + o.w < cam; });
+      eggs = eggs.filter(function (e) { return e.kind !== 'rotten' || e.x > cam + AX + 520; });
+      ant = { y: r.y, vy: 0, ground: true, mode: 'run', stride: 0, slideT: 0, lastRoofY: r.y };
+      chase = 0; heat = 0; drone = null; nextDrone = rand(16, 24); cop = null; blink = 2; stumble = 0; held = false; slideHeld = false;
+      state = 'playing'; seq([[0, 523, 0.08, 'triangle', 0.05], [90, 784, 0.12, 'triangle', 0.05]]);
+      updateStats();
+    }
+
+    /* ---------- Drawing ---------- */
+    function ot(text, x, y, size, fill, align, stroke) {
+      ctx.font = '900 ' + size + 'px system-ui,Arial,sans-serif'; ctx.textAlign = align || 'center'; ctx.textBaseline = 'middle';
+      ctx.lineJoin = 'round'; ctx.lineWidth = Math.max(3, size / 6.5); ctx.strokeStyle = stroke || '#1a0c1e'; ctx.strokeText(text, x, y);
+      ctx.fillStyle = fill || '#fff'; ctx.fillText(text, x, y);
+    }
+    function drawBuilding(r) {
+      const x = Math.round(r.x - cam), w = Math.round(r.w), y = Math.round(r.y);
+      if (x > W + 10 || x + w < -10) return;
+      const D = DISTRICTS[r.d === undefined ? (r.d = Math.max(0, Math.floor(r.x / DIST / DISTRICT_M)) % DISTRICTS.length) : r.d];
+      const g = ctx.createLinearGradient(x, 0, x + w, 0); g.addColorStop(0, D.wall[0]); g.addColorStop(1, D.wall[1]);
+      ctx.fillStyle = g; ctx.fillRect(x, y, w, H - y + 2);
+      const rnd = seeded(r.seed);
+      if (D.metal) { ctx.fillStyle = 'rgba(255,255,255,.06)'; for (let sx = x + 4; sx < x + w; sx += 12) ctx.fillRect(sx, y + 10, 5, H - y); }
+      if (D.brick) { ctx.fillStyle = 'rgba(0,0,0,.14)'; for (let by = y + 14; by < H; by += 10) { const o = ((by - y) / 10) % 2 ? 12 : 0; for (let bx = x + o; bx < x + w; bx += 24) ctx.fillRect(bx, by, 1.5, 10); ctx.fillRect(x, by, w, 1.5); } }
+      // windows, lit at random (the same each time, from the building's seed)
+      const cols = Math.max(2, Math.floor((w - 30) / 46)), gap = (w - 30) / cols;
+      for (let row = 0; y + 34 + row * 46 < H; row++) for (let c = 0; c < cols; c++) {
+        const wx = x + 15 + c * gap + gap / 2 - 11, wy = y + 30 + row * 46, lit = rnd() < 0.42;
+        ctx.fillStyle = lit ? D.win : D.dark; ctx.fillRect(wx, wy, 22, 28);
+        if (lit) { ctx.fillStyle = 'rgba(255,255,255,.25)'; ctx.fillRect(wx, wy, 22, 5); }
+        ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.fillRect(wx + 10, wy, 2, 28);
+      }
+      if (D.trim) { ctx.fillStyle = D.trim[r.seed % 3]; ctx.globalAlpha = 0.85; ctx.fillRect(x + 6, y + 14, w - 12, 3); ctx.globalAlpha = 1; }
+      // parapet ledge along the roof
+      ctx.fillStyle = D.ledge; ctx.fillRect(x - 4, y, w + 8, 9);
+      ctx.fillStyle = 'rgba(255,255,255,.18)'; ctx.fillRect(x - 4, y, w + 8, 2);
+      ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.fillRect(x - 4, y + 9, w + 8, 3);
+      ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.fillRect(x + w - 6, y + 9, 6, H - y);
+    }
+    function drawObstacle(o) {
+      const x = o.x - cam, y = o.y;
+      if (x > W + 20 || x + o.w < -20) return;
+      if (o.type === 'ac') sprite('edac', x - 4, y - o.h - 4, o.w + 8, o.h + 6, function () {
+        ctx.fillStyle = '#d8d4c4'; ctx.strokeStyle = INK; ctx.lineWidth = 2; roundRect(ctx, x, y - o.h, o.w, o.h, 4); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.arc(x + 20, y - o.h / 2, 14, 0, Math.PI * 2); ctx.fillStyle = '#6a7078'; ctx.fill(); ctx.stroke();
+      });
+      else if (o.type === 'chim') {
+        const D = DISTRICTS[district];
+        ctx.fillStyle = '#8a4a36'; ctx.strokeStyle = INK; ctx.lineWidth = 2; ctx.fillRect(x, y - o.h, o.w, o.h); ctx.strokeRect(x, y - o.h, o.w, o.h);
+        ctx.fillStyle = 'rgba(0,0,0,.2)'; for (let by = y - o.h + 8; by < y; by += 9) ctx.fillRect(x, by, o.w, 1.5);
+        ctx.fillStyle = '#5c3022'; ctx.fillRect(x - 4, y - o.h - 7, o.w + 8, 9); ctx.strokeRect(x - 4, y - o.h - 7, o.w + 8, 9);
+        const sm = (t * 0.6 + o.x * 0.01) % 1; ctx.globalAlpha = 0.35 * (1 - sm); ctx.fillStyle = D === DISTRICTS[3] ? '#aaa' : '#ccc';
+        ctx.beginPath(); ctx.arc(x + o.w / 2 - sm * 20, y - o.h - 14 - sm * 36, 7 + sm * 10, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
+      } else {   // washing line between two poles; the hanging clothes are what he must slide under
+        ctx.strokeStyle = INK; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y - 132); ctx.moveTo(x + o.w, y); ctx.lineTo(x + o.w, y - 132); ctx.stroke();
+        ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x, y - 126); ctx.quadraticCurveTo(x + o.w / 2, y - 116, x + o.w, y - 126); ctx.stroke();
+        const cl = ['#e04848', '#4a90e0', '#f0d040', '#50c070', '#e070c0'];
+        for (let i = 0; i < 4; i++) {
+          const cx = x + 12 + i * 29, top = y - 123 + Math.sin(i / 3 * Math.PI) * 4, sw = Math.sin(t * 4 + i) * 2;
+          ctx.fillStyle = cl[(i + Math.floor(o.x)) % cl.length]; ctx.strokeStyle = INK; ctx.lineWidth = 1.5;
+          ctx.beginPath(); ctx.moveTo(cx, top); ctx.lineTo(cx + 24, top); ctx.lineTo(cx + 24 + sw, top + (i % 2 ? 66 : 58)); ctx.lineTo(cx + sw, top + (i % 2 ? 66 : 58)); ctx.closePath(); ctx.fill(); ctx.stroke();
+        }
+      }
+    }
+    function drawEgg(e) {
+      const x = e.x - cam; if (x < -30 || x > W + 30) return;
+      const bob = Math.sin(t * 5 + e.x * 0.05) * 2.5, w = 20, h = 25, y = e.y + bob;
+      if (e.kind === 'gold') { const gl = ctx.createRadialGradient(x, y, 2, x, y, 24); gl.addColorStop(0, 'rgba(255,220,90,.55)'); gl.addColorStop(1, 'rgba(255,220,90,0)'); ctx.fillStyle = gl; ctx.fillRect(x - 24, y - 24, 48, 48); }
+      if (e.kind === 'rotten') { ctx.strokeStyle = 'rgba(150,220,90,.6)'; ctx.lineWidth = 2; for (let i = -1; i <= 1; i++) { ctx.beginPath(); ctx.moveTo(x + i * 7, y - 16); ctx.quadraticCurveTo(x + i * 7 + 4, y - 22 - (t * 20 % 6), x + i * 7, y - 28); ctx.stroke(); } }
+      const key = e.kind === 'gold' ? 'edgold' : e.kind === 'rotten' ? 'edrotten' : 'edegg';
+      sprite(key, x - w / 2, y - h / 2, w, h, function (a, b, c, d) { eggShape(a, b, c, d, e.kind === 'gold' ? '#ffc93a' : e.kind === 'rotten' ? '#7ac04a' : '#ffb0d8', e.kind === 'egg'); });
+    }
+    function drawPower(p) {
+      const x = p.x - cam; if (x < -40 || x > W + 40) return;
+      const y = p.y + Math.sin(t * 4) * 4;
+      const gl = ctx.createRadialGradient(x, y, 3, x, y, 30); gl.addColorStop(0, p.kind === 'carrot' ? 'rgba(255,160,60,.6)' : 'rgba(255,140,200,.6)'); gl.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = gl; ctx.fillRect(x - 30, y - 30, 60, 60);
+      if (p.kind === 'carrot') sprite('edcarrot', x - 17, y - 17, 34, 34, function () { ctx.save(); ctx.translate(x, y); ctx.rotate(0.7); ctx.fillStyle = '#ff8a2a'; ctx.strokeStyle = INK; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-6, -14); ctx.lineTo(6, -14); ctx.lineTo(0, 16); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#4ac04a'; ctx.fillRect(-4, -22, 8, 8); ctx.restore(); });
+      else suitBadge(x, y, 15);
+    }
+    function suitBadge(x, y, r) {   // the Bunny suit power-up: a pink badge with bunny ears
+      ctx.save(); ctx.translate(x, y); ctx.strokeStyle = INK; ctx.lineWidth = 2;
+      [[-6, -0.2], [6, 0.2]].forEach(function (e) { ctx.save(); ctx.translate(e[0], -r * 0.6); ctx.rotate(e[1]); ctx.beginPath(); ctx.ellipse(0, -r * 0.55, r * 0.28, r * 0.7, 0, 0, Math.PI * 2); ctx.fillStyle = '#ff8cc6'; ctx.fill(); ctx.stroke(); ctx.restore(); });
+      ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fillStyle = '#ffb4da'; ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(0, 2, r * 0.45, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+    function drawDrone() {
+      if (!drone) return;
+      const x = drone.x, y = drone.y;
+      if (drone.t > 1 && drone.t < drone.dur) {   // searchlight cone
+        const r = roofAt(cam + drone.bx), gy = r ? r.y : H;
+        ctx.save(); ctx.globalCompositeOperation = 'lighter';
+        const gr = ctx.createLinearGradient(0, y, 0, gy); gr.addColorStop(0, 'rgba(255,250,200,.35)'); gr.addColorStop(1, 'rgba(255,250,200,.12)');
+        ctx.fillStyle = gr; ctx.beginPath(); ctx.moveTo(x - 6, y + 10); ctx.lineTo(x + 6, y + 10); ctx.lineTo(drone.bx + 44, gy); ctx.lineTo(drone.bx - 44, gy); ctx.closePath(); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(drone.bx, gy, 46, 8, 0, 0, Math.PI * 2); ctx.fillStyle = 'rgba(255,250,200,.3)'; ctx.fill();
+        ctx.restore();
+      }
+      sprite('eddrone', x - 46, y - 27, 92, 53, function () {
+        ctx.fillStyle = '#7a8494'; ctx.strokeStyle = INK; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(x, y, 26, 12, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.fillRect(x - 44, y - 12, 88, 4);
+      });
+      const on = Math.floor(t * 6) % 2;
+      ctx.fillStyle = on ? '#ff3a3a' : '#3a7aff'; ctx.beginPath(); ctx.arc(x, y - 20, 4, 0, Math.PI * 2); ctx.fill();
+    }
+    function meter(x, y, w, label, v, col) {
+      ctx.fillStyle = 'rgba(10,6,20,.6)'; roundRect(ctx, x, y, w, 22, 11); ctx.fill();
+      ctx.fillStyle = col; roundRect(ctx, x + 3, y + 3, Math.max(0, (w - 6) * v), 16, 8); ctx.fill();
+      ot(label, x + w / 2, y + 11.5, 11, '#fff');
+    }
+    function button(x, y, w, h, text, col, on) {
+      ctx.save(); ctx.globalAlpha = on ? 1 : 0.45;
+      ctx.fillStyle = col; roundRect(ctx, x, y, w, h, h / 2); ctx.fill();
+      ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(0,0,0,.35)'; ctx.stroke();
+      ot(text, x + w / 2, y + h / 2 + 1, 15, '#fff'); ctx.restore();
+      return { x: x, y: y, w: w, h: h };
+    }
+    let btns = {};
+    function drawOver() {
+      ctx.fillStyle = 'rgba(8,4,16,.45)'; ctx.fillRect(0, 0, W, H);
+      const pw = 380, ph = 228, px = (W - pw) / 2, py = 98;
+      ot(reason.indexOf('fell') >= 0 ? 'SPLAT!' : 'BUSTED!', W / 2, 62, 40, reason.indexOf('fell') >= 0 ? '#ffb347' : '#ff6a8a');
+      ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.5)'; ctx.shadowBlur = 18; ctx.shadowOffsetY = 6;
+      roundRect(ctx, px, py, pw, ph, 18); ctx.fillStyle = '#21122c'; ctx.fill(); ctx.restore();
+      roundRect(ctx, px, py, pw, ph, 18); ctx.lineWidth = 2; ctx.strokeStyle = '#ff8cc6'; ctx.stroke();
+      ctx.fillStyle = '#d9b8e8'; ctx.font = '700 13px system-ui,Arial,sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(reason, W / 2, py + 20);
+      const s = totalScore(), b = getBest('eggdash:endless') || 0, md = medalFor(s);
+      [['SCORE', s.toLocaleString('en-GB')], ['DISTANCE', metres().toLocaleString('en-GB') + ' m'], ['EGGS', String(eggsRun)], ['BEST', b.toLocaleString('en-GB')]].forEach(function (r, i) {
+        const cx = px + 52 + i * 92;
+        ctx.fillStyle = '#b48cc8'; ctx.font = '700 10px system-ui,Arial,sans-serif'; ctx.fillText(r[0], cx, py + 48);
+        ctx.fillStyle = '#fff'; ctx.font = '900 ' + (i === 0 ? 22 : 18) + 'px system-ui,Arial,sans-serif'; ctx.fillText(r[1], cx, py + 72);
+      });
+      if (newBest) ot('NEW BEST!', W / 2, py + 100, 16, '#ffd65a');
+      else if (md) ot(md[1] + ' medal', W / 2, py + 100, 15, md[2]);
+      else ot('Bronze medal at 2,000', W / 2, py + 100, 13, '#b48cc8');
+      const ready = t - overAt > 0.8, can = chances < CHANCE_COST.length;
+      btns = {};
+      if (can) btns.chance = button(px + 24, py + 124, 160, 40, 'Second chance · ' + chanceCost() + ' 🥚', '#c0457e', ready && eggsRun >= chanceCost());
+      btns.again = button(can ? px + pw - 184 : W / 2 - 80, py + 124, 160, 40, 'Run again', '#2f9a5a', ready);
+      ctx.fillStyle = '#9a80aa'; ctx.font = '600 11px system-ui,Arial,sans-serif';
+      ctx.fillText(can ? (eggsRun >= chanceCost() ? 'Press C for a second chance, Space to run again' : 'Not enough eggs for a second chance · Space to run again') : 'Space to run again', W / 2, py + 186);
+      ctx.fillText('Lifetime eggs ' + save.eggs.toLocaleString('en-GB') + (djOn() ? ' · Double jump unlocked' : ' · Double jump at ' + DJ_EGGS), W / 2, py + 206);
+    }
+    function drawReady() {
+      ot("ANTON'S", W / 2, 62, 26, '#ffd0e8');
+      ot('EGG DASH', W / 2, 100, 50, '#ff8cc6');
+      ctx.fillStyle = 'rgba(20,8,30,.55)'; roundRect(ctx, W / 2 - 40, 130, 300, 132, 14); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.font = '700 13px system-ui,Arial,sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+      const lines = ['🥚 Grab eggs · 🥇 gold eggs are worth 10', '🤢 Rotten eggs break your combo', '⬆️ Jump the gaps, ⬇️ slide under washing', '🚓 Two slips close together: caught', '🔦 Slide to hide from the searchlight', '🥕 Carrot Burst · 🐰 Bunny suit saves you once'];
+      lines.forEach(function (l, i) { ctx.fillText(l, W / 2 - 28, 148 + i * 19); });
+      const b = getBest('eggdash:endless');
+      ctx.globalAlpha = 0.6 + 0.4 * Math.sin(t * 5);
+      ot('Tap, click or press Space to run', W / 2 + 110, 290, 18, '#fff');
+      ctx.globalAlpha = 1;
+      ot((b ? 'Best ' + Number(b).toLocaleString('en-GB') + ' · ' : '') + 'Lifetime eggs ' + save.eggs.toLocaleString('en-GB') + (djOn() ? ' · Double jump ✓' : ' · Double jump at ' + DJ_EGGS), W / 2, H - 22, 13, '#ffd0e8');
+      btns = { ach: button(W - 128, 14, 112, 32, '🏆 ' + achCount() + '/' + ACH.length, '#7a3a9a', true) };
+      if (showAch) {
+        ctx.fillStyle = 'rgba(8,4,16,.86)'; roundRect(ctx, 60, 54, W - 120, H - 90, 16); ctx.fill();
+        ot('Achievements', W / 2, 78, 22, '#ffd65a');
+        ACH.forEach(function (a, i) {
+          const col = i % 2, row = Math.floor(i / 2), x = 84 + col * 290, y = 112 + row * 52, got = !!save.ach[a[0]];
+          ctx.globalAlpha = got ? 1 : 0.5;
+          ctx.fillStyle = got ? '#ffd65a' : '#887'; ctx.font = '900 14px system-ui,Arial,sans-serif'; ctx.textAlign = 'left'; ctx.fillText((got ? '🏆 ' : '🔒 ') + a[1], x, y);
+          ctx.fillStyle = '#d8c8e0'; ctx.font = '600 12px system-ui,Arial,sans-serif'; ctx.fillText(a[2], x + 22, y + 19);
+          ctx.globalAlpha = 1;
+        });
+        ctx.textAlign = 'center'; ctx.fillStyle = '#9a80aa'; ctx.font = '600 11px system-ui,Arial,sans-serif'; ctx.fillText('Click anywhere to close', W / 2, H - 48);
+      }
+    }
+    function drawHud() {
+      ot(totalScore().toLocaleString('en-GB'), 16, 26, 26, '#fff', 'left');
+      ot(metres().toLocaleString('en-GB') + ' m', 16, 54, 14, '#ffd0e8', 'left');
+      sprite('edegg', 14, 66, 16, 20, function (a, b, c, d) { eggShape(a, b, c, d, '#ffb0d8', true); });
+      ot(String(eggsRun), 36, 77, 15, '#fff', 'left');
+      if (mult > 1) ot('x' + mult + ' COMBO', 16, 102, 15, ['#fff', '#fff', '#9be0ff', '#7affb0', '#ffd65a', '#ff8cc6'][mult], 'left');
+      let hx = W - 52;
+      btns = { pause: { x: W - 44, y: 10, w: 34, h: 34 } };
+      ctx.fillStyle = 'rgba(10,6,20,.55)'; roundRect(ctx, W - 44, 10, 34, 34, 10); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.fillRect(W - 33, 19, 4, 16); ctx.fillRect(W - 25, 19, 4, 16);
+      if (shield) { suitBadge(hx - 12, 30, 11); hx -= 34; }
+      if (carrot > 0) meter(W / 2 - 70, 12, 140, 'CARROT BURST', clamp(carrot / 3.5, 0, 1), '#ff9a3a');
+      let my = carrot > 0 ? 40 : 12;
+      if (chase > 0) { meter(W / 2 - 80, my, 160, '🚓 COPS CLOSE BEHIND', chase, '#3a6aff'); my += 28; }
+      if (drone || heat > 0.01) meter(W / 2 - 80, my, 160, '🔦 SEARCHLIGHT', heat, heat > 0.65 ? '#ff4a4a' : '#ffcc4a');
+      if (banner) { const a = Math.min(1, banner.t * 3, (2.4 - banner.t) * 2); ctx.globalAlpha = a; ot(banner.text.toUpperCase(), W / 2, 150, 30, '#ffd65a'); ctx.globalAlpha = 1; }
+      if (drone && drone.t < 2.5 && save.drones < 3) { ot('Slide to hide from the searchlight!', W / 2, 186, 15, '#fff'); }
+    }
+    function render() {
+      // sky and far city: cross-fade into the new district's picture
+      const prevD = (district + DISTRICTS.length - 1) % DISTRICTS.length;
+      if (distFade > 0) drawBackdrop(prevD, cam, 1);
+      drawBackdrop(district, cam, 1 - distFade);
+      // depth fog under the rooftops so the gaps look like a long drop
+      const fog = ctx.createLinearGradient(0, 300, 0, H); fog.addColorStop(0, 'rgba(10,6,24,0)'); fog.addColorStop(1, 'rgba(10,6,24,.85)');
+      ctx.fillStyle = fog; ctx.fillRect(0, 300, W, H - 300);
+      roofs.forEach(drawBuilding);
+      obs.forEach(drawObstacle);
+      powers.forEach(drawPower);
+      eggs.forEach(drawEgg);
+      drawDrone();
+      // Anton
+      const a = ant, pose = poseFor(a, a.mode === 'fall' ? t - overAt : t);
+      const flick = blink > 0 && Math.floor(t * 14) % 2 ? 0.35 : 1;
+      if (carrot > 0) { ctx.save(); ctx.globalAlpha = 0.5; ctx.strokeStyle = '#ffb347'; ctx.lineWidth = 3; for (let i = 0; i < 6; i++) { const ly = a.y - 20 - i * 15 + Math.sin(t * 30 + i) * 3; ctx.beginPath(); ctx.moveTo(AX - 40 - (t * 600 + i * 50) % 80, ly); ctx.lineTo(AX - 90 - (t * 600 + i * 50) % 80, ly); ctx.stroke(); } ctx.restore(); }
+      if (a.ground || state === 'ready') { ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.beginPath(); ctx.ellipse(AX + 2, a.y + 1, 26, 4, 0, 0, Math.PI * 2); ctx.fill(); }
+      drawAnton(AX, a.y, pose, flick);
+      if (shield) { ctx.save(); ctx.globalAlpha = 0.35 + Math.sin(t * 6) * 0.1; ctx.strokeStyle = '#ff9bd0'; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(AX + 2, a.y - 52, 44, 62, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); }
+      // the police
+      if (state === 'playing' && chase > 0) {
+        const cx = 20 + chase * 60 - (1 - chase) * 60;
+        const r = roofAt(cam + cx);
+        if (r) drawCop(cx, r.y, t * 16);
+        if (Math.floor(t * 4) % 2) { const gl = ctx.createLinearGradient(0, 0, 80, 0); gl.addColorStop(0, Math.floor(t * 8) % 2 ? 'rgba(255,40,40,.35)' : 'rgba(40,90,255,.35)'); gl.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = gl; ctx.fillRect(0, 0, 80, H); }
+      }
+      if (cop) drawCop(cop.x, a.y, cop.x < AX - 50 ? t * 16 : 0);
+      bits.forEach(function (p) {
+        const k = 1 - p.age / p.life;
+        if (p.text) { ctx.globalAlpha = Math.min(1, k * 2); ot(p.text, p.x, p.y, 14, p.col); ctx.globalAlpha = 1; return; }
+        ctx.globalAlpha = k; ctx.fillStyle = p.col; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
+      });
+      if (state === 'playing' || state === 'dying') drawHud();
+      else if (state === 'paused') {
+        drawHud(); btns = {};
+        ctx.fillStyle = 'rgba(8,4,16,.6)'; ctx.fillRect(0, 0, W, H);
+        ot('PAUSED', W / 2, H / 2 - 18, 44, '#fff'); ot('Click, tap or press Space to carry on', W / 2, H / 2 + 26, 17, '#ffd0e8');
+      } else if (state === 'ready') drawReady();
+      else if (state === 'over') drawOver();
+      toasts.forEach(function (q, i) {
+        const a2 = Math.min(1, q.t * 4, (3.2 - q.t) * 2), y = 104 + i * 52;
+        ctx.globalAlpha = a2; ctx.fillStyle = 'rgba(20,10,30,.88)'; roundRect(ctx, W / 2 - 150, y, 300, 44, 12); ctx.fill();
+        ctx.strokeStyle = '#ffd65a'; ctx.lineWidth = 1.5; ctx.stroke();
+        ot(q.text, W / 2, y + 15, 14, '#ffd65a'); ctx.fillStyle = '#e8d8f0'; ctx.font = '600 11px system-ui,Arial,sans-serif'; ctx.textAlign = 'center'; ctx.fillText(q.sub, W / 2, y + 33);
+        ctx.globalAlpha = 1;
+      });
+    }
+    function frame(ts) {
+      raf = requestAnimationFrame(frame);
+      acc += Math.min(0.1, (ts - (last || ts)) / 1000); last = ts;
+      while (acc >= STEP) { update(STEP); acc -= STEP; }
+      try { render(); } catch (e) { console.error('[Egg Dash]', e); }
+    }
+    function run() { if (!raf) { last = 0; acc = 0; raf = requestAnimationFrame(frame); } }
+    function stop() { cancelAnimationFrame(raf); raf = 0; }
+
+    /* ---------- Input ---------- */
+    function inBtn(b, p) { return b && p.x >= b.x && p.x <= b.x + b.w && p.y >= b.y && p.y <= b.y + b.h; }
+    let touchSlide = null;
+    canvas.addEventListener('pointerdown', function (e) {
+      if (e.button !== 0) return;
+      e.preventDefault();
+      const p = canvasPoint(canvas, e, W, H);
+      if (state === 'ready') {
+        if (showAch) { showAch = false; return; }
+        if (inBtn(btns.ach, p)) { showAch = true; sfx.click(); return; }
+      }
+      if (state === 'over') {
+        if (inBtn(btns.chance, p)) { if (t - overAt > 0.8) secondChance(); return; }
+        if (inBtn(btns.again, p)) { if (t - overAt > 0.8) { reset(); start(); } return; }
+        return;
+      }
+      if (state === 'playing' && inBtn(btns.pause, p)) { pause(); return; }
+      if (e.pointerType === 'touch' && state === 'playing' && p.x < W * 0.4) { touchSlide = e.pointerId; slidePress(); return; }
+      jumpPress();
+    });
+    function up(e) { if (touchSlide === e.pointerId) { touchSlide = null; slideRelease(); } else jumpRelease(); }
+    canvas.addEventListener('pointerup', up);
+    canvas.addEventListener('pointercancel', up);
+    window.addEventListener('keyup', function (e) {
+      if (!isOpen || current !== 'eggdash') return;
+      const k = keyName(e);
+      if (k === ' ' || k === 'ArrowUp' || k === 'w') jumpRelease();
+      if (k === 'ArrowDown' || k === 's') slideRelease();
+    });
+    $(panel, '.ta-ed-start').addEventListener('click', function () { reset(); state = 'ready'; showAch = false; run(); sfx.click(); });
+    reset(); showBest();
+    
+    games.eggdash = {
+      enter: function () { showBest(); run(); },
+      leave: function () { pause(); stop(); },
+      bestText: function () { const b = getBest('eggdash:endless'); const m = medalFor(b || 0); return b === undefined ? 'No score yet' : 'Best ' + Number(b).toLocaleString('en-GB') + (m ? ' · ' + m[1] : ''); },
+      onKey: function (e) {
+        const k = keyName(e);
+        if (k === ' ' || k === 'ArrowUp' || k === 'w') { if (!e.repeat) jumpPress(); return true; }
+        if (k === 'ArrowDown' || k === 's') { if (!e.repeat) slidePress(); return true; }
+        if (k === 'c') { if (!e.repeat && state === 'over' && t - overAt > 0.8) secondChance(); return true; }
+        if (k === 'p' || k === 'Enter') { if (!e.repeat) { if (state === 'playing') pause(); else if (state === 'paused') jumpPress(); } return true; }
+        return false;
+      },
+      wipe: function () { Object.assign(save, { eggs: 0, gold: 0, runs: 0, drones: 0, carrots: 0, ach: {}, far: 0 }); persist(); },
+      summary: function () { return { eggs: save.eggs, far: save.far || 0, ach: achCount(), all: ACH.length }; }
     };
   })();
 

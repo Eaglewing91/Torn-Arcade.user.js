@@ -4,7 +4,7 @@
 
 > ⚠️ **For use on Torn only.** Torn Arcade and its Art Packs are licensed solely for use on [torn.com](https://www.torn.com) through a userscript manager. Using, hosting or embedding any part of them anywhere else, or copying, modifying, redistributing or reusing them, is not allowed without written permission from the author. See [Licence](#-licence).
 
-Torn Arcade is a Tampermonkey userscript that adds a **Mobile Phone** link to Torn's sidebar. Click it and a phone opens on top of the page with six games, a scores screen and settings. Everything runs inside the phone, and every image, sound and piece of music is built into the script or its two optional Art Packs.
+Torn Arcade is a Tampermonkey userscript that adds a **Mobile Phone** link to Torn's sidebar. Click it and a phone opens on top of the page with seven games, a scores screen and settings. Everything runs inside the phone, and every image, sound and piece of music is built into the script or its two optional Art Packs.
 
 ---
 
@@ -18,12 +18,12 @@ Torn Arcade is a Tampermonkey userscript that adds a **Mobile Phone** link to To
 Your progress is saved in Tampermonkey's storage on your device. Updating the script keeps your saves.
 
 ### 🎨 Optional Art Packs
-The illustrated Tornie and character artwork comes in two separate, optional scripts. This keeps Torn Arcade itself small (about 1.4 MB), so it works on phones and apps that only accept scripts up to 2 MB. Without them, Tornies uses its pixel-art versions.
+The illustrated Tornie and character artwork comes in two separate, optional scripts. This keeps Torn Arcade itself small (about 1.5 MB), so it works on phones and apps that only accept scripts up to 2 MB. Without them, Tornies uses its pixel-art versions.
 
 | Script | What it adds | Size | Install |
 |---|---|---|---|
 | **Torn Arcade - Tornies Art** | Illustrated artwork for all 179 Tornies | about 1.4 MB | [Install](https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade-Tornies-Art.user.js) |
-| **Torn Arcade - Character Art** | Illustrated portraits of the gym leaders, story characters, trainers and your outfits, plus the six Faction Defence maps and the phone theme wallpapers | about 1.1 MB | [Install](https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade-Character-Art.user.js) |
+| **Torn Arcade - Character Art** | Illustrated portraits of the gym leaders, story characters, trainers and your outfits, plus the six Faction Defence maps, the phone theme wallpapers and the Anton's Egg Dash artwork | about 1.2 MB | [Install](https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade-Character-Art.user.js) |
 
 Install them like the main script, then reload Torn. The **Tornies Art** and **Character Art** apps on the bottom row of the phone show whether each pack is installed, a before/after preview, a gallery of the art you've unlocked and an on/off switch. Each pack updates itself separately.
 
@@ -55,6 +55,8 @@ From version 2.15.2, Tampermonkey checks this link for new versions (about once 
 | ![Angry Bogies](screenshots/angry-bogies.png) | ![Flappy Torn](screenshots/flappy-torn.png) |
 | ![Faction Defence, Casino Strip](screenshots/faction-defence.png) | ![Faction Defence, Racket HQ](screenshots/faction-defence-racket-hq.png) |
 
+![Anton's Egg Dash: Downtown, Casino Strip, The Docks and the Industrial Zone](screenshots/anton-egg-dash.png)
+
 ---
 
 ## 🎮 The games
@@ -81,6 +83,9 @@ Bogie versus the Racket. Pull back the slingshot, fling Bogies (the green Slime,
 
 ### 🛡️ Faction Defence
 A tower defence game. Racket raiders walk the roads towards your **Faction HQ**: build defenders on the spots beside the road, upgrade them with the cash you earn, and survive **40 waves** on **6 maps** (Westgate, The Docks, Midtown, Casino Strip, Industrial Zone and Racket HQ): winding roads, a crossroads, a roundabout, hairpins and maps where raiders split up and come at you from two directions. Five defenders (Gunner, Cannon, Molotov, Taser and Sniper) each have a job, and the raiders (bikers, armoured brutes and medics) make you mix them. Bosses arrive every ten waves: the **Enforcer**, the **Riot Captain** (his shield soaks up hits, but fire gets under it), both together, and finally the **Juggernaut** in heavy bomb-suit armour that shrugs off shells and fire, with Don Varro himself on the last map. Stars depend on how much of your HQ is left. Part of what you earn goes into the **War Chest**: waves 10, 20 and 30 are boss waves that must be cleared before the next one starts, and at the end of each your game is saved (leave any time and carry on from that point later) and you're paid what you've earned so far plus a milestone reward, and the rest at the end of the game. You spend it in the **Armoury** on new defenders, permanent upgrades and air strikes, and after wave 30 the Armoury opens mid-game, so what you buy there helps you through the last ten waves. The War Chest belongs to Faction Defence only. The illustrated maps come with the Character Art pack; without it, simple maps are drawn instead.
+
+### 🐰 Anton's Egg Dash
+An endless rooftop runner. Anton, in his pink bunny onesie, runs across the rooftops of Torn City with a sack of Easter eggs while the police chase him, and it keeps getting faster. Jump the gaps between buildings (hold to jump higher), jump the air-conditioning units and chimneys, and slide under the washing lines. Painted eggs score points, **gold eggs** are worth 10 eggs, and **rotten eggs** break your combo; grab eggs in a row for up to a **x5 combo**. Slip once and the police close in; slip again before they drop back and you're caught. Police drones sweep a searchlight over the roofs: slide to hide, or the heat meter fills up and you're busted. **Carrot Bursts** make Anton fast and unstoppable for a few seconds and carry him over gaps, and the **Bunny suit** saves you from one slip or fall. When a run ends you can spend eggs on a **second chance** (25, then 50, then 100 eggs). The run passes through Downtown, the Casino Strip, the Docks and the Industrial Zone. The **double jump** unlocks after 200 eggs in total, and there are 10 achievements and Bronze, Silver, Gold and Platinum medals. Anton and the backgrounds are custom illustrated artwork made specifically for Torn Arcade and come with the Character Art pack; without it, Anton and the city are drawn by the script.
 
 ### 💣 Dirty Bombs
 A minesweeper-style puzzle. Clear the city block by block without setting off a dirty bomb. Numbers show how many bombs are hidden next to each block.
@@ -115,7 +120,7 @@ If you add a **Limited** access API key in Settings, the phone checks the offici
 |---|---|---|---|---|
 | Only locally | Nobody | Public amusement (games) and event notifications on the phone | Stored locally / Used only for automation (event checks while the phone is open). Never shared. | Limited (user → events). Optional: only needed for event notifications |
 
-- **Data Storage:** settings, theme, wallpaper, best scores, your Tornies save, Torn Invasion progress, Angry Bogies stars, Faction Defence progress (stars, War Chest and Armoury) and your API key are kept in Tampermonkey storage on your device. Events are shown on the phone but never saved. With **Save maps on this device** on (Settings → Tornies), pictures of the Tornies maps the game has drawn are also kept in your browser's own storage for torn.com (IndexedDB, `torn-arcade-maps`). They are drawn by the script on your device, contain no personal data, are never uploaded or shared, and **Clear saved maps** deletes them.
+- **Data Storage:** settings, theme, wallpaper, best scores, your Tornies save, Torn Invasion progress, Angry Bogies stars, Faction Defence progress (stars, War Chest and Armoury), Egg Dash eggs and achievements and your API key are kept in Tampermonkey storage on your device. Events are shown on the phone but never saved. With **Save maps on this device** on (Settings → Tornies), pictures of the Tornies maps the game has drawn are also kept in your browser's own storage for torn.com (IndexedDB, `torn-arcade-maps`). They are drawn by the script on your device, contain no personal data, are never uploaded or shared, and **Clear saved maps** deletes them.
 - **Data Sharing:** nothing is sent anywhere except event requests to `api.torn.com`.
 - **Where it may be used:** Torn (torn.com) only. See [Licence](#-licence).
 - The same table is shown next to the API key box in Settings and at the top of the script.
