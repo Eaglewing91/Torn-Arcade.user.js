@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.30.0
+// @version      2.30.1
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with six game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -448,7 +448,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gift codes', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.30.0';
+  const VERSION = '2.30.1';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -15002,7 +15002,17 @@
   // Old Torn Invasion progress (kept in this script's storage) is handed over once when the new game asks.
   (function () {
   const INV_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade-Invasion.user.js';
-  const inv = { ok: false, ver: '', playing: false, summary: store.get('invSummary', null) };
+  const INV_WANT = '3.0.2';   // newest Invasion version this phone knows about (filled in at build time)
+  const inv = { ok: false, ver: '', old: false, playing: false, summary: store.get('invSummary', null) };
+  function verLess(a, b) { const x = String(a).split('.').map(Number), y = String(b).split('.').map(Number); for (let i = 0; i < 3; i++) { if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) < (y[i] || 0); } return false; }
+  // badge on the Invasion icon, like the Art Pack apps: download when missing, update arrow when out of date
+  function invBadge() {
+    const b = $(gridEl, '.ta-appbtn[data-app="invasion"]'); if (!b) return;
+    const badge = !inv.ok ? '⬇️' : inv.old ? '↻' : '';
+    let dl = $(b, '.ta-dl');
+    if (badge && !dl) { dl = document.createElement('span'); dl.className = 'ta-dl'; b.appendChild(dl); }
+    if (dl) { if (!badge) dl.remove(); else { dl.textContent = badge; dl.classList.toggle('ta-upd', badge === '↻'); } }
+  }
   function invOld() { try { return GM_getValue('invasion', {}) || {}; } catch (e) { return {}; } }
   function send(cmd, extra) { const o = Object.assign({ cmd: cmd }, extra || {}); document.dispatchEvent(new CustomEvent('ta-inv-cmd', { detail: JSON.stringify(o) })); }
   GM_addStyle([
@@ -15037,16 +15047,16 @@
   document.addEventListener('ta-inv-hello', function (e) {
     let d; try { d = JSON.parse(e.detail); } catch (er) { return; }
     if (d.proto !== 1) return;
-    const first = !inv.ok; inv.ok = true; inv.ver = d.ver; LAND_APPS.invasion = 1; render();
+    const first = !inv.ok; inv.ok = true; inv.ver = d.ver; inv.old = verLess(d.ver, INV_WANT); LAND_APPS.invasion = 1; render(); invBadge();
     if (d.needLegacy) send('legacy', { data: invOld() });
-    if (first && isOpen && current === 'invasion') { setOrientation(wantsLand('invasion'), true); send('enter', { muted: muted }); }
+    if (first && isOpen && current === 'invasion') { setOrientation(wantsLand('invasion'), true); send('enter', { muted: muted, update: inv.old ? INV_WANT : '' }); }
   });
   document.addEventListener('ta-inv-state', function (e) { try { inv.playing = !!JSON.parse(e.detail).playing; } catch (er) {} });
   document.addEventListener('ta-inv-summary', function (e) { try { inv.summary = JSON.parse(e.detail); store.set('invSummary', inv.summary); } catch (er) {} });
-  render();
+  render(); invBadge();
   document.dispatchEvent(new CustomEvent('ta-inv-ping'));
   games.invasion = {
-    enter: function () { if (inv.ok) send('enter', { muted: muted }); else render(); },
+    enter: function () { if (inv.ok) send('enter', { muted: muted, update: inv.old ? INV_WANT : '' }); else render(); },
     leave: function () { if (inv.ok) send('leave'); inv.playing = false; },
     onKey: function () { return false; },          // the game reads its own keys
     onEscape: function () { return inv.ok && inv.playing; },   // while playing, Escape pauses the game instead of closing the app

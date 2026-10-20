@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade - Invasion
 // @namespace    https://github.com/Eaglewing91
-// @version      3.0.1
+// @version      3.0.2
 // @description  Torn Invasion 3D, a 3D alien shooter for the Torn Arcade mobile phone. Needs Torn Arcade. Opens inside the phone's Invasion app. Makes no requests of any kind.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -1185,7 +1185,7 @@
    takes over progress from the old Torn Invasion once, when the phone hands it over. */
 (function () {
   'use strict';
-  const PROTO = 1, VER = '3.0.1';
+  const PROTO = 1, VER = '3.0.2';
   /* ---------- Storage ---------- */
   const S = (function () {
     let d = {};
@@ -1240,10 +1240,12 @@
   }
   function playing(p) { send('ta-inv-state', { playing: !!p }); }
   let root = null, ui = null, game = null, screen = 'title', isOpen = false, muted = false;
+  let updateTo = '';   // set by the phone when a newer version of this script is out
+  const SELF_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade-Invasion.user.js';
   document.addEventListener('ta-inv-ping', hello);
   document.addEventListener('ta-inv-cmd', function (e) {
     let c; try { c = JSON.parse(e.detail); } catch (er) { return; }
-    if (c.cmd === 'enter') { isOpen = true; muted = !!c.muted; mount(); if (game) game.settings({ muted: muted }); show(screen === 'game' ? 'pause' : screen); summary(); }
+    if (c.cmd === 'enter') { isOpen = true; muted = !!c.muted; updateTo = c.update || ''; mount(); if (game) game.settings({ muted: muted }); show(screen === 'game' ? 'pause' : screen); summary(); }
     else if (c.cmd === 'leave') { isOpen = false; if (game && screen === 'game') { game.pause(); screen = 'pause'; playing(false); } }
     else if (c.cmd === 'mute') { muted = !!c.muted; if (game) game.settings({ muted: muted }); }
     else if (c.cmd === 'legacy') importLegacy(c.data || {});
@@ -1297,7 +1299,9 @@
     '.ti3-stats b{display:block;font-size:18px;color:#fff}.ti3-stats small{color:#8ea3bb;font-size:11px}',
     '.ti3-toast{position:absolute;left:50%;top:12px;transform:translateX(-50%);background:rgba(10,16,26,.92);border:1px solid #ffd65a;border-radius:10px;padding:8px 14px;font:700 12.5px system-ui;color:#ffd65a;pointer-events:none;transition:opacity .4s}',
     '.ti3-pause{position:absolute;left:50%;transform:translateX(-50%);top:8px;z-index:3;border:0;border-radius:8px;background:rgba(10,16,26,.7);color:#fff;font:800 13px system-ui;padding:6px 10px;cursor:pointer}',
-    '.ti3-pause[hidden]{display:none}'
+    '.ti3-pause[hidden]{display:none}',
+    '.ti3-upd{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;background:#3a2a10;border:1px solid #e08a1e;border-radius:10px;padding:8px 10px;font:700 12.5px system-ui;color:#ffd9a0}',
+    '.ti3-upd a{background:#e08a1e;color:#1a0f00!important;text-decoration:none!important;border-radius:8px;padding:5px 12px;font-weight:800}'
   ].join('');
   function el(tag, cls, html) { const e = document.createElement(tag); if (cls) e.className = cls; if (html !== undefined) e.innerHTML = html; return e; }
   function mount() {
@@ -1368,6 +1372,7 @@
     if (name === 'title') {
       h = '<div class="ti3-card"><div class="ti3-logo">TORN INVASION<small>3D · v' + VER + '</small></div>' +
         '<div class="ti3-levels">' + LEVELS.map(function (l, i) { return '<button type="button" class="ti3-lv' + (i === 0 ? ' ti3-on' : '') + '"' + (l.ready ? '' : ' disabled') + '><b>' + (i + 1) + '. ' + l.name + '</b><small>' + l.blurb + '</small></button>'; }).join('') + '</div>' +
+        (updateTo ? '<div class="ti3-upd">↻ Update available: version ' + updateTo + ' (you have ' + VER + ') <a href="' + SELF_URL + '" target="_blank" rel="noopener noreferrer">Update</a></div>' : '') +
         '<div class="ti3-row"><button type="button" class="ti3-btn ti3-go" data-act="play">Play Downtown</button></div>' +
         '<div class="ti3-row"><button type="button" class="ti3-btn" data-act="settings">Settings</button><button type="button" class="ti3-btn" data-act="ach">Achievements ' + countEarned().n + '/' + countEarned().all + '</button></div>' +
         '<div class="ti3-note">Best score: ' + fmt(S.best[set.diff] || 0) + (S.classic ? '<br>Classic Invasion best scores kept: ' + Object.keys(S.classic).map(function (d) { return CLASSIC[d] + ' ' + fmt(S.classic[d]); }).join(' · ') : '') + '</div></div>';
