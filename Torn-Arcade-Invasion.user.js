@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade - Invasion
 // @namespace    https://github.com/Eaglewing91
-// @version      3.0.0
+// @version      3.0.1
 // @description  Torn Invasion 3D, a 3D alien shooter for the Torn Arcade mobile phone. Needs Torn Arcade. Opens inside the phone's Invasion app. Makes no requests of any kind.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -271,7 +271,9 @@
       zap: function () { tone('square', 1200, 300, 0.1, 0.06); },
       hurt: function () { tone('sawtooth', 160, 70, 0.22, 0.2); },
       pick: function () { tone('sine', 660, 990, 0.12, 0.12); },
-      boom: function () { noise(0.6, 500, 40, 0.9, 0.7); }
+      boom: function () { noise(0.6, 500, 40, 0.9, 0.7); },
+      jump: function () { noise(0.12, 500, 900, 0.18, 1); },
+      land: function () { noise(0.14, 300, 90, 0.35, 0.8); }
     };
   }
 
@@ -517,7 +519,7 @@
     }
 
     /* ---- Player, weapons, aliens ---- */
-    const P = { x: 0, z: 2, y: 0, yaw: 0, pitch: 0, hp: 100, armor: 0, vx: 0, vz: 0, bob: 0, alive: true, hurtT: 0, hurtDir: 0, score: 0, kills: 0 };
+    const P = { jy: 0, jv: 0, x: 0, z: 2, y: 0, yaw: 0, pitch: 0, hp: 100, armor: 0, vx: 0, vz: 0, bob: 0, alive: true, hurtT: 0, hurtDir: 0, score: 0, kills: 0 };
     const WEAP = {
       pistol: { name: 'Pistol', mag: 12, rate: 0.28, dmg: [18, 26], reloadT: 1.1, kind: 'hit', spread: 0.008 },
       plasma: { name: 'Plasma Rifle', mag: 40, rate: 0.1, dmg: [16, 22], reloadT: 1.6, kind: 'bolt', spread: 0.02 },
@@ -526,10 +528,10 @@
     const W = { cur: 'pistol', has: { pistol: true, plasma: false, shotgun: false }, ammo: { pistol: 12, plasma: 40, shotgun: 6 }, reserve: { pistol: 72, plasma: 0, shotgun: 0 }, cool: 0, reload: 0, kick: 0, flash: 0, swap: 0 };
     const aliens = [], bolts = [], parts = [], decals = [], pickups = [], flashes = [];
     const TYPES = {
-      grunt: { hp: 60, speed: 2.6, r: 0.38, h: 1.7, col: [0.36, 0.72, 0.34], dmg: 10, reach: 1.5, rate: 0.9, score: 100 },
-      spitter: { hp: 70, speed: 1.8, r: 0.38, h: 1.7, col: [0.55, 0.32, 0.62], dmg: 12, ranged: { speed: 13, kind: 'goo', every: 2.2 }, keep: 9, score: 150 },
-      drone: { hp: 45, speed: 3.2, r: 0.5, h: 0.5, col: [0.5, 0.52, 0.58], fly: 2.8, dmg: 8, ranged: { speed: 22, kind: 'zap', every: 1.4 }, keep: 8, score: 200 },
-      brute: { hp: 420, speed: 1.7, r: 0.7, h: 2.7, col: [0.3, 0.52, 0.3], dmg: 28, reach: 2.2, rate: 1.4, score: 800, armour: true }
+      grunt: { hp: 85, speed: 3.4, r: 0.38, h: 1.7, col: [0.36, 0.72, 0.34], dmg: 14, reach: 1.5, rate: 0.75, score: 100 },
+      spitter: { hp: 95, speed: 2.3, r: 0.38, h: 1.7, col: [0.55, 0.32, 0.62], dmg: 15, ranged: { speed: 17, kind: 'goo', every: 1.6 }, keep: 9, score: 150 },
+      drone: { hp: 70, speed: 4.4, r: 0.5, h: 0.5, col: [0.5, 0.52, 0.58], fly: 2.8, dmg: 11, ranged: { speed: 28, kind: 'zap', every: 1.0, burst: 2 }, keep: 8, score: 200 },
+      brute: { hp: 480, speed: 2.4, r: 0.7, h: 2.7, col: [0.3, 0.52, 0.3], dmg: 28, reach: 2.2, rate: 1.2, score: 800, armour: true, shoot: { speed: 15, kind: 'fire', every: 2.2, dmg: 18, spread: 3 }, charge: { speed: 7.5, every: 6, time: 1.4 } }
     };
     function spawn(type, x, z, wake) { const t = TYPES[type]; aliens.push({ type: type, t: t, x: x, z: z, y: t.fly || 0, yaw: 0, hp: t.hp * DIFF.hp, state: wake ? 'chase' : 'idle', walk: Math.random() * 6, cool: rand(0.5, 2), flash: 0, dead: 0, alert: 0, att: 0, strafe: Math.random() < 0.5 ? 1 : -1 }); }
     [['grunt', -2, -18], ['grunt', 2.5, -24], ['grunt', -1, -27], ['spitter', 3.5, -30], ['drone', -12, -40], ['drone', 14, -38], ['grunt', -24, -38], ['grunt', 26, -42],
@@ -594,7 +596,7 @@
       W.ammo[W.cur]--; W.cool = w.rate; W.kick = 1; W.flash = 0.06;
       const cy = Math.cos(P.pitch), dx0 = -Math.sin(P.yaw) * cy, dy0 = Math.sin(P.pitch), dz0 = -Math.cos(P.yaw) * cy;
       const sp = w.spread * (Math.hypot(P.vx, P.vz) > 1 ? 2 : 1), dx = dx0 + rand(-sp, sp), dy = dy0 + rand(-sp, sp), dz = dz0 + rand(-sp, sp);
-      const ox = P.x, oy = P.y + 1.6, oz = P.z;
+      const ox = P.x, oy = P.y + P.jy + 1.6, oz = P.z;
       const mz = [ox + dx0 * 0.9 - Math.cos(P.yaw) * -0.18, oy - 0.12, oz + dz0 * 0.9 + Math.sin(P.yaw) * -0.18];
       flashes.push({ p: mz, life: 0.06, c: W.cur === 'plasma' ? [0.3, 0.7, 1.6] : [1.6, 1.0, 0.45] });
       if (w.kind === 'bolt') { snd.plasma(); bolts.push({ x: mz[0], y: mz[1], z: mz[2], dx: dx, dy: dy, dz: dz, sp: 38, life: 2, mine: true, kind: 'plasma' }); return; }
@@ -612,6 +614,7 @@
       if (hit) damage(hit, rand(w.dmg[0], w.dmg[1]) * mult, hx, hy, hz, mult > 1, quiet);
       else if (best < 80) burst(hx - dx * 0.05, hy - dy * 0.05, hz - dz * 0.05, quiet ? 2 : 6, [1, 0.8, 0.4], 2, [1.6, 1.1, 0.4], 0.35);
     }
+    function jump() { if (P.alive && active && P.jy === 0 && P.jv === 0) { P.jv = 4.6; snd.jump(); } }
     function startReload() { const w = WEAP[W.cur]; if (W.reload > 0 || W.ammo[W.cur] >= w.mag || W.reserve[W.cur] <= 0) return; W.reload = w.reloadT; snd.reload(); }
     function finishReload() { const w = WEAP[W.cur], need = w.mag - W.ammo[W.cur], take = Math.min(need, W.reserve[W.cur]); W.ammo[W.cur] += take; W.reserve[W.cur] -= take; }
     function swapTo(k) { if (!W.has[k] || W.cur === k) return; W.cur = k; W.reload = 0; W.swap = 0.35; }
@@ -636,6 +639,12 @@
       if (document.pointerLockElement === cv) { try { doc.exitPointerLock(); } catch (e) {} }
       cb('onEnd', { won: won, score: P.score, kills: P.kills, total: totalAliens, time: time, hp: Math.round(P.hp), dmgTaken: Math.round(P.dmgTaken || 0), headshots: P.heads || 0 });
     }
+    function enemyShot(a, sy2, sp, kind, dmg, yawOff) {
+      const dx = P.x - a.x, dz = P.z - a.z, ty = P.y + P.jy + 1.3, dd = Math.hypot(dx, ty - sy2, dz);
+      let ux = dx / dd, uz = dz / dd; const c = Math.cos(yawOff || 0), s2 = Math.sin(yawOff || 0);
+      const rx = ux * c - uz * s2, rz = ux * s2 + uz * c;
+      bolts.push({ x: a.x, y: sy2, z: a.z, dx: rx, dy: (ty - sy2) / dd, dz: rz, sp: sp, life: 3, mine: false, kind: kind, dmg: dmg });
+    }
     function alertNear(x, z, r) { aliens.forEach(function (o) { if (!o.dead && Math.hypot(o.x - x, o.z - z) < r) o.state = 'chase'; }); }
     function hurtPlayer(d, fx, fz) {
       if (!P.alive) return;
@@ -657,6 +666,7 @@
       const k = e.key.toLowerCase(); keys[k] = down;
       if (down) {
         if (k === 'r') startReload();
+        if (k === ' ' && !e.repeat) jump();
         if (k === '1') swapTo('pistol'); if (k === '2') swapTo('shotgun'); if (k === '3') swapTo('plasma');
         if (k === 'enter' && state !== 'play' && !opts.menus) restart();
         if (k === 'escape' && state === 'play' && active) cb('onPause');
@@ -680,6 +690,7 @@
       if (Math.hypot(bx - (w - 70), by - (h - 80)) < 46) return 'fire';
       if (Math.hypot(bx - (w - 150), by - (h - 50)) < 28) return 'reload';
       if (Math.hypot(bx - (w - 60), by - (h - 170)) < 28) return 'swap';
+      if (Math.hypot(bx - (w - 165), by - (h - 125)) < 28) return 'jump';
       return bx < w * 0.45 ? 'move' : 'look';
     }
     cv.addEventListener('touchstart', function (e) {
@@ -688,6 +699,7 @@
         const b = btnAt(t.clientX, t.clientY);
         if (b === 'fire') { touch.fire = t.identifier; fire(); }
         else if (b === 'reload') startReload();
+        else if (b === 'jump') jump();
         else if (b === 'swap') { const L = ['pistol', 'shotgun', 'plasma'].filter(function (k) { return W.has[k]; }); swapTo(L[(L.indexOf(W.cur) + 1) % L.length]); }
         else if (b === 'move' && !touch.move) touch.move = { id: t.identifier, x0: t.clientX, y0: t.clientY, x: t.clientX, y: t.clientY };
         else if (b === 'look' && !touch.look) touch.look = { id: t.identifier, x: t.clientX, y: t.clientY };
@@ -706,7 +718,7 @@
     const isTouch = 'ontouchstart' in window || (navigator.maxTouchPoints || 0) > 0;
 
     function restart() {
-      P.x = 0; P.z = 2; P.yaw = 0; P.pitch = 0; P.hp = 100; P.armor = 0; P.alive = true; P.score = 0; P.kills = 0; P.heads = 0; P.dmgTaken = 0; P.ended = false; P.vx = P.vz = 0; msgT = 0;
+      P.jy = 0; P.jv = 0; P.x = 0; P.z = 2; P.yaw = 0; P.pitch = 0; P.hp = 100; P.armor = 0; P.alive = true; P.score = 0; P.kills = 0; P.heads = 0; P.dmgTaken = 0; P.ended = false; P.vx = P.vz = 0; msgT = 0;
       W.cur = 'pistol'; W.has = { pistol: true, plasma: false, shotgun: false }; W.ammo = { pistol: 12, plasma: 40, shotgun: 6 }; W.reserve = { pistol: 72, plasma: 0, shotgun: 0 };
       aliens.length = 0; bolts.length = 0; parts.length = 0; decals.length = 0; pickups.length = 0;
       [['grunt', -2, -18], ['grunt', 2.5, -24], ['grunt', -1, -27], ['spitter', 3.5, -30], ['drone', -12, -40], ['drone', 14, -38], ['grunt', -24, -38], ['grunt', 26, -42],
@@ -733,12 +745,13 @@
       P.vx = lerp(P.vx, P.alive ? wx : 0, Math.min(1, dt * 10)); P.vz = lerp(P.vz, P.alive ? wz : 0, Math.min(1, dt * 10));
       if (P.alive) moveCircle(P, P.vx * dt, P.vz * dt, 0.4);
       P.y = lerp(P.y, groundAt(P.x, P.z), Math.min(1, dt * 12));
+      if (P.jy > 0 || P.jv > 0) { P.jv -= 13 * dt; P.jy += P.jv * dt; if (P.jy <= 0) { P.jy = 0; P.jv = 0; snd.land(); } }
       P.bob += Math.hypot(P.vx, P.vz) * dt * 1.6;
       // weapons
       W.cool -= dt; W.kick = Math.max(0, W.kick - dt * 7); W.flash -= dt; W.swap = Math.max(0, W.swap - dt);
       if (W.reload > 0) { W.reload -= dt; if (W.reload <= 0) { W.reload = 0; finishReload(); } }
-      if ((mouseDown || keys[' '] || touch.fire !== false) && W.cur === 'plasma') fire();
-      if ((mouseDown || keys[' '] || touch.fire !== false) && W.cur === 'pistol' && W.cool < -0.12) fire();
+      if ((mouseDown || touch.fire !== false) && W.cur === 'plasma') fire();
+      if ((mouseDown || touch.fire !== false) && W.cur === 'pistol' && W.cool < -0.12) fire();
       if (P.alive && W.ammo[W.cur] === 0 && W.reserve[W.cur] > 0 && W.reload <= 0) startReload();
       // pickups
       pickups.forEach(function (p) {
@@ -760,7 +773,7 @@
         if (a.dead) { a.dead += dt; return; }
         a.flash = Math.max(0, a.flash - dt); a.cool -= dt;
         const dx = P.x - a.x, dz = P.z - a.z, d = Math.hypot(dx, dz);
-        if (a.state === 'idle') { a.walk += dt * 0.6; if (d < 22 && sees(a)) { a.state = 'chase'; } return; }
+        if (a.state === 'idle') { a.walk += dt * 0.6; if (d < 30 && sees(a)) { a.state = 'chase'; alertNear(a.x, a.z, 8); } return; }
         const tYaw = Math.atan2(-dx, -dz); let dy = tYaw - a.yaw; while (dy > Math.PI) dy -= TAU; while (dy < -Math.PI) dy += TAU; a.yaw += dy * Math.min(1, dt * 6);
         const t = a.t; let mvx = 0, mvz = 0;
         if (t.ranged) {
@@ -770,18 +783,30 @@
           if (Math.random() < dt * 0.3) a.strafe *= -1;
           if (a.cool <= 0 && d < 30 && P.alive && sees(a)) {
             a.cool = t.ranged.every * rand(0.8, 1.2); a.att = 0.4;
-            const sy2 = a.type === 'drone' ? a.y : 1.35, ty = P.y + 1.3, dd = Math.hypot(dx, ty - sy2, dz);
-            bolts.push({ x: a.x, y: sy2, z: a.z, dx: dx / dd, dy: (ty - sy2) / dd, dz: dz / dd, sp: t.ranged.speed, life: 3, mine: false, kind: t.ranged.kind, dmg: t.dmg });
+            const sy2 = a.type === 'drone' ? a.y : 1.35;
+            enemyShot(a, sy2, t.ranged.speed, t.ranged.kind, t.dmg, 0);
+            if (t.ranged.burst) setTimeout(function () { if (!a.dead && P.alive) { enemyShot(a, a.y, t.ranged.speed, t.ranged.kind, t.dmg, rand(-0.05, 0.05)); snd.zap(); } }, 180);
             if (t.ranged.kind === 'goo') snd.spit(); else snd.zap();
           }
         } else {
           if (d > t.reach * 0.8) { mvx = dx / d; mvz = dz / d; }
+          // the Brute: fireball spread while it walks in, and a charge when you are close
+          if (t.shoot) {
+            a.cool2 = (a.cool2 === undefined ? 1.2 : a.cool2) - dt; a.ccool = (a.ccool === undefined ? 3 : a.ccool) - dt;
+            if (a.cool2 <= 0 && d > 4 && d < 32 && P.alive && sees(a)) {
+              a.cool2 = t.shoot.every * rand(0.85, 1.15); a.att = 0.45;
+              for (let k = 0; k < t.shoot.spread; k++) enemyShot(a, 2.0, t.shoot.speed, t.shoot.kind, t.shoot.dmg, (k - (t.shoot.spread - 1) / 2) * 0.13);
+              snd.boom();
+            }
+            if (a.ccool <= 0 && d < 14 && d > 3 && P.alive && sees(a)) { a.ccool = t.charge.every; a.charging = t.charge.time; msg('The Brute is charging!', 1.2); }
+            if (a.charging > 0) { a.charging -= dt; shake = Math.min(1, shake + dt * 0.6); }
+          }
           if (d < t.reach && a.cool <= 0 && P.alive) { a.cool = t.rate; a.att = 0.35; setTimeout(function () { if (!a.dead && Math.hypot(P.x - a.x, P.z - a.z) < t.reach + 0.4) hurtPlayer(t.dmg, a.x, a.z); }, 180); }
         }
         // keep a little space from other aliens
         aliens.forEach(function (o) { if (o === a || o.dead) return; const ox = a.x - o.x, oz = a.z - o.z, od = Math.hypot(ox, oz); if (od < 1.2 && od > 0.01) { mvx += ox / od * 0.6; mvz += oz / od * 0.6; } });
-        const sp = t.speed * (a.att > 0 ? 0.3 : 1);
-        if (a.type === 'drone') { a.x += mvx * sp * dt; a.z += mvz * sp * dt; a.y = t.fly + Math.sin(time * 2 + a.walk) * 0.3; }
+        const sp = (a.charging > 0 ? t.charge.speed : t.speed) * (a.att > 0 && !(a.charging > 0) ? 0.3 : 1);
+        if (a.type === 'drone') { moveCircle(a, mvx * sp * dt, mvz * sp * dt, t.r, a.y - 0.3); a.y = t.fly + Math.sin(time * 2 + a.walk) * 0.3; }
         else moveCircle(a, mvx * sp * dt, mvz * sp * dt, t.r);
         a.walk += Math.hypot(mvx, mvz) * sp * dt * 2.2; a.att = Math.max(0, a.att - dt);
       });
@@ -791,12 +816,12 @@
         const b = bolts[i]; const step = b.sp * dt;
         let hitT = rayWorld(b.x, b.y, b.z, b.dx, b.dy, b.dz, step), hitA = null, mult = 1;
         if (b.mine) aliens.forEach(function (a) { if (a.dead) return; alienSpheres(a).forEach(function (s) { const t = raySphere(b.x, b.y, b.z, b.dx, b.dy, b.dz, s[0], s[1], s[2], s[3] + 0.08); if (t < hitT) { hitT = t; hitA = a; mult = s[4]; } }); });
-        else if (P.alive) { const t = raySphere(b.x, b.y, b.z, b.dx, b.dy, b.dz, P.x, P.y + 1.2, P.z, 0.55); if (t < hitT) { hitT = t; hitA = 'player'; } }
+        else if (P.alive) { const t = raySphere(b.x, b.y, b.z, b.dx, b.dy, b.dz, P.x, P.y + P.jy + 1.2, P.z, 0.55); if (t < hitT) { hitT = t; hitA = 'player'; } }
         b.x += b.dx * Math.min(step, hitT); b.y += b.dy * Math.min(step, hitT); b.z += b.dz * Math.min(step, hitT); b.life -= dt;
         if (hitT < step) {
           if (hitA === 'player') hurtPlayer(b.dmg, b.x - b.dx * 5, b.z - b.dz * 5);
           else if (hitA) damage(hitA, rand(WEAP.plasma.dmg[0], WEAP.plasma.dmg[1]) * mult, b.x, b.y, b.z, mult > 1);
-          const c = b.kind === 'plasma' ? [0.5, 0.8, 1] : b.kind === 'goo' ? [0.5, 1, 0.3] : [1, 0.4, 0.4];
+          const c = b.kind === 'plasma' ? [0.5, 0.8, 1] : b.kind === 'goo' ? [0.5, 1, 0.3] : b.kind === 'fire' ? [1.4, 0.6, 0.15] : [1, 0.4, 0.4];
           burst(b.x, b.y, b.z, 8, c, 2, c.map(function (v) { return v * 1.2; }), 0.4);
           if (b.kind === 'goo' && b.y < 0.3) splat(b.x, b.z, 0.7, [0.3, 0.6, 0.15]);
           bolts.splice(i, 1);
@@ -829,7 +854,7 @@
         L.push({ p: l.p, c: c, r: l.r, d: Math.hypot(l.p[0] - P.x, l.p[2] - P.z) - l.r * 0.5 });
       });
       flashes.forEach(function (f) { L.push({ p: f.p, c: f.c.map(function (v) { return v * 2; }), r: 9, d: -100 }); });
-      bolts.forEach(function (b) { const c = b.kind === 'plasma' ? [0.3, 0.6, 1.5] : b.kind === 'goo' ? [0.35, 1, 0.2] : [1.3, 0.3, 0.3]; L.push({ p: [b.x, b.y, b.z], c: c, r: 5, d: Math.hypot(b.x - P.x, b.z - P.z) - 8 }); });
+      bolts.forEach(function (b) { const c = b.kind === 'plasma' ? [0.3, 0.6, 1.5] : b.kind === 'goo' ? [0.35, 1, 0.2] : b.kind === 'fire' ? [1.6, 0.6, 0.15] : [1.3, 0.3, 0.3]; L.push({ p: [b.x, b.y, b.z], c: c, r: 5, d: Math.hypot(b.x - P.x, b.z - P.z) - 8 }); });
       aliens.forEach(function (a) { if (a.type === 'drone' && !a.dead) L.push({ p: [a.x, a.y - 0.45, a.z], c: [0.7, 0.08, 0.05], r: 3, d: Math.hypot(a.x - P.x, a.z - P.z) }); });
       L.sort(function (a, b) { return a.d - b.d; });
       const lp = new Float32Array(NL * 3), lc = new Float32Array(NL * 3), lr = new Float32Array(NL);
@@ -974,7 +999,7 @@
     }
     function drawGun(view) {
       // the gun lives in front of the camera; built in camera space then moved into the world so lights hit it
-      const camM = M4.chain(M4.T(P.x, P.y + 1.6, P.z), M4.Ry(P.yaw), M4.Rx(P.pitch));
+      const camM = M4.chain(M4.T(P.x, P.y + P.jy + 1.6, P.z), M4.Ry(P.yaw), M4.Rx(P.pitch));
       const mv = Math.hypot(P.vx, P.vz) / 5, bx = Math.sin(P.bob) * 0.012 * mv, by = Math.abs(Math.cos(P.bob)) * 0.014 * mv;
       const rl = W.reload > 0 ? Math.sin(Math.min(1, (WEAP[W.cur].reloadT - W.reload) / WEAP[W.cur].reloadT) * Math.PI) : 0;
       const sw = W.swap > 0 ? W.swap / 0.35 : 0;
@@ -1023,7 +1048,7 @@
       resize();
       gl.viewport(0, 0, W_, H_);
       gl.clearColor(env.fog[0], env.fog[1], env.fog[2], 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-      const sk = shake * 0.03, eye = [P.x + rand(-sk, sk), P.y + 1.6 + Math.abs(Math.cos(P.bob)) * 0.04 * Math.min(1, Math.hypot(P.vx, P.vz) / 5) + rand(-sk, sk), P.z];
+      const sk = shake * 0.03, eye = [P.x + rand(-sk, sk), P.y + P.jy + 1.6 + Math.abs(Math.cos(P.bob)) * 0.04 * Math.min(1, Math.hypot(P.vx, P.vz) / 5) + rand(-sk, sk), P.z];
       camPos = eye;
       const proj = M4.persp(1.2, W_ / H_, 0.05, 160);
       const view = M4.chain(M4.Rx(-P.pitch), M4.Ry(-P.yaw), M4.T(-eye[0], -eye[1], -eye[2]));
@@ -1071,8 +1096,8 @@
       draw(PRIM.cyl, M4.chain(M4.T(0, 0, -93), M4.S(0.6, 30, 0.6)), [0.3 * beamA, 1.2 * beamA, 0.5 * beamA], null, null, 1, true);
       halos.forEach(function (h) { billboard(h.p, h.s, h.c, P.yaw, P.pitch); });
       bolts.forEach(function (b) {
-        const c = b.kind === 'plasma' ? [0.5, 0.9, 1.8] : b.kind === 'goo' ? [0.5, 1.4, 0.3] : [1.6, 0.4, 0.4];
-        billboard([b.x, b.y, b.z], b.kind === 'goo' ? 0.55 : 0.45, c, P.yaw, P.pitch);
+        const c = b.kind === 'plasma' ? [0.5, 0.9, 1.8] : b.kind === 'goo' ? [0.5, 1.4, 0.3] : b.kind === 'fire' ? [1.8, 0.7, 0.2] : [1.6, 0.4, 0.4];
+        billboard([b.x, b.y, b.z], b.kind === 'fire' ? 0.8 : b.kind === 'goo' ? 0.55 : 0.45, c, P.yaw, P.pitch);
       });
       aliens.forEach(function (a) { if (a.type === 'drone' && !a.dead) billboard([a.x, a.y - 0.1, a.z - 0.0], 0.8, [0.7, 0.08, 0.05], P.yaw, P.pitch); });
       gl.disable(gl.BLEND); gl.depthMask(true);
@@ -1124,7 +1149,7 @@
         g.strokeStyle = 'rgba(255,255,255,0.35)'; g.fillStyle = 'rgba(255,255,255,0.12)'; g.lineWidth = 2 * s;
         const dp = window.devicePixelRatio > 1 ? Math.min(window.devicePixelRatio, 2) : 1;
         const circ = function (x, y, r, label) { g.beginPath(); g.arc(x, y, r, 0, TAU); g.fill(); g.stroke(); font(11); g.textAlign = 'center'; g.fillStyle = '#fff'; g.fillText(label, x, y + 4 * s); g.fillStyle = 'rgba(255,255,255,0.12)'; g.textAlign = 'left'; };
-        circ(w - 70 * dp, h - 80 * dp, 44 * dp, 'FIRE'); circ(w - 150 * dp, h - 50 * dp, 26 * dp, 'R'); if (W.has.plasma || W.has.shotgun) circ(w - 60 * dp, h - 170 * dp, 26 * dp, 'SWAP');
+        circ(w - 70 * dp, h - 80 * dp, 44 * dp, 'FIRE'); circ(w - 150 * dp, h - 50 * dp, 26 * dp, 'R'); circ(w - 165 * dp, h - 125 * dp, 28 * dp, 'JUMP'); if (W.has.plasma || W.has.shotgun) circ(w - 60 * dp, h - 170 * dp, 26 * dp, 'SWAP');
         if (touch.move) { const r = cv.getBoundingClientRect(); g.beginPath(); g.arc((touch.move.x0 - r.left) * dp, (touch.move.y0 - r.top) * dp, 46 * dp, 0, TAU); g.stroke(); g.beginPath(); g.arc((touch.move.x - r.left) * dp, (touch.move.y - r.top) * dp, 20 * dp, 0, TAU); g.fill(); }
       }
     }
@@ -1160,7 +1185,7 @@
    takes over progress from the old Torn Invasion once, when the phone hands it over. */
 (function () {
   'use strict';
-  const PROTO = 1, VER = '3.0.0';
+  const PROTO = 1, VER = '3.0.1';
   /* ---------- Storage ---------- */
   const S = (function () {
     let d = {};
@@ -1170,10 +1195,12 @@
   })();
   function save() { try { GM_setValue('invasion3d', S); } catch (e) {} }
   const stats = (function () { const s = S.stats; s.kills = s.kills || {}; s.total = s.total || 0; s.w = s.w || {}; s.boom = s.boom || 0; s.flaw = s.flaw || 0; s.clear = s.clear || 0; s.wins = s.wins || {}; s.heads = s.heads || 0; return s; })();
-  const set = S.set; if (set.sens === undefined) set.sens = 5; if (set.invert === undefined) set.invert = false; if (!set.gfx) set.gfx = 'high'; if (!set.diff) set.diff = 'normal';
+  const set = S.set; if (set.sens === undefined) set.sens = 5; if (set.invert === undefined) set.invert = false; if (!set.gfx) set.gfx = 'high'; set.diff = 'standard';   // one standard difficulty
+  ['easy', 'normal', 'hard'].forEach(function (d) { if (S.best[d]) { S.best.standard = Math.max(S.best.standard || 0, S.best[d]); delete S.best[d]; } if (S.reached[d]) { S.reached.standard = Math.max(S.reached.standard || 0, S.reached[d]); delete S.reached[d]; } });   // 3.0.0 had three
 
   /* ---------- Game data ---------- */
-  const DIFFS = { easy: { name: 'Easy', hp: 0.8, dmg: 0.6, score: 1 }, normal: { name: 'Normal', hp: 1, dmg: 1, score: 1.5 }, hard: { name: 'Hard', hp: 1.25, dmg: 1.4, score: 2 } };
+  const DIFFS = { standard: { name: 'Standard', hp: 1, dmg: 1, score: 1 } };
+  const CLASSIC = { easy: 'Easy', normal: 'Normal', hard: 'Hard' };   // names of the old game's difficulties, for its kept best scores
   const GFX = { low: { name: 'Low', q: 0.55 }, medium: { name: 'Medium', q: 0.8 }, high: { name: 'High', q: 1 } };
   const LEVELS = [
     { id: 'downtown', name: 'Downtown', blurb: 'Aliens have taken the main street. Reach the crash site.', ready: true },
@@ -1230,11 +1257,10 @@
     ['g', 's', 'b', 'd', 'x', 'Q'].forEach(function (k) { stats.kills[k] = Math.max(stats.kills[k] || 0, (os.kills || {})[k] || 0); });
     [1, 2, 3].forEach(function (k) { stats.w[k] = Math.max(stats.w[k] || 0, (os.w || {})[k] || 0); });
     ['total', 'boom', 'flaw', 'clear'].forEach(function (k) { stats[k] = Math.max(stats[k] || 0, os[k] || 0); });
-    const cl = {}; Object.keys(DIFFS).forEach(function (d) { if (o['best:' + d]) cl[d] = o['best:' + d]; });
+    const cl = {}; Object.keys(CLASSIC).forEach(function (d) { if (o['best:' + d]) cl[d] = o['best:' + d]; });
     if (Object.keys(cl).length) S.classic = cl;
     if (o.sensitivity) set.sens = Math.max(1, Math.min(10, Number(o.sensitivity) || 5));
     if (o.invertY !== undefined) set.invert = !!o.invertY;
-    if (o.difficulty && DIFFS[o.difficulty]) set.diff = o.difficulty;
     S.legacyDone = true; save(); summary();
     if (ui && screen === 'title') show('title');
   }
@@ -1342,10 +1368,9 @@
     if (name === 'title') {
       h = '<div class="ti3-card"><div class="ti3-logo">TORN INVASION<small>3D · v' + VER + '</small></div>' +
         '<div class="ti3-levels">' + LEVELS.map(function (l, i) { return '<button type="button" class="ti3-lv' + (i === 0 ? ' ti3-on' : '') + '"' + (l.ready ? '' : ' disabled') + '><b>' + (i + 1) + '. ' + l.name + '</b><small>' + l.blurb + '</small></button>'; }).join('') + '</div>' +
-        '<div class="ti3-row">' + Object.keys(DIFFS).map(function (d) { return '<button type="button" class="ti3-pill' + (set.diff === d ? ' ti3-on' : '') + '" data-diff="' + d + '">' + DIFFS[d].name + '</button>'; }).join('') + '</div>' +
         '<div class="ti3-row"><button type="button" class="ti3-btn ti3-go" data-act="play">Play Downtown</button></div>' +
         '<div class="ti3-row"><button type="button" class="ti3-btn" data-act="settings">Settings</button><button type="button" class="ti3-btn" data-act="ach">Achievements ' + countEarned().n + '/' + countEarned().all + '</button></div>' +
-        '<div class="ti3-note">Best on ' + DIFFS[set.diff].name + ': ' + fmt(S.best[set.diff] || 0) + (S.classic ? '<br>Classic Invasion best scores kept: ' + Object.keys(S.classic).map(function (d) { return DIFFS[d].name + ' ' + fmt(S.classic[d]); }).join(' · ') : '') + '</div></div>';
+        '<div class="ti3-note">Best score: ' + fmt(S.best[set.diff] || 0) + (S.classic ? '<br>Classic Invasion best scores kept: ' + Object.keys(S.classic).map(function (d) { return CLASSIC[d] + ' ' + fmt(S.classic[d]); }).join(' · ') : '') + '</div></div>';
     } else if (name === 'settings') {
       h = '<div class="ti3-card"><div class="ti3-h">Settings</div><div class="ti3-set">' +
         '<span>Mouse speed</span><input type="range" min="1" max="10" step="1" value="' + set.sens + '" data-set="sens">' +
@@ -1373,7 +1398,6 @@
   }
   function onMenuClick(e) {
     const b = e.target.closest('button'); if (!b) return;
-    if (b.dataset.diff) { set.diff = b.dataset.diff; save(); show('title'); return; }
     if (b.dataset.gfx) { set.gfx = b.dataset.gfx; save(); if (game) game.settings({ quality: GFX[set.gfx].q }); show('settings'); return; }
     const a = b.dataset.act;
     if (a === 'play') startGame();
