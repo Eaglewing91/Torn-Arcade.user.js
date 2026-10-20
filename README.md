@@ -17,6 +17,8 @@ Torn Arcade is a Tampermonkey userscript that adds a **Mobile Phone** link to To
 
 Your progress is saved in Tampermonkey's storage on your device. Updating the script keeps your saves.
 
+On a keyboard, **Esc** is the back button: it backs out of Tornies menus (like B) and takes you from an app to the home screen. It never closes the phone; use the **🔒 Lock** button on the home screen for that.
+
 ### 🎨 Optional Art Packs
 The illustrated Tornie and character artwork comes in two separate, optional scripts. This keeps Torn Arcade itself small (about 1.6 MB), so it works on phones and apps that only accept scripts up to 2 MB. Without them, Tornies uses its pixel-art versions.
 

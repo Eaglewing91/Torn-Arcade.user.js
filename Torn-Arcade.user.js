@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.35.4
+// @version      2.35.5
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with eight game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -548,7 +548,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gift codes', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.35.4';
+  const VERSION = '2.35.5';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -592,7 +592,7 @@
     '.ta-widget b{display:block;font:300 52px/1 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;letter-spacing:-1px}',
     '.ta-widget span{display:block;margin-top:4px;font-size:13px;opacity:.9}',
     '.ta-widget em{display:inline-block;margin-top:8px;font-style:normal;font-size:10.5px;font-weight:800;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:rgba(47,123,209,.55)}',
-    '.ta-lock{position:absolute;right:12px;top:12px;width:30px;height:30px;border-radius:50%;border:0;padding:0;margin:0;background:rgba(255,255,255,.14);color:#fff;font-size:14px;cursor:pointer;display:grid;place-items:center}',
+    '.ta-lock{position:absolute;right:12px;top:12px;height:30px;border-radius:15px;border:0;padding:0 11px 0 9px;margin:0;background:rgba(255,255,255,.14);color:#fff;font:700 13px system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;cursor:pointer;display:flex;align-items:center;gap:4px}',
     '.ta-lock:hover{background:rgba(255,255,255,.26)}',
     '.ta-note{position:relative;z-index:2;display:flex;align-items:center;gap:9px;margin:4px 12px 0;padding:8px 10px;border-radius:14px;background:rgba(18,24,34,.78);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.12);box-shadow:0 4px 14px rgba(0,0,0,.35)}',
     '.ta-note[hidden]{display:none}',
@@ -773,14 +773,14 @@
   root.innerHTML =
     '<div class="ta-backdrop"></div>' +
     '<div class="ta-phone" role="dialog" aria-label="Torn Arcade Mobile Phone" tabindex="-1">' +
-      '<span class="ta-side ta-pwr" data-act="close" title="Lock (Esc)"></span><span class="ta-side ta-v1"></span><span class="ta-side ta-v2"></span>' +
+      '<span class="ta-side ta-pwr" data-act="close" title="Lock phone"></span><span class="ta-side ta-v1"></span><span class="ta-side ta-v2"></span>' +
       '<div class="ta-screen">' +
         '<div class="ta-island"></div>' +
         '<a class="ta-push" hidden href="https://www.torn.com/page.php?sid=events" target="_blank" rel="noopener" title="Open your Torn events"><span class="ta-pushicon">📩</span><span class="ta-pushtext"><b>Torn · New event</b><small></small></span><em class="ta-pushn"></em></a>' +
         '<div class="ta-status"><span><span class="ta-clock">00:00</span><small>TCT</small></span>' +
           '<span class="ta-sicons"><span class="ta-bars"><i style="height:4px"></i><i style="height:6px"></i><i style="height:8.5px"></i><i style="height:11px"></i></span><span>TornTel</span><span class="ta-batt"><i></i></span></span></div>' +
         '<div class="ta-home">' +
-          '<div class="ta-widget"><button type="button" class="ta-lock" data-act="close" title="Lock phone (Esc)">🔒</button><b class="ta-wclock">00:00</b><span class="ta-wdate"></span><em>Torn City Time</em></div>' +
+          '<div class="ta-widget"><button type="button" class="ta-lock" data-act="close" title="Lock phone (closes it; your games are saved)">🔒 Lock</button><b class="ta-wclock">00:00</b><span class="ta-wdate"></span><em>Torn City Time</em></div>' +
           '<div class="ta-note" hidden><span class="ta-noteicon">👋</span><div class="ta-notetext"><b>Welcome to Torn Arcade v' + VERSION + '!</b><small>Eight games in your pocket. Start with Tornies, and grab the free Art Packs on the bottom row for illustrated artwork. Bugs or ideas? Message Eaglewing [571041].</small></div><button type="button" class="ta-notex" title="Dismiss">✕</button></div>' +
           '<div class="ta-grid">' + GAMES.map(appButton).join('') + '</div>' +
           '<div class="ta-grid ta-artrow">' + ART_APPS.map(appButton).join('') + '</div>' +
@@ -897,7 +897,7 @@
       P + '.ta-wclock{' + T.clock.split(';').map(function (r) { return r + '!important'; }).join(';') + '}',
       P + '.ta-wdate{color:' + (T.date || (dark ? '#e8ecf4' : '#2a3142')) + '!important}',
       P + '.ta-widget em{background:' + T.a + '!important;color:' + (T.pill || '#fff') + '!important' + (T.glow ? ';box-shadow:0 0 10px ' + T.glow : '') + '}',
-      P + '.ta-lock{background:' + (dark ? 'rgba(255,255,255,.14)' : 'rgba(255,255,255,.7)') + '!important}',
+      P + '.ta-lock{background:' + (dark ? 'rgba(255,255,255,.14)' : 'rgba(255,255,255,.7)') + '!important;color:' + (dark ? '#fff' : '#2a3142') + '!important}',
       P + '.ta-note{background:' + (dark ? 'rgba(' + T.g + ',.74)' : 'rgba(255,255,255,.85)') + '!important;border:1px solid ' + T.edge + '!important}',
       P + '.ta-note *{color:' + (dark ? '#e6eaf2' : '#2a3142') + '!important}',
       P + '.ta-note b,' + P + '.ta-note strong{color:' + T.title + '!important}',
@@ -2065,7 +2065,7 @@
   /* ---------- Input ---------- */
   const held = {}, dirOrder = [];
   let presses = [];
-  const KEYS = { arrowup: 'up', w: 'up', arrowdown: 'down', s: 'down', arrowleft: 'left', a: 'left', arrowright: 'right', d: 'right', z: 'a', ' ': 'a', x: 'b', backspace: 'b', enter: 'start', m: 'start', shift: 'run' };
+  const KEYS = { arrowup: 'up', w: 'up', arrowdown: 'down', s: 'down', arrowleft: 'left', a: 'left', arrowright: 'right', d: 'right', z: 'a', ' ': 'a', x: 'b', backspace: 'b', escape: 'b', enter: 'start', m: 'start', shift: 'run' };
   const isDir = function (b) { return b === 'up' || b === 'down' || b === 'left' || b === 'right'; };
   function keyOf(e) { return KEYS[(keyName(e) || '').toLowerCase()]; }
   function pressBtn(b, repeat) {
@@ -12695,7 +12695,11 @@
       await say('PAWL: The terminal is ancient. Everything on it runs back to front. The menus, the error messages, all of it. It\'s all backwards!|And the password hint is one word: "FOUNDATIONS".');
       await say('PAWL: Foundations of what? A building? A database? I\'ve tried everything. If you work it out, come and tell me.');
       G.flags.pawlPuzzle = 1; saveGame();
-    } else await say('PAWL: Still stuck on that Genesis password. The hint just says "FOUNDATIONS". And everything on that machine is backwards, I\'m telling you.');
+    } else {   // the full clue again, so nobody misses a part of it on a second visit
+      await say('PAWL: {P}! I\'m still stuck on Entry 179.|It\'s the last file on the old Project Genesis terminal, and it\'s locked with a password.');
+      await say('PAWL: Remember, the terminal is ancient. Everything on it runs back to front. The menus, the error messages, all of it. It\'s all backwards!|And the password hint is still one word: "FOUNDATIONS".');
+      await say('PAWL: Foundations of what? A building? A database? If you work it out, tell me.');
+    }
     if (!(await yesno('Do you know the solution?'))) { await say('PAWL: Me neither. I\'ll be here. Staring at it. Forever.'); return; }
     const raw = await askName('PASSWORD', '', 12);
     const guess = String(raw || '').toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -15266,6 +15270,11 @@
     bestText: function () {
       const d = loadSave();
       return d ? d.badges.length + (d.badges.length === 1 ? ' medal' : ' medals') + ' · ' + countKeys(d.caught) + ' caught' : 'Start your adventure';
+    },
+    onEscape: function (e) {   // Escape is the B button: it backs out of menus and never leaves the game
+      if (!active) return false;
+      if (isTyping(e && e.target)) return true;   // a name box handles Escape itself
+      pressBtn('b', e && e.repeat); return true;
     },
     onKey: function (e) {
       if (!active) return false;
@@ -19237,8 +19246,10 @@
     if (!isOpen) return;
     if (e.key === 'Escape') {
       e.preventDefault();
-      if (current && games[current] && games[current].onEscape && games[current].onEscape()) return;
-      if (current) goHome(); else closeArcade(); return;
+      // Escape is "back": the open app gets it first (Tornies treats it as B), then it goes back to the home screen.
+      // It never closes the phone; the Lock button does that.
+      if (current && games[current] && games[current].onEscape && games[current].onEscape(e)) return;
+      if (current) { goHome(); sfx.click(); } return;
     }
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     if (isTyping(e.target)) return;
