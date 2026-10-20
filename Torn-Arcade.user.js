@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.37.0
+// @version      2.38.0
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with eight game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -127,19 +127,30 @@
  *   requested while the phone is closed. Your key is only ever sent to
  *   api.torn.com. The clock shows Torn City Time (UTC) from your
  *   device's own clock.
- * - ONLINE PLAY (optional, off until you turn it on in Settings > Online):
- *   the phone talks to the Torn Arcade server (arcade-server-production-8ebd.up.railway.app,
- *   hosted on Railway, declared above with @connect) and to nothing else. Only
- *   requests you start are made: verifying your Torn ID, playing as a guest,
- *   signing out, deleting your online account and opening the Global tab of
- *   the Leaderboards app. Once you're verified, your best scores are also sent
- *   (right after verifying, when you open the Global tab, and when you set a
- *   new best) so they show on the global leaderboards. To verify, your API key
- *   is sent to the Torn Arcade server once; it asks api.torn.com who owns the
- *   key (user > basic) and then forgets it. The key is never stored or logged
- *   there. The server keeps your Torn ID, name, online results and best scores
- *   until you delete your online account.
- *   With Online play off, nothing is ever sent to the server.
+ * - ONLINE PLAY (optional, off until you turn it on in Settings > Online).
+ *   EVERY GAME WORKS FULLY WITHOUT IT, and without any API key. Online play
+ *   only adds global leaderboards, online Torn Territories games and safe
+ *   online Tornie trades. While it's on, the phone talks to the Torn Arcade
+ *   server (arcade-server-production-8ebd.up.railway.app, run by Eaglewing
+ *   [571041] on Railway, declared above with @connect) with plain HTTPS
+ *   requests through GM_xmlhttpRequest (no websockets), and to nothing else:
+ *   - When you tap something: verifying, playing as a guest, signing out,
+ *     deleting your online account, opening the Global tab of Leaderboards,
+ *     creating/joining/starting/leaving an online game, each move you make
+ *     in one, and each step of an online Tornie trade.
+ *   - To verify, your API key is sent to the server once; it asks
+ *     api.torn.com who owns it (user > basic) and then forgets it. The key
+ *     is never stored or logged there.
+ *   - Once you're verified: your best scores, right after verifying, when
+ *     you open the Global tab and when you set a new best.
+ *   - While the phone is open: a check every 20 seconds for game invites,
+ *     games waiting on you and trades waiting on you (shown as
+ *     notifications). While an online game is on screen: long polling for
+ *     news (at most one request every 20 seconds when nothing happens);
+ *     while your lobby waits to start, the game list every 5 seconds.
+ *   The server keeps your Torn ID, name, best scores, online rating, online
+ *   game records and trades until you delete your online account (Settings >
+ *   Online). With Online play off, nothing is ever sent.
  * - Keys only control a game while the phone is open, and never while you
  *   are typing in a text box.
  *
@@ -165,15 +176,17 @@
  * - Key Access Level:      Limited (user > events). Optional: only needed
  *                          for event notifications.
  *
- * TERMS OF SERVICE: ONLINE PLAY (optional, off by default)
+ * TERMS OF SERVICE: ONLINE PLAY (optional, off by default; no game needs it)
  * - Data Storage:          Persistent - until account deletion (on the Torn
- *                          Arcade server: your Torn ID, name, online game
- *                          results and best scores; on this device: a sign-in
- *                          token)
- * - Data Sharing:          General public (your name, rating and best scores
- *                          on the global leaderboards)
- * - Purpose of Use:        Public community tools (online games and the
- *                          global leaderboards)
+ *                          Arcade server: your Torn ID, name, best scores,
+ *                          online rating, online game records and Tornie
+ *                          trades; on this device: a sign-in token)
+ * - Data Sharing:          General public (your name, Torn ID, rating and
+ *                          best scores on the global leaderboards); players
+ *                          in your online games and trades see your name,
+ *                          Torn ID, moves and the Tornie you offer
+ * - Purpose of Use:        Public community tools (global leaderboards,
+ *                          online Torn Territories games and Tornie trades)
  * - Key Storage & Sharing: Not stored / Not shared (sent once to the Torn
  *                          Arcade server to confirm your Torn ID with
  *                          api.torn.com, then forgotten)
@@ -579,7 +592,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gift codes', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.37.0';
+  const VERSION = '2.38.0';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -628,6 +641,11 @@
     '.ta-lbrank{flex:none;width:30px;text-align:center;font-weight:800;font-size:13px;color:var(--muted,#9aa7b8)}',
     '.ta-lbr{flex:none;font-weight:800;font-variant-numeric:tabular-nums;color:#ffcf4a}',
     '.ta-lbme{background:rgba(47,123,209,.16)}',
+    '.ta-lbt{display:grid;grid-template-columns:38px minmax(0,1fr) auto 64px;gap:8px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line)}',
+    '.ta-lbt.ta-lbhead{padding:6px 12px;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}',
+    '.ta-lbt.ta-lbhead span:last-child,.ta-lbt .ta-lbr{text-align:right}',
+    '.ta-lbname{min-width:0;display:grid}', '.ta-lbname b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}', '.ta-lbname small{color:var(--muted);font-size:11px}',
+    '.ta-lbid{font-size:12px;color:#7ab8ff;text-decoration:none;font-variant-numeric:tabular-nums}', '.ta-lbid:hover{text-decoration:underline}',
     '.ta-lbtabs{display:flex;gap:4px;padding:3px;border-radius:12px;background:var(--panel2);border:1px solid var(--line2)}',
     '.ta-lbtab{flex:1;appearance:none;border:0;border-radius:9px;padding:7px 6px;margin:0;font:inherit;font-weight:700;font-size:13px;color:var(--muted);background:none;cursor:pointer}',
     '.ta-lbtab.ta-on{background:var(--panel);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.3)}',
@@ -775,6 +793,7 @@
     /* Event notifications */
     '.ta-push{position:absolute;z-index:60;top:46px;left:10px;right:10px;display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:18px;background:rgba(24,30,42,.94);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.14);box-shadow:0 8px 26px rgba(0,0,0,.5);color:#fff;text-decoration:none;font:13px system-ui,Arial,sans-serif;animation:ta-pushin .35s cubic-bezier(.2,.9,.3,1.2)}',
     '.ta-push[hidden]{display:none}',
+    '.ta-onpush{cursor:pointer;z-index:61}', '.ta-onpush .ta-pushicon{background:linear-gradient(160deg,#ffcf4a,#c8902a)}',
     '.ta-push.ta-out{animation:ta-pushout .3s ease-in forwards}',
     '@keyframes ta-pushin{from{transform:translateY(-130%);opacity:0}to{transform:none;opacity:1}}',
     '@keyframes ta-pushout{to{transform:translateY(-130%);opacity:0}}',
@@ -1049,7 +1068,7 @@
   function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
   const SCORE_FMT = {
     bombs:  function (k, v) { return [cap(k[1]), v + 's']; },
-    flappy: function (k, v) { return [cap(k[1]), v]; },
+    flappy: function (k, v) { return k[1] === 'hard' ? ['Best', v] : null; },
     eggdash: function (k, v) { return ['Endless', Number(v).toLocaleString('en-GB')]; },
     territories: function (k, v) { return k[1] === 'wins' ? ['Wins', v] : ['Fastest win', v + ' turns']; },
     bogies: function (k, v) { return ['Level ' + k[1], Number(v).toLocaleString('en-GB')]; },
@@ -1089,7 +1108,7 @@
       if (!SCORE_FMT[a.id]) return;
       const chips = Object.keys(best).filter(function (k) { return k.split(':')[0] === a.id; }).sort().map(function (k) {
         const r = SCORE_FMT[a.id](k.split(':'), best[k]);
-        return '<span class="ta-chip">' + esc(r[0]) + ' <b>' + esc(r[1]) + '</b></span>';
+        return r ? '<span class="ta-chip">' + esc(r[0]) + ' <b>' + esc(r[1]) + '</b></span>' : '';
       }).join('');
       rows += '<div class="ta-row">' + iconSmall(a) + '<div class="ta-rtext"><b>' + a.name + '</b>' + (chips ? '<div class="ta-chips">' + chips + '</div>' : '<small>No scores yet</small>') + '</div></div>';
     });
@@ -1456,7 +1475,7 @@
   const ONLINE_URL = 'https://arcade-server-production-8ebd.up.railway.app';
   let onlMsg = null, onlBusy = false;
   function onl() { return store.get('online', null) || { on: false }; }
-  function onlReq(method, path, body) {
+  function onlReq(method, path, body, wait) {
     return new Promise(function (resolve) {
       const o = onl();
       const bad = function () { resolve({ status: 0, body: { error: 'offline', message: 'Couldn\'t reach the Torn Arcade server. Try again in a minute.' } }); };
@@ -1465,7 +1484,7 @@
       const h = { 'Content-Type': 'application/json' };
       if (o.token) h.Authorization = 'Bearer ' + o.token;
       try {
-        GM_xmlhttpRequest({ method: method, url: ONLINE_URL + path, headers: h, data: body ? JSON.stringify(body) : undefined, timeout: 15000, anonymous: true,
+        GM_xmlhttpRequest({ method: method, url: ONLINE_URL + path, headers: h, data: body ? JSON.stringify(body) : undefined, timeout: wait || 15000, anonymous: true,
           onload: function (r) {
             let j = null; try { j = JSON.parse(r.responseText); } catch (e) {}
             if (r.status === 401 && o.token) { const n = onl(); delete n.token; delete n.account; store.set('online', n); }   // signed out on the server
@@ -1480,7 +1499,7 @@
     const o = onl(), a = o.account, saved = /^[A-Za-z0-9]{16}$/.test(store.get('apiKey', ''));
     const msg = onlMsg ? '<small class="ta-evmsg ta-onlmsg ' + (onlMsg.ok ? 'ta-good' : onlMsg.ok === false ? 'ta-bad' : '') + '">' + esc(onlMsg.text) + '</small>' : '';
     let h = '<div class="ta-group"><h3>Online</h3><div class="ta-list">' +
-      '<div class="ta-row"><span class="ta-ricon" style="background:#1c7ad0">🌐</span><div class="ta-rtext"><b>Online play</b><small>Join the global leaderboards for every game, and play Torn Territories against other players. Off until you turn it on; while on, the phone talks to the Torn Arcade server and, once you\'re verified, sends it your best scores.</small></div><button type="button" class="ta-switch' + (o.on ? ' ta-on' : '') + '" data-set="onlOn" aria-label="Online play"></button></div>';
+      '<div class="ta-row"><span class="ta-ricon" style="background:#1c7ad0">🌐</span><div class="ta-rtext"><b>Online play</b><small>Optional: every game works without it. Turn it on to join the global leaderboards, play Torn Territories online and trade Tornies safely online. While on, the phone talks to the Torn Arcade server (and nothing else): what you do online, your best scores once you\'re verified, and a check every 20 seconds for invites and trades while the phone is open.</small></div><button type="button" class="ta-switch' + (o.on ? ' ta-on' : '') + '" data-set="onlOn" aria-label="Online play"></button></div>';
     if (!o.on) return h + (msg ? '<div class="ta-row"><div class="ta-rtext">' + msg + '</div></div>' : '') + '</div></div>';
     if (a) h += '<div class="ta-row"><span class="ta-ricon" style="background:' + (a.verified ? '#1c9a5a' : '#7a7f8a') + '">' + (a.verified ? '✔️' : '👤') + '</span><div class="ta-rtext"><b>' + onlWho(a) + '</b><small>' +
       (a.verified ? 'Verified Torn ID · on the global leaderboards' : 'Guest · not on the global leaderboards until you verify') + '</small>' + (a.verified ? msg : '') + '</div><button type="button" class="ta-btn" data-set="onlOut">Sign out</button></div>';
@@ -1490,16 +1509,16 @@
         '<div class="ta-cheat"><input type="password" class="ta-cheatin ta-onlkey" autocomplete="off" spellcheck="false" maxlength="16" placeholder="' + (saved ? 'Or paste a Public API key' : 'Paste a Public API key') + '"><button type="button" class="ta-btn" data-set="onlVerify"' + (onlBusy ? ' disabled' : '') + '>Verify</button></div>' +
         (!a ? '<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="ta-btn" data-set="onlGuest"' + (onlBusy ? ' disabled' : '') + '>Play as a guest instead</button></div>' : '') +
         '<table class="ta-tos"><tbody>' +
-          '<tr><td>Data storage</td><td>Persistent - until account deletion (on the Torn Arcade server: your Torn ID, name, online game results and best scores)</td></tr>' +
-          '<tr><td>Data sharing</td><td>General public (your name, rating and best scores on the global leaderboards)</td></tr>' +
-          '<tr><td>Purpose of use</td><td>Public community tools (online games and the global leaderboards)</td></tr>' +
+          '<tr><td>Data storage</td><td>Persistent - until account deletion (on the Torn Arcade server: your Torn ID, name, best scores, online rating, online game records and Tornie trades)</td></tr>' +
+          '<tr><td>Data sharing</td><td>General public (your name, Torn ID, rating and best scores on the global leaderboards); players in your online games and trades see your name, Torn ID, moves and the Tornie you offer</td></tr>' +
+          '<tr><td>Purpose of use</td><td>Public community tools (global leaderboards, online Torn Territories games and Tornie trades)</td></tr>' +
           '<tr><td>Key storage &amp; sharing</td><td>Not stored / Not shared (sent once to the Torn Arcade server to confirm your Torn ID with api.torn.com, then forgotten)</td></tr>' +
           '<tr><td>Key access level</td><td>Public (user → basic). A Limited key also works; only your name and Torn ID are read.</td></tr>' +
         '</tbody></table>' +
-        '<small>The Torn Arcade server is run by Eaglewing [571041] and hosted on Railway. Guests need no key. Delete your online account at any time below. <a class="ta-evlink" href="https://www.torn.com/api.html" target="_blank" rel="noopener">Torn API terms</a> · <a class="ta-evlink" href="https://railway.com/legal/privacy" target="_blank" rel="noopener noreferrer">Railway privacy policy</a></small>' +
+        '<small>The Torn Arcade server is run by Eaglewing [571041] and hosted on Railway. Guests need no key, but can\'t join the leaderboards, online games or trades. Delete your online account at any time below. <a class="ta-evlink" href="https://www.torn.com/api.html" target="_blank" rel="noopener">Torn API terms</a> · <a class="ta-evlink" href="https://railway.com/legal/privacy" target="_blank" rel="noopener noreferrer">Railway privacy policy</a></small>' +
         '</div></div>';
     }
-    if (a) h += '<div class="ta-row"><span class="ta-ricon" style="background:#c0392b">🗑️</span><div class="ta-rtext"><b>Delete my online account</b><small>Removes your Torn ID, name, online results and best scores from the Torn Arcade server.</small></div><button type="button" class="ta-danger" data-set="onlDel"' + (onlBusy ? ' disabled' : '') + '>Delete</button></div>';
+    if (a) h += '<div class="ta-row"><span class="ta-ricon" style="background:#c0392b">🗑️</span><div class="ta-rtext"><b>Delete my online account</b><small>Removes your Torn ID, name, best scores, rating and trades from the Torn Arcade server. Your seats in running online games go to the computer.</small></div><button type="button" class="ta-danger" data-set="onlDel"' + (onlBusy ? ' disabled' : '') + '>Delete</button></div>';
     return h + '</div></div>';
   }
   async function onlVerify(key) {
@@ -1507,7 +1526,7 @@
     onlBusy = true; onlMsg = { text: 'Checking with Torn…' }; renderSettings();
     const r = await onlReq('POST', '/v1/auth/torn', { key: key });
     onlBusy = false;
-    if (r.status === 200 && r.body.token) { const o = onl(); o.token = r.body.token; o.account = r.body.account; store.set('online', o); onlMsg = { ok: true, text: 'Verified as ' + r.body.account.name + '. Welcome!' }; sfx.win(); lbSynced = Date.now(); onlSync(); }
+    if (r.status === 200 && r.body.token) { const o = onl(); o.token = r.body.token; o.account = r.body.account; store.set('online', o); onlMsg = { ok: true, text: 'Verified as ' + r.body.account.name + '. Welcome!' }; sfx.win(); lbSynced = Date.now(); onlSync(); inboxSeen = null; inboxStop(); inboxStart(); }
     else { onlMsg = { ok: false, text: r.body.message || 'Couldn\'t verify. Try again.' }; sfx.miss(); }
     renderSettings();
   }
@@ -1543,6 +1562,43 @@
       renderSettings(); return;
     }
   }
+  /* ---------- Online notifications ----------
+     While the phone is open and you're verified, it checks the Torn Arcade server every 20 seconds for game invites,
+     online games waiting on you and Tornie trades waiting on you, and shows each new one as a notification. */
+  const onPush = document.createElement('div');
+  onPush.className = 'ta-push ta-onpush'; onPush.hidden = true; onPush.setAttribute('role', 'button'); onPush.tabIndex = 0;
+  onPush.innerHTML = '<span class="ta-pushicon">🌐</span><span class="ta-pushtext"><b></b><small></small></span>';
+  $(root, '.ta-screen').appendChild(onPush);
+  let inboxT = 0, inboxSeen = null, onPushQ = [], onPushT = 0;
+  function inboxStart() { if (!inboxT && isOpen) { inboxT = setInterval(inboxPoll, 20000); inboxPoll(); } }
+  function inboxStop() { clearInterval(inboxT); inboxT = 0; }
+  async function inboxPoll() {
+    const o = onl();
+    if (!isOpen || document.hidden || !o.on || !o.token || !o.account || !o.account.verified) return;
+    const r = await onlReq('GET', '/v1/inbox');
+    if (r.status !== 200) return;
+    const first = !inboxSeen; if (first) inboxSeen = {};
+    (r.body.invites || []).forEach(function (x) { const k = 'i' + x.id; if (!inboxSeen[k]) { inboxSeen[k] = 1; onNote('Torn Territories', x.from + ' [' + x.fromId + '] invited you to an online game. Tap to answer.', function () { openApp('territories'); games.territories.openOnline(0); }); } });
+    (r.body.turns || []).forEach(function (x) {
+      const k = 't' + x.id + ':' + Math.floor(Date.now() / 25000);
+      const watching = current === 'territories' && games.territories.viewing && games.territories.viewing() === x.id;
+      if (!watching && !inboxSeen['t' + x.id + 'n']) { inboxSeen['t' + x.id + 'n'] = 1; setTimeout(function () { delete inboxSeen['t' + x.id + 'n']; }, 60000); onNote('Torn Territories', 'It\'s your move in online game ' + x.id + '. You have ' + Math.ceil((x.left || 0) / 1000) + ' seconds before the computer moves for you.', function () { openApp('territories'); games.territories.openOnline(x.id); }); }
+      inboxSeen[k] = 1;
+    });
+    (r.body.trades || []).forEach(function (x) { const k = 'r' + x.id + (x.collect ? 'c' : ''); if (!inboxSeen[k]) { inboxSeen[k] = 1; onNote('Tornie trade', x.collect ? 'Your trade with ' + x.with.name + ' is ready to collect. Open a Clinic Tornie Locker → ONLINE TRADES.' : x.with.name + ' [' + x.with.tornId + '] is waiting on you in a Tornie trade. Open a Clinic Tornie Locker → ONLINE TRADES.', function () { openApp('pocket'); }); } });
+  }
+  function onNote(title, text, tap) { onPushQ.push({ title: title, text: text, tap: tap }); if (onPush.hidden) onNext(); }
+  function onNext() {
+    clearTimeout(onPushT);
+    const n = onPushQ.shift();
+    if (!n || !isOpen) { onPush.hidden = true; return; }
+    $(onPush, 'b').textContent = n.title; $(onPush, 'small').textContent = n.text; onPush._tap = n.tap;
+    onPush.classList.remove('ta-out'); onPush.hidden = false;
+    if (!muted) seq([[0, 784, 0.07, 'sine', 0.06], [110, 1175, 0.12, 'sine', 0.06]]);
+    onPushT = setTimeout(function () { onPush.classList.add('ta-out'); onPushT = setTimeout(function () { onPush.hidden = true; onNext(); }, 300); }, 7000);
+  }
+  onPush.addEventListener('click', function () { const t = onPush._tap; onPush.hidden = true; sfx.click(); if (t) t(); setTimeout(onNext, 300); });
+
   /* ---------- Global leaderboards (the Global tab of the Leaderboards app) ----------
      Territories is ranked by the online rating the server keeps. Every other board ranks best scores, which your phone
      sends once you're verified: right after you verify, when you open the Global tab, and when you set a new best. */
@@ -1554,7 +1610,7 @@
     { id: 'defence', boards: [1, 2, 3, 4, 5, 6].map(function (n) { return ['defence:' + n, ['Westgate', 'The Docks', 'Midtown', 'Casino Strip', 'Industrial Zone', 'Racket HQ'][n - 1]]; }) },
     { id: 'eggdash', boards: [['eggdash:endless', 'Best score']] },
     { id: 'bombs', boards: [['bombs:easy', 'Easy'], ['bombs:normal', 'Normal'], ['bombs:hard', 'Hard']] },
-    { id: 'flappy', boards: [['flappy:easy', 'Easy'], ['flappy:normal', 'Normal'], ['flappy:hard', 'Hard']] }
+    { id: 'flappy', boards: [['flappy:hard', 'Best score']] }
   ];
   const lbCache = {};
   let lbTab = 'mine', lbGame = 'territories', lbBoard = 'territories', syncT = 0, lbSynced = 0;
@@ -1573,7 +1629,7 @@
     Object.keys(best).forEach(function (k) {
       const v = Math.floor(Number(best[k])), g = k.split(':');
       if (!(v > 0)) return;
-      if (g[0] === 'flappy' || g[0] === 'bombs' || k === 'eggdash:endless' || g[0] === 'defence') out[k] = v;
+      if (k === 'flappy:hard' || g[0] === 'bombs' || k === 'eggdash:endless' || g[0] === 'defence') out[k] = v;
       else if (g[0] === 'bogies') bog += v;
     });
     if (bog) out['bogies:total'] = bog;
@@ -1615,10 +1671,11 @@
     else if (c.error) body = '<div class="ta-row"><div class="ta-rtext"><small>' + esc(c.error) + '</small></div><button type="button" class="ta-btn" data-lb="retry">Retry</button></div>';
     else {
       const d = c.data, list = d.players || [];
-      body = list.length ? list.map(function (p) {
+      // A table: Rank · Name · ID (opens their Torn profile when tapped) · Score
+      body = list.length ? '<div class="ta-lbt ta-lbhead"><span>Rank</span><span>Name</span><span>ID</span><span>' + (rated ? 'Rating' : lbBoard.indexOf('bombs:') === 0 ? 'Time' : lbBoard.indexOf('defence:') === 0 ? 'Wave' : 'Score') + '</span></div>' + list.map(function (p) {
         const mine = o.account && o.account.tornId === p.tornId;
-        return '<div class="ta-row ta-lb' + (mine ? ' ta-lbme' : '') + '"><span class="ta-lbrank">' + (p.rank <= 3 ? ['🥇', '🥈', '🥉'][p.rank - 1] : '#' + p.rank) + '</span><div class="ta-rtext"><b>' + esc(p.name) + ' [' + p.tornId + ']</b>' +
-          (rated ? '<small>' + p.wins + ' wins from ' + p.games + ' games</small>' : '') + '</div><span class="ta-lbr">' + (rated ? p.rating : lbFmt(lbBoard, p.value)) + '</span></div>';
+        return '<div class="ta-lbt' + (mine ? ' ta-lbme' : '') + '"><span class="ta-lbrank">' + (p.rank <= 3 ? ['🥇', '🥈', '🥉'][p.rank - 1] : p.rank) + '</span><span class="ta-lbname"><b>' + esc(p.name) + '</b>' +
+          (rated ? '<small>' + p.wins + ' wins · ' + p.games + ' games</small>' : '') + '</span><a class="ta-lbid" href="https://www.torn.com/profiles.php?XID=' + Number(p.tornId) + '" target="_blank" rel="noopener" title="Open ' + esc(p.name) + '\'s Torn profile">' + Number(p.tornId) + '</a><span class="ta-lbr">' + (rated ? p.rating : lbFmt(lbBoard, p.value).replace(/^Wave /, '')) + '</span></div>';
       }).join('') : '<div class="ta-row"><div class="ta-rtext"><b>No one on this board yet</b><small>' + (rated ? 'Online Torn Territories games are coming in the next update. Ratings start at 1200.' : 'Be the first: verified players\' best scores appear here.') + '</small></div></div>';
       const me = d.me, loc = localBests()[lbBoard];
       const line = !o.account ? 'Sign in under Settings → Online to see your rank.' : !o.account.verified ? 'Verify your Torn ID under Settings → Online to appear here.' :
@@ -1693,7 +1750,7 @@
       try { document.activeElement.blur(); } catch (e) {}
     }
     applyWallpaper(); tickClock(); clockTimer = setInterval(tickClock, 5000);
-    evStart();
+    evStart(); inboxStart();
     setOrientation(wantsLand(current), false);
     win.classList.remove('ta-turn-l', 'ta-turn-p');
     refreshNav();
@@ -1705,7 +1762,7 @@
     if (!isOpen) return;
     devLockNow();   // the Dev app locks whenever the phone is closed
     if (current && games[current]) games[current].leave();
-    isOpen = false; root.hidden = true; clearInterval(clockTimer);
+    isOpen = false; root.hidden = true; clearInterval(clockTimer); inboxStop();
     evStop();
     document.documentElement.style.overflow = savedOverflow;
   }
@@ -1832,12 +1889,12 @@
     const MEDALS = [[50, 'Platinum', '#e8f3ff', '#8fb0d6'], [30, 'Gold', '#ffd65a', '#c48e12'], [20, 'Silver', '#e4e9f0', '#8d99a8'], [10, 'Bronze', '#e3a06a', '#94532a']];
 
     const panel = makePanel('flappy', 'Flappy Torn', 'Fly through the gaps in the pipes over Torn City. Each pipe you pass is a point.',
-      diffSelect('ta-fl-diff') + '<button type="button" class="ta-btn ta-fl-start">New game</button>',
+      '<button type="button" class="ta-btn ta-fl-start">New game</button>',
       [['score', 'Score'], ['best', 'Best', '–'], ['medal', 'Medal', '–']],
       '<canvas class="ta-canvas"></canvas>',
       '<span class="ta-kbd">Space</span>, <span class="ta-kbd">↑</span>, <span class="ta-kbd">W</span>, click or tap to flap · medals at 10, 20, 30 and 50');
-    const canvas = $(panel, 'canvas'), ctx = setupCanvas(canvas, W, H), diffSel = $(panel, '.ta-fl-diff');
-    diffSel.value = store.get('flappyDiff', 'easy');
+    // One difficulty for everyone (Hard), so every score is on the same leaderboard. Older Easy and Normal bests are kept but not shown.
+    const canvas = $(panel, 'canvas'), ctx = setupCanvas(canvas, W, H), diffSel = { value: 'hard', blur: function () {}, addEventListener: function () {} };
 
     const BIRD = new Image();
     BIRD.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABICAYAAAAJZ/BjAAAfF0lEQVR42u2ceZgV1bX2f3vXOaebnmh6AJp5EEQBlRBQUBJwigJR0YhRrxcVh8So0Zg4RGLu1STGGD8TTaLRSNQYonEgaqIYRVFRZAZFZkFRBmXsufucqr3uH3vX6erD6QGBm3zfZz1PPdVdp8a11n7XWu9au+D/j0W18zjtto8Dc4Ezs/z2xbIPQvcy/o+5fS0pJOa2PwTErU8C5W6/94VYD9wI8LJYtXJrB2AtEDglrAUO/UIJ7Re2AroAdwOLgZXAG8BvgLMjFh1Ci85QDMBpTvj1brsJ6PcFHLW9hDByewRGMtfPgAeBkRmCVxlKmOmOb3Db94BCpwD1hahbdqQK+BKw2wmuEfCBlNuGijAO44dlgSYF9AaqHRQl3TmPfwFF7Y9mjgE2OMH5EUw3ThmhIpLA/wGKIsINR9KNkfPDc87/QgltL6FwOjurDYWdyoCj6IhYDYyLQJkH5ABrIkoLgG1AyRdQ1H4l4Kz2YyfoIDIaMkeEAW7I8CdnZxkFP/liFOwd/egIfIRr3FkxQHdgegvWn6mY6RHhauCdyAgywK5INKX+bxCOOgjCDoW8r9ceBSxsIUKKjobngdyMsDSI/H5Nxkg5aCn6/gpLWoAH08JvrQldOcvNXIqBbs7KuwKlLmQMBdgI1DjLXePi+0uAC4G8LLJIudHzHHCWe97FwGD3W8z9H4ay8u9q+aGF5Eb+35dERrdgYYcBFwEPKMU7WqtPPa1NK7G/ABLztMQ8LZ7WSaXU+8CeVo4PQ88H3T2vyoAhHxj075qcqUhM/TJwpdufcNupwJgsnE1U8F7GiDkOuBNYngW/JQMiWlvTDlgpqxTP06KUak0J/+koipqM/ZfsLwwd7AjkNveg7zrhK+Crbt9TWSKJTGqgH3CzO1+yhJAprZXfs0epOXp4P5OIey1bf8yTy6aMk/+YfKwcPby/6VxWFERgUADxPC1aq0yfEAC1zun+JYOiuO/fUQGhAAcASaXS1nKZ279RKQKHy0dlxN3hMhx4WClVHbHMdCyulDKA9OpRKsvm3CZVmx6Q5NaHpE+vMgGaCTE8v7y0SJJbHxJpfELMjofls7W/kbde/JHc9ZPz5JQTjpCC/Nz0OVor0U33DZ3uHyIhaaPbvrw/EBQ7iAowwOVAXCT9AjcDvYA+IvhuRNzjRkToWI8AblRKnaO10kFgcL/pbP6goSFF3z7l5OXG0TlxhgzqwUcf70QrhXF+UWuFMXD4oRWoeIyaT/cQj3mUFudTPvpQRo8dzPeuGs/GjZ/x91lLefTxuSxattHiqFKISMy9zwXA60BlJGsudVuzP5Z6oJcA0EpxMiDfOF55iThKKXo5JUiPchVzx40BrneZ5b3AQs/T54qIDgITFBbkSocOiZjWSqssMVt9Q5Lde2oxRlCeZtLE4YhIs5hGKRARJk34ErH8BFoplFKk/ID6mnrqdlTTUFNP356lXHX1eObO+hEz/3wt/fp0RkSI3DjhlLAzI8DYb6g40NYvQBcR+gHq1m+LmngsiCDxGAZQD/4IBvWxx2rFrcAKrfWVQCIITFBUkMvVl3/NW7H4TvWTm87EGCEW29tX53WIU5ifQCtDsrqOyWeOYmD/bvi+IRFXJOIK3zf06N6VC847kVR1Ci8WBxRKgachFrNKqq1tpG5HNTmJGGecdyIvPnEdpSUFiB0J4Xud5PySiYSrnzukP2ihUzxOOZCvtaIwX6lf3QhF+ajAWINatwlunKIUoLQm4Xm6whgTaK3k0injvMVv3Mav776QXmVFXHXFKRx/3GGkUgGJuEJriMUUWsGgQ/vTqWsPkiaXwHjkFyR45LffpLQ4QTIFyRQU5Hk8/KuvUdKxiqB+G8rUWvmpHIwqwJdC4ok88ssKyc1LsGDxBn547X1ceOWD1NU1IiJ2VDXPacLttiyBw780EQvx/0hgmVKw6E/wpePg7zPhtGvtXUWgVxfY9GnTyxx79ED1i1u/yegxh0F9krq6RhRCPDfOnqpGzjj/t7z1zvuRWwnP3Hcsk07rSnLnR8TZg0lV4uX7bFhbxR//FhAYuODrisMOj2OqfbQXR1QOovIIKCaeXwJF3di+vTdPvLiDP//1Ld5ZtL497+k7+Lkb+J5L2lIHUgGew+jPq4CenmZNYOjw9C+QMyagtIa/PKM4/2ZJK0EpRVlpAdd86xR+cPV44rlx6ipr0Rq0ToDOwQRCIl5PsmYtd909nSdn7UQMfHsyfOtcwdSCjvCSxoDu0DwHNnWgHYIFAXiezZO3fAj3PQHTn4UtOyPRiacxIhjTYoIbLe6cDiz4PDJT7fxd9vGaAsRiHqv8gEOuOBvz25+iG7ZDbjk8NRP+YxokA43GcNqpw3nm7z8k9VklycYU8Zx8a1zBLnTDanTDMqh/H81OKHCpEJZAkBpFEzw3PaoxQig7rayCRCAwilgR1FXCrx5T3P2YYsceG8R4nkIEjGl3QGOcwX0KjHa1h1gLVMk+KUABJ0Zi3H3VrAcYT/FgIEztVoa/Ziax/HxINUKiFF5/A87+PmzfY/U1+YyRPPrAt4l5HqnKdcQb56EblqBSu9JPJEBgIJZpye2RlLHX0EXwyhy49g5YsSG0dntd+XxsTuDed7kj+eoj2X3QlvF6Lfx/BPAWcDjwmssCY/sQ63qAESjzPE6vqsX0LFd6xCiQejD10G8gnP4VeGsxbNupeH/1ZubNW8XpI+dRKE8hlRvQuh6UtiGKshutm95It9PtmQB0wr7BtLvgstvgs91h9KMRsWGpUp9LCdpZfDfgEGAdsCMyCnRrSlAt4P4M4Fy3bx1wMbZRqT0MZugDDgVe8zy6ikDXUtTKp6Gw0D6aCSBWANXVcMmPFH99RQGGI/vB0/co+h+i8PcIsdj+kYzGgM6B6jo4/3p4/k3wPIWnPZKpvZFCKYXneQRBEEY+rUOIUmitcZm5NsZgjHkX+CNwP7ag3yKCeFkEN9AlRCHtW+6Sj1rg7ch50oZSnwKGiFicrK6FyiqYOB78WojHIGiE3Bw4e6INIeYs0mzbrZj5Chw7VOjZH/y69lt6NuGrhBX+hG/BKwshJ+GR8g2Bw/levXpyyCEDqKioQClFdXV12gdorVtUQqgoYwwigjFGGWOMiCjP87oApwATXd1hSxsya6aMxzKqRVHC6imgrJUMMLzGCEASMYKH/0tJ11LLOgLy7C8RWYuk3kFkMRIsQPwFiKxDnr0bKetojyvOR178jT02+Q4ii/ZtNQsRfxGSWoqcOMJeMzfHEnUdi4rk+9+/ThYsWCB1dbUSLtXVVTJ37ly5/PLLJJFIOHJub3IvyppWVFTIN846U66+6ko5//zzpX//fmlGVmst2K6K49tTvgzp39ezlOuiVaL1jrsJL6gyuaWcGN8GzEkjSclm5Lm7m6jfkiJkzd8Qed8pYRFiFjkhr0FWzkSOGmBfMCeO/PUOJbKu6dj2ril3vWvPbS78k086UdatWyvRxRgj1niblqVLlsjIESP2UkIo/JychPz89ttl166dzc6rq6uT6dOnS+fycgF8p4QqYGhbyW+onV7YfhqTSdVGlOADP8hybgxQeTlcCsgF40kFKxBZhdz/w6brHNZHyfY5iLyL+PMzhLYC2fM2MumrISuJzPgZ+6QEf76955zf22skElaAkydPliAIREQkmUxKEARpwYdK8H1fUqmUE2atTJgwIa0ErW3NoFNxsbz++py00MNzwvNERNatWysDBgyIKuE9l5lk7aQIdxzinO/GiOVnK3iE+5+JFKbD+ixxzbmA9OqK3zAPSS6w1vj7mxHtoGj0UKRy3t5K8OcjshSR95BrzrXWphXy5B2qCbragJ5gEVK/EDm8L6KUtvcbPUrq6utFRJoJqqUlPKa+vk6+PHy4qyfExPM8mT37FRERaWxs3GvkGGMkmWxMK6GkpJNorUM4mpYNisJ/bolw3G2tUUj6IAOScoBlnrbK+q9LEdmA1M61eP6Pe5GuJfY6Y45C9rxlhR0VbLDAClHWIHdcZZWQiCGz70dkNeK/0wb0rEV+8wMElGitpLS0VBYsXCgikh4B7VlCJaxZs0aKCgsFkGnTbk4Lv7UlmUyKiMhjj/1JAON5XtBaJ0WJ47jDUptppyKikHSzu9ZFDu/TPmTGT5TIB0j9WxYaNr6InDHWwVFvZMtsK+yoEsxCJOWc8/032WPLOiJrn7UKC+Znt36zGGmYj/Tv0WT9N0+bJvUNjVmxvq0lFORPbrtNevbsIY2NDeL7fpuKNMakFThq1CgBUs6XfD9bEHNnpMoT9k+2VwlRSHoa211mlCI4aSQS86zz/e0NVsjBQkSWWCE+eScysDdSVoS89gf7uyyMCHWhc87rkAecDxk+yMKLv9gKvJn1z7cj5B+/QsAKv3fvXrJ46TKpratLC6Y9S6gsY4wEQSA1NTWyatXKfRpFoQKefvopAXzP84zrpGjWphMDHnXZW9aaa4aQW4IkHxBPW4EfM1TJ+plNCgBk6mlKds21oyD1DiIrrSCn34qcMkrJ4z9HGhZbJZmIYJPvILIeuftaC0fXnWdhJhOKUvOtEi8+DVHKOt4rvvMd+XjzljRktEcBUQFnCru956dSKfF9X0REampqpKKiwvkzlXK5VjqZ913FfxBwKvALYB5QF+kyCz13EFFGtg6IAFt84nvnCn6g8IMmqHvoOeGY8+CZFyBWaFWrArjoHHjxfmFIX0iFrKVEmUlI7YRrvi1cdTbcNQMWzQOv0PJBYCmEmAd+Jby9HEQMWivGjBnj6hNxRASlWucfRQStNfX19ezevTudjLlkq83zwwQuFovheR6+75Ofn89Xv/oVgEB7XgzbNNyMTVFuBMzC9kWOdjzQOcADwPtO6B7ZZ5aEpT8vMKiSIjjtBJuBglBcoLjmXEVBB1i7Cc66DiZ9Bxa/D7rQJutBAwweBAV5rlaSUVKMaQiq4Ne3wLBD4Vu3R8uNjsNJwCfb4MOtluCrqKigb79+7RZcmAGvWrWKYUcdxaBBg/jnP19CKYUxBt1GSh6e/9FHH3HJJVNZvnw5sVgMEWHUqFFRVvnI1vp44lkEnACGAJe6THmlI4VN86Ynu73gVEQ+RJb/xf6fk1BS9YaS92YiZx6vxEVIAsiUrytZ/qTD//ddBjt/b3xPh6jvIR88Z8996V6L+an57reVYezvudBztLy/arV8tOnjNuEjxHoRkRNOOCH9fKWlJbJ71652OfAQciZNOkMAOfLII6Tehb4vvPCCywm8MHwHWxFtBjMm0vUVXZLACtchdjEwBbgL+ChKwoe0yYQxID50KYFOhdCYFFZuEIYMhafvEeY9CleeA907wyPPC0eeDROnwuy5oHLAK7Eczl6Zogd+DfQbAtMuhjsesU+drhNq+GxX0/FdunRx0NM2iRtCz8YNG3j99deJxWyQ0q9vX1c8ap2YMyJ4nseOHdt59dXX8DyPVDJFKpUEoLy83N3HRDspJJaFpctxB3TDzhDp5xK0fi5L7kLTNJ0oShAYyInD0UNA1ULnznB4P3j7XVi0EkYcA6kqGDEMRoyAn35q8XrW2/DSPDjju4ohA+C88cLEMdCzC3iqecCsY2B2w02XwnFTFJvWCL16W9+BgsZk07G5HTqglMIPgnYowNZW1qxdi+/7aK055JD+zHrpnxQXd2oTxsQY8Dw+/vgTqquricfj3Hff7ygstN0rubk5aUU7lEnzEl8Hfgw8Arzpwsi1jsV7yjnly1yBZiDQMZsPUG5P7wro2dViusqHr4+xI+OPz4FqAC9urdjfA0WFcMqJ8Kv/hlXPwca/C7dfKRTlwvJVito6e6eo8WkFxoe8zjD5ZHhlgW0YzFbEsu0pCj/lt0MBrs2lri4t6MrKSiZOnMCMGTPQWhO0Q5HJZNIypMDUqZcwe/Yrbn8qs5KWDkFPjvRtZtY8o9y/yohfFZlDAOjXHbx8K2Spgymnw51/gsWr4dePwDVXQ/JTG7GID6bK3sDTUFYOY7u7p0qKZdLN3syJ1vbaZx0vzHxNgS9pHCrIbzquproaREimUm060VDopWWl6Whp+/YdbN++g7PO+kbayXotlODC88vKSonHY6SSSdZ/8EH698rKynSEZIypjtrtPc6h+hnxvqL5ZIfo5LUWyaQupSqd45lG6NoT7v6e/f/6e+Evf1Ykyi2UBIFVXPhOkoSgGoJdYGpbZs+1AtUI/XpAj3IwNRB3QXBFaVOwsWXLFlKpFL7v09DYGIWAFgU4ePAQioqKUEqRSFhHNHbs2LTwWlOgiNC7d2/69++PiFBaWsJRR9n5f5s2bcKxqQCfRBWwzlX0YxFYak+7imSreRbmNXeaQRVcMBnuuBpSPpw3Tfj+j2F3DcTKQOfZmxljfUg4mtLhZSuQ4SVgUF+hodHlDino0w2K8u1ZH364kd27d6ULLW3F7kEQUFpaytSpFxMEAclkkhOOH8ewYcPaNYKMMcRicW655RYKCwu54YYbKC21/nbZsmVRRa/KJOJynS+QdjQYSaQQnU7QtEYbgZGDFeOPB9NgoUIrW/kacxwcPQhWrIeZr8G9M2DndijvCBVloItB59vyoYqB8tKl4Ba1oBQUdLCO3/NAAigogpmzYct2m0yNHj2K/v0HUFdXR3lZWVqz2RxqaMVjx46lrraWgQMHcN9991FYWJSO8VtzxKGChg4dyoUXTuFrXzslPeJuuukmtm3bBqBE5GcugkxfrcKNhPwI/GRrwTCRkSLYicyrgOtiHgk/QF90mmL6nYK/p6l7Id3BUGR9w6y3YMaL8OoCqKqFHl3hqEPhyAEwsBd0L4eSjopOhUJRAXTIaUcTDHaExUvgpp/Bzx+2mDT5nMn8/Be/ZMf27Rw6YABFRYXtyogznXl4fHsSsvD4IAjQWvPuu+8yfPiXjDGiRWSr6xqvDSHIA7YCsyPWndl2YSKdybtcsXkEdurOiUA8RIudewSCLNV+B0cxDRNPgRn3wLaXYeVT8LsbYOKxNmfYXQUfbYPNn8HOSivU1hqTMiMkUvCNcWBr5PDSrJf4eNNH5OTmsmXbtnYV2kUE3/cJgiAd+WzcuJFbbpnWrmjIjiSTVsTvf38/QWCMc+D/cML3AAm/IBK4vvcnws5mt41SpitdpX+GKzLjivdXhpGJMXDUQFjyeJMrzzQ02xzlPHw4hzFO01S76JQIP8LLtstSXbddLnzlAnjrXQ+RgAsvnMJ/3/ZTtm7dSp/evenSubzdo8D3U8RicS68cAqPPPIor706m7Hjjmfjhx9SWlpKUWH2ERUEAZ7nsW7dOo488kgaGhoMoEXk6GgXnYq8dkcHQ50yYOafjg/6u8uIw2V8RJsPKcUkEXp2LEDWz0SVlYNJOatsTWChFUvzeDfsA1LsrcRWBRZArCPMmgWnXqPwPNs59+ifHmXk0aPYtWsXgwYOpLCwoE0lpFIp4vE4zz//HKeddjqeF6Nfvz788+VXqKquQUQYdOhAchKJvWBKXGY8btw45syZE3ie5wVB8A/XKRGyDummIc8VZF5wwt/pYGaka694xgk/5In6AA+70TAC+K4Iy7WGyhqCd9dZt94WA6CUVZCnLUTF3Op5dp9W+yb8dJdbFZxyEpw+RggCMMbn+h/8gM2ffExRx46sXb+e6pqatNPNhCURSQt/1cr3ueiii137I6xbt57zzzsXz/OIJxKsXrOW6uqadBQUZtGe53HllVcwZ84ccX1Gja6OrrKVI8Od2109+FLs9P4tGa3XoYOe5DLnXzgW1QO6eZqTjGC6aPRJY5zjEP73pzG7WO4rX4LH/iHUNmqqKquY++YbHHfccXTv0YMtW7eiEPLz89OUs2uqSgtw6ZLFTJgwnm2ffuZm2VhY2bRpEwsXzGfEiBFUdOtmlak1eR06oLVmx44dXH75ZTz00HQ8z/ODIIgB1znE8KKg2lZ3tLTA/UtGW4oPDNGKZUbQ/UpRK2+HxECgGNR+TWH4fEsYdc15E752BfhGY4yhpKQTN954ExMmfp1ETg4dcnMpKelEh9zcCPQkefCBB7nhxhupqanB0zrdyOUp0J5Hyg/Iz89j0plnMnr0sRQXF9PQ0MCK997jiSeeYPPmzVjUCTyX7H43W4ecaq2w0o7+zyCj/3GepxkZGMxTl+GddRz4nSDWPUOVUc9zEEeI70OsE7wwS3H29UJdo0Ypg4iN1U8dP57BgwdTWlZGTiJBbW0ty5ct5cknn2LFihUuZUjDdfMZ50qjxLQopIjw/+AQJWtb54F69bAle4qneDgQgmG98BbdAtIIugRUr6YsQwRUdNpdcBCV4JzyosUw9cfw7vpQ+00Du0NugsAYkkk/s7+YcV8Wtu5QrP7Qyu2yw4vZWuvz0uYa7OEaT4MSQZRCWa5HjDEKO3uml6P4E9liOu8Aoq4C1gh809OUbNmDdClQ6ugjINgJehdIyjVvb3beZYfl/8nPTrodiEVrCOqhRy+YMhHyc+z0qKraJtfm+wF2NmbT3PBDehh++l343rmWTGxMQdd8j7+N68WF/TsxsVcBFXkxdqV8ttX61rSdH5Emr74Z+1mET2ia2B2G/nKgUTmEpHOU4nEFfn4OscXTYEAPCOrcq4WPoJuELgNBlTo7URn8qxyYsRoELu8ohD3b4OW3YfZCWLVBsaPSXr5zJxhyiHDyMfDVL0PhAPjZrXDz7+yDTBnYkQeP6caOhoCOcY+8uKYhMCzZXc+zH1fxwse1rKlM4geSCU1rXCT5V2DZwYCgTCW8oBWnGsE/qiexuTdDXszy+F5mPGVcOjgQVCc3SKPu3/0tQVN+0OoYjP6f8ZZ29osl8ejg9jdGspuEK0cFdqQmDQz/Jqz4wD73G+P7MLprAZIypESoShn2pAL2JAO21Kd47dNaHltfyY46I852QvomHqFz5rs6y4vABwdaAaEzrgCWeJougcGcOkTpZ78LcSUEqYgSIsKS8AttnVxqtx1UPUiB68cucnIMsowO3aR6CbNvHYH6aANNJBsPISqcX2ZCiQnE8+Gdt+DYS+1pvYpi3HNMVzZWpVhb1ciG6hQf1aTYUudT1WgyCy26Dbj+zDVB338wXF84CsYBL8c02jdw6hDUE1dAYQdI1Tv+PvOxBCTuwtbICEGDFIOqAClyAo5afAPIDpdKhr4kB/sRmgJn7fHsSZ0QoT6S1vKDaogp+M69ivtelTSpmApa5gO1UgZEG5vRB07Im103+VpXaVyP/fzlpwcLgjKjovOBR2MafIMa1hP158vhsD72JdNtAdmgJCpkaYqUpNhClXRw+/aA2uWgJFoqkqaETBKg8kDyrDKUo65JuvMaI1DkW4qy3oeBt8Anu7OXnvIS0JCSkE4Jp6xudPH+WhdmVLfF4x6secIqAhZTgOmehsCgizvAL8+BqWOtgIKGJkqidd4ig6vVGX5Ct+ILJKPOl81vuKf2jZ069ehriinTrfWX5EP3YsXALjCyn5CXUDz4Jiz9SABSIsQdLT8RO1Oy2eDIMAsTHXwHOgqK3qAbdmrTZOwXUZRjTAPAO3WoUrdNguEDrP0EDZFyo2pDEbQQKdGO81pDZof/Og5vrIbKeuhfDj2KoajMXuPFBYppz8CSTRIohRZBYWeTnu+onDjNPwi4X4/1eZZh2I8YfRPbdU3E/rzQ2gND4Gn0BaOUuvpEGNZXrK00QuC3UxkHgUIKI6VYjqsTxiyQPL0E7npJMe8DMba2iyc22vwZtrXfRFnO9i77+3rh+XnYeVCXO/Y0dLFJmn9iZjfwEjDORUgAgafxTh0KU46FkwZBx+Kms8V3EYsKnV3T3/sj6Gj9QBwUxXSkPuHD+q0wcyn8aR6894k1Ik/jiYAR5jt2882I9zGfV4D7g/cG27T1QeT9otQ1LgKYDvzZOafuwI0KLtWanCDy2N07wcmDFROPEI7uC91LaPrIWdi3EVgrNZ/TYsL5xulO13Didx2s3gavr4Xn34M31iB1jTau0gqNAmNYD/zScTwBn/+TDgcMgsIHeBL7acdYRPCzXTHnWRdnQPOPWpQD1yu4SmsSIqjIpxlMYQcY2h09si98ubdiUFehdwmU5bsw08viE6QFijEaqfuQbIBPq2DDTsXyT2DRh8LiTcjqrYgxaTjRnmsMM8JS9y6P0fSxhP0S/oFWwFdcclHtMr0HsW3uLTnpTg6u/tPVlT1XpDGeQguoyMgIWTLVKR9V0RHVvRjVraOic0cozYOOeZAfF3Lct39Q1pc0BIqqRqiqE7bXKLZVwZbdIpsrYVslUp9sxsl6YKFIrEPeKsJLbuS+Gnn2/Rb8wYr9L6fpG/tRejsaofcFbgU+JMsEj8i6RCk+8DQS0zTrqKb57JxwEkl71r1m/mhlrx/TiFbUK1jqat0TbTVjL2M7oGHBwYoxMq3dixT+H3ZOG5rmmCWaclqeA37vLC4XO0/hCBddDVaKPgo6K0WhasG5tvWCYpuZdwtsFmE9dv7DMrduyPIusG8fmf2XKSD8oIdpwVkfiv38JM3dH1sdtj7kmMPWlji2e7uzW8udpXZ0pENuxAf5Tqk12MnSO1ysvt1RBbtbeQ85WEL/Vy2hsB+OQMACB1slGcd5GZlkLMO5H+jnitHKzJ//lxSgsF9JfNVFTDrD6nQ7R60m+5fS27O22mT8v738D4QDDdbFvYY3AAAAAElFTkSuQmCC';
@@ -2043,7 +2100,7 @@
         outlinedText('FLAPPY TORN', W / 2, 92, 48, '#ffd65a');
         outlinedText('Click, tap or press Space to flap', W / 2, 142, 18, '#ffffff');
         const b = getBest(key());
-        outlinedText(DIFF_NAME[diffSel.value] + (b ? '  ·  Best ' + b : ''), W / 2, FLOOR - 40, 16, '#b9d4f5');
+        if (b) outlinedText('Best ' + b, W / 2, FLOOR - 40, 16, '#b9d4f5');
         ctx.globalAlpha = 0.55 + 0.45 * Math.sin(t * 6);
         outlinedText('TAP', BIRD_X + 62, bird.y, 16, '#ffffff');
         ctx.globalAlpha = 1;
@@ -2076,7 +2133,7 @@
     games.flappy = {
       enter: function () { showBest(); run(); },
       leave: function () { pause(); stop(); },
-      bestText: function () { const b = getBest(key()); const m = medalFor(b || 0); return b === undefined ? 'No score yet' : 'Best ' + b + (m ? ' · ' + m[1] : '') + ' · ' + DIFF_NAME[diffSel.value]; },
+      bestText: function () { const b = getBest(key()); const m = medalFor(b || 0); return b === undefined ? 'No score yet' : 'Best ' + b + (m ? ' · ' + m[1] : ''); },
       onKey: function (e) {
         const k = keyName(e);
         if (k === ' ' || k === 'ArrowUp' || k === 'w') { if (!e.repeat) flap(); return true; }
@@ -12232,10 +12289,11 @@
   async function tradeMenu() {
     G.trades = G.trades || { out: [] };
     while (true) {
-      const c = await menu(['SEND A TORNIE', 'RECEIVE A TORNIE', 'SENT CODES', 'BACK'], { x: 4, y: 4 });
-      if (c === 0) await tradeSend();
-      else if (c === 1) await tradeReceive();
-      else if (c === 2) await tradeSent();
+      const c = await menu(['ONLINE TRADES', 'SEND A CODE', 'RECEIVE A CODE', 'SENT CODES', 'BACK'], { x: 4, y: 4 });
+      if (c === 0) await onlineTrades();
+      else if (c === 1) await tradeSend();
+      else if (c === 2) await tradeReceive();
+      else if (c === 3) await tradeSent();
       else return;
     }
   }
@@ -12308,6 +12366,112 @@
     jingle('get');
     await say('{P} received ' + (mon.rk ? 'a GOLDEN ' : '') + SP[mon.sp].name + (mon.nick ? ' "' + mon.nick + '"' : '') + ' (Lv' + mon.lv + ') from ' + (r.fromName ? r.fromName + ' ' : 'player ') + '[' + r.from + ']!');
     if (where === 'box') await say('Your team is full, so it went to your Tornie Locker.');
+  }
+
+  /* ================= Safe online trades (optional: needs Online play and a verified Torn ID) =================
+     The Torn Arcade server is the middleman. Each player's Tornie goes in as a normal trade code (so it can't be
+     changed), both players see exactly what they'd get, and the swap only happens when both press Confirm.
+     Cancel before that and each player collects their own Tornie back. A Tornie put into a trade leaves your save
+     at once, so it can never be in two places, and each one can only be collected once. */
+  function tradeAcct() { const o = onl(); return o.on && o.token && o.account && o.account.verified ? o.account : null; }
+  function monLine(code) {
+    const r = decodeTrade(code); if (r.err) return '(unreadable Tornie)';
+    const m = r.mon, ivs = m.iv.reduce(function (a, b) { return a + b; }, 0);
+    return (m.rk ? 'GOLDEN ' : '') + SP[m.sp].name + (m.nick ? ' "' + m.nick + '"' : '') + ' Lv' + m.lv + '|Stats ' + ivs + '/186. Moves: ' + m.moves.map(function (x) { return MOVES[x.id].name; }).join(', ') + '.';
+  }
+  async function tradeNet(method, path, body) {
+    const r = await onlReq(method, path, body);
+    if (r.status !== 200) { await say(r.body.message || 'Couldn\'t reach the Torn Arcade server. Try again in a minute.'); return null; }
+    return r.body;
+  }
+  async function packForTrade(me, to) {
+    const pick = await pickTradeMon(); if (!pick) return null;
+    const mon = pick.list[pick.i];
+    if (SP[mon.sp].event) { await say(SP[mon.sp].name + ' won\'t go in the trade capsule.|Some Tornies can\'t be traded.'); return null; }
+    if (!mon.ot) { mon.ot = me.tornId; mon.otn = G.name; }
+    const id = Math.floor(Math.random() * 4294967295) >>> 0;
+    return { pick: pick, mon: mon, code: encodeTrade(mon, me.tornId, G.name, to, id) };
+  }
+  // The Tornie leaves the save once the server has it (a copy of its code is kept until the trade ends).
+  function sentToTrade(p, tradeId) {
+    p.pick.list.splice(p.pick.i, 1);
+    G.trades.held = (G.trades.held || []).concat([{ id: tradeId, code: p.code }]).slice(-20);
+    gstat('tradesOut'); saveGame();
+  }
+  async function onlineTrades() {
+    const me = tradeAcct();
+    if (!me) { await say('Online trades need Online play.|On your phone, open Settings → Online, turn on Online play and verify your Torn ID. Then come back here.'); return; }
+    while (true) {
+      const d = await tradeNet('GET', '/v1/trades'); if (!d) return;
+      const list = d.trades;
+      const label = function (t) {
+        const st = t.collect ? 'COLLECT' : t.status !== 'open' ? 'DONE' : !t.mine ? 'ADD YOURS' : !t.theirs ? 'WAITING' : !t.myOk ? 'CONFIRM?' : 'WAITING';
+        return { label: 'With ' + t.with.name.slice(0, 12), right: st };
+      };
+      const c = await menu([{ label: 'NEW TRADE', right: '' }].concat(list.map(label), [{ label: 'BACK', right: '' }]), { x: 4, y: 4, w: 200, visible: 8 });
+      if (c === 0) await onlineNew(me);
+      else if (c > 0 && c <= list.length) await onlineOne(me, list[c - 1]);
+      else return;
+    }
+  }
+  async function onlineNew(me) {
+    const raw = await tradeBox({ title: 'Trade with which player?', note: 'Type their Torn player ID (the number in [brackets] after their name). They need Online play on to trade.', placeholder: 'e.g. 571041', ok: 'Next' });
+    if (raw === null) return;
+    const to = Number(String(raw).replace(/[^\d]/g, ''));
+    if (!to || to > 99999999) { await say('That doesn\'t look like a Torn player ID.'); return; }
+    if (to === me.tornId) { await say('You can\'t trade with yourself!'); return; }
+    const p = await packForTrade(me, to); if (!p) return;
+    if (!(await yesno('Offer ' + (p.mon.rk ? 'GOLDEN ' : '') + monName(p.mon) + ' (Lv' + p.mon.lv + ') to player [' + to + ']?|It waits safely with the trade server until you both confirm, or comes back if the trade is cancelled.'))) return;
+    const d = await tradeNet('POST', '/v1/trades', { to: to, offer: p.code }); if (!d) return;
+    sentToTrade(p, d.trade.id); jingle('item');
+    await say(monName(p.mon) + ' is in the trade. Player [' + to + '] gets a notification on their phone.|When they add a Tornie, come back here to see it and confirm.');
+  }
+  async function onlineOne(me, t) {
+    const who = t.with.name + ' [' + t.with.tornId + ']';
+    if (t.collect) { await onlineCollect(me, t); return; }
+    if (t.status !== 'open') return;
+    await say('Trade with ' + who + '.|You give: ' + (t.mine ? monLine(t.mine) : 'nothing yet.') + '|You get: ' + (t.theirs ? monLine(t.theirs) : 'nothing yet. Waiting for them to add a Tornie.'));
+    const opts = [], acts = [];
+    if (!t.mine && t.side === 'b') { opts.push('ADD A TORNIE'); acts.push('add'); }
+    if (t.mine && t.theirs && !t.myOk) { opts.push('CONFIRM TRADE'); acts.push('ok'); }
+    opts.push('CANCEL TRADE'); acts.push('cancel'); opts.push('BACK'); acts.push('back');
+    if (t.myOk) await say('You\'ve confirmed. Waiting for ' + t.with.name + ' to confirm too.');
+    const c = acts[await menu(opts, { x: 4, y: 4, w: 160 })];
+    if (c === 'add') {
+      const p = await packForTrade(me, t.with.tornId); if (!p) return;
+      if (!(await yesno('Add ' + monName(p.mon) + ' (Lv' + p.mon.lv + ') to the trade?|You still need to confirm before anything changes hands.'))) return;
+      const d = await tradeNet('POST', '/v1/trades/' + t.id + '/offer', { offer: p.code }); if (!d) return;
+      sentToTrade(p, t.id); jingle('item');
+      await say(monName(p.mon) + ' is in the trade. Now you can both confirm.');
+    } else if (c === 'ok') {
+      if (!(await yesno('Swap for real?|You give ' + monLine(t.mine).split('|')[0] + '.|You get ' + monLine(t.theirs).split('|')[0] + '.'))) return;
+      const d = await tradeNet('POST', '/v1/trades/' + t.id + '/confirm'); if (!d) return;
+      if (d.trade.collect) await onlineCollect(me, d.trade);
+      else await say('Confirmed! As soon as ' + t.with.name + ' confirms too, the trade completes.');
+    } else if (c === 'cancel') {
+      if (!(await yesno('Cancel this trade?|Each of you gets your own Tornie back.'))) return;
+      const d = await tradeNet('POST', '/v1/trades/' + t.id + '/cancel'); if (!d) return;
+      if (d.trade.collect) await onlineCollect(me, d.trade); else await say('Trade cancelled.');
+    }
+  }
+  // Add the Tornie to the save first, then tell the server it was collected (so nothing is lost if the
+  // connection drops in between; a code can't be added twice).
+  async function onlineCollect(me, t) {
+    const r = decodeTrade(t.collect);
+    if (r.err) { await say('That Tornie couldn\'t be read. Update Torn Arcade and try again.'); return; }
+    const back = t.status === 'cancelled';
+    if ((back ? r.from !== me.tornId : r.to !== me.tornId)) { await say('This Tornie isn\'t meant for you.'); return; }
+    const key = me.tornId + ':' + r.id;
+    if (!usedTrades()[key]) {
+      markTradeUsed(me.tornId, r.id);
+      G.trades.inIds = (G.trades.inIds || []).concat([r.id]).slice(-200);
+      G.trades.held = (G.trades.held || []).filter(function (h) { return h.id !== t.id; });
+      const where = addMon(r.mon); if (!back) { gstat('tradesIn'); checkMerits(); }
+      saveGame(); jingle('get');
+      await say(back ? monName(r.mon) + ' came back to you.' : 'Trade complete! {P} received ' + (r.mon.rk ? 'a GOLDEN ' : '') + SP[r.mon.sp].name + ' (Lv' + r.mon.lv + ') from ' + t.with.name + '!');
+      if (where === 'box') await say('Your team is full, so it went to your Tornie Locker.');
+    }
+    await onlReq('POST', '/v1/trades/' + t.id + '/collect');
   }
 
   /* ================= Map edge fixes ================= */
@@ -18406,12 +18570,23 @@
     };
   })();
 
-  /* ================= Torn Territories (district-building board game) =================
-     Build roads, safehouses and HQs across a map of Torn City districts. Districts pay out Brick, Wood, Wheat, Ore
-     and Cotton when their number is rolled. First faction to 10 Respect wins. You against computer factions, or
-     pass-and-play on one device. Illustrated districts come from the Character Art pack (keys 'tt…'); without it
-     the districts are drawn by the script. Everything runs inside the phone: no requests, nothing on Torn's page. */
-  (function () {
+  /* ================= Torn Territories: the rules engine =================
+     Everything about the game itself: the board, the rules, every player action (act) and the computer players.
+     It has no screen, sound or storage of its own, so the same code runs in the phone (games on this device) and
+     on the Torn Arcade server (online games, where the server checks every move). The game lives in one plain
+     object (G) that can be saved or sent as JSON. env gives it: rnd (random numbers), viewer() (whose screen this
+     is, -1 on the server) and hooks for sounds and effects (snd, collect, lost, rolled, turn, win, last). */
+  function TTEngine(env) {
+    env = env || {};
+    const noop = function () {};
+    ['snd', 'collect', 'lost', 'rolled', 'turn', 'win', 'last'].forEach(function (k) { if (!env[k]) env[k] = noop; });
+    const rnd = env.rnd || Math.random;
+    function VIEW() { return env.viewer ? env.viewer() : -1; }
+    let G = null;
+    function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); const t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+    function pips(n) { return n ? 6 - Math.abs(7 - n) : 0; }
+    function list(o) { return Object.keys(o).filter(function (r) { return o[r]; }).map(function (r) { return o[r] + ' ' + RN[r]; }).join(' + '); }
+    function sum(o) { return Object.keys(o || {}).reduce(function (a, k) { return a + (o[k] || 0); }, 0); }
     const RES = ['brick', 'wood', 'wheat', 'ore', 'cotton'];
     const RN = { brick: 'Brick', wood: 'Wood', wheat: 'Wheat', ore: 'Ore', cotton: 'Cotton' };
     const DIST = {
@@ -18438,231 +18613,7 @@
       large: { rows: [4, 5, 6, 7, 6, 5, 4], tiles: { brick: 6, wood: 8, wheat: 8, ore: 6, cotton: 7, none: 2 },
         nums: [2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 8, 8, 8, 8, 9, 9, 9, 9, 10, 10, 10, 10, 11, 11, 11, 12, 12], ports: ['any', 'any', 'any', 'any', 'any', 'any', 'brick', 'wood', 'wheat', 'ore', 'cotton', 'wood', 'wheat'] }
     };
-    const R = 58, CX = 380, CY = 290, NS = 'http://www.w3.org/2000/svg', FONT = 'system-ui,Arial,sans-serif';
-    const ICON = {
-      brick: '<rect x="3" y="6" width="11" height="7" rx="1" fill="#e2704a"/><rect x="16" y="6" width="11" height="7" rx="1" fill="#c75a36"/><rect x="9" y="15" width="11" height="7" rx="1" fill="#d6643f"/><rect x="3" y="24" width="11" height="3" rx="1" fill="#a8452a"/><rect x="16" y="24" width="11" height="3" rx="1" fill="#b84e2f"/>',
-      wood: '<rect x="3" y="15" width="24" height="8" rx="4" fill="#9a6232"/><circle cx="25" cy="19" r="4" fill="#d8a868"/><circle cx="25" cy="19" r="1.6" fill="#9a6232"/><rect x="6" y="6" width="20" height="8" rx="4" fill="#b07440"/><circle cx="24" cy="10" r="4" fill="#e4b878"/><circle cx="24" cy="10" r="1.6" fill="#b07440"/>',
-      wheat: '<path d="M15 28V8" stroke="#c8962a" stroke-width="2"/><ellipse cx="12" cy="10" rx="2.5" ry="4" fill="#f0c040" transform="rotate(-25 12 10)"/><ellipse cx="18" cy="10" rx="2.5" ry="4" fill="#f0c040" transform="rotate(25 18 10)"/><ellipse cx="12" cy="17" rx="2.5" ry="4" fill="#e8b830" transform="rotate(-25 12 17)"/><ellipse cx="18" cy="17" rx="2.5" ry="4" fill="#e8b830" transform="rotate(25 18 17)"/><ellipse cx="15" cy="5" rx="2.2" ry="3.5" fill="#f6cc50"/>',
-      ore: '<path d="M4 24l5-11l7-4l8 5l3 10z" fill="#7f8aa0"/><path d="M9 13l7-4l8 5l-7 3z" fill="#a8b2c6"/><path d="M12 19l3-2l3 3l-3 2z" fill="#ffd060"/><path d="M19 21l2-1l2 2l-2 1z" fill="#ffd060"/>',
-      cotton: '<path d="M15 26v-8" stroke="#7a5a3a" stroke-width="2"/><path d="M9 21l6 3l6-3" fill="none" stroke="#6a8a3a" stroke-width="2"/><circle cx="11" cy="12" r="5" fill="#fff"/><circle cx="19" cy="12" r="5" fill="#f4f0fa"/><circle cx="15" cy="8" r="5" fill="#fff"/><circle cx="15" cy="15" r="4.5" fill="#ece6f6"/>'
-    };
-    function icon(r) { return '<svg viewBox="0 0 30 30" aria-hidden="true">' + ICON[r] + '</svg>'; }
-
-    GM_addStyle([
-      '.ta-panel[data-game="territories"] .ta-bar,.ta-panel[data-game="territories"] .ta-stats,.ta-panel[data-game="territories"] .ta-help{display:none}',
-      '.ta-land .ta-panel[data-game="territories"].ta-on{grid-template-columns:minmax(0,1fr)}',
-      '.ta-land .ta-panel[data-game="territories"] .ta-stage{grid-column:1}',
-      '.ta-panel[data-game="territories"] .ta-stage{padding:6px;align-items:stretch;justify-content:stretch;background:#100c1f}',
-      '.ta-tt{position:absolute;inset:6px;--tp:#1a1530;--tp2:#231c40;--tl:#342b5c;--tm:#a59bc8;--tg:#ffcf4a;color:#f1ecff;font-size:13px;line-height:1.3}',
-      '.ta-tt [hidden]{display:none!important}',
-      '.ta-tt button{appearance:none;font:inherit;font-weight:700;font-size:13px;color:#f1ecff;background:var(--tp2);border:1px solid var(--tl);border-radius:9px;padding:6px 8px;margin:0;cursor:pointer;text-align:left;display:grid;gap:1px;line-height:1.2}',
-      '.ta-tt button:hover:not(:disabled){border-color:var(--tm)}',
-      '.ta-tt button:disabled{opacity:.38;cursor:default}',
-      '.ta-tt button.ta-tt-on{border-color:var(--tg);background:#3a2f12}',
-      '.ta-tt button small{font-size:11px;color:var(--tm);font-weight:600}',
-      '.ta-tt button.ta-tt-sm{padding:4px 9px;text-align:center}',
-      '.ta-tt .ta-tt-go{background:var(--tg);color:#1a1530;border-color:var(--tg);text-align:center;font-size:14px}',
-      '.ta-tt select{font:inherit;font-size:12.5px;font-weight:600;background:var(--tp2);color:#f1ecff;border:1px solid var(--tl);border-radius:7px;padding:3px 4px;margin:0;height:auto}',
-      '.ta-tt-game{position:absolute;inset:0;display:grid;grid-template-columns:minmax(0,1fr) 272px;gap:8px}',
-      '.ta-tt.ta-tt-narrow .ta-tt-game{grid-template-columns:1fr;grid-template-rows:minmax(0,1.1fr) minmax(0,1fr)}',
-      '.ta-tt-board{position:relative;min-width:0;min-height:0;border-radius:12px;border:1px solid var(--tl);overflow:hidden;background:radial-gradient(ellipse at 50% 50%,#1d3a5c 0%,#142a46 45%,#0c1830 75%)}',
-      '.ta-tt-scroll{position:absolute;inset:0;overflow:auto;overscroll-behavior:contain}',
-      '.ta-tt-scroll svg{display:block;width:100%;height:100%;touch-action:manipulation}',
-      '.ta-tt-zoom{display:flex;gap:4px;pointer-events:auto}',
-      '.ta-tt.ta-tt-full{position:fixed;inset:0;z-index:5;padding:10px max(10px,env(safe-area-inset-right,0px)) 10px max(10px,env(safe-area-inset-left,0px));background:#100c1f}',
-      '.ta-tt.ta-tt-full .ta-tt-title,.ta-tt.ta-tt-full .ta-tt-game{inset:10px}',
-      '.ta-tt.ta-tt-full .ta-tt-game{grid-template-columns:minmax(0,1fr) 330px}',
-      '.ta-tt.ta-tt-full.ta-tt-narrow .ta-tt-game{grid-template-columns:1fr}',
-      '.ta-tt .ta-tt-zoom button{width:26px;height:26px;padding:0;text-align:center;place-items:center;font-size:16px;line-height:1}',
-      '.ta-tt-banner{position:absolute;left:8px;top:8px;right:8px;display:flex;justify-content:space-between;gap:6px;pointer-events:none}',
-      '.ta-tt-prompt{background:rgba(16,12,31,.86);border:1px solid var(--tl);border-radius:8px;padding:4px 9px;font-weight:700;max-width:74%}',
-      '.ta-tt-dice{display:flex;gap:4px}',
-      '.ta-tt-die{width:26px;height:26px;border-radius:6px;background:#f6f1ff;color:#1a1530;display:grid;place-items:center;font-weight:800;font-size:15px;box-shadow:0 2px 0 #9a8fbf}',
-      '.ta-tt-die.ta-tt-roll{animation:ta-tt-shake .35s ease}',
-      '@keyframes ta-tt-shake{30%{transform:rotate(-14deg) scale(1.08)}60%{transform:rotate(10deg)}}',
-      '.ta-tt-side{min-width:0;min-height:0;overflow-y:auto;display:grid;gap:8px;align-content:start;padding-right:2px}',
-      '.ta-tt-card{background:var(--tp);border:1px solid var(--tl);border-radius:11px;padding:8px;display:grid;gap:7px}',
-      '.ta-tt-card h4{margin:0;font-size:11px;letter-spacing:.08em;color:var(--tm);font-weight:800}',
-      '.ta-tt-me{display:flex;align-items:center;justify-content:space-between;gap:6px;font-weight:800}',
-      '.ta-tt-me strong{font-size:18px;color:var(--tg);margin-left:3px}',
-      '.ta-tt-me small{color:var(--tm);font-weight:600}',
-      '.ta-tt button span:has(> em){display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;column-gap:4px}',
-      '.ta-tt button span em{font-style:normal;font-weight:600;font-size:10.5px;color:var(--tm);white-space:nowrap;margin-left:auto}',
-      '.ta-tt-hand{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}',
-      '.ta-tt-res{background:var(--tp2);border-radius:8px;padding:3px 1px;text-align:center;border:1px solid transparent;transition:border-color .3s,transform .3s}',
-      '.ta-tt-res.ta-tt-got{border-color:var(--tg);transform:translateY(-2px)}',
-      '.ta-tt-res svg{width:22px;height:22px;display:block;margin:0 auto}',
-      '.ta-tt-res b{display:block;font-size:15px;font-variant-numeric:tabular-nums}',
-      '.ta-tt-res small{color:var(--tm);font-size:10.5px}',
-      '.ta-tt-favs{display:grid;gap:4px}',
-      '.ta-tt-fav{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;background:var(--tp2);border-radius:8px;padding:5px 7px}',
-      '.ta-tt-fav small{display:block;color:var(--tm);font-size:11px}',
-      '.ta-tt-empty{color:var(--tm);font-size:12px}',
-      '.ta-tt-empty b,.ta-tt-ans b{color:#f1ecff}',
-      '.ta-tt-btns{display:grid;grid-template-columns:1fr 1fr;gap:5px}',
-      '.ta-tt-row{display:flex;flex-wrap:wrap;align-items:center;gap:4px;color:var(--tm);font-size:12px}',
-      '.ta-tt-pls{display:grid;gap:5px}',
-      '.ta-tt-pl{display:grid;grid-template-columns:10px 1fr auto;gap:1px 6px;align-items:center}',
-      '.ta-tt-pl i{width:10px;height:10px;border-radius:3px;display:block}',
-      '.ta-tt-pl .ta-tt-r{font-weight:800;color:var(--tg);font-size:15px;font-variant-numeric:tabular-nums}',
-      '.ta-tt-pl .ta-tt-meta{grid-column:2/4;color:var(--tm);font-size:11px}',
-      '.ta-tt-pl.ta-tt-turn>span:nth-child(2){color:var(--tg)}',
-      '.ta-tt-badge{display:inline-block;background:#3a2f12;color:var(--tg);border-radius:5px;padding:0 4px;margin-left:4px;font-size:10.5px;font-weight:800}',
-      '.ta-tt-log{color:var(--tm);font-size:11.5px;max-height:96px;overflow-y:auto;display:grid;gap:2px}',
-      '.ta-tt-log p{margin:0}',
-      '.ta-tt-log p:first-child{color:#f1ecff}',
-      '.ta-tt-dlg{position:absolute;inset:0;z-index:4;background:rgba(10,8,20,.74);display:grid;place-items:center;padding:10px;border-radius:12px}',
-      '.ta-tt-box{background:var(--tp);border:1px solid var(--tl);border-radius:13px;padding:12px;display:grid;gap:9px;width:min(440px,100%);max-height:100%;overflow-y:auto}',
-      '.ta-tt-box h3{margin:0;font-size:16px;font-weight:900;color:var(--tg);letter-spacing:.02em}',
-      '.ta-tt-box p{margin:0;color:var(--tm)}',
-      '.ta-tt-box p b{color:#f1ecff}',
-      '.ta-tt-steps{display:grid;gap:4px}',
-      '.ta-tt-step{display:grid;grid-template-columns:22px 1fr auto 22px auto;gap:5px;align-items:center}',
-      '.ta-tt-step svg{width:20px;height:20px}',
-      '.ta-tt-step b{text-align:center;font-variant-numeric:tabular-nums}',
-      '.ta-tt-step span span{color:var(--tm);font-size:11.5px}',
-      '.ta-tt-cols{display:grid;grid-template-columns:1fr 1fr;gap:10px}',
-      '.ta-tt-picks{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}',
-      '.ta-tt-picks button{text-align:center;justify-items:center;font-size:11.5px;padding:4px 1px}',
-      '.ta-tt-picks svg{width:22px;height:22px}',
-      '.ta-tt-ans{display:grid;grid-template-columns:10px 1fr auto;gap:6px;align-items:center}',
-      '.ta-tt-ans i{width:10px;height:10px;border-radius:3px}',
-      '.ta-tt-title{position:absolute;inset:0;overflow-y:auto;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:8px;align-content:start}',
-      '.ta-tt.ta-tt-narrow .ta-tt-title{grid-template-columns:1fr}',
-      '.ta-tt-title h2{margin:0;font-size:22px;font-weight:900;letter-spacing:.02em}',
-      '.ta-tt-title h2 span{color:var(--tg)}',
-      '.ta-tt-seat{display:grid;grid-template-columns:12px 1fr auto auto;gap:5px;align-items:center}',
-      '.ta-tt-seat i{width:12px;height:12px;border-radius:3px}',
-      '.ta-tt-rules p{margin:0;font-size:12.5px}',
-      '.ta-tt-rules b{color:var(--tg)}',
-      '.ta-tt-costs{display:grid;grid-template-columns:auto 1fr;gap:3px 9px;font-size:12px}',
-      '.ta-tt-costs span:nth-child(odd){font-weight:800;white-space:nowrap}',
-      '.ta-tt-costs span:nth-child(even){color:var(--tm)}'
-    ].join('\n'));
-
-    const panel = makePanel('territories', 'Torn Territories', 'Build roads, safehouses and HQs across Torn City. First to 10 Respect wins.', '', [],
-      '<div class="ta-tt">' +
-      '<div class="ta-tt-title" data-tt="title">' +
-        '<div class="ta-tt-card"><h2>TORN <span>TERRITORIES</span></h2><h4>NEW GAME</h4><div class="ta-tt-pls" data-tt="seats"></div>' +
-          '<div class="ta-tt-row"><span>Map</span><select data-tt="size" aria-label="Map size"><option value="large">Large: 37 districts</option><option value="standard">Standard: 19 districts</option></select></div>' +
-          '<div class="ta-tt-row"><span>Rivals</span><select data-tt="diff" aria-label="Rival difficulty"><option value="easy">Easy</option><option value="normal">Normal</option><option value="hard">Hard</option></select><span>Speed</span><select data-tt="speed" aria-label="Rival speed"><option value="750">Normal</option><option value="300">Fast</option><option value="40">Instant</option></select><span>Music</span><select data-tt="music" aria-label="Background music"><option value="on">On</option><option value="off">Off</option></select></div>' +
-          '<button class="ta-tt-sm" data-tt="full2">Play full screen</button><button class="ta-tt-go" data-tt="start">Start a new game</button><button class="ta-tt-sm" data-tt="cont" hidden>Continue your saved game</button>' +
-          '<div class="ta-tt-empty" data-tt="record"></div>' +
-          '<div class="ta-tt-empty">More than one Human seat plays pass-and-play on this device. All Computer seats lets you watch.</div></div>' +
-        '<div class="ta-tt-card ta-tt-rules"><h4>HOW TO PLAY</h4>' +
-          '<p>Every turn starts with a roll of the dice. Every district with that number pays out to the buildings on its corners: <b>1 card</b> for a safehouse, <b>2</b> for an HQ.</p>' +
-          '<div class="ta-tt-costs"><span>Road</span><span>Brick + Wood. Roads link up your territory.</span><span>Safehouse</span><span>Brick + Wood + Wheat + Cotton. 1 Respect. Goes on one of your roads, two corners from any other building.</span><span>HQ</span><span>2 Wheat + 3 Ore. Upgrades a safehouse: 2 Respect, double pay.</span><span>Favour card</span><span>Wheat + Ore + Cotton. Crew, Supply Run, Street Deal, Road Crew or a secret +1 Respect.</span></div>' +
-          '<p>Roll a <b>7</b> and the <b>police raid</b> moves: anyone holding more than 7 cards hands over half, the raided district stops paying, and the roller takes a card from a rival there.</p>' +
-          '<p>Trade with rivals, or with the bank at 4 for 1. The bank holds 19 of each card (24 on the large map); if it runs short, nobody collects that card unless only one faction is owed it. You have 15 roads, 5 safehouses and 4 HQs. Harbours give 3 for 1, or 2 for 1 in one resource. <b>Longest Road</b> (5+) and <b>Biggest Crew</b> (3+ Crew cards played) are worth 2 Respect each. First to <b>10 Respect</b> on their own turn wins.</p></div>' +
-      '</div>' +
-      '<div class="ta-tt-game" data-tt="game" hidden>' +
-        '<div class="ta-tt-board"><div class="ta-tt-scroll" data-tt="scroll"><svg data-tt="svg" role="img" aria-label="The Torn City board" preserveAspectRatio="xMidYMid meet"></svg></div>' +
-          '<div class="ta-tt-banner"><div class="ta-tt-prompt" data-tt="prompt"></div><div class="ta-tt-zoom"><button data-tt="zin" aria-label="Zoom in">+</button><button data-tt="zout" aria-label="Zoom out">−</button><button data-tt="mus" aria-label="Music" title="Music on or off">♪</button><button data-tt="full" aria-label="Full screen" title="Full screen">⛶</button></div><div class="ta-tt-dice"><div class="ta-tt-die" data-tt="d1">–</div><div class="ta-tt-die" data-tt="d2">–</div></div></div></div>' +
-        '<div class="ta-tt-side">' +
-          '<div class="ta-tt-card" data-tt="meCard"><div class="ta-tt-me"><span data-tt="meName"></span><span>Respect<strong data-tt="myResp">0</strong> <small data-tt="secret"></small></span></div><div class="ta-tt-hand" data-tt="hand"></div><div class="ta-tt-empty" data-tt="last" hidden></div><div class="ta-tt-favs" data-tt="favs"></div></div>' +
-          '<div class="ta-tt-card" data-tt="acts"><button class="ta-tt-go" data-tt="roll">Roll the dice</button>' +
-            '<div class="ta-tt-btns"><button data-tt="bRoute"><span>Road <em data-tt="nRoute"></em></span><small>Brick · Wood</small></button><button data-tt="bSafe"><span>Safehouse <em data-tt="nSafe"></em></span><small>Brick · Wood · Wheat · Cotton</small></button>' +
-            '<button data-tt="bHQ"><span>Upgrade to HQ <em data-tt="nHQ"></em></span><small>2 Wheat · 3 Ore</small></button><button data-tt="bFav"><span>Favour card <em data-tt="nFav"></em></span><small>Wheat · Ore · Cotton</small></button></div>' +
-            '<button data-tt="bDeal"><span>Trade with rivals</span><small>Offer some of your cards for theirs</small></button>' +
-            '<div class="ta-tt-row"><span>Bank</span><select data-tt="give" aria-label="Give to the bank"></select><span>for</span><select data-tt="get" aria-label="Get from the bank"></select><button class="ta-tt-sm" data-tt="bTrade">Trade</button></div>' +
-            '<button class="ta-tt-go" data-tt="end">End turn</button></div>' +
-          '<div class="ta-tt-card"><h4>FACTIONS</h4><div class="ta-tt-pls" data-tt="players"></div></div>' +
-          '<div class="ta-tt-card"><h4>STREET TALK</h4><div class="ta-tt-log" data-tt="log"></div></div>' +
-          '<button class="ta-tt-sm" data-tt="quit">Back to the new game screen</button>' +
-        '</div>' +
-      '</div>' +
-      '<div class="ta-tt-dlg" data-tt="dlg" hidden><div class="ta-tt-box" data-tt="dlgBox"></div></div>' +
-      '</div>',
-      '');
-    const box = $(panel, '.ta-tt');
-    function Q(id) { return box.querySelector('[data-tt="' + id + '"]'); }
-    const svg = Q('svg');
-    let G = null;   // the whole game (saved in Tampermonkey storage)
-    const UI = { last: null, aiTraded: false, zoom: 1, mode: null, viewer: -1, flash: [], dlg: null, timer: 0, aiActs: 0, asked: false, rolled: false, sawOver: false, live: false };
-    const opts = Object.assign({ size: 'large', diff: 'normal', speed: 750, seats: [['human', 0], ['ai', 1], ['ai', 2], ['ai', 3]] }, store.get('territoriesOpts', null) || {});
-    const stats = Object.assign({ games: 0, wins: 0, fastest: 0 }, store.get('territoriesStats', null) || {});
-
-    const rnd = Math.random;
-    function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); const t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
-    function pips(n) { return n ? 6 - Math.abs(7 - n) : 0; }
-
-    /* ---------- Sound: effects and soft background music, all generated live (no audio files) ---------- */
-    const FX = {
-      road: [[0, 310, 0.05, 'triangle', 0.05, 220], [90, 280, 0.05, 'triangle', 0.05, 200], [180, 140, 0.12, 'sine', 0.05, 90]],                       // two knocks and a thud: laying a road
-      safe: [[0, 330, 0.04, 'square', 0.025, 260], [110, 330, 0.04, 'square', 0.025, 260], [220, 330, 0.04, 'square', 0.025, 260], [340, 784, 0.18, 'triangle', 0.05], [420, 1047, 0.26, 'triangle', 0.045]],   // hammering, then a chime
-      hq: [[0, 523, 0.12, 'triangle', 0.05], [90, 659, 0.12, 'triangle', 0.05], [180, 784, 0.12, 'triangle', 0.05], [270, 1047, 0.3, 'triangle', 0.05], [300, 2093, 0.25, 'sine', 0.02]],   // a rising fanfare
-      fav: [[0, 1400, 0.12, 'sine', 0.025, 500], [130, 988, 0.3, 'sine', 0.04], [130, 1480, 0.3, 'sine', 0.02]],                                       // a card swish and a bell
-      trade: [[0, 1568, 0.06, 'square', 0.02], [70, 2093, 0.12, 'square', 0.02]],                                                                     // coins
-      deal: [[0, 659, 0.1, 'triangle', 0.045], [100, 880, 0.18, 'triangle', 0.045]],
-      dice: [[0, 520, 0.04, 'square', 0.03], [60, 380, 0.04, 'square', 0.03], [120, 640, 0.05, 'square', 0.03]],
-      raid: [[150, 2200, 0.12, 'sine', 0.03, 2600], [300, 2200, 0.3, 'sine', 0.03, 1800], [500, 760, 0.18, 'square', 0.022], [690, 600, 0.18, 'square', 0.022], [880, 760, 0.18, 'square', 0.022]],   // a whistle and a siren
-      lose: [[0, 520, 0.12, 'triangle', 0.04, 260]],
-      pick: [[0, 700, 0.05, 'triangle', 0.03]]
-    };
-    const PLUCK = { brick: 392, wood: 440, wheat: 523, ore: 587, cotton: 659 };   // collecting: one soft note per resource
-    function snd(k) { if (UI.live && FX[k]) seq(FX[k]); }
-    function collectSound(list) { if (!UI.live) return; list.forEach(function (r, i) { setTimeout(function () { tone(PLUCK[r] || 600, 0.22, 'triangle', 0.04); tone((PLUCK[r] || 600) * 2, 0.16, 'sine', 0.012); }, i * 90); }); }
-    // A slow, soft piece that never quite repeats: warm pads, a gentle bass and a few music-box notes from a C major
-    // pentatonic scale, at 66 beats a minute, through a low-pass filter and a soft echo.
-    const PROG = [[36, [60, 64, 67, 71]], [33, [57, 60, 64, 67]], [41, [57, 60, 64, 65]], [43, [55, 59, 62, 64]], [40, [55, 59, 64, 67]], [33, [57, 60, 64, 67]], [38, [57, 60, 62, 65]], [43, [55, 60, 62, 67]]];
-    const MEL = [72, 74, 76, 79, 81, 84], BEAT = 60 / 66, BAR = BEAT * 4;
-    const MUS = { bus: null, mel: null, timer: 0, next: 0, bar: 0 };
-    function hz(m) { return 440 * Math.pow(2, (m - 69) / 12); }
-    function musicOn() { return opts.music !== false && !muted && UI.live; }
-    function musicStart() {
-      if (MUS.timer || !musicOn()) return;
-      try {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        const c = audioCtx, gr = musicGraph(c, outFor(c));
-        MUS.bus = gr.bus; MUS.mel = gr.mel; MUS.next = c.currentTime + 0.15; MUS.bar = 0;
-        MUS.timer = setInterval(musicTick, 250); musicTick();
-      } catch (e) { MUS.timer = 0; }
-    }
-    function musicGraph(c, dest) {
-      const lp = c.createBiquadFilter(), bus = c.createGain(), mel = c.createGain(), dl = c.createDelay(1), fb = c.createGain();
-      lp.type = 'lowpass'; lp.frequency.value = 1500; lp.Q.value = 0.4;
-      bus.gain.setValueAtTime(0, c.currentTime); bus.gain.linearRampToValueAtTime(0.9, c.currentTime + 2.5);
-      dl.delayTime.value = BEAT * 0.75; fb.gain.value = 0.32;
-      mel.connect(lp); mel.connect(dl); dl.connect(fb); fb.connect(dl); dl.connect(lp);
-      lp.connect(bus); bus.connect(dest);
-      return { bus: bus, mel: mel };
-    }
-    function musicStop() {
-      clearInterval(MUS.timer); MUS.timer = 0;
-      const bus = MUS.bus; MUS.bus = null;
-      if (bus) { try { bus.gain.cancelScheduledValues(audioCtx.currentTime); bus.gain.setTargetAtTime(0, audioCtx.currentTime, 0.25); setTimeout(function () { try { bus.disconnect(); } catch (e) {} }, 1500); } catch (e) {} }
-    }
-    function note(f, at, dur, type, vol, attack, dest) {
-      const c = dest.context, o = c.createOscillator(), g = c.createGain();
-      o.type = type; o.frequency.value = f;
-      g.gain.setValueAtTime(0.0001, at); g.gain.linearRampToValueAtTime(vol, at + attack); g.gain.setTargetAtTime(0.0001, at + Math.max(attack, dur - 0.4), dur / 4);
-      o.connect(g); g.connect(dest); o.start(at); o.stop(at + dur + 1.5);
-    }
-    function musicTick() {
-      if (!musicOn()) { musicStop(); return; }
-      scheduleBars(MUS, audioCtx.currentTime + 1.5);
-    }
-    function scheduleBars(M, until) {
-      while (M.next < until) {
-        const t = M.next, ch = PROG[M.bar % PROG.length];
-        ch[1].forEach(function (m, i) { note(hz(m), t, BAR + 1.2, i % 2 ? 'triangle' : 'sine', 0.014, 1.3, M.bus); });   // pads
-        note(hz(ch[0]), t, BAR, 'sine', 0.05, 0.08, M.bus);   // bass
-        if (rnd() < 0.5) note(hz(ch[0] + 7), t + BEAT * 2, BEAT * 2, 'sine', 0.03, 0.08, M.bus);
-        for (let b = 0; b < 4; b++) {   // a few music-box notes, more likely on the stronger beats
-          if (rnd() < (b === 0 ? 0.55 : b === 2 ? 0.45 : 0.25)) note(hz(MEL[Math.floor(rnd() * MEL.length)] - (rnd() < 0.3 ? 12 : 0)), t + b * BEAT + (rnd() < 0.3 ? BEAT / 2 : 0), 1.4, 'triangle', 0.03, 0.01, M.mel);
-        }
-        M.next += BAR; M.bar++;
-      }
-    }
-
-    /* ---------- Pictures from the Character Art pack (data URIs, or null) ---------- */
-    function art(res) {
-      const api = games.pocket && games.pocket.art, b64 = api && api.get ? api.get('tt' + res) : null;
-      return b64 ? 'data:image/webp;base64,' + b64 : null;
-    }
-
-    /* ---------- New game ---------- */
+    const R = 58, CX = 380, CY = 290;
     function makeBoard(size) {
       const M = MAPS[size] || MAPS.large, centres = [];
       M.rows.forEach(function (L, ri) {
@@ -18704,25 +18655,6 @@
       }
       return { hexes: hexes, verts: verts, edges: edges, ports: ports };
     }
-    function newGame() {
-      const size = opts.size, B = makeBoard(size), seats = opts.seats.filter(function (s) { return s[0] !== 'off'; });
-      const players = seats.map(function (s) { const i = opts.seats.indexOf(s); return { name: NAMES[i], col: COLOURS[s[1]][0], ai: s[0] === 'ai', hand: { brick: 0, wood: 0, wheat: 0, ore: 0, cotton: 0 }, favs: [], crew: 0, routes: 15, safes: 5, hqs: 4 }; });
-      const big = size === 'large';
-      const deck = shuffle(Array(big ? 20 : 14).fill('crew').concat(Array(5).fill('respect'), Array(big ? 3 : 2).fill('supply'), Array(big ? 3 : 2).fill('deal'), Array(big ? 3 : 2).fill('roads')));
-      const n = players.length, order = [];
-      for (let i = 0; i < n; i++) order.push(i);
-      for (let i = n - 1; i >= 0; i--) order.push(i);
-      const xs = B.hexes.map(function (h) { return h.cx; }).concat(B.ports.map(function (p) { return p.x; })), ys = B.hexes.map(function (h) { return h.cy; }).concat(B.ports.map(function (p) { return p.y; }));
-      const x0 = Math.min.apply(null, xs) - R - 14, x1 = Math.max.apply(null, xs) + R + 14, y0 = Math.min.apply(null, ys) - R - 34, y1 = Math.max.apply(null, ys) + R + 12;
-      G = { v: 1, size: size, vb: [x0, y0, x1 - x0, y1 - y0].map(Math.round).join(' '), hexes: B.hexes, verts: B.verts, edges: B.edges, ports: B.ports, players: players, deck: deck, diff: opts.diff, speed: opts.speed,
-        raid: B.hexes.findIndex(function (h) { return h.res === 'none'; }), cur: order[0], phase: 'setup', setup: { order: order, i: 0, step: 'safe', last: -1 },
-        dice: null, turn: 0, playedFav: false, free: 0, discardQ: [], afterRaid: 'main', longest: -1, bigCrew: -1, winner: -1, log: [], offer: null, counted: false };
-      UI.mode = null; UI.viewer = -1; UI.dlg = null; UI.aiActs = 0; UI.asked = false; UI.sawOver = false;
-      say('A new game begins. Each faction opens two safehouses, each with a road. The second safehouse pays its starting cards.');
-      sfx.win();
-      tick();
-    }
-
     /* ---------- Rules ---------- */
     function P(i) { return G.players[i]; }
     function cards(p) { return RES.reduce(function (s, r) { return s + p.hand[r]; }, 0); }
@@ -18775,7 +18707,7 @@
       return s;
     }
     function humans() { return G.players.filter(function (p) { return !p.ai; }).length; }
-    function you(i) { return i === UI.viewer && humans() === 1; }
+    function you(i) { return i === VIEW() && humans() === 1; }
     function name(i) { return you(i) ? 'You' : P(i).name; }
     function verb(i, v) { return you(i) ? v : v + (/(s|sh|ch)$/.test(v) ? 'es' : 's'); }
     function say(t) { G.log.unshift(t); if (G.log.length > 80) G.log.pop(); }
@@ -18783,29 +18715,20 @@
       if (G.phase === 'over' || respect(pi, true) < 10) return false;
       G.phase = 'over'; G.winner = pi;
       say(name(pi) + ' ' + verb(pi, 'reach') + ' 10 Respect and take' + (you(pi) ? '' : 's') + ' over Torn City!');
-      if (!G.counted && humans() === 1) {   // best scores: wins, and the fastest win in turns
-        G.counted = true; stats.games++;
-        if (!P(pi).ai) {
-          stats.wins++; const turns = Math.floor(G.turn / G.players.length) + 1;
-          if (!stats.fastest || turns < stats.fastest) stats.fastest = turns;
-          record('territories:wins', stats.wins); record('territories:fastest', turns, true);
-          confetti(panel.querySelector('.ta-stage')); sfx.win();
-        } else snd('lose');
-        store.set('territoriesStats', stats);
-      }
+      env.win(pi);
       return true;
     }
 
     /* ---------- Turn flow ---------- */
     function rollDice() {
       const a = 1 + Math.floor(rnd() * 6), b = 1 + Math.floor(rnd() * 6), n = a + b;
-      G.dice = [a, b]; UI.rolled = true;
-      snd('dice');
+      G.dice = [a, b]; env.rolled();
+      env.snd('dice');
       say(name(G.cur) + ' ' + verb(G.cur, 'roll') + ' ' + n + '.');
       if (n === 7) {
         G.discardQ = G.players.map(function (p, i) { return i; }).filter(function (i) { return cards(P(i)) > 7; });
         G.afterRaid = 'main'; G.phase = G.discardQ.length ? 'discard' : 'raid';
-        snd('raid');
+        env.snd('raid');
       } else { produce(n); G.phase = 'main'; }
     }
     function produce(n) {
@@ -18826,11 +18749,11 @@
       got.forEach(function (g, i) {
         const k = Object.keys(g); if (!k.length) return;
         say(name(i) + ' ' + verb(i, 'collect') + ' ' + k.map(function (r) { return g[r] + ' ' + RN[r]; }).join(', ') + '.');
-        if (i === UI.viewer) { UI.flash = k; collectSound(k); }
+        env.collect(i, k);
       });
     }
     function discard(pi, take) {
-      if (pi === UI.viewer) snd('lose');
+      env.lost(pi);
       Object.keys(take).forEach(function (r) { P(pi).hand[r] -= take[r]; });
       say(name(pi) + ' ' + verb(pi, 'hand') + ' ' + Object.keys(take).reduce(function (a, r) { return a + take[r]; }, 0) + ' cards to the police.');
       G.discardQ.shift();
@@ -18854,22 +18777,22 @@
       P(vi).hand[r]--; P(pi).hand[r]++;
       if (!G.hid) G.hid = [];
       G.hid.push({ p: pi, r: r, t: G.turn });   // the other factions don't see which card was taken
-      const seen = pi === UI.viewer || vi === UI.viewer;
+      const seen = pi === VIEW() || vi === VIEW();
       say(name(pi) + ' ' + verb(pi, 'take') + (seen ? ' ' + RN[r] : ' a card') + ' from ' + (you(vi) ? 'you' : P(vi).name) + '.');
-      if (pi === UI.viewer) { UI.flash = [r]; collectSound([r]); } else if (vi === UI.viewer) snd('lose');
+      env.collect(pi, [r]); env.lost(vi);
       G.phase = G.afterRaid;
     }
     function endTurn() {
       P(G.cur).favs.forEach(function (f) { f.fresh = false; });
       G.cur = (G.cur + 1) % G.players.length; G.turn++; G.phase = 'roll'; G.playedFav = false; G.dice = null; G.offer = null;
-      UI.mode = null; UI.aiActs = 0; UI.asked = false; UI.aiTraded = false; if (UI.last && UI.last.who === G.cur) UI.last = null;
+      G.aiActs = 0; G.asked = false; G.aiTraded = false; G.ask = null; G.auto = null; env.turn(G.cur);
       if (G.hid) G.hid = G.hid.filter(function (h) { return G.turn - h.t < G.players.length * 2; });   // after a couple of rounds it no longer matters
     }
     function placeSafe(pi, v, setup) {
       const p = P(pi);
       if (!setup) pay(p, COST.safe);
       G.verts[v].owner = pi; G.verts[v].lvl = 1; p.safes--;
-      snd('safe');
+      env.snd('safe');
       if (setup) {
         G.setup.last = v; G.setup.step = 'route';
         const got = [];
@@ -18882,7 +18805,7 @@
       const p = P(pi);
       if (!free) pay(p, COST.route);
       G.edges[e].owner = pi; p.routes--;
-      snd('road');
+      env.snd('road');
       if (G.phase === 'setup') {
         G.setup.i++; G.setup.step = 'safe'; G.setup.last = -1;
         if (G.setup.i >= G.setup.order.length) { G.phase = 'roll'; G.cur = 0; say('The city is carved up. ' + name(0) + ' ' + verb(0, 'roll') + ' first.'); }
@@ -18895,13 +18818,13 @@
     }
     function upgrade(pi, v) {
       const p = P(pi); pay(p, COST.hq); G.verts[v].lvl = 2; p.safes++; p.hqs--;
-      snd('hq');
+      env.snd('hq');
       say(name(pi) + ' ' + verb(pi, 'turn') + ' a safehouse into an HQ. +1 Respect.');
     }
     function buyFav(pi) {
       const p = P(pi); pay(p, COST.fav); const t = G.deck.pop();
-      p.favs.push({ t: t, fresh: true }); snd('fav');
-      say(name(pi) + ' ' + verb(pi, 'call') + ' in a favour' + (pi === UI.viewer ? ': ' + FAV[t].name : '') + '.');
+      p.favs.push({ t: t, fresh: true }); env.snd('fav');
+      say(name(pi) + ' ' + verb(pi, 'call') + ' in a favour' + (pi === VIEW() ? ': ' + FAV[t].name : '') + '.');
     }
     function canPlay(pi, f) { return f.t !== 'respect' && (f.t !== 'supply' || RES.reduce(function (a, r) { return a + Math.min(2, stock(r)); }, 0) >= 2) && !f.fresh && !G.playedFav && G.cur === pi && (G.phase === 'main' || (G.phase === 'roll' && f.t === 'crew')); }
     function useFav(pi, idx) {
@@ -18914,9 +18837,8 @@
     function streetDeal(pi, r) {
       let n = 0; G.players.forEach(function (q, i) { if (i !== pi) { n += q.hand[r]; q.hand[r] = 0; } });
       P(pi).hand[r] += n; say(name(pi) + ' ' + verb(pi, 'collect') + ' ' + n + ' ' + RN[r] + ' from the other factions.');
-      if (pi === UI.viewer) UI.flash = [r];
+      env.collect(pi, [r], true);
     }
-
     /* ---------- Computer factions ---------- */
     function owns(pi, r) { return G.verts.some(function (V) { return V.owner === pi && V.hexes.some(function (h) { return G.hexes[h].res === r; }); }); }
     function vScore(v, pi) {
@@ -19048,7 +18970,7 @@
       if (G.phase === 'roads') { const e = p.routes ? bestRoute(pi) : -1; if (e < 0) { G.phase = 'main'; return; } placeRoute(pi, e, true); return; }
       if (G.phase !== 'main') return;
       if (checkWin(pi)) return;
-      if (++UI.aiActs > 14) { endTurn(); return; }
+      if (G.aiActs = (G.aiActs || 0) + 1, G.aiActs > 14) { endTurn(); return; }
       const fi = p.favs.findIndex(function (f) { return canPlay(pi, f); });
       if (fi >= 0) {   // play a favour card when it helps
         const t = p.favs[fi].t, n = need(pi), short = RES.filter(function (r) { return n[r]; });
@@ -19073,14 +18995,14 @@
       const n = need(pi), short = RES.filter(function (r) { return n[r]; });
       if (short.length && short.reduce(function (s, r) { return s + n[r]; }, 0) <= 3) {
         const plain = planCost(pi);   // trade with the bank or a harbour for a missing card
-        if (!UI.aiTraded) { UI.aiTraded = true; if (aiDeal(pi, short, plain)) return; }
+        if (!G.aiTraded) { G.aiTraded = true; if (aiDeal(pi, short, plain)) return; }
         const spare = RES.filter(function (r) { return !n[r] && p.hand[r] - (plain[r] || 0) >= rate(pi, r); }).sort(function (a, b) { return p.hand[b] - p.hand[a]; })[0];
         if (spare && stock(short[0]) > 0) { const k = rate(pi, spare); p.hand[spare] -= k; p.hand[short[0]]++; say(p.name + ' trades ' + k + ' ' + RN[spare] + ' for 1 ' + RN[short[0]] + (k < 4 ? ' at a harbour.' : ' with the bank.')); return; }
-        if (!UI.asked && humans() === 1) {   // or ask the human player for it (one offer per turn)
-          UI.asked = true;
+        if (!G.asked && humans() === 1) {   // or ask the human player for it (one offer per turn)
+          G.asked = true;
           const hi = G.players.findIndex(function (q) { return !q.ai; }), r = short[0];
           const giveR = RES.filter(function (x) { return !n[x] && p.hand[x] > (plain[x] || 0); }).sort(function (a, b) { return p.hand[b] - p.hand[a]; })[0];
-          if (giveR && P(hi).hand[r] > 0 && rnd() < (G.diff === 'easy' ? 0.55 : 0.4)) {
+          if (hi !== pi && giveR && P(hi).hand[r] > 0 && rnd() < (G.diff === 'easy' ? 0.55 : 0.4)) {
             const give = {}; give[giveR] = p.hand[giveR] - (plain[giveR] || 0) >= 3 ? 2 : 1;
             const want = {}; want[r] = 1;
             G.offer = { from: pi, to: hi, give: give, want: want }; G.phase = 'offer';
@@ -19092,17 +19014,475 @@
       if (checkWin(pi)) return;
       endTurn();
     }
+    /* ---------- New game. o: { size, diff, speed, online, players: [{ name, col, ai, id }] } ---------- */
+    function newGame(o) {
+      const size = o.size === 'standard' ? 'standard' : 'large', B = makeBoard(size);
+      const players = o.players.map(function (s) { return { name: s.name, col: s.col, ai: !!s.ai, id: s.id || 0, hand: { brick: 0, wood: 0, wheat: 0, ore: 0, cotton: 0 }, favs: [], crew: 0, routes: 15, safes: 5, hqs: 4 }; });
+      const big = size === 'large';
+      const deck = shuffle(Array(big ? 20 : 14).fill('crew').concat(Array(5).fill('respect'), Array(big ? 3 : 2).fill('supply'), Array(big ? 3 : 2).fill('deal'), Array(big ? 3 : 2).fill('roads')));
+      const n = players.length, order = [];
+      for (let i = 0; i < n; i++) order.push(i);
+      for (let i = n - 1; i >= 0; i--) order.push(i);
+      const xs = B.hexes.map(function (h) { return h.cx; }).concat(B.ports.map(function (p) { return p.x; })), ys = B.hexes.map(function (h) { return h.cy; }).concat(B.ports.map(function (p) { return p.y; }));
+      const x0 = Math.min.apply(null, xs) - R - 14, x1 = Math.max.apply(null, xs) + R + 14, y0 = Math.min.apply(null, ys) - R - 34, y1 = Math.max.apply(null, ys) + R + 12;
+      G = { v: 1, size: size, vb: [x0, y0, x1 - x0, y1 - y0].map(Math.round).join(' '), hexes: B.hexes, verts: B.verts, edges: B.edges, ports: B.ports, players: players, deck: deck, diff: o.diff || 'normal', speed: o.speed || 750, online: !!o.online,
+        raid: B.hexes.findIndex(function (h) { return h.res === 'none'; }), cur: order[0], phase: 'setup', setup: { order: order, i: 0, step: 'safe', last: -1 },
+        dice: null, turn: 0, playedFav: false, free: 0, discardQ: [], afterRaid: 'main', longest: -1, bigCrew: -1, winner: -1, log: [], offer: null, ask: null, auto: null, counted: false };
+      say('A new game begins. Each faction opens two safehouses, each with a road. The second safehouse pays its starting cards.');
+      return G;
+    }
+    // Who the game is waiting for, and whether that seat is played by the computer right now
+    // (a computer faction, or a person whose turn was handed to the computer after 30 seconds).
+    function waiting() {
+      if (!G || G.phase === 'over') return -1;
+      if (G.phase === 'discard') return G.discardQ[0];
+      if (G.phase === 'offer') return G.offer.to;
+      return G.cur;
+    }
+    // A handed-over turn lasts for that one turn (or, during setup, that one safehouse and road).
+    function moveKey() { return G.phase === 'setup' ? 's' + G.setup.i : 't' + G.turn; }
+    function isAI(i) { return P(i).ai || !!(G.auto && G.auto.p === i && G.auto.k === moveKey() && i === G.cur); }
+    // One computer decision for whoever the game is waiting on.
+    function aiMove() {
+      const w = waiting(); if (w < 0) return;
+      if (G.phase === 'discard') { aiDiscard(w); return; }
+      if (G.phase === 'offer') { answerOffer(w, false); return; }
+      aiStep();
+    }
+    // Hand a person's turn (or the decision they're stuck on) to the computer.
+    function takeOver(i) {
+      if (G.phase === 'discard' && G.discardQ[0] === i) { say(P(i).name + ' was too slow. Cards were handed over for them.'); aiDiscard(i); return; }
+      if (G.phase === 'offer' && G.offer.to === i) { say(P(i).name + ' didn\'t answer in time.'); answerOffer(i, false); return; }
+      if (G.cur === i && !isAI(i)) { G.auto = { p: i, k: moveKey() }; say(P(i).name + ' ran out of time. The computer plays this turn for them.'); }
+    }
+    function answerOffer(pi, yes) {
+      const o = G.offer;
+      if (yes) {
+        RES.forEach(function (x) { P(o.to).hand[x] += (o.give[x] || 0) - (o.want[x] || 0); P(o.from).hand[x] += (o.want[x] || 0) - (o.give[x] || 0); });
+        say(name(o.to) + ' ' + verb(o.to, 'take') + ' ' + P(o.from).name + '\'s deal: ' + list(o.give) + ' for ' + list(o.want) + '.');
+        env.collect(o.to, Object.keys(o.give), true); env.last(o.to, o.want, o.give); env.last(o.from, o.give, o.want); env.snd('deal');
+      } else say(name(o.to) + ' ' + verb(o.to, 'turn') + ' down ' + P(o.from).name + '.');
+      G.offer = null; G.phase = 'main';
+    }
+    // Answers from the other factions to an offer: computer factions answer at once (yes, no, or a counter-offer);
+    // in online games, other people are listed so the offer can be put to them.
+    function answers(pi, give, want) {
+      return G.players.map(function (p, i) { return i; }).filter(function (i) { return i !== pi && (P(i).ai || G.online); }).map(function (i) {
+        if (!P(i).ai) return { i: i, human: true };   // people answer for themselves (their cards stay hidden)
+        const w = wantsDeal(i, give, want, pi);
+        return { i: i, ok: w.ok, why: w.why, counter: !w.ok && (w.why === 'value' || w.why === 'threat') ? counter(i, give, want, pi) : null };
+      });
+    }
+    function okHand(o) { return o && typeof o === 'object' && Object.keys(o).every(function (k) { return RES.indexOf(k) >= 0 && Number.isInteger(o[k]) && o[k] >= 0 && o[k] <= 30; }); }
+    /* ---------- Every move a player can make. Checks it's allowed, applies it, and returns { ok } or { err }. ---------- */
+    function act(pi, a) {
+      const no = function (why) { return { err: why || 'not_now' }; };
+      if (!G || G.phase === 'over') return no('over');
+      if (!a || typeof a.t !== 'string' || !P(pi)) return no('bad');
+      const p = P(pi), cur = pi === G.cur, t = a.t, main = cur && G.phase === 'main';
+      const num = function (x, max) { return Number.isInteger(x) && x >= 0 && x < max; };
+      let out = { ok: true };
+      if (t === 'roll') { if (!cur || G.phase !== 'roll') return no(); rollDice(); if (G.phase === 'main') checkWin(pi); }
+      else if (t === 'safe') {
+        if (!cur || !num(a.v, G.verts.length)) return no();
+        if (G.phase === 'setup' && G.setup.step === 'safe' && safeOK(pi, a.v, true)) placeSafe(pi, a.v, true);
+        else if (main && safeOK(pi, a.v) && canAfford(p, COST.safe) && p.safes) placeSafe(pi, a.v, false);
+        else return no();
+        checkWin(pi);
+      }
+      else if (t === 'route') {
+        if (!cur || !num(a.e, G.edges.length)) return no();
+        if (G.phase === 'setup' && G.setup.step === 'route' && routeOK(pi, a.e)) placeRoute(pi, a.e, true);
+        else if (G.phase === 'roads' && routeOK(pi, a.e) && p.routes) placeRoute(pi, a.e, true);
+        else if (main && routeOK(pi, a.e) && canAfford(p, COST.route) && p.routes) placeRoute(pi, a.e, false);
+        else return no();
+        checkWin(pi);
+      }
+      else if (t === 'hq') { if (!main || !num(a.v, G.verts.length) || G.verts[a.v].owner !== pi || G.verts[a.v].lvl !== 1 || !canAfford(p, COST.hq) || !p.hqs) return no(); upgrade(pi, a.v); checkWin(pi); }
+      else if (t === 'fav') { if (!main || !G.deck.length || !canAfford(p, COST.fav)) return no(); buyFav(pi); checkWin(pi); }
+      else if (t === 'bank') {
+        const g = a.give, w = a.get;
+        if (!main || RES.indexOf(g) < 0 || RES.indexOf(w) < 0 || g === w) return no();
+        const k = rate(pi, g); if (p.hand[g] < k || stock(w) < 1) return no();
+        p.hand[g] -= k; p.hand[w]++;
+        const gave = {}, got = {}; gave[g] = k; got[w] = 1;
+        env.collect(pi, [w], true); env.snd('trade'); env.last(pi, gave, got);
+        say(name(pi) + ' ' + verb(pi, 'trade') + ' ' + k + ' ' + RN[g] + ' for 1 ' + RN[w] + (k < 4 ? ' at a harbour.' : ' with the bank.'));
+      }
+      else if (t === 'end') { if (!main) return no(); if (!checkWin(pi)) endTurn(); }
+      else if (t === 'raid') { if (!cur || G.phase !== 'raid' || !num(a.h, G.hexes.length) || a.h === G.raid) return no(); moveRaid(pi, a.h); }
+      else if (t === 'rob') { if (!cur || G.phase !== 'steal' || victims(pi, G.raid).indexOf(a.v) < 0) return no(); steal(pi, a.v); }
+      else if (t === 'discard') {
+        if (G.phase !== 'discard' || G.discardQ[0] !== pi || !okHand(a.take)) return no();
+        if (sum(a.take) !== Math.floor(cards(p) / 2) || RES.some(function (r) { return (a.take[r] || 0) > p.hand[r]; })) return no();
+        discard(pi, a.take);
+      }
+      else if (t === 'play') {
+        const f = p.favs[a.idx];
+        if (!num(a.idx, p.favs.length) || !canPlay(pi, f)) return no();
+        if (f.t === 'crew') { useFav(pi, a.idx); p.crew++; awards(); G.afterRaid = G.phase; G.phase = 'raid'; checkWin(pi); }
+        else if (f.t === 'roads') { useFav(pi, a.idx); G.free = 2; G.phase = anyRoute(pi) && p.routes ? 'roads' : 'main'; }
+        else if (f.t === 'supply') {
+          const pk = a.picks;
+          if (!Array.isArray(pk) || pk.length !== 2 || pk.some(function (r) { return RES.indexOf(r) < 0 || stock(r) < pk.filter(function (x) { return x === r; }).length; })) return no();
+          useFav(pi, a.idx); pk.forEach(function (x) { p.hand[x]++; }); env.collect(pi, pk.slice());
+          say(name(pi) + ' ' + verb(pi, 'bring') + ' in ' + RN[pk[0]] + ' and ' + RN[pk[1]] + '.');
+        }
+        else if (f.t === 'deal') { if (RES.indexOf(a.res) < 0) return no(); useFav(pi, a.idx); streetDeal(pi, a.res); env.snd('trade'); }
+        else return no();
+      }
+      else if (t === 'ask') {   // put an offer to the other factions
+        if (!main || !okHand(a.give) || !okHand(a.want) || !sum(a.give) || !sum(a.want) || RES.some(function (r) { return (a.give[r] && a.want[r]) || (a.give[r] || 0) > p.hand[r]; })) return no();
+        G.ask = { give: a.give, want: a.want, answers: answers(pi, a.give, a.want) };
+        say(name(pi) + ' ' + verb(pi, 'offer') + ' ' + list(a.give) + ' for ' + list(a.want) + '.');
+        out.answers = G.ask.answers;
+      }
+      else if (t === 'accept') {   // take a computer faction's yes or counter-offer
+        const A = G.ask, ans = A && A.answers[a.k];
+        if (!main || !ans || !P(ans.i).ai || !(ans.ok || ans.counter)) return no();
+        const them = P(ans.i), give = ans.counter || A.give;
+        if (RES.some(function (x) { return (give[x] || 0) > p.hand[x] || (A.want[x] || 0) > them.hand[x]; })) return no('cards');
+        RES.forEach(function (x) { p.hand[x] += (A.want[x] || 0) - (give[x] || 0); them.hand[x] += (give[x] || 0) - (A.want[x] || 0); });
+        say(them.name + ' takes the deal: ' + list(give) + ' for ' + list(A.want) + '.');
+        env.collect(pi, Object.keys(A.want), true); env.last(pi, give, A.want); env.snd('deal');
+        G.ask = null; out.gave = give; out.got = A.want;
+      }
+      else if (t === 'propose') {   // online: put the offer to another person, who has 30 seconds to answer
+        const A = G.ask;
+        if (!main || !A || !G.online || !num(a.to, G.players.length) || a.to === pi || P(a.to).ai) return no();
+        if (RES.some(function (x) { return (A.give[x] || 0) > p.hand[x] || (A.want[x] || 0) > P(a.to).hand[x]; })) return no('cards');
+        G.offer = { from: pi, to: a.to, give: A.give, want: A.want }; G.phase = 'offer'; G.ask = null;
+        say(name(pi) + ' ' + verb(pi, 'offer') + ' ' + P(a.to).name + ' ' + list(A.give) + ' for ' + list(A.want) + '.');
+      }
+      else if (t === 'yes' || t === 'no') {
+        const o = G.offer;
+        if (G.phase !== 'offer' || !o || o.to !== pi) return no();
+        if (t === 'yes' && RES.some(function (x) { return (o.want[x] || 0) > P(o.to).hand[x] || (o.give[x] || 0) > P(o.from).hand[x]; })) return no('cards');
+        answerOffer(pi, t === 'yes');
+      }
+      else return no('bad');
+      return out;
+    }
+    // A copy of the game for one player's screen: other factions' cards and favours are hidden, and so is the deck.
+    function viewFor(Gx, seat) {
+      const g = JSON.parse(JSON.stringify(Gx)), over = g.phase === 'over';
+      g.bank = {}; RES.forEach(function (r) { g.bank[r] = (g.size === 'large' ? 24 : 19) - Gx.players.reduce(function (s, q) { return s + q.hand[r]; }, 0); });
+      g.players.forEach(function (p, i) {
+        if (i === seat || over) return;
+        p.n = RES.reduce(function (s, r) { return s + p.hand[r]; }, 0);
+        p.hand = { brick: 0, wood: 0, wheat: 0, ore: 0, cotton: 0 };
+        p.favs = p.favs.map(function (f) { return { t: '?', fresh: f.fresh }; });
+      });
+      g.deck = g.deck.map(function () { return '?'; });
+      delete g.hid;
+      if (g.ask && !(seat === g.cur)) g.ask = null;
+      return g;
+    }
+    return {
+      get: function () { return G; }, set: function (g) { G = g; },
+      RES: RES, RN: RN, DIST: DIST, COST: COST, FAV: FAV, MAPS: MAPS, R: R, CX: CX, CY: CY,
+      newGame: newGame, act: act, aiMove: aiMove, aiStep: aiStep, aiDiscard: aiDiscard, takeOver: takeOver, waiting: waiting, isAI: isAI, viewFor: viewFor, answers: answers,
+      P: P, cards: cards, stock: stock, canAfford: canAfford, spaced: spaced, safeOK: safeOK, routeOK: routeOK, anyRoute: anyRoute, anySafe: anySafe, rate: rate, routeLen: routeLen,
+      respect: respect, humans: humans, you: you, name: name, verb: verb, say: say, checkWin: checkWin, canPlay: canPlay, victims: victims, pips: pips, list: list, sum: sum,
+      wantsDeal: wantsDeal, counter: counter, est: est, produce: produce
+    };
+  }
+  if (typeof module !== 'undefined' && module.exports) module.exports = TTEngine;
+
+  /* ================= Torn Territories (district-building board game) =================
+     Build roads, safehouses and HQs across a map of Torn City districts. Districts pay out Brick, Wood, Wheat, Ore
+     and Cotton when their number is rolled. First faction to 10 Respect wins. You against computer factions, or
+     pass-and-play on one device. Illustrated districts come from the Character Art pack (keys 'tt…'); without it
+     the districts are drawn by the script. Games on this device make no requests and touch nothing on Torn's page.
+     Online games (optional, see 'Online games' below) are run by the Torn Arcade server with the same engine. */
+  (function () {
+    // The rules and the computer players live in the shared engine (tt-engine.js), which the Torn Arcade server runs too.
+    const E = TTEngine({
+      viewer: function () { return UI.viewer; },
+      snd: function (k) { snd(k); },
+      collect: function (pi, l, quiet) { if (pi === UI.viewer) { UI.flash = l; if (!quiet) collectSound(l); } },
+      lost: function (pi) { if (pi === UI.viewer) snd('lose'); },
+      rolled: function () { UI.rolled = true; },
+      turn: function (cur) { UI.mode = null; if (UI.last && UI.last.who === cur) UI.last = null; },
+      last: function (pi, gave, got) { if (pi === UI.viewer) UI.last = { who: pi, gave: gave, got: got }; },
+      win: function (pi) { wonGame(pi); }
+    });
+    const RES = E.RES, RN = E.RN, DIST = E.DIST, COST = E.COST, FAV = E.FAV, R = E.R;
+    const COLOURS = [['#3fd17a', 'Green'], ['#ff4a5a', 'Red'], ['#ffb02e', 'Orange'], ['#5aa8ff', 'Blue'], ['#b07aff', 'Purple'], ['#ff7ac8', 'Pink'], ['#2fd0c0', 'Teal'], ['#f2f2f2', 'White']];
+    const NAMES = ['Your faction', 'The Racket', 'Southside Crew', 'Neon Syndicate'];
+    const NS = 'http://www.w3.org/2000/svg', FONT = 'system-ui,Arial,sans-serif';
+    const ICON = {
+      brick: '<rect x="3" y="6" width="11" height="7" rx="1" fill="#e2704a"/><rect x="16" y="6" width="11" height="7" rx="1" fill="#c75a36"/><rect x="9" y="15" width="11" height="7" rx="1" fill="#d6643f"/><rect x="3" y="24" width="11" height="3" rx="1" fill="#a8452a"/><rect x="16" y="24" width="11" height="3" rx="1" fill="#b84e2f"/>',
+      wood: '<rect x="3" y="15" width="24" height="8" rx="4" fill="#9a6232"/><circle cx="25" cy="19" r="4" fill="#d8a868"/><circle cx="25" cy="19" r="1.6" fill="#9a6232"/><rect x="6" y="6" width="20" height="8" rx="4" fill="#b07440"/><circle cx="24" cy="10" r="4" fill="#e4b878"/><circle cx="24" cy="10" r="1.6" fill="#b07440"/>',
+      wheat: '<path d="M15 28V8" stroke="#c8962a" stroke-width="2"/><ellipse cx="12" cy="10" rx="2.5" ry="4" fill="#f0c040" transform="rotate(-25 12 10)"/><ellipse cx="18" cy="10" rx="2.5" ry="4" fill="#f0c040" transform="rotate(25 18 10)"/><ellipse cx="12" cy="17" rx="2.5" ry="4" fill="#e8b830" transform="rotate(-25 12 17)"/><ellipse cx="18" cy="17" rx="2.5" ry="4" fill="#e8b830" transform="rotate(25 18 17)"/><ellipse cx="15" cy="5" rx="2.2" ry="3.5" fill="#f6cc50"/>',
+      ore: '<path d="M4 24l5-11l7-4l8 5l3 10z" fill="#7f8aa0"/><path d="M9 13l7-4l8 5l-7 3z" fill="#a8b2c6"/><path d="M12 19l3-2l3 3l-3 2z" fill="#ffd060"/><path d="M19 21l2-1l2 2l-2 1z" fill="#ffd060"/>',
+      cotton: '<path d="M15 26v-8" stroke="#7a5a3a" stroke-width="2"/><path d="M9 21l6 3l6-3" fill="none" stroke="#6a8a3a" stroke-width="2"/><circle cx="11" cy="12" r="5" fill="#fff"/><circle cx="19" cy="12" r="5" fill="#f4f0fa"/><circle cx="15" cy="8" r="5" fill="#fff"/><circle cx="15" cy="15" r="4.5" fill="#ece6f6"/>'
+    };
+    function icon(r) { return '<svg viewBox="0 0 30 30" aria-hidden="true">' + ICON[r] + '</svg>'; }
+
+    GM_addStyle([
+      '.ta-panel[data-game="territories"] .ta-bar,.ta-panel[data-game="territories"] .ta-stats,.ta-panel[data-game="territories"] .ta-help{display:none}',
+      '.ta-land .ta-panel[data-game="territories"].ta-on{grid-template-columns:minmax(0,1fr)}',
+      '.ta-land .ta-panel[data-game="territories"] .ta-stage{grid-column:1}',
+      '.ta-panel[data-game="territories"] .ta-stage{padding:6px;align-items:stretch;justify-content:stretch;background:#100c1f}',
+      '.ta-tt{position:absolute;inset:6px;--tp:#1a1530;--tp2:#231c40;--tl:#342b5c;--tm:#a59bc8;--tg:#ffcf4a;color:#f1ecff;font-size:13px;line-height:1.3}',
+      '.ta-tt [hidden]{display:none!important}',
+      '.ta-tt button{appearance:none;font:inherit;font-weight:700;font-size:13px;color:#f1ecff;background:var(--tp2);border:1px solid var(--tl);border-radius:9px;padding:6px 8px;margin:0;cursor:pointer;text-align:left;display:grid;gap:1px;line-height:1.2}',
+      '.ta-tt button:hover:not(:disabled){border-color:var(--tm)}',
+      '.ta-tt button:disabled{opacity:.38;cursor:default}',
+      '.ta-tt button.ta-tt-on{border-color:var(--tg);background:#3a2f12}',
+      '.ta-tt button small{font-size:11px;color:var(--tm);font-weight:600}',
+      '.ta-tt button.ta-tt-sm{padding:4px 9px;text-align:center}',
+      '.ta-tt .ta-tt-go{background:var(--tg);color:#1a1530;border-color:var(--tg);text-align:center;font-size:14px}',
+      '.ta-tt select{font:inherit;font-size:12.5px;font-weight:600;background:var(--tp2);color:#f1ecff;border:1px solid var(--tl);border-radius:7px;padding:3px 4px;margin:0;height:auto}',
+      '.ta-tt-game{position:absolute;inset:0;display:grid;grid-template-columns:minmax(0,1fr) 272px;gap:8px}',
+      '.ta-tt.ta-tt-narrow .ta-tt-game{grid-template-columns:1fr;grid-template-rows:minmax(0,1.1fr) minmax(0,1fr)}',
+      '.ta-tt-board{position:relative;min-width:0;min-height:0;border-radius:12px;border:1px solid var(--tl);overflow:hidden;background:radial-gradient(ellipse at 50% 50%,#1d3a5c 0%,#142a46 45%,#0c1830 75%)}',
+      '.ta-tt-scroll{position:absolute;inset:0;overflow:auto;overscroll-behavior:contain}',
+      '.ta-tt-scroll svg{display:block;width:100%;height:100%;touch-action:manipulation}',
+      '.ta-tt-zoom{display:flex;gap:4px;pointer-events:auto}',
+      '.ta-tt.ta-tt-full{position:fixed;inset:0;z-index:5;padding:10px max(10px,env(safe-area-inset-right,0px)) 10px max(10px,env(safe-area-inset-left,0px));background:#100c1f}',
+      '.ta-tt.ta-tt-full .ta-tt-title,.ta-tt.ta-tt-full .ta-tt-game{inset:10px}',
+      '.ta-tt.ta-tt-full .ta-tt-game{grid-template-columns:minmax(0,1fr) 330px}',
+      '.ta-tt.ta-tt-full.ta-tt-narrow .ta-tt-game{grid-template-columns:1fr}',
+      '.ta-tt .ta-tt-zoom button{width:26px;height:26px;padding:0;text-align:center;place-items:center;font-size:16px;line-height:1}',
+      '.ta-tt-banner{position:absolute;left:8px;top:8px;right:8px;display:flex;justify-content:space-between;gap:6px;pointer-events:none}',
+      '.ta-tt-prompt{background:rgba(16,12,31,.86);border:1px solid var(--tl);border-radius:8px;padding:4px 9px;font-weight:700;max-width:74%}',
+      '.ta-tt-dice{display:flex;gap:4px}',
+      '.ta-tt-die{width:26px;height:26px;border-radius:6px;background:#f6f1ff;color:#1a1530;display:grid;place-items:center;font-weight:800;font-size:15px;box-shadow:0 2px 0 #9a8fbf}',
+      '.ta-tt-die.ta-tt-roll{animation:ta-tt-shake .35s ease}',
+      '@keyframes ta-tt-shake{30%{transform:rotate(-14deg) scale(1.08)}60%{transform:rotate(10deg)}}',
+      '.ta-tt-side{min-width:0;min-height:0;overflow-y:auto;display:grid;gap:8px;align-content:start;padding-right:2px}',
+      '.ta-tt-card{background:var(--tp);border:1px solid var(--tl);border-radius:11px;padding:8px;display:grid;gap:7px}',
+      '.ta-tt-card h4{margin:0;font-size:11px;letter-spacing:.08em;color:var(--tm);font-weight:800}',
+      '.ta-tt-me{display:flex;align-items:center;justify-content:space-between;gap:6px;font-weight:800}',
+      '.ta-tt-me strong{font-size:18px;color:var(--tg);margin-left:3px}',
+      '.ta-tt-me small{color:var(--tm);font-weight:600}',
+      '.ta-tt button span:has(> em){display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;column-gap:4px}',
+      '.ta-tt button span em{font-style:normal;font-weight:600;font-size:10.5px;color:var(--tm);white-space:nowrap;margin-left:auto}',
+      '.ta-tt-hand{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}',
+      '.ta-tt-res{background:var(--tp2);border-radius:8px;padding:3px 1px;text-align:center;border:1px solid transparent;transition:border-color .3s,transform .3s}',
+      '.ta-tt-res.ta-tt-got{border-color:var(--tg);transform:translateY(-2px)}',
+      '.ta-tt-res svg{width:22px;height:22px;display:block;margin:0 auto}',
+      '.ta-tt-res b{display:block;font-size:15px;font-variant-numeric:tabular-nums}',
+      '.ta-tt-res small{color:var(--tm);font-size:10.5px}',
+      '.ta-tt-favs{display:grid;gap:4px}',
+      '.ta-tt-fav{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;background:var(--tp2);border-radius:8px;padding:5px 7px}',
+      '.ta-tt-fav small{display:block;color:var(--tm);font-size:11px}',
+      '.ta-tt-empty{color:var(--tm);font-size:12px}',
+      '.ta-tt-empty b,.ta-tt-ans b{color:#f1ecff}',
+      '.ta-tt-btns{display:grid;grid-template-columns:1fr 1fr;gap:5px}',
+      '.ta-tt-row{display:flex;flex-wrap:wrap;align-items:center;gap:4px;color:var(--tm);font-size:12px}',
+      '.ta-tt-pls{display:grid;gap:5px}',
+      '.ta-tt-pl{display:grid;grid-template-columns:10px 1fr auto;gap:1px 6px;align-items:center}',
+      '.ta-tt-pl i{width:10px;height:10px;border-radius:3px;display:block}',
+      '.ta-tt-pl .ta-tt-r{font-weight:800;color:var(--tg);font-size:15px;font-variant-numeric:tabular-nums}',
+      '.ta-tt-pl .ta-tt-meta{grid-column:2/4;color:var(--tm);font-size:11px}',
+      '.ta-tt-pl.ta-tt-turn>span:nth-child(2){color:var(--tg)}',
+      '.ta-tt-badge{display:inline-block;background:#3a2f12;color:var(--tg);border-radius:5px;padding:0 4px;margin-left:4px;font-size:10.5px;font-weight:800}',
+      '.ta-tt-log{color:var(--tm);font-size:11.5px;max-height:96px;overflow-y:auto;display:grid;gap:2px}',
+      '.ta-tt-log p{margin:0}',
+      '.ta-tt-log p:first-child{color:#f1ecff}',
+      '.ta-tt-dlg{position:absolute;inset:0;z-index:4;background:rgba(10,8,20,.74);display:grid;place-items:center;padding:10px;border-radius:12px}',
+      '.ta-tt-box{background:var(--tp);border:1px solid var(--tl);border-radius:13px;padding:12px;display:grid;gap:9px;width:min(440px,100%);max-height:100%;overflow-y:auto}',
+      '.ta-tt-box h3{margin:0;font-size:16px;font-weight:900;color:var(--tg);letter-spacing:.02em}',
+      '.ta-tt-box p{margin:0;color:var(--tm)}',
+      '.ta-tt-box p b{color:#f1ecff}',
+      '.ta-tt-steps{display:grid;gap:4px}',
+      '.ta-tt-step{display:grid;grid-template-columns:22px 1fr auto 22px auto;gap:5px;align-items:center}',
+      '.ta-tt-step svg{width:20px;height:20px}',
+      '.ta-tt-step b{text-align:center;font-variant-numeric:tabular-nums}',
+      '.ta-tt-step span span{color:var(--tm);font-size:11.5px}',
+      '.ta-tt-cols{display:grid;grid-template-columns:1fr 1fr;gap:10px}',
+      '.ta-tt-picks{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}',
+      '.ta-tt-picks button{text-align:center;justify-items:center;font-size:11.5px;padding:4px 1px}',
+      '.ta-tt-picks svg{width:22px;height:22px}',
+      '.ta-tt-ans{display:grid;grid-template-columns:10px 1fr auto;gap:6px;align-items:center}',
+      '.ta-tt-ans i{width:10px;height:10px;border-radius:3px}',
+      '.ta-tt-title{position:absolute;inset:0;overflow-y:auto;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:8px;align-content:start}',
+      '.ta-tt.ta-tt-narrow .ta-tt-title{grid-template-columns:1fr}',
+      '.ta-tt-title h2{margin:0;font-size:22px;font-weight:900;letter-spacing:.02em}',
+      '.ta-tt-title h2 span{color:var(--tg)}',
+      '.ta-tt-seat{display:grid;grid-template-columns:12px 1fr auto auto;gap:5px;align-items:center}',
+      '.ta-tt-seat i{width:12px;height:12px;border-radius:3px}',
+      '.ta-tt-rules p{margin:0;font-size:12.5px}',
+      '.ta-tt-rules b{color:var(--tg)}',
+      '.ta-tt-costs{display:grid;grid-template-columns:auto 1fr;gap:3px 9px;font-size:12px}',
+      '.ta-tt-costs span:nth-child(odd){font-weight:800;white-space:nowrap}',
+      '.ta-tt-costs span:nth-child(even){color:var(--tm)}',
+      '.ta-tt-online .ta-tt-ids{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}',
+      '.ta-tt-online input{min-width:0;font:inherit;font-size:13px;color:#f1ecff;background:var(--tp2);border:1px solid var(--tl);border-radius:8px;padding:6px 7px;outline:none}',
+      '.ta-tt-online input:focus{border-color:var(--tg)}',
+      '.ta-tt-og{display:grid;gap:4px;padding:7px 8px;border-radius:9px;background:var(--tp2);border:1px solid var(--tl)}',
+      '.ta-tt-og b{font-size:12.5px}', '.ta-tt-og small{color:var(--tm);font-size:11.5px}',
+      '.ta-tt-og .ta-tt-btns{display:flex;gap:5px;flex-wrap:wrap}',
+      '.ta-tt-og.ta-tt-inv{border-color:var(--tg)}',
+      '.ta-tt-msg{font-size:12px;color:#ffd27a}'
+    ].join('\n'));
+
+    const panel = makePanel('territories', 'Torn Territories', 'Build roads, safehouses and HQs across Torn City. First to 10 Respect wins.', '', [],
+      '<div class="ta-tt">' +
+      '<div class="ta-tt-title" data-tt="title">' +
+        '<div class="ta-tt-card"><h2>TORN <span>TERRITORIES</span></h2><h4>NEW GAME</h4><div class="ta-tt-pls" data-tt="seats"></div>' +
+          '<div class="ta-tt-row"><span>Map</span><select data-tt="size" aria-label="Map size"><option value="large">Large: 37 districts</option><option value="standard">Standard: 19 districts</option></select></div>' +
+          '<div class="ta-tt-row"><span>Rivals</span><select data-tt="diff" aria-label="Rival difficulty"><option value="easy">Easy</option><option value="normal">Normal</option><option value="hard">Hard</option></select><span>Speed</span><select data-tt="speed" aria-label="Rival speed"><option value="750">Normal</option><option value="300">Fast</option><option value="40">Instant</option></select><span>Music</span><select data-tt="music" aria-label="Background music"><option value="on">On</option><option value="off">Off</option></select></div>' +
+          '<button class="ta-tt-sm" data-tt="full2">Play full screen</button><button class="ta-tt-go" data-tt="start">Start a new game</button><button class="ta-tt-sm" data-tt="cont" hidden>Continue your saved game</button>' +
+          '<div class="ta-tt-empty" data-tt="record"></div>' +
+          '<div class="ta-tt-empty">More than one Human seat plays pass-and-play on this device. All Computer seats lets you watch.</div></div>' +
+        '<div class="ta-tt-card ta-tt-online" data-tt="online"></div>' +
+        '<div class="ta-tt-card ta-tt-rules"><h4>HOW TO PLAY</h4>' +
+          '<p>Every turn starts with a roll of the dice. Every district with that number pays out to the buildings on its corners: <b>1 card</b> for a safehouse, <b>2</b> for an HQ.</p>' +
+          '<div class="ta-tt-costs"><span>Road</span><span>Brick + Wood. Roads link up your territory.</span><span>Safehouse</span><span>Brick + Wood + Wheat + Cotton. 1 Respect. Goes on one of your roads, two corners from any other building.</span><span>HQ</span><span>2 Wheat + 3 Ore. Upgrades a safehouse: 2 Respect, double pay.</span><span>Favour card</span><span>Wheat + Ore + Cotton. Crew, Supply Run, Street Deal, Road Crew or a secret +1 Respect.</span></div>' +
+          '<p>Roll a <b>7</b> and the <b>police raid</b> moves: anyone holding more than 7 cards hands over half, the raided district stops paying, and the roller takes a card from a rival there.</p>' +
+          '<p>Trade with rivals, or with the bank at 4 for 1. The bank holds 19 of each card (24 on the large map); if it runs short, nobody collects that card unless only one faction is owed it. You have 15 roads, 5 safehouses and 4 HQs. Harbours give 3 for 1, or 2 for 1 in one resource. <b>Longest Road</b> (5+) and <b>Biggest Crew</b> (3+ Crew cards played) are worth 2 Respect each. First to <b>10 Respect</b> on their own turn wins.</p></div>' +
+      '</div>' +
+      '<div class="ta-tt-game" data-tt="game" hidden>' +
+        '<div class="ta-tt-board"><div class="ta-tt-scroll" data-tt="scroll"><svg data-tt="svg" role="img" aria-label="The Torn City board" preserveAspectRatio="xMidYMid meet"></svg></div>' +
+          '<div class="ta-tt-banner"><div class="ta-tt-prompt" data-tt="prompt"></div><div class="ta-tt-zoom"><button data-tt="zin" aria-label="Zoom in">+</button><button data-tt="zout" aria-label="Zoom out">−</button><button data-tt="mus" aria-label="Music" title="Music on or off">♪</button><button data-tt="full" aria-label="Full screen" title="Full screen">⛶</button></div><div class="ta-tt-dice"><div class="ta-tt-die" data-tt="d1">–</div><div class="ta-tt-die" data-tt="d2">–</div></div></div></div>' +
+        '<div class="ta-tt-side">' +
+          '<div class="ta-tt-card" data-tt="meCard"><div class="ta-tt-me"><span data-tt="meName"></span><span>Respect<strong data-tt="myResp">0</strong> <small data-tt="secret"></small></span></div><div class="ta-tt-hand" data-tt="hand"></div><div class="ta-tt-empty" data-tt="last" hidden></div><div class="ta-tt-favs" data-tt="favs"></div></div>' +
+          '<div class="ta-tt-card" data-tt="acts"><button class="ta-tt-go" data-tt="roll">Roll the dice</button>' +
+            '<div class="ta-tt-btns"><button data-tt="bRoute"><span>Road <em data-tt="nRoute"></em></span><small>Brick · Wood</small></button><button data-tt="bSafe"><span>Safehouse <em data-tt="nSafe"></em></span><small>Brick · Wood · Wheat · Cotton</small></button>' +
+            '<button data-tt="bHQ"><span>Upgrade to HQ <em data-tt="nHQ"></em></span><small>2 Wheat · 3 Ore</small></button><button data-tt="bFav"><span>Favour card <em data-tt="nFav"></em></span><small>Wheat · Ore · Cotton</small></button></div>' +
+            '<button data-tt="bDeal"><span>Trade with rivals</span><small>Offer some of your cards for theirs</small></button>' +
+            '<div class="ta-tt-row"><span>Bank</span><select data-tt="give" aria-label="Give to the bank"></select><span>for</span><select data-tt="get" aria-label="Get from the bank"></select><button class="ta-tt-sm" data-tt="bTrade">Trade</button></div>' +
+            '<button class="ta-tt-go" data-tt="end">End turn</button></div>' +
+          '<div class="ta-tt-card"><h4>FACTIONS</h4><div class="ta-tt-pls" data-tt="players"></div></div>' +
+          '<div class="ta-tt-card"><h4>STREET TALK</h4><div class="ta-tt-log" data-tt="log"></div></div>' +
+          '<button class="ta-tt-sm" data-tt="quit">Back to the new game screen</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="ta-tt-dlg" data-tt="dlg" hidden><div class="ta-tt-box" data-tt="dlgBox"></div></div>' +
+      '</div>',
+      '');
+    const box = $(panel, '.ta-tt');
+    function Q(id) { return box.querySelector('[data-tt="' + id + '"]'); }
+    const svg = Q('svg');
+    let G = null;   // the whole game (saved in Tampermonkey storage)
+    const UI = { last: null, aiTraded: false, zoom: 1, mode: null, viewer: -1, flash: [], dlg: null, timer: 0, aiActs: 0, asked: false, rolled: false, sawOver: false, live: false };
+    const opts = Object.assign({ size: 'large', diff: 'normal', speed: 750, seats: [['human', 0], ['ai', 1], ['ai', 2], ['ai', 3]] }, store.get('territoriesOpts', null) || {});
+    const stats = Object.assign({ games: 0, wins: 0, fastest: 0 }, store.get('territoriesStats', null) || {});
+
+    const rnd = Math.random;   // music
+
+    /* ---------- Sound: effects and soft background music, all generated live (no audio files) ---------- */
+    const FX = {
+      road: [[0, 310, 0.05, 'triangle', 0.05, 220], [90, 280, 0.05, 'triangle', 0.05, 200], [180, 140, 0.12, 'sine', 0.05, 90]],                       // two knocks and a thud: laying a road
+      safe: [[0, 330, 0.04, 'square', 0.025, 260], [110, 330, 0.04, 'square', 0.025, 260], [220, 330, 0.04, 'square', 0.025, 260], [340, 784, 0.18, 'triangle', 0.05], [420, 1047, 0.26, 'triangle', 0.045]],   // hammering, then a chime
+      hq: [[0, 523, 0.12, 'triangle', 0.05], [90, 659, 0.12, 'triangle', 0.05], [180, 784, 0.12, 'triangle', 0.05], [270, 1047, 0.3, 'triangle', 0.05], [300, 2093, 0.25, 'sine', 0.02]],   // a rising fanfare
+      fav: [[0, 1400, 0.12, 'sine', 0.025, 500], [130, 988, 0.3, 'sine', 0.04], [130, 1480, 0.3, 'sine', 0.02]],                                       // a card swish and a bell
+      trade: [[0, 1568, 0.06, 'square', 0.02], [70, 2093, 0.12, 'square', 0.02]],                                                                     // coins
+      deal: [[0, 659, 0.1, 'triangle', 0.045], [100, 880, 0.18, 'triangle', 0.045]],
+      dice: [[0, 520, 0.04, 'square', 0.03], [60, 380, 0.04, 'square', 0.03], [120, 640, 0.05, 'square', 0.03]],
+      raid: [[150, 2200, 0.12, 'sine', 0.03, 2600], [300, 2200, 0.3, 'sine', 0.03, 1800], [500, 760, 0.18, 'square', 0.022], [690, 600, 0.18, 'square', 0.022], [880, 760, 0.18, 'square', 0.022]],   // a whistle and a siren
+      lose: [[0, 520, 0.12, 'triangle', 0.04, 260]],
+      pick: [[0, 700, 0.05, 'triangle', 0.03]]
+    };
+    const PLUCK = { brick: 392, wood: 440, wheat: 523, ore: 587, cotton: 659 };   // collecting: one soft note per resource
+    function snd(k) { if (UI.live && FX[k]) seq(FX[k]); }
+    function collectSound(list) { if (!UI.live) return; list.forEach(function (r, i) { setTimeout(function () { tone(PLUCK[r] || 600, 0.22, 'triangle', 0.04); tone((PLUCK[r] || 600) * 2, 0.16, 'sine', 0.012); }, i * 90); }); }
+    // A slow, soft piece that never quite repeats: warm pads, a gentle bass and a few music-box notes from a C major
+    // pentatonic scale, at 66 beats a minute, through a low-pass filter and a soft echo.
+    const PROG = [[36, [60, 64, 67, 71]], [33, [57, 60, 64, 67]], [41, [57, 60, 64, 65]], [43, [55, 59, 62, 64]], [40, [55, 59, 64, 67]], [33, [57, 60, 64, 67]], [38, [57, 60, 62, 65]], [43, [55, 60, 62, 67]]];
+    const MEL = [72, 74, 76, 79, 81, 84], BEAT = 60 / 66, BAR = BEAT * 4;
+    const MUS = { bus: null, mel: null, timer: 0, next: 0, bar: 0 };
+    function hz(m) { return 440 * Math.pow(2, (m - 69) / 12); }
+    function musicOn() { return opts.music !== false && !muted && UI.live; }
+    function musicStart() {
+      if (MUS.timer || !musicOn()) return;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const c = audioCtx, gr = musicGraph(c, outFor(c));
+        MUS.bus = gr.bus; MUS.mel = gr.mel; MUS.next = c.currentTime + 0.15; MUS.bar = 0;
+        MUS.timer = setInterval(musicTick, 250); musicTick();
+      } catch (e) { MUS.timer = 0; }
+    }
+    function musicGraph(c, dest) {
+      const lp = c.createBiquadFilter(), bus = c.createGain(), mel = c.createGain(), dl = c.createDelay(1), fb = c.createGain();
+      lp.type = 'lowpass'; lp.frequency.value = 1500; lp.Q.value = 0.4;
+      bus.gain.setValueAtTime(0, c.currentTime); bus.gain.linearRampToValueAtTime(0.9, c.currentTime + 2.5);
+      dl.delayTime.value = BEAT * 0.75; fb.gain.value = 0.32;
+      mel.connect(lp); mel.connect(dl); dl.connect(fb); fb.connect(dl); dl.connect(lp);
+      lp.connect(bus); bus.connect(dest);
+      return { bus: bus, mel: mel };
+    }
+    function musicStop() {
+      clearInterval(MUS.timer); MUS.timer = 0;
+      const bus = MUS.bus; MUS.bus = null;
+      if (bus) { try { bus.gain.cancelScheduledValues(audioCtx.currentTime); bus.gain.setTargetAtTime(0, audioCtx.currentTime, 0.25); setTimeout(function () { try { bus.disconnect(); } catch (e) {} }, 1500); } catch (e) {} }
+    }
+    function note(f, at, dur, type, vol, attack, dest) {
+      const c = dest.context, o = c.createOscillator(), g = c.createGain();
+      o.type = type; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, at); g.gain.linearRampToValueAtTime(vol, at + attack); g.gain.setTargetAtTime(0.0001, at + Math.max(attack, dur - 0.4), dur / 4);
+      o.connect(g); g.connect(dest); o.start(at); o.stop(at + dur + 1.5);
+    }
+    function musicTick() {
+      if (!musicOn()) { musicStop(); return; }
+      scheduleBars(MUS, audioCtx.currentTime + 1.5);
+    }
+    function scheduleBars(M, until) {
+      while (M.next < until) {
+        const t = M.next, ch = PROG[M.bar % PROG.length];
+        ch[1].forEach(function (m, i) { note(hz(m), t, BAR + 1.2, i % 2 ? 'triangle' : 'sine', 0.014, 1.3, M.bus); });   // pads
+        note(hz(ch[0]), t, BAR, 'sine', 0.05, 0.08, M.bus);   // bass
+        if (rnd() < 0.5) note(hz(ch[0] + 7), t + BEAT * 2, BEAT * 2, 'sine', 0.03, 0.08, M.bus);
+        for (let b = 0; b < 4; b++) {   // a few music-box notes, more likely on the stronger beats
+          if (rnd() < (b === 0 ? 0.55 : b === 2 ? 0.45 : 0.25)) note(hz(MEL[Math.floor(rnd() * MEL.length)] - (rnd() < 0.3 ? 12 : 0)), t + b * BEAT + (rnd() < 0.3 ? BEAT / 2 : 0), 1.4, 'triangle', 0.03, 0.01, M.mel);
+        }
+        M.next += BAR; M.bar++;
+      }
+    }
+
+    /* ---------- Pictures from the Character Art pack (data URIs, or null) ---------- */
+    function art(res) {
+      const api = games.pocket && games.pocket.art, b64 = api && api.get ? api.get('tt' + res) : null;
+      return b64 ? 'data:image/webp;base64,' + b64 : null;
+    }
+
+    /* ---------- New game ---------- */
+    function newGame() {
+      const seats = opts.seats.filter(function (s) { return s[0] !== 'off'; });
+      G = E.newGame({ size: opts.size, diff: opts.diff, speed: opts.speed, players: seats.map(function (s) { const i = opts.seats.indexOf(s); return { name: NAMES[i], col: COLOURS[s[1]][0], ai: s[0] === 'ai' }; }) });
+      UI.mode = null; UI.viewer = -1; UI.dlg = null; UI.sawOver = false; UI.last = null;
+      sfx.win();
+      tick();
+    }
+
+    const P = E.P, cards = function (p) { return p.n !== undefined ? p.n : E.cards(p); }, stock = function (r) { return G && G.bank ? G.bank[r] : E.stock(r); };
+    const canAfford = E.canAfford, safeOK = E.safeOK, routeOK = E.routeOK, anyRoute = E.anyRoute, anySafe = E.anySafe, rate = E.rate, routeLen = E.routeLen, pips = E.pips;
+    const respect = E.respect, humans = E.humans, you = E.you, name = E.name, verb = E.verb, say = E.say, checkWin = E.checkWin, canPlay = E.canPlay, victims = E.victims;
+    function act(pi, a) { if (ON) { onAct(a); return { sent: true }; } const r = E.act(pi, a); if (r.err) sfx.miss(); return r; }
+    // Best scores against the computer (games on this device with one person playing).
+    function wonGame(pi) {
+      if (G.counted || humans() !== 1) return;
+      G.counted = true; stats.games++;
+      if (!P(pi).ai) {
+        stats.wins++; const turns = Math.floor(G.turn / G.players.length) + 1;
+        if (!stats.fastest || turns < stats.fastest) stats.fastest = turns;
+        record('territories:wins', stats.wins); record('territories:fastest', turns, true);
+        confetti(panel.querySelector('.ta-stage')); sfx.win();
+      } else snd('lose');
+      store.set('territoriesStats', stats);
+    }
 
     /* ---------- The loop ---------- */
-    function waitingHuman() {
-      if (G.phase === 'over') return -1;
-      if (G.phase === 'discard') return P(G.discardQ[0]).ai ? -1 : G.discardQ[0];
-      if (G.phase === 'offer') return G.offer.to;
-      return P(G.cur).ai ? -1 : G.cur;
-    }
+    function waitingHuman() { const w = E.waiting(); return w < 0 || E.isAI(w) ? -1 : w; }
     function tick() {
       clearTimeout(UI.timer);
-      while (G.phase === 'discard' && G.discardQ.length && P(G.discardQ[0]).ai) aiDiscard(G.discardQ[0]);
+      if (ON) {   // online: the server runs the game; open the dialog the game is waiting on you for, close stale ones
+        const w = waitingHuman(), dk = UI.dlg && UI.dlg.kind;
+        if ((dk === 'discard' || dk === 'steal' || dk === 'offer') && w !== UI.viewer) UI.dlg = null;
+        if ((dk === 'trade' || dk === 'supply' || dk === 'deal') && !mine()) UI.dlg = null;
+        if (w >= 0 && w === UI.viewer && !UI.dlg) {
+          if (G.phase === 'discard') UI.dlg = { kind: 'discard', take: {} };
+          else if (G.phase === 'steal') UI.dlg = { kind: 'steal' };
+          else if (G.phase === 'offer') UI.dlg = { kind: 'offer' };
+        }
+        render(); return;
+      }
+      while (G.phase === 'discard' && G.discardQ.length && E.isAI(G.discardQ[0])) E.aiDiscard(G.discardQ[0]);
       const w = waitingHuman(), hu = humans();
       if (hu === 1) UI.viewer = G.players.findIndex(function (p) { return !p.ai; });
       if (w >= 0 && hu > 1 && UI.viewer !== w) UI.dlg = { kind: 'pass', who: w };
@@ -19114,54 +19494,47 @@
       }
       store.set('territories', G.phase === 'over' ? null : G);
       render();
-      if (w < 0 && G.phase !== 'over' && UI.live) UI.timer = setTimeout(function () { if (!UI.live) return; aiStep(); tick(); }, G.phase === 'setup' ? Math.min(G.speed, 450) : G.speed);
+      if (w < 0 && G.phase !== 'over' && UI.live) UI.timer = setTimeout(function () { if (!UI.live) return; E.aiMove(); tick(); }, G.phase === 'setup' ? Math.min(G.speed, 450) : G.speed);
     }
 
     /* ---------- Your moves ---------- */
-    function mine() { return !!G && G.phase !== 'over' && !P(G.cur).ai && UI.viewer === G.cur && !(UI.dlg && UI.dlg.kind === 'pass'); }
+    function mine() { return !!G && G.phase !== 'over' && !E.isAI(G.cur) && UI.viewer === G.cur && !(UI.dlg && UI.dlg.kind === 'pass'); }
     function on(id, fn) { Q(id).addEventListener('click', fn); }
-    on('roll', function () { if (!mine() || G.phase !== 'roll') return; rollDice(); if (G.phase === 'main') checkWin(G.cur); tick(); });
+    on('roll', function () { if (!mine() || G.phase !== 'roll') return; act(G.cur, { t: 'roll' }); tick(); });
     function setMode(m) { if (!mine() || G.phase !== 'main') return; UI.mode = UI.mode === m ? null : m; sfx.click(); render(); }
     on('bRoute', function () { setMode('route'); });
     on('bSafe', function () { setMode('safe'); });
     on('bHQ', function () { setMode('hq'); });
-    on('bFav', function () { if (!mine() || G.phase !== 'main' || !G.deck.length || !canAfford(P(G.cur), COST.fav)) return; buyFav(G.cur); checkWin(G.cur); tick(); });
+    on('bFav', function () { if (!mine()) return; act(G.cur, { t: 'fav' }); tick(); });
     on('bTrade', function () {
       if (!mine() || G.phase !== 'main') return;
-      const g = Q('give').value, w = Q('get').value, pi = G.cur, k = rate(pi, g);
-      if (P(pi).hand[g] < k || g === w || stock(w) < 1) return;
-      P(pi).hand[g] -= k; P(pi).hand[w]++; UI.flash = [w]; snd('trade'); UI.last = { who: pi, gave: (function () { const o = {}; o[g] = k; return o; })(), got: (function () { const o = {}; o[w] = 1; return o; })() };
-      say(name(pi) + ' ' + verb(pi, 'trade') + ' ' + k + ' ' + RN[g] + ' for 1 ' + RN[w] + (k < 4 ? ' at a harbour.' : ' with the bank.'));
+      act(G.cur, { t: 'bank', give: Q('give').value, get: Q('get').value });
       tick();
     });
     on('bDeal', function () { if (!mine() || G.phase !== 'main') return; UI.dlg = { kind: 'trade', give: {}, want: {}, answers: null }; sfx.click(); render(); });
-    on('end', function () { if (!mine() || G.phase !== 'main') return; sfx.click(); if (!checkWin(G.cur)) endTurn(); tick(); });
-    on('quit', function () { clearTimeout(UI.timer); sfx.click(); showTitle(); });
-    function clickHex(hi) { if (!mine() || G.phase !== 'raid' || hi === G.raid) return; moveRaid(G.cur, hi); tick(); }
+    on('end', function () { if (!mine() || G.phase !== 'main') return; sfx.click(); act(G.cur, { t: 'end' }); tick(); });
+    on('quit', function () { clearTimeout(UI.timer); sfx.click(); ON = null; showTitle(); });
+    function clickHex(hi) { if (!mine() || G.phase !== 'raid' || hi === G.raid) return; act(G.cur, { t: 'raid', h: hi }); tick(); }
     function clickVert(v) {
       if (!mine()) return;
       const pi = G.cur, p = P(pi);
-      if (G.phase === 'setup' && G.setup.step === 'safe' && safeOK(pi, v, true)) placeSafe(pi, v, true);
-      else if (UI.mode === 'safe' && G.phase === 'main' && safeOK(pi, v) && canAfford(p, COST.safe) && p.safes) { placeSafe(pi, v, false); UI.mode = canAfford(p, COST.safe) && p.safes && anySafe(pi) ? 'safe' : null; }
-      else if (UI.mode === 'hq' && G.phase === 'main' && G.verts[v].owner === pi && G.verts[v].lvl === 1 && canAfford(p, COST.hq) && p.hqs) { upgrade(pi, v); UI.mode = null; }
+      if (G.phase === 'setup' || UI.mode === 'safe') { if (act(pi, { t: 'safe', v: v }).err) return; if (UI.mode === 'safe') UI.mode = canAfford(p, COST.safe) && p.safes && anySafe(pi) ? 'safe' : null; }
+      else if (UI.mode === 'hq') { if (act(pi, { t: 'hq', v: v }).err) return; UI.mode = null; }
       else return;
-      checkWin(pi); tick();
+      tick();
     }
     function clickEdge(e) {
       if (!mine()) return;
       const pi = G.cur, p = P(pi);
-      if (G.phase === 'setup' && G.setup.step === 'route' && routeOK(pi, e)) placeRoute(pi, e, true);
-      else if (G.phase === 'roads' && routeOK(pi, e) && p.routes) placeRoute(pi, e, true);
-      else if (UI.mode === 'route' && G.phase === 'main' && routeOK(pi, e) && canAfford(p, COST.route) && p.routes) { placeRoute(pi, e, false); UI.mode = canAfford(p, COST.route) && p.routes && anyRoute(pi) ? 'route' : null; }
+      if (G.phase === 'setup' || G.phase === 'roads' || UI.mode === 'route') { if (act(pi, { t: 'route', e: e }).err) return; if (UI.mode === 'route') UI.mode = canAfford(p, COST.route) && p.routes && anyRoute(pi) ? 'route' : null; }
       else return;
-      checkWin(pi); tick();
+      tick();
     }
     function playFav(idx) {
       const pi = G.cur, f = P(pi).favs[idx];
       if (!mine() || !f || !canPlay(pi, f)) return;
       UI.mode = null; sfx.click();
-      if (f.t === 'crew') { useFav(pi, idx); P(pi).crew++; awards(); G.afterRaid = G.phase; G.phase = 'raid'; checkWin(pi); tick(); }
-      else if (f.t === 'roads') { useFav(pi, idx); G.free = 2; G.phase = anyRoute(pi) && P(pi).routes ? 'roads' : 'main'; tick(); }
+      if (f.t === 'crew' || f.t === 'roads') { act(pi, { t: 'play', idx: idx }); tick(); }
       else if (f.t === 'supply') { UI.dlg = { kind: 'supply', idx: idx, picks: [] }; render(); }
       else if (f.t === 'deal') { UI.dlg = { kind: 'deal', idx: idx }; render(); }
     }
@@ -19182,7 +19555,7 @@
         bx.innerHTML = '<h3>PASS THE PHONE</h3><p>Hand the device to <b style="color:' + P(d.who).col + '">' + esc(P(d.who).name) + '</b>. Everyone else, look away from their cards.</p><button class="ta-tt-go" data-a="show">Show ' + esc(P(d.who).name) + '\'s cards</button>';
       } else if (d.kind === 'discard') {
         const pi = G.discardQ[0], need = Math.floor(cards(P(pi)) / 2), sel = sum(d.take);
-        bx.innerHTML = '<h3>POLICE RAID</h3><p>' + (humans() > 1 ? esc(P(pi).name) + ' is' : 'You\'re') + ' holding <b>' + cards(P(pi)) + ' cards</b>. Hand over ' + need + ' of them.</p>' + steppers('take', d.take, P(pi).hand) +
+        bx.innerHTML = '<h3>POLICE RAID</h3><p>' + (humans() > 1 && !ON ? esc(P(pi).name) + ' is' : 'You\'re') + ' holding <b>' + cards(P(pi)) + ' cards</b>. Hand over ' + need + ' of them.</p>' + steppers('take', d.take, P(pi).hand) +
           '<button class="ta-tt-go" data-a="discard"' + (sel === need ? '' : ' disabled') + '>Hand over ' + sel + ' of ' + need + '</button>';
       } else if (d.kind === 'steal') {
         bx.innerHTML = '<h3>WHO DO YOU ROB?</h3><p>Take one card at random from a rival on this district.</p><div class="ta-tt-pls">' +
@@ -19195,10 +19568,11 @@
         const me = P(G.cur), ok = sum(d.give) > 0 && sum(d.want) > 0 && RES.every(function (r) { return !(d.give[r] && d.want[r]); });
         bx.innerHTML = '<h3>TRADE WITH RIVALS</h3><div class="ta-tt-cols"><div class="ta-tt-steps"><p>You give</p>' + steppers('give', d.give, me.hand) + '</div><div class="ta-tt-steps"><p>You want</p>' + steppers('want', d.want, null) + '</div></div>' +
           (d.answers ? '<div class="ta-tt-pls">' + (d.answers.length ? d.answers.map(function (a, k) {
+            if (a.human) return '<div class="ta-tt-ans"><i style="background:' + P(a.i).col + '"></i><span>' + esc(P(a.i).name) + ' decides for themselves (30 seconds)</span><button class="ta-tt-sm" data-a="propose" data-to="' + a.i + '">Offer to ' + esc(P(a.i).name) + '</button></div>';
             const why = { cards: ' doesn\'t have that', leader: ' won\'t trade with the leader', threat: ' won\'t help you build', value: ' says no' }[a.why] || ' says no';
             return '<div class="ta-tt-ans"><i style="background:' + P(a.i).col + '"></i><span>' + esc(P(a.i).name) + (a.ok ? ' will take that deal' : a.counter ? ' says no, but counters: <b>you give ' + list(a.counter) + '</b>, you get ' + list(d.want) : why) + '</span>' +
               (a.ok || a.counter ? '<button class="ta-tt-sm" data-a="accept" data-k2="' + k + '">' + (a.ok ? 'Deal' : 'Accept counter') + '</button>' : '<span></span>') + '</div>';
-          }).join('') : '<p>No computer factions to trade with.</p>') + '</div>' : '') +
+          }).join('') : '<p>No one to trade with.</p>') + '</div>' : '') +
           '<div class="ta-tt-btns"><button class="ta-tt-go" data-a="offer"' + (ok ? '' : ' disabled') + '>Make the offer</button><button class="ta-tt-sm" data-a="close">Close</button></div>';
       } else if (d.kind === 'offer') {
         const o = G.offer, can = RES.every(function (r) { return (o.want[r] || 0) <= P(o.to).hand[r]; });
@@ -19206,7 +19580,7 @@
           '<div class="ta-tt-btns"><button class="ta-tt-go" data-a="yes"' + (can ? '' : ' disabled') + '>Deal</button><button class="ta-tt-sm" data-a="no">No thanks</button></div>';
       } else if (d.kind === 'over') {
         const w = G.winner;
-        bx.innerHTML = '<h3>' + (you(w) ? 'TORN CITY IS YOURS' : esc(P(w).name.toUpperCase()) + ' WINS') + '</h3><p>Final Respect, counting secret Councillor\'s Favours: ' + G.players.map(function (p, i) { return esc(p.name) + ' <b>' + respect(i, true) + '</b>'; }).join(' · ') + '</p><div class="ta-tt-btns"><button class="ta-tt-go" data-a="again">New game</button><button class="ta-tt-sm" data-a="close">Look at the board</button></div>';
+        bx.innerHTML = '<h3>' + ((ON ? w === UI.viewer : you(w)) ? 'TORN CITY IS YOURS' : esc(P(w).name.toUpperCase()) + ' WINS') + '</h3><p>Final Respect, counting secret Councillor\'s Favours: ' + G.players.map(function (p, i) { return esc(p.name) + ' <b>' + respect(i, true) + '</b>'; }).join(' · ') + '</p><div class="ta-tt-btns"><button class="ta-tt-go" data-a="again">' + (ON ? 'Back to your games' : 'New game') + '</button><button class="ta-tt-sm" data-a="close">Look at the board</button></div>';
       }
     }
     Q('dlgBox').addEventListener('click', function (e) {
@@ -19214,39 +19588,36 @@
       const a = b.dataset.a, d = UI.dlg, r = b.dataset.r;
       if (a === 'show') { UI.viewer = d.who; UI.dlg = null; sfx.click(); tick(); return; }
       if (a === 'close') { UI.dlg = null; render(); return; }
-      if (a === 'again') { UI.dlg = null; showTitle(); return; }
+      if (a === 'again') { UI.dlg = null; ON = null; showTitle(); return; }
+      if (a === 'propose') { UI.dlg = null; act(G.cur, { t: 'propose', to: +b.dataset.to }); sfx.click(); render(); return; }
       if (a === 'inc' || a === 'dec') {
         const k = b.dataset.k, o = d[k], lim = k === 'take' ? P(G.discardQ[0]).hand[r] : k === 'give' ? P(G.cur).hand[r] : 19;
         o[r] = Math.max(0, Math.min(lim, (o[r] || 0) + (a === 'inc' ? 1 : -1)));
         if (k === 'take' && sum(o) > Math.floor(cards(P(G.discardQ[0])) / 2)) o[r]--;
         d.answers = null; render(); return;
       }
-      if (a === 'discard') { const t = d.take; UI.dlg = null; discard(G.discardQ[0], t); tick(); return; }
-      if (a === 'rob') { UI.dlg = null; steal(G.cur, +b.dataset.v); tick(); return; }
+      if (a === 'discard') { const t = d.take; if (act(G.discardQ[0], { t: 'discard', take: t }).err) return; UI.dlg = null; tick(); return; }
+      if (a === 'rob') { UI.dlg = null; act(G.cur, { t: 'rob', v: +b.dataset.v }); tick(); return; }
       if (a === 'pick') {
         d.picks.push(r);
-        if (d.picks.length === 2) { useFav(G.cur, d.idx); d.picks.forEach(function (x) { P(G.cur).hand[x]++; }); UI.flash = d.picks.slice(); say(name(G.cur) + ' ' + verb(G.cur, 'bring') + ' in ' + RN[d.picks[0]] + ' and ' + RN[d.picks[1]] + '.'); UI.dlg = null; collectSound(d.picks); tick(); }
+        if (d.picks.length === 2) { UI.dlg = null; act(G.cur, { t: 'play', idx: d.idx, picks: d.picks.slice() }); tick(); }
         else render();
         return;
       }
-      if (a === 'deal') { useFav(G.cur, d.idx); streetDeal(G.cur, r); UI.dlg = null; snd('trade'); tick(); return; }
+      if (a === 'deal') { UI.dlg = null; act(G.cur, { t: 'play', idx: d.idx, res: r }); tick(); return; }
       if (a === 'offer') {
-        d.answers = G.players.map(function (p, i) { return i; }).filter(function (i) { return i !== G.cur && P(i).ai; }).map(function (i) { const w = wantsDeal(i, d.give, d.want, G.cur); return { i: i, ok: w.ok, why: w.why, counter: !w.ok && (w.why === 'value' || w.why === 'threat') ? counter(i, d.give, d.want, G.cur) : null }; });
-        say(name(G.cur) + ' ' + verb(G.cur, 'offer') + ' ' + list(d.give) + ' for ' + list(d.want) + '.');
-        render(); return;
+        if (ON) { onAct({ t: 'ask', give: d.give, want: d.want }).then(function (x) { if (x.status === 200 && UI.dlg === d) { d.answers = x.body.answers || []; render(); } }); return; }
+        const r2 = act(G.cur, { t: 'ask', give: d.give, want: d.want }); if (r2.err) return;
+        d.answers = r2.answers; render(); return;
       }
       if (a === 'accept') {
-        const ans = d.answers[+b.dataset.k2], v = ans.i, me = P(G.cur), them = P(v), give = ans.counter || d.give;
-        if (RES.some(function (x) { return (give[x] || 0) > me.hand[x] || (d.want[x] || 0) > them.hand[x]; })) return;
-        RES.forEach(function (x) { me.hand[x] += (d.want[x] || 0) - (give[x] || 0); them.hand[x] += (give[x] || 0) - (d.want[x] || 0); });
-        say(them.name + ' takes the deal: ' + list(give) + ' for ' + list(d.want) + '.'); UI.flash = Object.keys(d.want); UI.last = { who: G.cur, gave: give, got: d.want };
-        UI.dlg = null; snd('deal'); tick(); return;
+        if (act(G.cur, { t: 'accept', k: +b.dataset.k2 }).err) return;
+        UI.dlg = null; tick(); return;
       }
       if (a === 'yes' || a === 'no') {
-        const o = G.offer;
-        if (a === 'yes') { RES.forEach(function (x) { P(o.to).hand[x] += (o.give[x] || 0) - (o.want[x] || 0); P(o.from).hand[x] += (o.want[x] || 0) - (o.give[x] || 0); }); say(name(o.to) + ' ' + verb(o.to, 'take') + ' ' + P(o.from).name + '\'s deal.'); if (o.to === UI.viewer) UI.flash = Object.keys(o.give); UI.last = { who: o.to, gave: o.want, got: o.give }; snd('deal'); }
-        else { say(name(o.to) + ' ' + verb(o.to, 'turn') + ' down ' + P(o.from).name + '.'); sfx.click(); }
-        G.offer = null; G.phase = 'main'; UI.dlg = null; tick(); return;
+        if (act(G.offer.to, { t: a }).err) return;
+        if (a === 'no') sfx.click();
+        UI.dlg = null; tick(); return;
       }
     });
 
@@ -19367,7 +19738,7 @@
           Q(b[0]).disabled = !(main && canAfford(me, COST[b[1]]) && b[2]); Q(b[0]).classList.toggle('ta-tt-on', UI.mode === b[1]);
         });
         Q('bFav').disabled = !(main && canAfford(me, COST.fav) && G.deck.length);
-        Q('bDeal').disabled = !(main && cards(me) > 0 && G.players.some(function (p) { return p.ai; }));
+        Q('bDeal').disabled = !(main && cards(me) > 0 && G.players.some(function (p, i) { return i !== vi && (p.ai || ON); }));
         const gv = Q('give').value, gt = Q('get').value;
         Q('give').innerHTML = RES.map(function (r) { return '<option value="' + r + '">' + rate(vi, r) + ' ' + RN[r] + ' (have ' + me.hand[r] + ')</option>'; }).join('');
         Q('get').innerHTML = RES.map(function (r) { return '<option value="' + r + '">1 ' + RN[r] + ' (bank ' + stock(r) + ')</option>'; }).join('');
@@ -19389,6 +19760,8 @@
         G.phase === 'roll' ? 'Your turn. Roll the dice' + (c.favs.some(function (f) { return canPlay(G.cur, f); }) ? ', or play a Crew card first.' : '.') :
         G.phase === 'raid' ? 'Tap a district to send the police raid there.' : G.phase === 'roads' ? 'Road Crew: build ' + G.free + ' more road' + (G.free > 1 ? 's' : '') + ' for free.' :
         UI.mode === 'route' ? 'Tap a gold road to build it.' : UI.mode === 'safe' ? 'Tap a gold spot to open a safehouse.' : UI.mode === 'hq' ? 'Tap one of your safehouses to upgrade it.' : 'Build, trade or end your turn.';
+      if (ON) { ON.prompt = Q('prompt').textContent; onClock(); }
+      Q('quit').textContent = ON ? 'Back to your online games' : 'Back to the new game screen';
       if (G.phase === 'over' && !UI.dlg && !UI.sawOver) { UI.sawOver = true; UI.dlg = { kind: 'over' }; }
       dlgHTML();
     }
@@ -19451,18 +19824,161 @@
       Q('game').hidden = true; Q('title').hidden = false; Q('dlg').hidden = true; UI.dlg = null; seatsHTML();
       const saved = store.get('territories', null);
       Q('cont').hidden = !(saved && saved.v === 1 && saved.phase && saved.phase !== 'over');
+      onCard(); onLoadList();
     }
-    on('start', function () { sfx.click(); Q('title').hidden = true; Q('game').hidden = false; newGame(); });
+    on('start', function () { sfx.click(); ON = null; Q('title').hidden = true; Q('game').hidden = false; newGame(); });
     on('cont', function () {
       const s = store.get('territories', null); if (!s) return;
-      G = s; UI.viewer = -1; UI.dlg = null; UI.mode = null; UI.sawOver = false; UI.aiActs = 0; UI.asked = false;
+      ON = null; G = s; E.set(G); UI.viewer = -1; UI.dlg = null; UI.mode = null; UI.sawOver = false;
       sfx.click(); Q('title').hidden = true; Q('game').hidden = false; tick();
     });
+
+    /* ---------- Online games (optional: Settings → Online, verified players only) ----------
+       The Torn Arcade server runs online games with the same rules engine as this phone (tt-engine.js). The phone
+       shows the game and sends your moves. While an online game is on screen it asks the server for news by long
+       polling (plain HTTPS requests; no websockets), and the title screen checks your game list every few seconds
+       while one of your games is waiting to start. Nothing is sent with Online play off. */
+    let ON = null, onList = null, onMsg = '', onGen = 0, onListT = 0, onClockT = 0;
+    function onReady() { const o = onl(); return !!(o.on && o.token && o.account && o.account.verified); }
+    function onWait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+    function onCard() {
+      const c = Q('online'); if (!c) return;
+      if (!onReady()) {
+        c.innerHTML = '<h4>PLAY ONLINE</h4><div class="ta-tt-empty">Play against other Torn players, live. Optional: turn on Online play and verify your Torn ID in Settings → Online. Everything else here works without it.</div><button class="ta-tt-sm" data-o="settings">Open Settings</button>';
+        return;
+      }
+      const games = onList || [];
+      c.innerHTML = '<h4>PLAY ONLINE</h4>' + (onMsg ? '<div class="ta-tt-msg">' + esc(onMsg) + '</div>' : '') +
+        '<div class="ta-tt-empty">Invite 1 to 3 players by Torn ID. They get a notification on their phone. Empty seats are played by the computer. 30 seconds a move: if a player doesn\'t act in time, the computer plays that turn for them.</div>' +
+        '<div class="ta-tt-ids">' + [0, 1, 2].map(function (i) { return '<input data-oid="' + i + '" inputmode="numeric" maxlength="9" placeholder="Torn ID" aria-label="Player ' + (i + 2) + ' Torn ID">'; }).join('') + '</div>' +
+        '<button class="ta-tt-go" data-o="create">Invite and make a lobby</button>' +
+        (games.length ? games.map(onRow).join('') : '<div class="ta-tt-empty">' + (onList ? 'No online games yet.' : 'Loading your online games…') + '</div>') +
+        '<button class="ta-tt-sm" data-o="refresh">Refresh</button>';
+    }
+    function onRow(g) {
+      const seats = g.seats.map(function (s) { return esc(s.name) + (s.st === 'pending' ? ' (invited)' : s.st === 'declined' ? ' (said no)' : s.st === 'ai' ? ' (computer)' : s.st === 'left' ? ' (left)' : ''); }).join(', ');
+      let btn = '', st = '';
+      if (g.status === 'lobby') {
+        st = 'Waiting to start · ' + (g.size === 'standard' ? 'Standard' : 'Large') + ' map';
+        if (g.invited) btn = '<button class="ta-tt-go" data-o="join" data-g="' + g.id + '">Join</button><button class="ta-tt-sm" data-o="decline" data-g="' + g.id + '">No thanks</button>';
+        else if (g.you === 0) btn = '<button class="ta-tt-go" data-o="start" data-g="' + g.id + '">Start now</button><button class="ta-tt-sm" data-o="cancel" data-g="' + g.id + '">Cancel</button>';
+        else btn = '<span class="ta-tt-empty">Waiting for ' + esc(g.host) + ' to start.</span><button class="ta-tt-sm" data-o="leave" data-g="' + g.id + '">Leave</button>';
+      } else if (g.status === 'active') {
+        st = 'Playing · ' + (g.waitingOn === g.you ? '<b style="color:var(--tg)">your move</b>' : 'waiting on ' + esc((g.seats[g.waitingOn] || {}).name || '…'));
+        btn = '<button class="ta-tt-go" data-o="open" data-g="' + g.id + '">Open</button><button class="ta-tt-sm" data-o="leave" data-g="' + g.id + '">Leave</button>';
+      } else {
+        st = 'Finished · ' + (g.winner === g.you ? 'you won!' : esc((g.seats[g.winner] || {}).name || '') + ' won') + (g.rated ? ' · rated' : '');
+        btn = '<button class="ta-tt-sm" data-o="open" data-g="' + g.id + '">Look at the board</button>';
+      }
+      return '<div class="ta-tt-og' + (g.invited || (g.status === 'active' && g.waitingOn === g.you) ? ' ta-tt-inv' : '') + '"><b>Game ' + g.id + ' · ' + esc(g.host) + '\'s lobby</b><small>' + st + '</small><small>' + seats + '</small><div class="ta-tt-btns">' + btn + '</div></div>';
+    }
+    async function onLoadList() {
+      clearInterval(onListT); onListT = 0;
+      if (!onReady() || !UI.live) return;
+      const r = await onlReq('GET', '/v1/tt/games');
+      if (r.status === 200) { onList = r.body.games; if (r.body.games.some(function (g) { return g.status === 'lobby'; })) onListT = setInterval(onRefresh, 5000); }
+      else onMsg = r.body.message || 'Couldn\'t load your online games.';
+      if (!Q('title').hidden) onCard();
+    }
+    async function onRefresh() {
+      if (!UI.live || Q('title').hidden || !onReady()) { clearInterval(onListT); onListT = 0; return; }
+      const r = await onlReq('GET', '/v1/tt/games');
+      if (r.status !== 200) return;
+      const was = onList || []; onList = r.body.games;
+      const started = onList.find(function (g) { return g.status === 'active' && g.you >= 0 && was.some(function (w) { return w.id === g.id && w.status === 'lobby'; }); });
+      if (started) { onOpen(started.id); return; }   // your lobby just started: straight into the game
+      if (!onList.some(function (g) { return g.status === 'lobby'; })) { clearInterval(onListT); onListT = 0; }
+      if (document.activeElement && document.activeElement.closest && document.activeElement.closest('.ta-tt-online')) return;   // don't redraw while typing
+      onCard();
+    }
+    Q('online').addEventListener('click', async function (e) {
+      const b = e.target.closest('button[data-o]'); if (!b || b.disabled) return;
+      const o = b.dataset.o, id = +b.dataset.g;
+      sfx.click(); onMsg = '';
+      if (o === 'settings') { openApp('settings'); return; }
+      if (o === 'refresh') { onLoadList(); return; }
+      if (o === 'open') { onOpen(id); return; }
+      if ((o === 'leave' || o === 'cancel') && !b.classList.contains('ta-sure')) { b.classList.add('ta-sure'); b.textContent = 'Tap again'; setTimeout(function () { if (b.isConnected) { b.classList.remove('ta-sure'); b.textContent = o === 'leave' ? 'Leave' : 'Cancel'; } }, 3000); return; }
+      b.disabled = true;
+      let r;
+      if (o === 'create') {
+        const ids = Array.prototype.map.call(Q('online').querySelectorAll('[data-oid]'), function (i) { return Number(String(i.value).replace(/[^\d]/g, '')); }).filter(function (x) { return x > 0; });
+        if (!ids.length) { onMsg = 'Type at least one Torn ID (the number in [brackets] after a name).'; onCard(); return; }
+        r = await onlReq('POST', '/v1/tt/games', { invite: ids, size: opts.size, col: opts.seats[0][1] });
+        if (r.status === 200) onMsg = 'Lobby made. Your invites are on their way. Start whenever you\'re ready; anyone who hasn\'t joined is played by the computer.';
+      } else r = await onlReq('POST', '/v1/tt/games/' + id + '/' + o);
+      if (r.status !== 200) onMsg = r.body.message || 'That didn\'t work. Try again.';
+      else if (o === 'start' || o === 'join') { await onLoadList(); if (o === 'start') { onOpen(id); return; } }
+      onLoadList();
+    });
+    Q('online').addEventListener('keydown', function (e) { if (e.key === 'Enter' && e.target.dataset.oid !== undefined) { e.preventDefault(); const b = Q('online').querySelector('[data-o="create"]'); if (b) b.click(); } });
+    function onOpen(id) {
+      clearInterval(onListT); onListT = 0;
+      ON = { id: id, ver: -1, board: null, gen: ++onGen, game: null, left: 0 };
+      G = null; UI.viewer = -1; UI.dlg = null; UI.mode = null; UI.sawOver = false; UI.last = null;
+      Q('title').hidden = true; Q('game').hidden = false; Q('prompt').textContent = 'Connecting…';
+      onPoll(ON.gen);
+    }
+    async function onPoll(gen) {
+      while (ON && ON.gen === gen && UI.live) {
+        if (ON.polling) return;
+        ON.polling = true;
+        const r = await onlReq('GET', '/v1/tt/games/' + ON.id + '?wait=1&v=' + ON.ver + (ON.board ? '&board=1' : ''), null, 30000);
+        if (!ON || ON.gen !== gen) return;
+        ON.polling = false;
+        if (r.status === 200) onApply(r.body);
+        else if (r.status === 403 || r.status === 404 || r.status === 401) { onMsg = r.body.message || 'That game isn\'t available.'; ON = null; showTitle(); return; }
+        else await onWait(3000);
+        if (ON && ON.game && ON.game.status !== 'active' && ON.game.status !== 'lobby') { ON.polling = false; return; }   // finished: no more news
+      }
+      if (ON) ON.polling = false;
+    }
+    function onApply(b) {
+      const g = b.game, s = b.state, me = g.you, was = G;
+      ON.game = g; ON.ver = g.ver; ON.left = Date.now() + (g.left || 0);
+      if (!s) { Q('prompt').textContent = 'Waiting for ' + g.host + ' to start the game…'; return; }
+      if (s.hexes) ON.board = { hexes: s.hexes, verts: s.verts, edges: s.edges, ports: s.ports };
+      else {
+        s.hexes = ON.board.hexes; s.ports = ON.board.ports;
+        s.verts = ON.board.verts.map(function (v, i) { return Object.assign({}, v, { owner: s.vo[i][0], lvl: s.vo[i][1] }); });
+        s.edges = ON.board.edges.map(function (e, i) { return Object.assign({}, e, { owner: s.eo[i] }); });
+      }
+      if (was && me >= 0 && was.players[me] && s.players[me]) {   // sounds for what just happened
+        if (s.dice && (!was.dice || s.turn !== was.turn || s.dice.join() !== was.dice.join())) { snd('dice'); UI.rolled = true; }
+        const got = RES.filter(function (r) { return s.players[me].hand[r] > was.players[me].hand[r]; });
+        if (got.length) { UI.flash = got; collectSound(got); }
+        if (s.edges.filter(function (e) { return e.owner >= 0; }).length > was.edges.filter(function (e) { return e.owner >= 0; }).length) snd('road');
+        else if (s.verts.reduce(function (a, v) { return a + v.lvl; }, 0) > was.verts.reduce(function (a, v) { return a + v.lvl; }, 0)) snd('safe');
+        if (g.waitingOn === me && !g.auto && (was.cur !== s.cur || was.phase !== s.phase) && !(was.cur === me && was.phase === s.phase)) seq([[0, 988, 0.07, 'sine', 0.06], [110, 1319, 0.12, 'sine', 0.06]]);
+      }
+      G = s; E.set(G); UI.viewer = me;
+      tick();
+    }
+    async function onAct(a) {
+      const r = await onlReq('POST', '/v1/tt/games/' + ON.id + '/act', { a: a });
+      if (r.status !== 200) { sfx.miss(); if (ON) { ON.note = r.body.message || 'Couldn\'t reach the server.'; render(); setTimeout(function () { if (ON) { ON.note = ''; render(); } }, 3500); } }
+      return r;
+    }
+    // The countdown: whose move it is and how long is left, updated every second.
+    function onClock() {
+      if (!onClockT) onClockT = setInterval(function () { if (!ON || !UI.live) { clearInterval(onClockT); onClockT = 0; return; } onClock(); }, 1000);
+      if (!ON || !ON.game || !G) return;
+      const g = ON.game, left = Math.max(0, Math.ceil((ON.left - Date.now()) / 1000));
+      let t = ON.prompt || '';
+      if (g.status === 'active' && g.waitingOn >= 0) {
+        const who = g.waitingOn === g.you ? 'You' : (g.seats[g.waitingOn] || {}).name;
+        t += g.auto ? ' (computer playing)' : ' · ' + (g.waitingOn === g.you ? '' : who + ': ') + left + 's';
+      }
+      if (ON.note) t = ON.note;
+      Q('prompt').textContent = t;
+    }
     showTitle();
     
     games.territories = {
-      enter: function () { UI.live = true; Q('mus').style.opacity = opts.music === false ? '.45' : ''; musicStart(); if (G && !Q('game').hidden) tick(); else showTitle(); },
-      leave: function () { UI.live = false; clearTimeout(UI.timer); musicStop(); setFull(false); },
+      enter: function () { UI.live = true; Q('mus').style.opacity = opts.music === false ? '.45' : ''; musicStart(); if (ON) { onPoll(ON.gen); render(); } else if (G && !Q('game').hidden) tick(); else showTitle(); },
+      leave: function () { UI.live = false; clearTimeout(UI.timer); clearInterval(onListT); onListT = 0; musicStop(); setFull(false); },
+      openOnline: function (id) { if (id) onOpen(id); else { ON = null; showTitle(); } },
+      viewing: function () { return ON ? ON.id : 0; },
       mute: function (m) { if (m) musicStop(); else musicStart(); },
       onEscape: function () { if (box.classList.contains('ta-tt-full')) { setFull(false); return true; } return false; },
       relayout: function () { if (G && !Q('game').hidden) render(); },
