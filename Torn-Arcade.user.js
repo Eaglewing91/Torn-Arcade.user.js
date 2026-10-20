@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.33.0
+// @version      2.34.0
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with seven game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps and Egg Dash artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -545,7 +545,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gift codes', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.33.0';
+  const VERSION = '2.34.0';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -3686,9 +3686,41 @@
       warps: mats([4, 5], 7, outMap, dx, dy + 1),
       npcs: [
         { id: 'nurse', x: 4, y: 2, dir: 'down', pal: 'nurse', move: 'still', run: nurseTalk },
-        { id: 'taxi', x: 1, y: 5, dir: 'right', pal: 'driver', move: 'look', run: taxi }
+        { id: 'taxi', x: 1, y: 5, dir: 'right', pal: 'driver', move: 'look', run: taxi },
+        { id: 'coach', x: 8, y: 4, dir: 'left', pal: 'man', move: 'look', run: moveCoach }
       ]
     });
+  }
+  /* Move Coach (in every Tornie Clinic): teaches a Tornie any move from its own move list that it is already
+     high enough level for, for a small fee. This is how Tornies caught before an update pick up the new moves
+     they would have learned on the way, and how any Tornie gets back a move it dropped. */
+  const COACH_FEE = 500;
+  function coachMoves(mon) {
+    const out = [], seen = {};
+    (SP[mon.sp].learn || []).forEach(function (l) {
+      if (l[0] <= mon.lv && MOVES[l[1]] && !seen[l[1]] && !mon.moves.some(function (x) { return x.id === l[1]; })) { seen[l[1]] = 1; out.push(l); }
+    });
+    return out.sort(function (a, b) { return b[0] - a[0]; });   // newest first
+  }
+  async function moveCoach() {
+    await say('MOVE COACH: I teach Tornies any move they\'re high enough level for. $' + COACH_FEE + ' a lesson.');
+    while (true) {
+      const t = await partyScreen({ pick: true, prompt: 'Which Tornie needs a lesson?' });
+      if (t === null) { await say('MOVE COACH: Come back any time.'); return; }
+      const mon = G.party[t], list = coachMoves(mon);
+      if (!list.length) { await say('MOVE COACH: ' + monName(mon) + ' already knows everything it can learn at its level. Train it up and come back!'); continue; }
+      let sel = 0;
+      const i = await menu(list.map(function (l) { return { label: MOVES[l[1]].name, right: 'Lv ' + l[0] }; }).concat(['CANCEL']), {
+        x: 4, y: 4, w: 150, visible: 6, onMove: function (k) { sel = k; },
+        draw: function () { moneyBox(); if (list[sel]) drawMoveInfo(list[sel][1], 4, VH - 58, VW - 8, 54, { name: true, right: '$' + COACH_FEE }); }
+      });
+      if (i < 0 || i >= list.length) continue;
+      const mv = list[i][1];
+      if (G.money < COACH_FEE) { await say('MOVE COACH: A lesson is $' + COACH_FEE + '. Come back when you have the cash.'); return; }
+      if (!(await yesno('MOVE COACH: Teach ' + MOVES[mv].name + ' to ' + monName(mon) + ' for $' + COACH_FEE + '?'))) continue;
+      if (await learnMove(mon, mv, false)) { G.money -= COACH_FEE; sfx.point(); saveGame(); await say('MOVE COACH: Good lesson. That\'s $' + COACH_FEE + '.'); }
+      if (!(await yesno('MOVE COACH: Another lesson?'))) { await say('MOVE COACH: Keep training!'); return; }
+    }
   }
   function makeShop(id, outMap, dx, dy, stock, extra) {
     defMap('mart_' + id, {
@@ -3969,7 +4001,8 @@
     npcs: [
       { id: 'nurse', x: 4, y: 2, dir: 'down', pal: 'nurse', move: 'still', run: nurseTalk },
       { id: 'cw_man', x: 7, y: 6, dir: 'left', pal: 'man', move: 'look', text: 'Tornie Clinics patch up your team for free. Cheapest hospital in Torn City!' },
-      { id: 'cw_girl', x: 1, y: 4, dir: 'right', pal: 'blonde', move: 'look', text: 'Only six Tornies fit in your team. Extra ones go into the Tornie Locker on that computer.' }
+      { id: 'cw_girl', x: 1, y: 4, dir: 'right', pal: 'blonde', move: 'look', text: 'Only six Tornies fit in your team. Extra ones go into the Tornie Locker on that computer.' },
+      { id: 'coach', x: 8, y: 4, dir: 'left', pal: 'man', move: 'look', run: moveCoach }
     ]
   });
   defMap('mart_w', {

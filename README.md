@@ -65,7 +65,7 @@ From version 2.15.2, Tampermonkey checks this link for new versions (about once 
 A creature-collecting RPG set in Torn City. You start in Maple Hollow with one of three partner Tornies and travel across the city to catch, train and battle **178 Tornies**, from Gutterats in the alleys to the Legendary Guardians.
 
 - Win **8 Arena medals** from Torn City's Arena Leaders, then take on the **Torn Council** and the Champion.
-- Turn-based battles with 17 types, **181 moves**, status effects, boosters and evolutions. Every type has weak, medium and strong attacks of both kinds plus status moves, and Tornies of the same type learn different moves, so no two teams fight quite alike. **37 Training Discs** teach extra moves.
+- Turn-based battles with 17 types, **181 moves**, status effects, boosters and evolutions. Every type has weak, medium and strong attacks of both kinds plus status moves, and Tornies of the same type learn different moves, so no two teams fight quite alike. **37 Training Discs** teach extra moves. The **Move Coach** in every Tornie Clinic teaches a Tornie any move it's high enough level for ($500), so Tornies caught before an update can pick up the new moves.
 - Day and night, live weather, fishing, a Day Care with eggs to hatch, rare golden Tornies, merits to earn and a Battle Tower.
 - Trade Tornies with friends using trade codes. No server is involved.
 - Custom illustrated artwork for every Tornie and character, made specifically for Torn Arcade (from the optional Art Packs; pixel art without them), plus an animated title screen and an original soundtrack.
