@@ -1,0 +1,153 @@
+// Torn Arcade server: sign-in with a Torn ID, accounts and the global leaderboard.
+// Plain Node http, no framework. Every reply is JSON. Bodies over 8 KB are refused.
+'use strict';
+const http = require('http');
+const crypto = require('crypto');
+const db = require('./db');
+const torn = require('./torn');
+
+const PORT = Number(process.env.PORT) || 8080;
+const VERSION = '1.0.0';
+const GAMES = ['territories'];
+const ORIGINS = ['https://www.torn.com', 'https://torn.com'];
+
+/* ---------- Rate limits: per IP, in memory (one server instance) ---------- */
+const buckets = new Map();
+function limited(ip, kind, max, perMs) {
+  const k = kind + '|' + ip, now = Date.now();
+  let b = buckets.get(k);
+  if (!b || now - b.t > perMs) { b = { t: now, n: 0 }; buckets.set(k, b); }
+  b.n++;
+  return b.n > max;
+}
+setInterval(function () { const now = Date.now(); buckets.forEach(function (b, k) { if (now - b.t > 15 * 60000) buckets.delete(k); }); }, 60000).unref();
+
+/* ---------- Helpers ---------- */
+function ipOf(req) { return String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim(); }
+function send(res, code, body) {
+  res.writeHead(code, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Arcade-Server': VERSION });
+  res.end(JSON.stringify(body));
+}
+function fail(res, code, error, message) { send(res, code, { error: error, message: message }); }
+function readBody(req) {
+  return new Promise(function (resolve, reject) {
+    let size = 0; const parts = [];
+    req.on('data', function (c) { size += c.length; if (size > 8192) { reject(new Error('too_big')); req.destroy(); } else parts.push(c); });
+    req.on('end', function () {
+      if (!parts.length) return resolve({});
+      try { resolve(JSON.parse(Buffer.concat(parts).toString('utf8'))); } catch (e) { reject(new Error('bad_json')); }
+    });
+    req.on('error', reject);
+  });
+}
+const hashToken = function (t) { return crypto.createHash('sha256').update(t).digest(); };
+async function newToken(accountId) {
+  const t = crypto.randomBytes(32).toString('base64url');
+  await db.q('INSERT INTO tokens (hash, account_id) VALUES ($1, $2)', [hashToken(t), accountId]);
+  return t;
+}
+async function whoAsks(req) {   // the signed-in account, or null
+  const m = /^Bearer ([A-Za-z0-9_-]{20,100})$/.exec(req.headers.authorization || '');
+  if (!m) return null;
+  const r = await db.q('UPDATE tokens SET last_used = now() WHERE hash = $1 RETURNING account_id', [hashToken(m[1])]);
+  if (!r.rows.length) return null;
+  const a = await db.q('UPDATE accounts SET last_seen = now() WHERE id = $1 RETURNING id, torn_id, name, verified, banned', [r.rows[0].account_id]);
+  return a.rows[0] || null;
+}
+function pub(a) { return { id: Number(a.id), tornId: a.torn_id, name: a.name, verified: a.verified }; }
+
+/* ---------- Routes ---------- */
+async function route(req, res, url) {
+  const ip = ipOf(req), path = url.pathname, method = req.method;
+  if (path === '/health') {
+    let ok = true; try { await db.q('SELECT 1'); } catch (e) { ok = false; }
+    return send(res, ok ? 200 : 503, { ok: ok, version: VERSION });
+  }
+  if (limited(ip, 'all', 240, 60000)) return fail(res, 429, 'slow_down', 'Too many requests. Wait a minute.');
+
+  // Sign in with a Torn API key. The key is checked with api.torn.com once, then forgotten.
+  if (path === '/v1/auth/torn' && method === 'POST') {
+    if (limited(ip, 'verify', 10, 10 * 60000)) return fail(res, 429, 'slow_down', 'Too many sign-in attempts. Wait ten minutes.');
+    const body = await readBody(req);
+    const who = await torn.whoIs(body.key);
+    if (who.error) return fail(res, who.error === 'bad_key' ? 400 : 502, who.error, who.message);
+    const me = await whoAsks(req);
+    let acc = (await db.q('SELECT * FROM accounts WHERE torn_id = $1', [who.id])).rows[0];
+    if (acc) acc = (await db.q('UPDATE accounts SET name = $2, verified = TRUE, last_seen = now() WHERE id = $1 RETURNING *', [acc.id, who.name])).rows[0];
+    else if (me && !me.verified) acc = (await db.q('UPDATE accounts SET torn_id = $2, name = $3, verified = TRUE WHERE id = $1 RETURNING *', [me.id, who.id, who.name])).rows[0];   // a guest becomes verified
+    else acc = (await db.q('INSERT INTO accounts (torn_id, name, verified) VALUES ($1, $2, TRUE) RETURNING *', [who.id, who.name])).rows[0];
+    if (acc.banned) return fail(res, 403, 'banned', 'This account can\'t play online.');
+    return send(res, 200, { token: await newToken(acc.id), account: pub(acc) });
+  }
+  // A guest account: no key, not on the leaderboard.
+  if (path === '/v1/auth/guest' && method === 'POST') {
+    if (limited(ip, 'guest', 5, 60 * 60000)) return fail(res, 429, 'slow_down', 'Too many new accounts from here. Try again later.');
+    const name = 'Guest-' + crypto.randomInt(1000, 10000);
+    const acc = (await db.q('INSERT INTO accounts (name) VALUES ($1) RETURNING *', [name])).rows[0];
+    return send(res, 200, { token: await newToken(acc.id), account: pub(acc) });
+  }
+  // The global leaderboard (verified players only).
+  let m;
+  if ((m = /^\/v1\/leaderboard\/([a-z]+)$/.exec(path)) && method === 'GET') {
+    if (GAMES.indexOf(m[1]) < 0) return fail(res, 404, 'no_game', 'Unknown game.');
+    const limit = Math.max(1, Math.min(100, Number(url.searchParams.get('limit')) || 50));
+    const rows = (await db.q(
+      'SELECT a.name, a.torn_id, r.rating, r.games, r.wins FROM ratings r JOIN accounts a ON a.id = r.account_id ' +
+      'WHERE r.game = $1 AND a.verified AND NOT a.banned AND r.games > 0 ORDER BY r.rating DESC, r.wins DESC, a.id LIMIT $2', [m[1], limit])).rows;
+    const out = { game: m[1], players: rows.map(function (r, i) { return { rank: i + 1, name: r.name, tornId: r.torn_id, rating: r.rating, games: r.games, wins: r.wins }; }) };
+    const me = await whoAsks(req);
+    if (me) {
+      const mine = (await db.q('SELECT rating, games, wins FROM ratings WHERE account_id = $1 AND game = $2', [me.id, m[1]])).rows[0];
+      if (mine && mine.games > 0 && me.verified) {
+        const above = (await db.q('SELECT count(*)::int AS n FROM ratings r JOIN accounts a ON a.id = r.account_id WHERE r.game = $1 AND a.verified AND NOT a.banned AND r.games > 0 AND r.rating > $2', [m[1], mine.rating])).rows[0].n;
+        out.me = { rank: above + 1, rating: mine.rating, games: mine.games, wins: mine.wins };
+      } else out.me = { rank: null, rating: mine ? mine.rating : 1200, games: mine ? mine.games : 0, wins: mine ? mine.wins : 0 };
+    }
+    return send(res, 200, out);
+  }
+  // Everything below needs a signed-in account.
+  const me = await whoAsks(req);
+  if (!me) return fail(res, 401, 'signed_out', 'Sign in to play online.');
+  if (me.banned) return fail(res, 403, 'banned', 'This account can\'t play online.');
+  if (path === '/v1/me' && method === 'GET') return send(res, 200, { account: pub(me) });
+  if (path === '/v1/auth/logout' && method === 'POST') {
+    const t = /^Bearer (.+)$/.exec(req.headers.authorization)[1];
+    await db.q('DELETE FROM tokens WHERE hash = $1', [hashToken(t)]);
+    return send(res, 200, { ok: true });
+  }
+  if (path === '/v1/me' && method === 'DELETE') {   // wipes the account, its sign-ins and its ratings
+    await db.q('DELETE FROM accounts WHERE id = $1', [me.id]);
+    return send(res, 200, { ok: true, deleted: true });
+  }
+  return fail(res, 404, 'not_found', 'Not found.');
+}
+
+const server = http.createServer(function (req, res) {
+  const origin = req.headers.origin;
+  if (origin && ORIGINS.indexOf(origin) >= 0) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
+    res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE');
+    res.setHeader('Access-Control-Max-Age', '86400');
+  }
+  if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
+  let url;
+  try { url = new URL(req.url, 'http://x'); } catch (e) { return fail(res, 400, 'bad_url', 'Bad request.'); }
+  route(req, res, url).catch(function (e) {
+    if (e.message === 'too_big') return fail(res, 413, 'too_big', 'Request too large.');
+    if (e.message === 'bad_json') return fail(res, 400, 'bad_json', 'Bad request.');
+    console.error('error', req.method, url.pathname, e.message);
+    if (!res.headersSent) fail(res, 500, 'server_error', 'Something went wrong on the server.');
+  });
+});
+server.requestTimeout = 15000;
+server.headersTimeout = 10000;
+
+db.migrate().then(function () {
+  server.listen(PORT, function () { console.log('Torn Arcade server ' + VERSION + ' on port ' + PORT); });
+}).catch(function (e) { console.error('database setup failed', e.message); process.exit(1); });
+
+function stop() { server.close(function () { db.pool.end().then(function () { process.exit(0); }); }); setTimeout(function () { process.exit(0); }, 5000).unref(); }
+process.on('SIGTERM', stop);
+process.on('SIGINT', stop);

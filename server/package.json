@@ -1,0 +1,16 @@
+{
+  "name": "torn-arcade-server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Server for Torn Arcade online play: sign-in with a Torn ID, online games and the global leaderboard.",
+  "license": "UNLICENSED",
+  "main": "src/server.js",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node test/run.js"
+  },
+  "dependencies": {
+    "pg": "^8.13.1"
+  }
+}
