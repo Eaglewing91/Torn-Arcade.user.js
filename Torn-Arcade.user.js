@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.32.1
+// @version      2.32.2
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with seven game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps and Egg Dash artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -545,7 +545,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gift codes', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.32.1';
+  const VERSION = '2.32.2';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -17325,7 +17325,7 @@
       if (a.mode === 'caught') return { lean: 0.05, head: 0.1 + Math.sin(tt * 3) * 0.05, armF: 0.6, armB: 0.6, legF: 0, legB: 0, cuffed: true };
       if (a.mode === 'fall') return { lean: -0.3, head: -0.3, armF: -2.8 + Math.sin(tt * 18) * 0.5, armB: -2.6 - Math.sin(tt * 18) * 0.5, legF: Math.sin(tt * 14) * 0.6, legB: -Math.sin(tt * 14) * 0.6, spin: Math.min(0.6, tt) };
       if (a.mode === 'idle') return { lean: 0.02, head: Math.sin(tt * 1.7) * 0.06, armF: Math.sin(tt * 2) * 0.06, armB: -0.05, legF: -0.08, legB: 0.12, drop: Math.sin(tt * 3.4) * 6 };
-      if (!a.ground) {
+      if (!a.ground && !a.hover) {
         if (a.vy < 0) return { lean: 0.18, head: -0.12, armF: -2.3, armB: -1.7, legF: -0.9, legB: 0.55, sack: -0.2 };
         return { lean: 0.1, head: 0.05, armF: -1.3, armB: -0.9, legF: -0.5, legB: 0.35, sack: 0.25 };
       }
@@ -17473,7 +17473,7 @@
       if (state !== 'playing') return;
       held = true;
       if (ant.mode === 'slide') ant.mode = 'run';
-      if (ant.ground) { ant.vy = -JUMP_V; ant.ground = false; holdT = 0; jumps = 1; tone(420, 0.09, 'triangle', 0.045, 760); puff(AX, ant.y, 5); }
+      if (ant.ground || ant.hover) { ant.hover = false; ant.vy = -JUMP_V; ant.ground = false; holdT = 0; jumps = 1; tone(420, 0.09, 'triangle', 0.045, 760); puff(AX, ant.y, 5); }
       else if (djOn() && jumps < 2) { ant.vy = -DJUMP_V; holdT = HOLD_MAX; jumps = 2; tone(620, 0.09, 'triangle', 0.045, 1040); puff(AX, ant.y, 4); }
     }
     function jumpRelease() { held = false; }
@@ -17588,9 +17588,10 @@
         const g = (held && ant.vy < 0 && holdT < HOLD_MAX) ? GRAV * HOLD_G : GRAV;
         holdT += dt;
         ant.vy += g * dt;
-        if (carrot > 0 && ant.vy > 0 && ant.lastRoofY !== undefined && ant.y >= ant.lastRoofY - 4 && (!under || under.y > ant.y + 4)) { ant.vy = 0; ant.y = ant.lastRoofY - 4; }   // the carrot carries him over gaps
+        ant.hover = false;
+        if (carrot > 0 && !under && ant.vy >= 0 && ant.lastRoofY !== undefined && ant.y >= ant.lastRoofY - 4) { ant.vy = 0; ant.y = ant.lastRoofY - 4; ant.hover = true; ant.stride += v * dt / 26; }   // the carrot carries him over gaps (only gaps: over a lower roof he drops onto it)
         const ny = ant.y + ant.vy * dt;
-        if (under && ant.vy >= 0 && ant.y <= under.y + 1 && ny >= under.y) {
+        if (under && ant.vy >= 0 && ant.y <= under.y + 12 && ny >= under.y) {   // lands, stepping up onto a ledge a little higher if he has to
           ant.y = under.y; ant.vy = 0; ant.ground = true; jumps = 0; puff(AX, ant.y, 4);
           if (slideHeld) { ant.mode = 'slide'; ant.slideT = 0; } else ant.mode = 'run';
         } else ant.y = ny;
@@ -17598,11 +17599,11 @@
       if (ant.ground) ant.lastRoofY = ant.y;
       // a wall: running into the side of a higher building
       const front = roofAt(wx + 18);
-      if (front && front !== under && ant.y > front.y + 10 && wx + 18 >= front.x - 6 && wx < front.x) {
+      if (front && front !== under && ant.y > front.y + 12 && wx + 18 >= front.x - 6 && wx < front.x) {
         if (shield || carrot > 0) { if (carrot <= 0) { shield = false; blink = 1; popText(AX, front.y - 120, 'Bunny suit saved you!', '#ff9bd0'); } ant.y = front.y; ant.vy = -380; ant.ground = false; }
         else { cam = Math.min(cam, front.x - 24 - AX); ant.vy = Math.max(ant.vy, 60); }   // he slides down the wall
       }
-      if (carrot > 0) { carrot -= dt; if (carrot <= 0 && !ant.ground && !under) carrot = 0.05; }
+      if (carrot > 0) { carrot -= dt; if (carrot <= 0 && !ant.ground && !under) carrot = 0.05; if (carrot <= 0) blink = Math.max(blink, 1); }
       if (ant.y > H - 30 && shield) { shield = false; blink = 1.2; ant.vy = -1080; popText(AX, H - 80, 'Bunny suit saved you!', '#ff9bd0'); tone(520, 0.3, 'sine', 0.06, 1200); }
       if (ant.y > H + 60) { fell(); return; }
 
