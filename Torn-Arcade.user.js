@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.30.3
+// @version      2.31.0
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with six game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -85,6 +85,9 @@
  *   it opens a mobile phone on top of the page with six game apps, plus Scores
  *   and Settings. Everything runs inside that phone. On pages without the
  *   sidebar, a small floating "Phone" button is shown instead.
+ * - On pages where you don't open the phone, only the small part that adds
+ *   the link runs. The phone and its games are set up the first time you
+ *   open it on a page, so the script adds almost no load time to Torn.
  * - Apart from adding that one link, the script never reads, clicks or
  *   changes anything on Torn's page. It never loads Torn pages and never
  *   talks to any other website. Every image and sound is built into the
@@ -152,6 +155,97 @@
 
   if (window.top !== window.self) return;            // never inside frames
   if (document.getElementById('ta-root')) return;    // only one copy per page
+
+  /* ================= Starter =================
+   * On every Torn page only this small part runs: it adds the "Mobile Phone" link (or a small floating
+   * button where there is no sidebar). The phone and all six games are set up the first time you open it,
+   * so pages where you never open the phone pay almost nothing. */
+  let arcade = null;
+  function startArcade() { if (!arcade) arcade = TA_MAIN(); return arcade; }
+  try { GM_addStyle('.ta-launch{position:fixed;left:12px;bottom:12px;z-index:2147482999;display:flex;align-items:center;gap:6px;padding:7px 13px 7px 10px;margin:0;border-radius:999px;border:1px solid #2f7bd1;background:rgba(12,20,31,.92);color:#e6f2ff;font:700 13px/1 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.45)}.ta-launch[hidden]{display:none}'); } catch (e) {}
+  const launcher = document.createElement('button');
+  launcher.type = 'button'; launcher.className = 'ta-launch'; launcher.innerHTML = '<span>📱</span><span>Phone</span>';
+  launcher.title = 'Open Mobile Phone'; launcher.hidden = true;
+  launcher.addEventListener('click', function () { startArcade().open(); });
+  (document.body || document.documentElement).append(launcher);
+  /* ================= "Mobile Phone" link in Torn's sidebar =================
+   * Copies Torn's own Calendar row so it looks like the other area links, and
+   * adds it straight after it. Clicking it only opens the phone on top of the
+   * page: it is not a real link and never loads a page. If Torn redraws its
+   * sidebar, a watcher on the sidebar alone adds the link back. */
+  const LINK_ID = 'nav-mobile-phone';
+  const PHONE_PATH = 'M4.6 0h6.8A1.6 1.6 0 0 1 13 1.6v12.8a1.6 1.6 0 0 1-1.6 1.6H4.6A1.6 1.6 0 0 1 3 14.4V1.6A1.6 1.6 0 0 1 4.6 0Zm.4 2.2v10h6v-10H5Zm3 10.9a.95.95 0 1 0 0 1.9.95.95 0 0 0 0-1.9Z';
+  let sideWatch = null, linkTries = 0;
+  function areaAnchor() {
+    const cal = document.getElementById('nav-calendar');
+    if (cal) return cal;
+    const list = document.querySelectorAll('[class*="areas"] [id^="nav-"]:not(#' + LINK_ID + ')');
+    return list.length ? list[list.length - 1] : null;
+  }
+  function stripActive(el) {
+    [el].concat(Array.prototype.slice.call(el.querySelectorAll('[class]'))).forEach(function (n) {
+      const cls = typeof n.className === 'string' ? n.className : (n.getAttribute('class') || '');
+      const keep = cls.split(/\s+/).filter(function (c) { return c && !/active/i.test(c); }).join(' ');
+      n.setAttribute('class', keep);
+    });
+  }
+  function insertPhoneLink() {
+    if (document.getElementById(LINK_ID)) return true;
+    const anchor = areaAnchor();
+    if (!anchor || !anchor.parentNode) return false;
+    const row = anchor.cloneNode(true);
+    row.id = LINK_ID;
+    stripActive(row);
+    row.querySelectorAll('[id]').forEach(function (n) { n.removeAttribute('id'); });
+    const a = row.querySelector('a');
+    if (!a) return false;
+    a.setAttribute('href', '#'); a.removeAttribute('i-data'); a.setAttribute('role', 'button'); a.title = 'Open Mobile Phone';
+    // Drop anything extra Torn shows on that row (counters, timers).
+    Array.prototype.slice.call(row.querySelectorAll('[class*="amount"],[class*="counter"],[class*="timer"]')).forEach(function (n) { n.remove(); });
+    const name = row.querySelector('[class*="linkName"]') || a.querySelector('span:last-child');
+    if (name) name.textContent = 'Mobile Phone';
+    const svg = row.querySelector('svg');
+    // Torn's mobile layout (phones, tablets and Torn PDA: the "area-mobile" rows, or a window 1000px wide or less)
+    // uses bigger icon tiles. There the copy keeps the Calendar icon's own size and viewBox, and the phone icon is
+    // scaled to fill it, so it lines up with the other tiles. The PC sidebar is unchanged.
+    const mobileSide = /area-mobile/.test(anchor.className || '') || !!anchor.querySelector('[class*="mobileLink"]') || window.innerWidth <= 1000;
+    if (svg && mobileSide) {
+      const vb = (svg.getAttribute('viewBox') || '0 0 16 16').split(/[\s,]+/).map(Number);
+      const vw = vb[2] || 16, vh = vb[3] || 16, k = Math.min(vw, vh) / 16;
+      svg.innerHTML = '<g transform="translate(' + (vb[0] + (vw - 16 * k) / 2) + ' ' + (vb[1] + (vh - 16 * k) / 2) + ') scale(' + k + ')"><path fill-rule="evenodd" d="' + PHONE_PATH + '"></path></g>';
+    } else if (svg) {
+      svg.setAttribute('viewBox', '0 0 16 16'); svg.setAttribute('width', '16'); svg.setAttribute('height', '16');
+      svg.innerHTML = '<path fill-rule="evenodd" d="' + PHONE_PATH + '"></path>';
+    }
+    a.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); startArcade().toggle(); });
+    anchor.parentNode.insertBefore(row, anchor.nextSibling);
+    launcher.hidden = true;
+    watchSidebar(anchor);
+    return true;
+  }
+  function watchSidebar(anchor) {
+    if (sideWatch) return;
+    const box = anchor.closest('#sidebarroot') || anchor.closest('[class*="sidebar"]') || anchor.parentNode;
+    let queued = false;
+    sideWatch = new MutationObserver(function () {
+      if (queued || document.getElementById(LINK_ID)) return;
+      queued = true;
+      requestAnimationFrame(function () { queued = false; if (!insertPhoneLink()) { sideWatch.disconnect(); sideWatch = null; tryLink(); } });
+    });
+    sideWatch.observe(box, { childList: true, subtree: true });
+  }
+  // Torn draws its sidebar after the page loads, so look for it for a few seconds.
+  function tryLink() {
+    if (insertPhoneLink()) return;
+    if (++linkTries < 30) setTimeout(tryLink, 400);
+    else launcher.hidden = false;   // no sidebar on this page: show the small floating button instead
+  }
+
+  tryLink();
+  try { GM_registerMenuCommand('Open Mobile Phone', function () { startArcade().open(); }); } catch (e) {}
+
+  /* ================= The phone and its games (set up on first open) ================= */
+  function TA_MAIN() {
 
   /* ================= Storage (Tampermonkey storage) ================= */
   const store = (function () {
@@ -448,7 +542,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gift codes', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.30.3';
+  const VERSION = '2.31.0';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -702,9 +796,6 @@
   if (!store.get('welcomed', false) && !store.get('betaSeen', '')) noteEl.hidden = false;
   $(noteEl, '.ta-notex').addEventListener('click', function (e) { e.stopPropagation(); noteEl.hidden = true; store.set('welcomed', true); try { sfx.click(); } catch (e2) {} });
 
-  const launcher = document.createElement('button');
-  launcher.type = 'button'; launcher.className = 'ta-launch'; launcher.innerHTML = '<span>📱</span><span>Phone</span>';
-  launcher.title = 'Open Mobile Phone'; launcher.hidden = true;
 
   function makePanel(id, title, desc, controls, stats, stage, help) {
     const p = document.createElement('section');
@@ -17062,7 +17153,6 @@
   root.querySelectorAll('[data-act="close"]').forEach(function (el) { el.addEventListener('click', closeArcade); });
   root.querySelectorAll('[data-act="home"]').forEach(function (el) { el.addEventListener('click', function () { goHome(); sfx.click(); }); });
   muteBtn.addEventListener('click', function () { setMuted(!muted); if (!muted) sfx.click(); });
-  launcher.addEventListener('click', openArcade);
   window.addEventListener('resize', function () { if (!isOpen) return; sizePhone(); const land = wantsLand(current); if (land !== root.classList.contains('ta-land')) setOrientation(land, false); relayout(); });
   // Mouse clicks on our buttons don't leave them focused, so Space goes to the game.
   root.addEventListener('mousedown', function (e) { if (e.target.closest && e.target.closest('button')) e.preventDefault(); });
@@ -17087,83 +17177,9 @@
     if (current && games[current] && games[current].onKey(e)) { e.preventDefault(); e.stopPropagation(); }
   }, true);
 
-  /* ================= "Mobile Phone" link in Torn's sidebar =================
-   * Copies Torn's own Calendar row so it looks like the other area links, and
-   * adds it straight after it. Clicking it only opens the phone on top of the
-   * page: it is not a real link and never loads a page. If Torn redraws its
-   * sidebar, a watcher on the sidebar alone adds the link back. */
-  const LINK_ID = 'nav-mobile-phone';
-  const PHONE_PATH = 'M4.6 0h6.8A1.6 1.6 0 0 1 13 1.6v12.8a1.6 1.6 0 0 1-1.6 1.6H4.6A1.6 1.6 0 0 1 3 14.4V1.6A1.6 1.6 0 0 1 4.6 0Zm.4 2.2v10h6v-10H5Zm3 10.9a.95.95 0 1 0 0 1.9.95.95 0 0 0 0-1.9Z';
-  let sideWatch = null, linkTries = 0;
-  function areaAnchor() {
-    const cal = document.getElementById('nav-calendar');
-    if (cal) return cal;
-    const list = document.querySelectorAll('[class*="areas"] [id^="nav-"]:not(#' + LINK_ID + ')');
-    return list.length ? list[list.length - 1] : null;
-  }
-  function stripActive(el) {
-    [el].concat(Array.prototype.slice.call(el.querySelectorAll('[class]'))).forEach(function (n) {
-      const cls = typeof n.className === 'string' ? n.className : (n.getAttribute('class') || '');
-      const keep = cls.split(/\s+/).filter(function (c) { return c && !/active/i.test(c); }).join(' ');
-      n.setAttribute('class', keep);
-    });
-  }
-  function insertPhoneLink() {
-    if (document.getElementById(LINK_ID)) return true;
-    const anchor = areaAnchor();
-    if (!anchor || !anchor.parentNode) return false;
-    const row = anchor.cloneNode(true);
-    row.id = LINK_ID;
-    stripActive(row);
-    row.querySelectorAll('[id]').forEach(function (n) { n.removeAttribute('id'); });
-    const a = row.querySelector('a');
-    if (!a) return false;
-    a.setAttribute('href', '#'); a.removeAttribute('i-data'); a.setAttribute('role', 'button'); a.title = 'Open Mobile Phone';
-    // Drop anything extra Torn shows on that row (counters, timers).
-    Array.prototype.slice.call(row.querySelectorAll('[class*="amount"],[class*="counter"],[class*="timer"]')).forEach(function (n) { n.remove(); });
-    const name = row.querySelector('[class*="linkName"]') || a.querySelector('span:last-child');
-    if (name) name.textContent = 'Mobile Phone';
-    const svg = row.querySelector('svg');
-    // Torn's mobile layout (phones, tablets and Torn PDA: the "area-mobile" rows, or a window 1000px wide or less)
-    // uses bigger icon tiles. There the copy keeps the Calendar icon's own size and viewBox, and the phone icon is
-    // scaled to fill it, so it lines up with the other tiles. The PC sidebar is unchanged.
-    const mobileSide = /area-mobile/.test(anchor.className || '') || !!anchor.querySelector('[class*="mobileLink"]') || window.innerWidth <= 1000;
-    if (svg && mobileSide) {
-      const vb = (svg.getAttribute('viewBox') || '0 0 16 16').split(/[\s,]+/).map(Number);
-      const vw = vb[2] || 16, vh = vb[3] || 16, k = Math.min(vw, vh) / 16;
-      svg.innerHTML = '<g transform="translate(' + (vb[0] + (vw - 16 * k) / 2) + ' ' + (vb[1] + (vh - 16 * k) / 2) + ') scale(' + k + ')"><path fill-rule="evenodd" d="' + PHONE_PATH + '"></path></g>';
-    } else if (svg) {
-      svg.setAttribute('viewBox', '0 0 16 16'); svg.setAttribute('width', '16'); svg.setAttribute('height', '16');
-      svg.innerHTML = '<path fill-rule="evenodd" d="' + PHONE_PATH + '"></path>';
-    }
-    a.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); toggleArcade(); });
-    anchor.parentNode.insertBefore(row, anchor.nextSibling);
-    launcher.hidden = true;
-    watchSidebar(anchor);
-    return true;
-  }
-  function watchSidebar(anchor) {
-    if (sideWatch) return;
-    const box = anchor.closest('#sidebarroot') || anchor.closest('[class*="sidebar"]') || anchor.parentNode;
-    let queued = false;
-    sideWatch = new MutationObserver(function () {
-      if (queued || document.getElementById(LINK_ID)) return;
-      queued = true;
-      requestAnimationFrame(function () { queued = false; if (!insertPhoneLink()) { sideWatch.disconnect(); sideWatch = null; tryLink(); } });
-    });
-    sideWatch.observe(box, { childList: true, subtree: true });
-  }
-  // Torn draws its sidebar after the page loads, so look for it for a few seconds.
-  function tryLink() {
-    if (insertPhoneLink()) return;
-    if (++linkTries < 30) setTimeout(tryLink, 400);
-    else launcher.hidden = false;   // no sidebar on this page: show the small floating button instead
-  }
-
   setMuted(muted);
-  (document.body || document.documentElement).append(root, launcher);
+  (document.body || document.documentElement).append(root);
   refreshNav();
-  tryLink();
-
-  try { GM_registerMenuCommand('Open Mobile Phone', openArcade); } catch (e) {}
+  return { toggle: toggleArcade, open: openArcade };
+  }
 })();
