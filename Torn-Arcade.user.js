@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.28.3
+// @version      2.28.4
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with six game apps: Tornies (a creature-collecting RPG), Torn Invasion (a Doom-style alien shooter), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -438,7 +438,10 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gift codes', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, invasion: 1, bogies: 1, defence: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.28';
+  const VERSION = '2.28.4';
+  // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
+  // the script itself makes no request.
+  const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
 
   GM_addStyle([
     /* The phone */
@@ -611,6 +614,7 @@
     '.ta-cheatin{flex:1;min-width:0;font:600 13px system-ui,Arial,sans-serif;color:#fff;background:#0b1622;border:1px solid var(--line2);border-radius:8px;padding:6px 9px;outline:none}',
     '.ta-cheatin:focus{border-color:var(--accent)}',
     '.ta-cheat .ta-btn{padding:6px 12px;font-size:12.5px}',
+    '.ta-upd{display:inline-block;text-decoration:none!important;border-radius:9px;padding:7px 12px;font:700 12.5px system-ui,Arial,sans-serif;color:#fff!important;background:#2f7bd1;cursor:pointer;flex:none}',
     '.ta-about{padding:10px 12px;color:var(--muted);font-size:12px;line-height:1.5}',
     /* Event notifications */
     '.ta-push{position:absolute;z-index:60;top:46px;left:10px;right:10px;display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:18px;background:rgba(24,30,42,.94);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.14);box-shadow:0 8px 26px rgba(0,0,0,.5);color:#fff;text-decoration:none;font:13px system-ui,Arial,sans-serif;animation:ta-pushin .35s cubic-bezier(.2,.9,.3,1.2)}',
@@ -1171,7 +1175,9 @@
         '<div class="ta-row"><span class="ta-ricon" style="background:#1c6a32">👽</span><div class="ta-rtext"><b>Delete Invasion progress</b><small>Unlocked levels, best scores and achievements</small></div><button type="button" class="ta-danger" data-set="resetInvasion">Delete</button></div>' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#2a4f9a">🛡️</span><div class="ta-rtext"><b>Delete Faction Defence progress</b><small>Stars, War Chest and Armoury upgrades</small></div><button type="button" class="ta-danger" data-set="resetDefence">Delete</button></div>' +
       '</div></div>' +
-      '<div class="ta-group"><h3>About</h3><div class="ta-list"><div class="ta-about"><b>Torn Arcade · Mobile Phone</b><br>Version ' + VERSION + ' by Eaglewing [571041]<br>' +
+      '<div class="ta-group"><h3>About</h3><div class="ta-list">' +
+        '<div class="ta-row"><span class="ta-ricon" style="background:#2f7bd1">⬇️</span><div class="ta-rtext"><b>Check for updates</b><small>You have version ' + VERSION + '. Tampermonkey shows if a newer one is ready.</small></div><a class="ta-upd" href="' + UPDATE_URL + '" target="_blank" rel="noopener noreferrer">Check</a></div>' +
+        '<div class="ta-about"><b>Torn Arcade · Mobile Phone</b><br>Version ' + VERSION + ' by Eaglewing [571041]<br>' +
         'Everything runs on your device. The phone never loads Torn pages and talks to no other websites. If you add an API key, it only asks the official Torn API for your new events while the phone is open.<br><br>&copy; 2026 Eaglewing [571041]. All rights reserved. This script may not be copied, modified or redistributed without permission.</div></div></div>';
   }
   /* Cheat codes. Only a SHA-256 fingerprint of each code is stored here, never the code itself.
