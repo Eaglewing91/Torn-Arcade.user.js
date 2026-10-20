@@ -99,7 +99,7 @@ A district-building board game. Torn City is split into districts (Brickworks, T
 - Plays by the classic Catan rules: 15 roads, 5 safehouses and 4 HQs per faction, a bank of 19 of each card (24 on the large map) with the bank-shortage rule, discard half on a 7 when holding more than 7, one favour card per turn and never on the turn you bought it. The build buttons show how many pieces you have left, and the bank trade shows how many of each card the bank holds.
 - Zoom buttons and a **full screen** button for the big map. Games save as you go, so you can leave and carry on later.
 - Soft background music and sound effects for building, upgrading, trading, favours and police raids, all generated live in your browser (no audio files). Music can be switched off in the game or on the new game screen.
-- Your wins and fastest win show in the Scores app. The illustrated districts come with the Character Art pack; without it, the districts are drawn by the script.
+- Your wins and fastest win show in the Leaderboards app. The illustrated districts come with the Character Art pack; without it, the districts are drawn by the script.
 
 ### 💣 Dirty Bombs
 A minesweeper-style puzzle. Clear the city block by block without setting off a dirty bomb. Numbers show how many bombs are hidden next to each block.
@@ -107,8 +107,8 @@ A minesweeper-style puzzle. Clear the city block by block without setting off a 
 ### 🐤 Flappy Torn
 Tap to fly through the gaps in the pipes over the Torn City skyline. Every pipe you pass is a point.
 
-### 🏆 Scores and ⚙️ Settings
-Scores keeps your best result for every mini-game. Settings has sound and volume, **phone themes** (Classic, Neon Night, Crimson Syndicate, Casino Royale, Emerald Jungle and the light Riviera, each with its own colours, clock and icon style; the illustrated theme wallpapers come with the Character Art pack, and without it a matching gradient is used), wallpapers for the Classic theme, optional Torn event notifications, a Tornies cheat-code box and options to reset each game's data.
+### 🏆 Leaderboards and ⚙️ Settings
+**Leaderboards** has two tabs. **My scores** keeps your best result for every game on this device and works offline. **🌐 Global** ranks you against everyone who has turned on Online play: pick a game, then a mode or map (Flappy Torn and Dirty Bombs by difficulty, Faction Defence by map, Tornies by Tornies caught or Arena medals, Torn Territories by online rating), and see the top 50 and your own rank. Settings has sound and volume, **phone themes** (Classic, Neon Night, Crimson Syndicate, Casino Royale, Emerald Jungle and the light Riviera, each with its own colours, clock and icon style; the illustrated theme wallpapers come with the Character Art pack, and without it a matching gradient is used), wallpapers for the Classic theme, optional Torn event notifications, a Tornies cheat-code box and options to reset each game's data.
 
 ---
 
@@ -128,12 +128,12 @@ Torn Arcade is built to follow Torn's scripting rules:
 If you add a **Limited** access API key in Settings, the phone checks the official Torn API (`api.torn.com`, `/v2/user/events`) for new events **every 5 seconds while the phone is open**. That's 12 calls a minute, well under Torn's limit of 100. Nothing is requested while the phone is closed. The key is only ever sent to `api.torn.com`. See the Torn API terms on Torn's API page (on [Torn](https://www.torn.com), under the API section).
 
 ### 🌐 Optional online play
-**Off until you turn it on** in Settings → Online. While it's on, the phone talks to the Torn Arcade server (`arcade-server-production-8ebd.up.railway.app`, run by Eaglewing [571041] and hosted on Railway). The server address is declared in the script header with `@connect`. Every request is one you start: verifying your Torn ID, playing as a guest, signing out, deleting your online account, or opening Scores to see the global leaderboard. With Online play off, nothing is ever sent.
+**Off until you turn it on** in Settings → Online. While it's on, the phone talks to the Torn Arcade server (`arcade-server-production-8ebd.up.railway.app`, run by Eaglewing [571041] and hosted on Railway). The server address is declared in the script header with `@connect`. Requests are only made for things you do: verifying your Torn ID, playing as a guest, signing out, deleting your online account, or opening the Global tab of Leaderboards. Once you're verified, your best scores are also sent (right after verifying, when you open the Global tab, and when you set a new best) so they appear on the global leaderboards. With Online play off, nothing is ever sent.
 
 - **Verify your Torn ID** with your saved key or a pasted **Public** key. The key goes to the Torn Arcade server once; the server asks `api.torn.com` who owns it (`/v2/user/basic`), then forgets it. The key is never stored or logged.
 - **Play as a guest** with no key at all. Guests aren't on the global leaderboard until they verify.
 - **Delete my online account** removes your Torn ID, name and online results from the server.
-- The global leaderboard for Torn Territories is in Scores. Online Territories games are coming in the next update. The server's code is in the [`server`](server) folder.
+- Global leaderboards for every game are in the Leaderboards app. Best scores come from players' own devices, so the server rejects impossible values, but it can't watch you play; Torn Territories ratings will come from games played on the server. Online Territories games are coming in the next update. The server's code is in the [`server`](server) folder.
 
 ---
 
@@ -152,7 +152,7 @@ If you add a **Limited** access API key in Settings, the phone checks the offici
 
 | Data Storage | Data Sharing | Purpose of Use | Key Storage & Sharing | Key Access Level |
 |---|---|---|---|---|
-| Persistent - until account deletion (on the Torn Arcade server: your Torn ID, name and online game results; on your device: a sign-in token) | General public (your name, rating and results on the global leaderboard) | Public community tools (online games and the global leaderboard) | Not stored / Not shared (sent once to the Torn Arcade server to confirm your Torn ID with `api.torn.com`, then forgotten) | Public (user → basic). A Limited key also works; only your name and Torn ID are read |
+| Persistent - until account deletion (on the Torn Arcade server: your Torn ID, name, online game results and best scores; on your device: a sign-in token) | General public (your name, rating and best scores on the global leaderboards) | Public community tools (online games and the global leaderboards) | Not stored / Not shared (sent once to the Torn Arcade server to confirm your Torn ID with `api.torn.com`, then forgotten) | Public (user → basic). A Limited key also works; only your name and Torn ID are read |
 
 The same table is shown in Settings → Online wherever you can enter a key. The server is hosted on Railway ([Railway privacy policy](https://railway.com/legal/privacy)); see also the Torn API terms on Torn's API page.
 

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.36.1
+// @version      2.37.0
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with eight game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -131,11 +131,14 @@
  *   the phone talks to the Torn Arcade server (arcade-server-production-8ebd.up.railway.app,
  *   hosted on Railway, declared above with @connect) and to nothing else. Only
  *   requests you start are made: verifying your Torn ID, playing as a guest,
- *   signing out, deleting your online account and opening the global
- *   leaderboard in Scores. To verify, your API key is sent to the Torn Arcade
- *   server once; it asks api.torn.com who owns the key (user > basic) and then
- *   forgets it. The key is never stored or logged there. The server keeps your
- *   Torn ID, name and online results until you delete your online account.
+ *   signing out, deleting your online account and opening the Global tab of
+ *   the Leaderboards app. Once you're verified, your best scores are also sent
+ *   (right after verifying, when you open the Global tab, and when you set a
+ *   new best) so they show on the global leaderboards. To verify, your API key
+ *   is sent to the Torn Arcade server once; it asks api.torn.com who owns the
+ *   key (user > basic) and then forgets it. The key is never stored or logged
+ *   there. The server keeps your Torn ID, name, online results and best scores
+ *   until you delete your online account.
  *   With Online play off, nothing is ever sent to the server.
  * - Keys only control a game while the phone is open, and never while you
  *   are typing in a text box.
@@ -164,12 +167,13 @@
  *
  * TERMS OF SERVICE: ONLINE PLAY (optional, off by default)
  * - Data Storage:          Persistent - until account deletion (on the Torn
- *                          Arcade server: your Torn ID, name and online game
- *                          results; on this device: a sign-in token)
- * - Data Sharing:          General public (your name, rating and results on
- *                          the global leaderboard)
+ *                          Arcade server: your Torn ID, name, online game
+ *                          results and best scores; on this device: a sign-in
+ *                          token)
+ * - Data Sharing:          General public (your name, rating and best scores
+ *                          on the global leaderboards)
  * - Purpose of Use:        Public community tools (online games and the
- *                          global leaderboard)
+ *                          global leaderboards)
  * - Key Storage & Sharing: Not stored / Not shared (sent once to the Torn
  *                          Arcade server to confirm your Torn ID with
  *                          api.torn.com, then forgotten)
@@ -289,11 +293,12 @@
   })();
   function getBest(key) { return (store.get('best', {}) || {})[key]; }
   // Saves a score if it beats the best. lower=true when fewer is better. Returns true for a new best.
+  let bestHook = null;   // set by Online play: sends a new best to the global leaderboards (verified players only)
   function record(key, value, lower) {
     const all = store.get('best', {}) || {};
     const cur = all[key];
     if (cur === undefined || (lower ? value < cur : value > cur)) {
-      all[key] = value; store.set('best', all); refreshNav(); return true;
+      all[key] = value; store.set('best', all); refreshNav(); try { if (bestHook) bestHook(); } catch (e) {} return true;
     }
     return false;
   }
@@ -564,7 +569,7 @@
     flappy: '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'
   };
   const SYS_APPS = [
-    { id: 'scores',   name: 'Scores',   icon: '🏆', bg: ['#ffd65a', '#d08a10'] },
+    { id: 'scores',   name: 'Leaderboards', icon: '🏆', bg: ['#ffd65a', '#d08a10'] },
     { id: 'settings', name: 'Settings', icon: '⚙️', bg: ['#a9b4c2', '#5a6676'] }
   ];
   // The optional Art Pack scripts, as apps on the bottom row of the home screen (see renderArt).
@@ -574,7 +579,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gift codes', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.36.1';
+  const VERSION = '2.37.0';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -623,6 +628,18 @@
     '.ta-lbrank{flex:none;width:30px;text-align:center;font-weight:800;font-size:13px;color:var(--muted,#9aa7b8)}',
     '.ta-lbr{flex:none;font-weight:800;font-variant-numeric:tabular-nums;color:#ffcf4a}',
     '.ta-lbme{background:rgba(47,123,209,.16)}',
+    '.ta-lbtabs{display:flex;gap:4px;padding:3px;border-radius:12px;background:var(--panel2);border:1px solid var(--line2)}',
+    '.ta-lbtab{flex:1;appearance:none;border:0;border-radius:9px;padding:7px 6px;margin:0;font:inherit;font-weight:700;font-size:13px;color:var(--muted);background:none;cursor:pointer}',
+    '.ta-lbtab.ta-on{background:var(--panel);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.3)}',
+    '.ta-lbgames{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}',
+    '.ta-lbgame{appearance:none;display:flex;flex-direction:column;align-items:center;gap:4px;padding:7px 2px 6px;margin:0;border-radius:12px;border:1px solid var(--line2);background:var(--panel2);color:var(--text);font:inherit;font-size:10.5px;font-weight:600;line-height:1.1;cursor:pointer;text-align:center}',
+    '.ta-lbgame .ta-ricon{width:30px;height:30px;font-size:16px;border-radius:8px;display:grid;place-items:center;overflow:hidden;flex:none}',
+    '.ta-lbgame .ta-ricon img{width:100%;height:100%;border-radius:inherit;object-fit:cover}',
+    '.ta-lbgame span:last-child{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+    '.ta-lbgame.ta-on{border-color:var(--accent);background:rgba(47,123,209,.22)}',
+    '.ta-lbmodes{display:flex;flex-wrap:wrap;gap:5px}',
+    '.ta-lbmode{appearance:none;padding:5px 11px;margin:0;border-radius:999px;border:1px solid var(--line2);background:var(--panel2);color:var(--text);font:inherit;font-size:12px;font-weight:600;cursor:pointer}',
+    '.ta-lbmode.ta-on{border-color:var(--accent);background:var(--accent);color:#fff}',
     '.ta-note{position:relative;z-index:2;display:flex;align-items:center;gap:9px;margin:4px 12px 0;padding:8px 10px;border-radius:14px;background:rgba(18,24,34,.78);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.12);box-shadow:0 4px 14px rgba(0,0,0,.35)}',
     '.ta-note[hidden]{display:none}',
     '.ta-noteicon{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;background:#e8a020;font-size:16px;flex:none}',
@@ -1043,8 +1060,10 @@
     return '<span class="ta-ricon" style="background:linear-gradient(160deg,' + a.bg[0] + ',' + a.bg[1] + ')">' + (img ? '<img src="' + img + '" alt="">' : a.icon) + '</span>';
   }
   function renderScores() {
+    const tabs = '<div class="ta-lbtabs"><button type="button" class="ta-lbtab' + (lbTab === 'mine' ? ' ta-on' : '') + '" data-lbtab="mine">My scores</button><button type="button" class="ta-lbtab' + (lbTab === 'global' ? ' ta-on' : '') + '" data-lbtab="global">🌐 Global</button></div>';
+    if (lbTab === 'global') { scoresBox.innerHTML = tabs + lbGlobalHTML(); return; }
     const best = store.get('best', {}) || {};
-    let html = '';
+    let html = tabs;
     const pocketApp = GAMES.find(function (a) { return a.id === 'pocket'; });
     if (pocketApp && games.pocket && games.pocket.summary) {
       const s = games.pocket.summary();
@@ -1075,7 +1094,6 @@
       rows += '<div class="ta-row">' + iconSmall(a) + '<div class="ta-rtext"><b>' + a.name + '</b>' + (chips ? '<div class="ta-chips">' + chips + '</div>' : '<small>No scores yet</small>') + '</div></div>';
     });
     html += '<div class="ta-group"><h3>Best scores</h3><div class="ta-list">' + rows + '</div></div>';
-    html += onlBoardHTML();
     scoresBox.innerHTML = html;
   }
 
@@ -1436,7 +1454,7 @@
      playing as a guest, signing out, deleting your online account, or opening Scores. With Online play off,
      nothing is sent. To verify, the key goes to the server once; it asks api.torn.com who owns it, then forgets it. */
   const ONLINE_URL = 'https://arcade-server-production-8ebd.up.railway.app';
-  let onlMsg = null, onlBoard = null, onlBusy = false;
+  let onlMsg = null, onlBusy = false;
   function onl() { return store.get('online', null) || { on: false }; }
   function onlReq(method, path, body) {
     return new Promise(function (resolve) {
@@ -1462,26 +1480,26 @@
     const o = onl(), a = o.account, saved = /^[A-Za-z0-9]{16}$/.test(store.get('apiKey', ''));
     const msg = onlMsg ? '<small class="ta-evmsg ta-onlmsg ' + (onlMsg.ok ? 'ta-good' : onlMsg.ok === false ? 'ta-bad' : '') + '">' + esc(onlMsg.text) + '</small>' : '';
     let h = '<div class="ta-group"><h3>Online</h3><div class="ta-list">' +
-      '<div class="ta-row"><span class="ta-ricon" style="background:#1c7ad0">🌐</span><div class="ta-rtext"><b>Online play</b><small>Play Torn Territories against other players and join the global leaderboard. Off until you turn it on; while on, the phone talks to the Torn Arcade server.</small></div><button type="button" class="ta-switch' + (o.on ? ' ta-on' : '') + '" data-set="onlOn" aria-label="Online play"></button></div>';
+      '<div class="ta-row"><span class="ta-ricon" style="background:#1c7ad0">🌐</span><div class="ta-rtext"><b>Online play</b><small>Join the global leaderboards for every game, and play Torn Territories against other players. Off until you turn it on; while on, the phone talks to the Torn Arcade server and, once you\'re verified, sends it your best scores.</small></div><button type="button" class="ta-switch' + (o.on ? ' ta-on' : '') + '" data-set="onlOn" aria-label="Online play"></button></div>';
     if (!o.on) return h + (msg ? '<div class="ta-row"><div class="ta-rtext">' + msg + '</div></div>' : '') + '</div></div>';
     if (a) h += '<div class="ta-row"><span class="ta-ricon" style="background:' + (a.verified ? '#1c9a5a' : '#7a7f8a') + '">' + (a.verified ? '✔️' : '👤') + '</span><div class="ta-rtext"><b>' + onlWho(a) + '</b><small>' +
-      (a.verified ? 'Verified Torn ID · on the global leaderboard' : 'Guest · not on the global leaderboard until you verify') + '</small>' + (a.verified ? msg : '') + '</div><button type="button" class="ta-btn" data-set="onlOut">Sign out</button></div>';
+      (a.verified ? 'Verified Torn ID · on the global leaderboards' : 'Guest · not on the global leaderboards until you verify') + '</small>' + (a.verified ? msg : '') + '</div><button type="button" class="ta-btn" data-set="onlOut">Sign out</button></div>';
     if (!a || !a.verified) {
       h += '<div class="ta-row"><span class="ta-ricon" style="background:#2f7bd1">🗝️</span><div class="ta-rtext"><b>Verify your Torn ID</b><small>Proves who you are, so nobody can play as you and your results count on the global leaderboard.</small>' + msg +
         (saved ? '<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="ta-btn" data-set="onlSaved"' + (onlBusy ? ' disabled' : '') + '>Use my saved key</button></div>' : '') +
         '<div class="ta-cheat"><input type="password" class="ta-cheatin ta-onlkey" autocomplete="off" spellcheck="false" maxlength="16" placeholder="' + (saved ? 'Or paste a Public API key' : 'Paste a Public API key') + '"><button type="button" class="ta-btn" data-set="onlVerify"' + (onlBusy ? ' disabled' : '') + '>Verify</button></div>' +
         (!a ? '<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="ta-btn" data-set="onlGuest"' + (onlBusy ? ' disabled' : '') + '>Play as a guest instead</button></div>' : '') +
         '<table class="ta-tos"><tbody>' +
-          '<tr><td>Data storage</td><td>Persistent - until account deletion (on the Torn Arcade server: your Torn ID, name and online game results)</td></tr>' +
-          '<tr><td>Data sharing</td><td>General public (your name, rating and results on the global leaderboard)</td></tr>' +
-          '<tr><td>Purpose of use</td><td>Public community tools (online games and the global leaderboard)</td></tr>' +
+          '<tr><td>Data storage</td><td>Persistent - until account deletion (on the Torn Arcade server: your Torn ID, name, online game results and best scores)</td></tr>' +
+          '<tr><td>Data sharing</td><td>General public (your name, rating and best scores on the global leaderboards)</td></tr>' +
+          '<tr><td>Purpose of use</td><td>Public community tools (online games and the global leaderboards)</td></tr>' +
           '<tr><td>Key storage &amp; sharing</td><td>Not stored / Not shared (sent once to the Torn Arcade server to confirm your Torn ID with api.torn.com, then forgotten)</td></tr>' +
           '<tr><td>Key access level</td><td>Public (user → basic). A Limited key also works; only your name and Torn ID are read.</td></tr>' +
         '</tbody></table>' +
         '<small>The Torn Arcade server is run by Eaglewing [571041] and hosted on Railway. Guests need no key. Delete your online account at any time below. <a class="ta-evlink" href="https://www.torn.com/api.html" target="_blank" rel="noopener">Torn API terms</a> · <a class="ta-evlink" href="https://railway.com/legal/privacy" target="_blank" rel="noopener noreferrer">Railway privacy policy</a></small>' +
         '</div></div>';
     }
-    if (a) h += '<div class="ta-row"><span class="ta-ricon" style="background:#c0392b">🗑️</span><div class="ta-rtext"><b>Delete my online account</b><small>Removes your Torn ID, name and online results from the Torn Arcade server.</small></div><button type="button" class="ta-danger" data-set="onlDel"' + (onlBusy ? ' disabled' : '') + '>Delete</button></div>';
+    if (a) h += '<div class="ta-row"><span class="ta-ricon" style="background:#c0392b">🗑️</span><div class="ta-rtext"><b>Delete my online account</b><small>Removes your Torn ID, name, online results and best scores from the Torn Arcade server.</small></div><button type="button" class="ta-danger" data-set="onlDel"' + (onlBusy ? ' disabled' : '') + '>Delete</button></div>';
     return h + '</div></div>';
   }
   async function onlVerify(key) {
@@ -1489,7 +1507,7 @@
     onlBusy = true; onlMsg = { text: 'Checking with Torn…' }; renderSettings();
     const r = await onlReq('POST', '/v1/auth/torn', { key: key });
     onlBusy = false;
-    if (r.status === 200 && r.body.token) { const o = onl(); o.token = r.body.token; o.account = r.body.account; store.set('online', o); onlMsg = { ok: true, text: 'Verified as ' + r.body.account.name + '. Welcome!' }; onlBoard = null; sfx.win(); }
+    if (r.status === 200 && r.body.token) { const o = onl(); o.token = r.body.token; o.account = r.body.account; store.set('online', o); onlMsg = { ok: true, text: 'Verified as ' + r.body.account.name + '. Welcome!' }; sfx.win(); lbSynced = Date.now(); onlSync(); }
     else { onlMsg = { ok: false, text: r.body.message || 'Couldn\'t verify. Try again.' }; sfx.miss(); }
     renderSettings();
   }
@@ -1499,7 +1517,7 @@
     if (k === 'onlOn') {
       if (o.on) {   // turning it off signs you out on this device
         if (o.token) onlReq('POST', '/v1/auth/logout');
-        store.set('online', { on: false }); onlMsg = null; onlBoard = null;
+        store.set('online', { on: false }); onlMsg = null;
       } else { o.on = true; store.set('online', o); onlMsg = null; }
       sfx.click(); renderSettings(); return;
     }
@@ -1514,43 +1532,112 @@
     }
     if (k === 'onlOut') {
       onlReq('POST', '/v1/auth/logout');
-      delete o.token; delete o.account; store.set('online', o); onlMsg = { text: 'Signed out.' }; onlBoard = null; sfx.click(); renderSettings(); return;
+      delete o.token; delete o.account; store.set('online', o); onlMsg = { text: 'Signed out.' }; sfx.click(); renderSettings(); return;
     }
     if (k === 'onlDel') {
       if (!t.classList.contains('ta-sure')) { t.classList.add('ta-sure'); t.textContent = 'Tap again'; setTimeout(function () { if (t.isConnected) { t.classList.remove('ta-sure'); t.textContent = 'Delete'; } }, 3000); return; }
       onlBusy = true; t.disabled = true;
       const r = await onlReq('DELETE', '/v1/me'); onlBusy = false;
-      if (r.status === 200 || r.status === 401) { const n = onl(); delete n.token; delete n.account; store.set('online', n); onlMsg = { ok: true, text: 'Your online account was deleted from the server.' }; onlBoard = null; sfx.click(); }
+      if (r.status === 200 || r.status === 401) { const n = onl(); delete n.token; delete n.account; store.set('online', n); onlMsg = { ok: true, text: 'Your online account was deleted from the server.' }; sfx.click(); }
       else { onlMsg = { ok: false, text: r.body.message || 'Couldn\'t delete it. Try again.' }; sfx.miss(); }
       renderSettings(); return;
     }
   }
-  // Global leaderboard in Scores. Loaded when you open Scores (only with Online play on).
-  async function onlLoadBoard() {
-    if (!onl().on) return;
-    if (onlBoard && onlBoard.at > Date.now() - 30000) return;
-    onlBoard = { loading: true, at: Date.now() };
-    const r = await onlReq('GET', '/v1/leaderboard/territories?limit=50');
-    onlBoard = r.status === 200 ? { at: Date.now(), data: r.body } : { at: Date.now() - 25000, error: r.body.message || 'Couldn\'t load the leaderboard.' };
-    if (current === 'scores') renderScores();
+  /* ---------- Global leaderboards (the Global tab of the Leaderboards app) ----------
+     Territories is ranked by the online rating the server keeps. Every other board ranks best scores, which your phone
+     sends once you're verified: right after you verify, when you open the Global tab, and when you set a new best. */
+  const LB_GAMES = [
+    { id: 'territories', boards: [['territories', 'Online rating']] },
+    { id: 'pocket', boards: [['tornies:caught', 'Tornies caught'], ['tornies:medals', 'Arena medals']] },
+    { id: 'invasion', boards: [['invasion:standard', 'Best score']] },
+    { id: 'bogies', boards: [['bogies:total', 'Total score']] },
+    { id: 'defence', boards: [1, 2, 3, 4, 5, 6].map(function (n) { return ['defence:' + n, ['Westgate', 'The Docks', 'Midtown', 'Casino Strip', 'Industrial Zone', 'Racket HQ'][n - 1]]; }) },
+    { id: 'eggdash', boards: [['eggdash:endless', 'Best score']] },
+    { id: 'bombs', boards: [['bombs:easy', 'Easy'], ['bombs:normal', 'Normal'], ['bombs:hard', 'Hard']] },
+    { id: 'flappy', boards: [['flappy:easy', 'Easy'], ['flappy:normal', 'Normal'], ['flappy:hard', 'Hard']] }
+  ];
+  const lbCache = {};
+  let lbTab = 'mine', lbGame = 'territories', lbBoard = 'territories', syncT = 0, lbSynced = 0;
+  function lbFmt(board, v) {
+    if (v === null || v === undefined) return '–';
+    if (board.indexOf('bombs:') === 0) return v + 's';
+    if (board.indexOf('defence:') === 0) return 'Wave ' + v;
+    if (board === 'tornies:caught') return v + '/179';
+    if (board === 'tornies:medals') return v + '/8';
+    return Number(v).toLocaleString('en-GB');
   }
-  function onlBoardHTML() {
+  // Your bests on this device, in the server's board names.
+  function localBests() {
+    const best = store.get('best', {}) || {}, out = {};
+    let bog = 0;
+    Object.keys(best).forEach(function (k) {
+      const v = Math.floor(Number(best[k])), g = k.split(':');
+      if (!(v > 0)) return;
+      if (g[0] === 'flappy' || g[0] === 'bombs' || k === 'eggdash:endless' || g[0] === 'defence') out[k] = v;
+      else if (g[0] === 'bogies') bog += v;
+    });
+    if (bog) out['bogies:total'] = bog;
+    try { const t = games.pocket && games.pocket.summary && games.pocket.summary(); if (t) { if (t.caught) out['tornies:caught'] = t.caught; if (t.badges) out['tornies:medals'] = t.badges; } } catch (e) {}
+    try { const iv = games.invasion && games.invasion.summary && games.invasion.summary(); const d = iv && iv.diffs && iv.diffs.find(function (x) { return x.name === 'Standard'; }); if (d && d.best > 0) out['invasion:standard'] = Math.floor(d.best); } catch (e) {}
+    return out;
+  }
+  // Send the bests that changed since last time (verified players only).
+  async function onlSync() {
     const o = onl();
-    if (!o.on) return '';
+    if (!o.on || !o.token || !o.account || !o.account.verified) return;
+    const now = localBests(), sent = store.get('onlSent', {}) || {}, diff = {};
+    if (sent._who !== o.account.tornId) { Object.keys(sent).forEach(function (k) { delete sent[k]; }); }
+    Object.keys(now).forEach(function (k) { if (sent[k] !== now[k]) diff[k] = now[k]; });
+    if (!Object.keys(diff).length) return;
+    const r = await onlReq('POST', '/v1/scores', { scores: diff });
+    if (r.status === 200) { Object.keys(diff).forEach(function (k) { sent[k] = diff[k]; Object.keys(lbCache).forEach(function (c) { if (c === k) delete lbCache[c]; }); }); sent._who = o.account.tornId; store.set('onlSent', sent); }
+  }
+  bestHook = function () { clearTimeout(syncT); syncT = setTimeout(onlSync, 2000); };   // a new best was just set
+  async function lbLoad(board, force) {
+    if (!onl().on) return;
+    const c = lbCache[board];
+    if (!force && c && (c.loading || c.at > Date.now() - 30000)) return;
+    lbCache[board] = { loading: true, at: Date.now() };
+    if (Date.now() - lbSynced > 60000) { lbSynced = Date.now(); await onlSync(); }
+    const r = await onlReq('GET', '/v1/leaderboard/' + board + '?limit=50');
+    lbCache[board] = r.status === 200 ? { at: Date.now(), data: r.body } : { at: Date.now() - 25000, error: r.body.message || 'Couldn\'t load this leaderboard.' };
+    if (current === 'scores' && lbTab === 'global' && lbBoard === board) renderScores();
+  }
+  function lbGlobalHTML() {
+    const o = onl();
+    if (!o.on) return '<div class="ta-group"><div class="ta-list"><div class="ta-row"><span class="ta-ricon" style="background:#1c7ad0">🌐</span><div class="ta-rtext"><b>See how you rank against all of Torn</b><small>Global leaderboards need Online play. Turn it on and verify your Torn ID in Settings → Online. Your scores on this device are under My scores, and work without it.</small></div><button type="button" class="ta-btn" data-lb="settings">Settings</button></div></div></div>';
+    const g = LB_GAMES.find(function (x) { return x.id === lbGame; }) || LB_GAMES[0];
+    let h = '<div class="ta-lbgames">' + LB_GAMES.map(function (x) { const a = appInfo(x.id); return a ? '<button type="button" class="ta-lbgame' + (x.id === g.id ? ' ta-on' : '') + '" data-lbg="' + x.id + '" title="' + esc(a.title || a.name) + '">' + iconSmall(a) + '<span>' + esc(a.name) + '</span></button>' : ''; }).join('') + '</div>';
+    if (g.boards.length > 1) h += '<div class="ta-lbmodes">' + g.boards.map(function (b) { return '<button type="button" class="ta-lbmode' + (b[0] === lbBoard ? ' ta-on' : '') + '" data-lbb="' + b[0] + '">' + esc(b[1]) + '</button>'; }).join('') + '</div>';
+    const bname = (g.boards.find(function (b) { return b[0] === lbBoard; }) || g.boards[0])[1], c = lbCache[lbBoard], rated = lbBoard === 'territories';
     let body;
-    if (!onlBoard || onlBoard.loading) body = '<div class="ta-row"><div class="ta-rtext"><small>Loading the global leaderboard…</small></div></div>';
-    else if (onlBoard.error) body = '<div class="ta-row"><div class="ta-rtext"><small>' + esc(onlBoard.error) + '</small></div></div>';
+    if (!c || c.loading) body = '<div class="ta-row"><div class="ta-rtext"><small>Loading…</small></div></div>';
+    else if (c.error) body = '<div class="ta-row"><div class="ta-rtext"><small>' + esc(c.error) + '</small></div><button type="button" class="ta-btn" data-lb="retry">Retry</button></div>';
     else {
-      const d = onlBoard.data, list = d.players || [];
+      const d = c.data, list = d.players || [];
       body = list.length ? list.map(function (p) {
         const mine = o.account && o.account.tornId === p.tornId;
-        return '<div class="ta-row ta-lb' + (mine ? ' ta-lbme' : '') + '"><span class="ta-lbrank">' + (p.rank <= 3 ? ['🥇', '🥈', '🥉'][p.rank - 1] : '#' + p.rank) + '</span><div class="ta-rtext"><b>' + esc(p.name) + ' [' + p.tornId + ']</b><small>' + p.wins + ' wins from ' + p.games + ' games</small></div><span class="ta-lbr">' + p.rating + '</span></div>';
-      }).join('') : '<div class="ta-row"><div class="ta-rtext"><b>No ranked games yet</b><small>Online Torn Territories games are coming in the next update. Your rating starts at 1200.</small></div></div>';
-      const me = d.me;
-      body += '<div class="ta-row"><div class="ta-rtext"><small>' + (!o.account ? 'Sign in under Settings > Online to see your rank.' : !o.account.verified ? 'Verify your Torn ID under Settings > Online to appear here.' : me && me.rank ? 'You: #' + me.rank + ' · rating ' + me.rating + ' · ' + me.wins + ' wins from ' + me.games + ' games' : 'You: not ranked yet. Play an online game to get a rank.') + '</small></div></div>';
+        return '<div class="ta-row ta-lb' + (mine ? ' ta-lbme' : '') + '"><span class="ta-lbrank">' + (p.rank <= 3 ? ['🥇', '🥈', '🥉'][p.rank - 1] : '#' + p.rank) + '</span><div class="ta-rtext"><b>' + esc(p.name) + ' [' + p.tornId + ']</b>' +
+          (rated ? '<small>' + p.wins + ' wins from ' + p.games + ' games</small>' : '') + '</div><span class="ta-lbr">' + (rated ? p.rating : lbFmt(lbBoard, p.value)) + '</span></div>';
+      }).join('') : '<div class="ta-row"><div class="ta-rtext"><b>No one on this board yet</b><small>' + (rated ? 'Online Torn Territories games are coming in the next update. Ratings start at 1200.' : 'Be the first: verified players\' best scores appear here.') + '</small></div></div>';
+      const me = d.me, loc = localBests()[lbBoard];
+      const line = !o.account ? 'Sign in under Settings → Online to see your rank.' : !o.account.verified ? 'Verify your Torn ID under Settings → Online to appear here.' :
+        me && me.rank ? 'You: #' + me.rank + ' · ' + (rated ? 'rating ' + me.rating + ' · ' + me.wins + ' wins from ' + me.games + ' games' : lbFmt(lbBoard, me.value)) :
+        rated ? 'You: not ranked yet. Play an online game to get a rank.' : 'You: no score on this board yet.';
+      body += '<div class="ta-row"><div class="ta-rtext"><small>' + line + (!rated ? ' · On this device: ' + lbFmt(lbBoard, loc === undefined ? null : loc) : '') + '</small></div></div>';
     }
-    return '<div class="ta-group"><h3>Global leaderboard · Torn Territories</h3><div class="ta-list">' + body + '</div></div>';
+    return h + '<div class="ta-group"><h3>' + esc((function (a) { return a ? a.title || a.name : g.id; })(appInfo(g.id))) + (g.boards.length > 1 || !rated ? ' · ' + esc(bname) : '') + (lbBoard.indexOf('bombs:') === 0 ? ' · fastest' : '') + '</h3><div class="ta-list">' + body + '</div></div>';
   }
+  scoresBox.addEventListener('click', function (e) {
+    const t = e.target.closest('[data-lbtab],[data-lbg],[data-lbb],[data-lb]');
+    if (!t || !scoresBox.contains(t)) return;
+    sfx.click();
+    if (t.dataset.lbtab) { lbTab = t.dataset.lbtab; renderScores(); if (lbTab === 'global') lbLoad(lbBoard); return; }
+    if (t.dataset.lbg) { lbGame = t.dataset.lbg; const g = LB_GAMES.find(function (x) { return x.id === lbGame; }); lbBoard = g.boards[0][0]; renderScores(); lbLoad(lbBoard); return; }
+    if (t.dataset.lbb) { lbBoard = t.dataset.lbb; renderScores(); lbLoad(lbBoard); return; }
+    if (t.dataset.lb === 'settings') { openApp('settings'); return; }
+    if (t.dataset.lb === 'retry') { lbLoad(lbBoard, true); renderScores(); return; }
+  });
 
   /* Saved maps (Tornies). Everything happens on this device; the game draws the maps itself, nothing is downloaded. */
   function mapInfo() { try { return games.pocket && games.pocket.maps ? games.pocket.maps.info() : null; } catch (e) { return null; } }
@@ -1579,7 +1666,7 @@
     if (!a) return;
     if (current && games[current]) games[current].leave();
     current = id; root.dataset.app = id;
-    if (id === 'scores') { renderScores(); onlLoadBoard(); }
+    if (id === 'scores') { renderScores(); if (lbTab === 'global') lbLoad(lbBoard); }
     if (id === 'settings') renderSettings();
     if (id === 'artT' || id === 'artC') renderArt(id);
     if (id === 'dev') renderDev();
