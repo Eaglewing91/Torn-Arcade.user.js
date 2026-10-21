@@ -12,7 +12,7 @@ const crypto = require('crypto');
 const db = require('./db');
 const ChessEngine = require('./chess-engine');
 
-const TURN_MS = Number(process.env.CH_TURN_MS) || 30000;
+const TURN_MS = Number(process.env.CH_TURN_MS) || 45000;   // 45 seconds a move
 const STRIKES = 3;                                   // moves the computer may make for a player who ran out of time
 const LOBBY_MS = 30 * 60000, PUBLIC_MS = 15 * 60000, KEEP_OVER_MS = 15 * 60000, WAIT_MS = 20000;
 const rnd = function () { return crypto.randomInt(0, 2 ** 32) / 2 ** 32; };
@@ -58,7 +58,7 @@ function summary(g, me) {
   };
 }
 
-/* ---------- The clock: 30 seconds a move; the computer covers up to 3 timeouts, the 4th loses ---------- */
+/* ---------- The clock: 45 seconds a move; the computer covers up to 3 timeouts, the 4th loses ---------- */
 function step(g, now) {
   const r = g.row, S = r.state;
   if (r.status !== 'active' || !S) return;

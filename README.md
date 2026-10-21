@@ -6,6 +6,8 @@
 
 Torn Arcade is a Tampermonkey userscript that adds a **Mobile Phone** link to Torn's sidebar. Click it and a phone opens on top of the page with nine games, leaderboards and settings. Everything runs inside the phone, and every image, sound and piece of music is built into the script or its two optional Art Packs.
 
+> ♞ **2.43.1:** Faster online moves in Chess and Territories: on some browsers a move could wait up to 20 seconds before it was sent. It now goes out straight away.
+>
 > 🛡️ **2.43: Trade anti-cheat.** Tornie trades are now online only (the old send-it-yourself trade codes are gone), and the server records who owns each traded Tornie, so copies can't be traded. Settings → Cheat code is now **Redeem code**.
 >
 > ♞ **2.42: Chess.** Play the computer on three levels or play online with a 30 second move clock. **Public games and ⚡ Quick match** for Chess and Territories, so it's easy to find an opponent (invites by Torn ID still work). Territories' police raid has new artwork to match the Air Marshal.

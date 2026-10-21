@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.43.0
+// @version      2.43.1
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with nine game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -638,7 +638,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gifts and trades', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.43.0';
+  const VERSION = '2.43.1';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -1611,7 +1611,12 @@
   const ONLINE_URL = 'https://arcade-server-production-8ebd.up.railway.app';
   let onlMsg = null, onlBusy = false;
   function onl() { return store.get('online', null) || { on: false }; }
+  // Live-game listening requests (long polls) that are open right now. Some browsers and userscript managers only send
+  // one request to the server at a time, so a move would wait behind an open long poll for up to 20 seconds. Any request
+  // that changes something (a move, a trade, a save) first cancels the open long polls; they reopen straight after.
+  const onlPolls = new Set();
   function onlReq(method, path, body, wait) {
+    if (method !== 'GET') onlPolls.forEach(function (x) { try { x.abort(); } catch (e) {} });
     return new Promise(function (resolve) {
       const o = onl();
       const bad = function () { resolve({ status: 0, body: { error: 'offline', message: 'Couldn\'t reach the Torn Arcade server. Try again in a minute.' } }); };
@@ -1620,13 +1625,19 @@
       const h = { 'Content-Type': 'application/json', 'X-Arcade-Version': VERSION };
       if (o.token) h.Authorization = 'Bearer ' + o.token;
       try {
-        GM_xmlhttpRequest({ method: method, url: ONLINE_URL + path, headers: h, data: body ? JSON.stringify(body) : undefined, timeout: wait || 15000, anonymous: true,
+        const isPoll = method === 'GET' && /[?&]wait=1/.test(path);
+        let x = null;
+        const end = function () { if (x) onlPolls.delete(x); };
+        x = GM_xmlhttpRequest({ method: method, url: ONLINE_URL + path, headers: h, data: body ? JSON.stringify(body) : undefined, timeout: wait || 15000, anonymous: true,
           onload: function (r) {
+            end();
             let j = null; try { j = JSON.parse(r.responseText); } catch (e) {}
             if (r.status === 401 && o.token) { const n = onl(); delete n.token; delete n.account; store.set('online', n); }   // signed out on the server
             resolve({ status: r.status, body: j || {} });
           },
-          onerror: bad, ontimeout: bad });
+          onabort: function () { end(); resolve({ status: 0, aborted: true, body: { error: 'aborted', message: '' } }); },
+          onerror: function () { end(); bad(); }, ontimeout: function () { end(); bad(); } });
+        if (isPoll && x && typeof x.abort === 'function') onlPolls.add(x);
       } catch (e) { bad(); }
     });
   }
@@ -20636,6 +20647,7 @@
         const r = await onlReq('GET', '/v1/tt/games/' + ON.id + '?wait=1&v=' + ON.ver + (ON.board ? '&board=1' : ''), null, 30000);
         if (!ON || ON.gen !== gen) return;
         ON.polling = false;
+        if (r.aborted) continue;   // cancelled so a move could go out first: listen again at once
         if (r.status === 200) onApply(r.body);
         else if (r.status === 403 || r.status === 404 || r.status === 401) { onMsg = r.body.message || 'That game isn\'t available.'; ON = null; showTitle(); return; }
         else await onWait(3000);
@@ -21399,6 +21411,7 @@
         const r = await onlReq('GET', '/v1/chess/games/' + ON.id + '?wait=1&v=' + ON.ver, null, 30000);
         if (!ON || ON.gen !== gen) return;
         ON.polling = false;
+        if (r.aborted) continue;   // cancelled so a move could go out first: listen again at once
         if (r.status === 200) onApply(r.body);
         else if (r.status === 401 || r.status === 403 || r.status === 404) { onMsg = (r.body && r.body.message) || 'That game isn\'t available.'; ON = null; showTitle(); return; }
         else await new Promise(function (z) { setTimeout(z, 3000); });
