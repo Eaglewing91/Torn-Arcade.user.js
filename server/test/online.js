@@ -45,7 +45,12 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     let st = (await call('GET', '/v1/tt/games/' + id, null, A)).body.state;
     const E = TTEngine({}); E.set(st);
     const v = st.verts.findIndex((x, i) => E.safeOK(0, i, true));
+    await sleep(1000);   // most of A's 1.5 s used up
     r = await call('POST', '/v1/tt/games/' + id + '/act', { a: { t: 'safe', v: v } }, A); check('a move by hand', r.status === 200, r.body);
+    r = await call('GET', '/v1/tt/games/' + id, null, A); check('each move gives a fresh timer', r.body.game.left > 1200, r.body.game.left);
+    await sleep(1000);   // 2 s since A's turn began: without the reset the computer would have taken over by now
+    st = (await call('GET', '/v1/tt/games/' + id, null, A)).body.state;
+    check('still A\'s own move after the reset', !st.log.some(l => /ran out of time/.test(l)), st.log.slice(0, 3));
     r = await call('POST', '/v1/tt/games/' + id + '/act', { a: { t: 'roll' } }, B); check('moves out of turn are refused', r.status === 400, r.body);
     st = (await call('GET', '/v1/tt/games/' + id, null, A)).body.state; E.set(st);
     const e = st.edges.findIndex((x, i) => E.routeOK(0, i));

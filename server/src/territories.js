@@ -14,7 +14,8 @@ const crypto = require('crypto');
 const db = require('./db');
 const TTEngine = require('./tt-engine');
 
-const TURN_MS = Number(process.env.TT_TURN_MS) || 30000;   // the inactivity timer
+const TURN_MS = Number(process.env.TT_TURN_MS) || 45000;   // the inactivity timer: 45 seconds, reset by every move you make
+const TURN_CAP_MS = Number(process.env.TT_TURN_CAP_MS) || 4 * 60000;   // but one whole turn can't run past 4 minutes
 const AI_MS = Number(process.env.TT_AI_MS) || 900;         // pause between computer moves
 const SETUP_AI_MS = Math.min(AI_MS, 450);
 const LOBBY_MS = 30 * 60000, KEEP_OVER_MS = 15 * 60000, WAIT_MS = 20000;
@@ -93,10 +94,12 @@ function step(g, now) {
   if (G.phase === 'over') { finish(g); return; }
   const w = E.waiting(), key = [w, G.phase, G.turn, G.setup && G.setup.i, G.discardQ.length, G.offer ? 1 : 0].join('|');
   if (key !== g.waitKey) { g.waitKey = key; g.waitSince = now; g.nextAt = now + (G.phase === 'setup' ? SETUP_AI_MS : AI_MS); }
+  const tk = [G.cur, G.turn, G.setup && G.setup.i].join('|');
+  if (tk !== g.turnKey) { g.turnKey = tk; g.turnSince = now; }
   if (E.isAI(w)) {
     if (now < g.nextAt) return;
     E.aiMove(); g.nextAt = now + (G.phase === 'setup' ? SETUP_AI_MS : AI_MS); bump(g);
-  } else if (now - g.waitSince >= TURN_MS) {
+  } else if (now - g.waitSince >= TURN_MS || (w === G.cur && now - (g.turnSince || now) >= TURN_CAP_MS)) {
     E.takeOver(w); g.waitKey = ''; bump(g);
   }
   if (G.phase === 'over') finish(g);
@@ -276,8 +279,9 @@ async function route(req, res, url, c) {
     if (r.status !== 'active' || seat < 0) return c.fail(res, 400, 'not_now', 'This game isn\'t running.');
     if (c.limited(c.ip, 'ttact', 240, 60000)) return c.fail(res, 429, 'slow_down', 'Too many moves. Slow down a little.');
     if (g.E.isAI(seat)) return c.fail(res, 400, 'auto', 'The computer is playing this turn for you. You\'re back in control on your next turn.');
-    const b = await c.readBody(req), out = g.E.act(seat, b.a);
+    const b = await c.readBody(req), was = g.E.waiting(), out = g.E.act(seat, b.a);
     if (out.err) return c.fail(res, 400, out.err, 'That move isn\'t allowed right now.');
+    if (was === seat) g.waitSince = Date.now();   // every move you make (a road, a trade...) gives you a fresh 45 seconds
     bump(g);
     if (g.G.phase === 'over') await finish(g);
     return c.send(res, 200, { ok: true, answers: out.answers || null, ver: r.ver });

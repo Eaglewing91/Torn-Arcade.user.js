@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.43.1
+// @version      2.43.2
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with nine game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -613,7 +613,7 @@
     { id: 'flappy', name: 'Flappy Torn',    icon: '🐦', bg: ['#6cc8ff', '#1f72c8'] , desc: 'Fly through the gaps in the pipes over Torn City. Every pipe you pass is a point.' },
     { id: 'eggdash', name: 'Egg Dash', title: "Anton's Egg Dash", icon: '🐰', bg: ['#8a5ae8', '#2a1458'], desc: 'Run the rooftops of Torn City as Anton in his bunny onesie. Grab the Easter eggs, jump the gaps and stay ahead of the police. One endless run that keeps getting faster.' },
     { id: 'territories', name: 'Territories', title: 'Torn Territories', icon: '🏘️', bg: ['#4a8ad8', '#1a3a6a'], desc: 'A district-building board game. Build roads, safehouses and HQs across Torn City, trade with rival factions and dodge the police raids. Classic (first to 14 Respect) or the Flight Paths expansion: fly to islands named after Torn\'s travel destinations (first to 12 or 16). Play against the computer, pass-and-play or online.' },
-    { id: 'chess', name: 'Chess', title: 'Chess', icon: '♞', bg: ['#e8c88a', '#7a5230'], desc: 'Classic chess against the computer (Easy, Normal, Hard), or online against other Torn players with Quick match, public games and invites. 30 seconds a move online.' },
+    { id: 'chess', name: 'Chess', title: 'Chess', icon: '♞', bg: ['#e8c88a', '#7a5230'], desc: 'Classic chess against the computer (Easy, Normal, Hard), or online against other Torn players with Quick match, public games and invites. 45 seconds a move online.' },
   ];
   // Home-screen icons for the games: small WebP pictures stored as text in the script (nothing is downloaded).
   const APP_ART = {
@@ -638,7 +638,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gifts and trades', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.43.1';
+  const VERSION = '2.43.2';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -20184,7 +20184,7 @@
         const me = P(G.cur), ok = sum(d.give) > 0 && sum(d.want) > 0 && RES.every(function (r) { return !(d.give[r] && d.want[r]); });
         bx.innerHTML = '<h3>TRADE WITH RIVALS</h3><div class="ta-tt-cols"><div class="ta-tt-steps"><p>You give</p>' + steppers('give', d.give, me.hand) + '</div><div class="ta-tt-steps"><p>You want</p>' + steppers('want', d.want, null) + '</div></div>' +
           (d.answers ? '<div class="ta-tt-pls">' + (d.answers.length ? d.answers.map(function (a, k) {
-            if (a.human) return '<div class="ta-tt-ans"><i style="background:' + P(a.i).col + '"></i><span>' + esc(P(a.i).name) + ' decides for themselves (30 seconds)</span><button class="ta-tt-sm" data-a="propose" data-to="' + a.i + '">Offer to ' + esc(P(a.i).name) + '</button></div>';
+            if (a.human) return '<div class="ta-tt-ans"><i style="background:' + P(a.i).col + '"></i><span>' + esc(P(a.i).name) + ' decides for themselves (45 seconds)</span><button class="ta-tt-sm" data-a="propose" data-to="' + a.i + '">Offer to ' + esc(P(a.i).name) + '</button></div>';
             const why = { cards: ' doesn\'t have that', leader: ' won\'t trade with the leader', threat: ' won\'t help you build', value: ' says no' }[a.why] || ' says no';
             return '<div class="ta-tt-ans"><i style="background:' + P(a.i).col + '"></i><span>' + esc(P(a.i).name) + (a.ok ? ' will take that deal' : a.counter ? ' says no, but counters: <b>you give ' + list(a.counter) + '</b>, you get ' + list(d.want) : why) + '</span>' +
               (a.ok || a.counter ? '<button class="ta-tt-sm" data-a="accept" data-k2="' + k + '">' + (a.ok ? 'Deal' : 'Accept counter') + '</button>' : '<span></span>') + '</div>';
@@ -20557,7 +20557,7 @@
       c.innerHTML = '<h4>PLAY ONLINE</h4>' + (onMsg ? '<div class="ta-tt-msg">' + esc(onMsg) + '</div>' : '') +
         '<div class="ta-tt-btns"><button class="ta-tt-go" data-o="quick">⚡ Quick match</button><button class="ta-tt-sm" data-o="public">Make a public game</button></div>' +
         '<div class="ta-tt-empty">Quick match puts you in the next public ' + GAME_NAME[opts.game] + ' game waiting for players, or opens one. A public game starts by itself when all 4 seats are taken, or when its host starts it (empty seats are played by the computer).</div>' +
-        '<div class="ta-tt-empty">Invite 1 to 3 players by Torn ID to a game of <b>' + GAME_NAME[opts.game] + '</b> (pick the game on the left). They get a notification on their phone. Empty seats are played by the computer. 30 seconds a move: if a player doesn\'t act in time, the computer plays that turn for them.</div>' +
+        '<div class="ta-tt-empty">Invite 1 to 3 players by Torn ID to a game of <b>' + GAME_NAME[opts.game] + '</b> (pick the game on the left). They get a notification on their phone. Empty seats are played by the computer. 45 seconds a move, and every move you make starts your 45 seconds again: if a player doesn\'t act in time, the computer plays that turn for them.</div>' +
         '<div class="ta-tt-ids">' + [0, 1, 2].map(function (i) { return '<input data-oid="' + i + '" inputmode="numeric" maxlength="9" placeholder="Torn ID" aria-label="Player ' + (i + 2) + ' Torn ID">'; }).join('') + '</div>' +
         '<button class="ta-tt-go" data-o="create">Invite and make a lobby</button>' +
         '<h4>PUBLIC GAMES · ' + esc(GAME_NAME[opts.game]) + '</h4>' + (pub.length ? pub.map(onRow).join('') : '<div class="ta-tt-empty">' + (onPub ? 'No public games waiting. Use Quick match or make one.' : 'Loading…') + '</div>') +
@@ -20976,7 +20976,7 @@
      Classic chess on the phone: against the computer (Easy, Normal, Hard) or online against other Torn players
      (optional: Online play, verified Torn ID). Classic Staunton-style pieces and board, drawn by the script.
      Games against the computer make no requests and touch nothing on Torn's page. Online games are run by the Torn
-     Arcade server with the same rules engine (chess-engine.js): 30 seconds a move; if you run out of time the computer
+     Arcade server with the same rules engine (chess-engine.js): 45 seconds a move; if you run out of time the computer
      moves for you, up to 3 times a game, and the 4th time you lose on time. */
   (function () {
     const CE = ChessEngine({});
@@ -21065,7 +21065,7 @@
           '<div class="ta-ch-note" data-c="record"></div></div>' +
         '<div class="ta-ch-card" data-c="online"></div>' +
         '<div class="ta-ch-card"><h4>HOW TO PLAY</h4><div class="ta-ch-note">Tap a piece to see where it can go, then tap a square (or drag the piece). Checkmate the other king to win. All the usual rules apply: castling, en passant, promotion, and draws by stalemate, threefold repetition, the 50-move rule or too little material left.</div>' +
-          '<div class="ta-ch-note">Online: 30 seconds a move. If you run out of time, the computer moves for you, up to 3 times a game. The 4th time you lose on time. Games between two players change your chess rating on the global leaderboard.</div></div>' +
+          '<div class="ta-ch-note">Online: 45 seconds a move. If you run out of time, the computer moves for you, up to 3 times a game. The 4th time you lose on time. Games between two players change your chess rating on the global leaderboard.</div></div>' +
       '</div>' +
       '<div class="ta-ch-game" data-c="game" hidden>' +
         '<div class="ta-ch-boardwrap" data-c="wrap"><div class="ta-ch-board" data-c="board"></div></div>' +
@@ -21343,7 +21343,7 @@
       c.innerHTML = '<h4>PLAY ONLINE</h4>' + (onMsg ? '<div class="ta-ch-msg">' + esc(onMsg) + '</div>' : '') +
         '<div class="ta-ch-btns"><button class="ta-ch-go" data-o="quick">⚡ Quick match</button><button data-o="public">Make a public game</button></div>' +
         '<div class="ta-ch-row"><input data-o="id" inputmode="numeric" maxlength="9" placeholder="Torn ID" aria-label="Torn ID to invite" style="flex:1"><button data-o="invite">Invite</button></div>' +
-        '<div class="ta-ch-note">You play ' + (opts.side === 'w' ? 'White' : opts.side === 'b' ? 'Black' : 'a random colour') + ' in games you host (set it under Play the computer). 30 seconds a move.</div>' +
+        '<div class="ta-ch-note">You play ' + (opts.side === 'w' ? 'White' : opts.side === 'b' ? 'Black' : 'a random colour') + ' in games you host (set it under Play the computer). 45 seconds a move.</div>' +
         '<h4>YOUR GAMES</h4>' + (mine.length ? mine.map(row).join('') : '<div class="ta-ch-note">' + (onMine ? 'No online games yet.' : 'Loading…') + '</div>') +
         '<h4>PUBLIC GAMES</h4>' + (pub.length ? pub.map(row).join('') : '<div class="ta-ch-note">' + (onPublic ? 'Nobody is waiting right now. Make a public game or use Quick match.' : 'Loading…') + '</div>');
     }
