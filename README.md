@@ -148,13 +148,15 @@ Torn Arcade is built to follow Torn's scripting rules:
 | Feature | Key needed | What it reads | Where the key goes |
 |---|---|---|---|
 | All games | **None** | Nothing | Nowhere |
-| Event notifications (optional) | **Limited** | `user → events` | Only `api.torn.com`, every 5 seconds while the phone is open |
+| Event notifications (optional) | **Custom** (`user → basic, events`), made with the **Generate custom API key** button; a Limited key also works | `user → events` | Only `api.torn.com`, every 5 seconds while the phone is open |
 | Online play (optional) | **Public** | `user → basic` (your name and Torn ID) | Once to the Torn Arcade server, which asks `api.torn.com` who owns it and forgets it |
 
-You can verify for Online play with the Limited key you saved for notifications (**Use my saved key**); only your name and Torn ID are read. If you'd rather not send it, make a separate Public key and paste that instead.
+You can verify for Online play with the key you saved for notifications (**Use my saved key**); only your name and Torn ID are read. If you'd rather not send it, make a separate Public key and paste that instead.
+
+**Generate custom API key** (Settings → Notifications) opens Torn's own new-key page in a new tab, with the name *Torn Arcade* and only the two selections it needs (**basic** and **events**) already ticked. You confirm it on Torn and paste the key back. A custom key like this can't read anything else on your account. If Torn's newer API ever refuses a custom key for events, Torn Arcade asks the older API path for the same events instead (still only `api.torn.com`).
 
 ### Optional event notifications
-If you add a **Limited** access API key in Settings, the phone checks the official Torn API (`api.torn.com`, `/v2/user/events`) for new events **every 5 seconds while the phone is open**. That's 12 calls a minute, well under Torn's limit of 100. Nothing is requested while the phone is closed. The key is only ever sent to `api.torn.com`. See the Torn API terms on Torn's API page (on [Torn](https://www.torn.com), under the API section).
+If you add an API key in Settings (a **Custom** key with `user → basic, events`, or a Limited key), the phone checks the official Torn API (`api.torn.com`, `/v2/user/events`) for new events **every 5 seconds while the phone is open**. That's 12 calls a minute, well under Torn's limit of 100. Nothing is requested while the phone is closed. The key is only ever sent to `api.torn.com`. See the Torn API terms on Torn's API page (on [Torn](https://www.torn.com), under the API section).
 
 ### 🌐 Optional online play
 **Online play is completely optional and off until you turn it on** (Settings → Online). **Every game works fully without it**: Tornies, Torn Invasion, Angry Bogies, Faction Defence, Egg Dash, Torn Territories against the computer or pass-and-play, Dirty Bombs and Flappy Torn all play on your own device, with no API key, no account and no server. Online play only *adds* three things:
@@ -193,7 +195,7 @@ With Online play off, **nothing** is ever sent, and nothing is requested while t
 
 | Data Storage | Data Sharing | Purpose of Use | Key Storage & Sharing | Key Access Level |
 |---|---|---|---|---|
-| Only locally | Nobody | Public amusement (games) and event notifications on the phone | Stored locally / Used only for automation (event checks while the phone is open). Never shared. | Limited (user → events). Optional: only needed for event notifications |
+| Only locally | Nobody | Public amusement (games) and event notifications on the phone | Stored locally / Used only for automation (event checks while the phone is open). Never shared. | Custom (user → basic, events). A Limited key also works. Optional: only needed for event notifications |
 
 - **Data Storage:** settings, theme, wallpaper, best scores, your Tornies save, Torn Invasion progress, Angry Bogies stars, Faction Defence progress (stars, War Chest and Armoury), Egg Dash eggs and achievements, a Torn Territories game in progress and your API key are kept in Tampermonkey storage on your device. Events are shown on the phone but never saved. With **Save maps on this device** on (Settings → Tornies), pictures of the Tornies maps the game has drawn are also kept in your browser's own storage for torn.com (IndexedDB, `torn-arcade-maps`). They are drawn by the script on your device, contain no personal data, are never uploaded or shared, and **Clear saved maps** deletes them.
 - **Data Sharing:** nothing is sent anywhere except event requests to `api.torn.com` and, only if you turn on Online play, requests to the Torn Arcade server (see below).
@@ -204,7 +206,7 @@ With Online play off, **nothing** is ever sent, and nothing is requested while t
 
 | Data Storage | Data Sharing | Purpose of Use | Key Storage & Sharing | Key Access Level |
 |---|---|---|---|---|
-| Persistent - until account deletion (on the Torn Arcade server: your Torn ID, name, best scores, online rating, online game records, Tornie trades and, if you turn them on, cloud saves of your game progress; on your device: a sign-in token) | General public (your name, Torn ID, rating and best scores on the global leaderboards); the players in your online games and trades see your name, Torn ID, your moves, and the Tornie you offer | Public community tools (global leaderboards, online Torn Territories games and Tornie trades) | Not stored / Not shared (sent once to the Torn Arcade server to confirm your Torn ID with `api.torn.com`, then forgotten) | Public (user → basic). A Limited key also works; only your name and Torn ID are read |
+| Persistent - until account deletion (on the Torn Arcade server: your Torn ID, name, best scores, online rating, online game records, Tornie trades and, if you turn them on, cloud saves of your game progress; on your device: a sign-in token) | General public (your name, Torn ID, rating and best scores on the global leaderboards); the players in your online games and trades see your name, Torn ID, your moves, and the Tornie you offer | Public community tools (global leaderboards, online Torn Territories games and Tornie trades) | Not stored / Not shared (sent once to the Torn Arcade server to confirm your Torn ID with `api.torn.com`, then forgotten) | Public (user → basic). The custom key (user → basic, events) or a Limited key also works; only your name and Torn ID are read |
 
 The same table is shown in Settings → Online wherever you can enter a key, and at the top of the script. The server is hosted on Railway ([Railway privacy policy](https://railway.com/legal/privacy)); see also the Torn API terms on Torn's API page.
 

@@ -10,6 +10,11 @@ async function whoIs(key) {
   try {
     const r = await fetch(BASE + '/v2/user/basic?comment=TornArcade', { headers: { Authorization: 'ApiKey ' + key, Accept: 'application/json' }, signal: ctl.signal });
     d = await r.json();
+    // a custom key (user > basic, events) that the newer API turns away: ask the older API path for the same basic profile
+    if (d && d.error && d.error.code === 16) {
+      const r1 = await fetch(BASE + '/user/?selections=basic&comment=TornArcade&key=' + encodeURIComponent(key), { headers: { Accept: 'application/json' }, signal: ctl.signal });   // the older API takes the key in the address (HTTPS, never logged)
+      d = await r1.json();
+    }
   } catch (e) {
     return { error: 'torn_down', message: 'Couldn\'t reach the Torn API. Try again in a minute.' };
   } finally { clearTimeout(timer); }

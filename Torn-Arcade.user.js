@@ -159,10 +159,12 @@
  *   delete them (Settings > Online). With Online play off, nothing is ever
  *   sent.
  * - WHICH API KEY FOR WHAT: no game needs a key. Event notifications need a
- *   Limited key (user > events; sent only to api.torn.com). Online play
- *   needs only a Public key (user > basic; sent once to the Torn Arcade
- *   server to confirm your Torn ID). A saved Limited key can be used to
- *   verify too, but only your name and ID are read.
+ *   Custom key with only user > basic, events (the Settings button opens
+ *   Torn's own new-key page with those ticked; a Limited key also works;
+ *   sent only to api.torn.com). Online play needs only a Public key
+ *   (user > basic; sent once to the Torn Arcade server to confirm your Torn
+ *   ID). The saved custom key can be used to verify too, but only your
+ *   name and ID are read.
  * - Keys only control a game while the phone is open, and never while you
  *   are typing in a text box.
  *
@@ -185,8 +187,9 @@
  *                          on the phone
  * - Key Storage & Sharing: Stored locally / Used only for automation (event
  *                          checks while the phone is open). Never shared.
- * - Key Access Level:      Limited (user > events). Optional: only needed
- *                          for event notifications.
+ * - Key Access Level:      Custom (user > basic, events). A Limited key also
+ *                          works. Optional: only needed for event
+ *                          notifications.
  *
  * TERMS OF SERVICE: ONLINE PLAY (optional, off by default; no game needs it)
  * - Data Storage:          Persistent - until account deletion (on the Torn
@@ -204,8 +207,9 @@
  * - Key Storage & Sharing: Not stored / Not shared (sent once to the Torn
  *                          Arcade server to confirm your Torn ID with
  *                          api.torn.com, then forgotten)
- * - Key Access Level:      Public (user > basic). A Limited key also works;
- *                          only your name and Torn ID are read.
+ * - Key Access Level:      Public (user > basic). The custom key (user >
+ *                          basic, events) or a Limited key also works; only
+ *                          your name and Torn ID are read.
  * - Where it may be used:  Torn (www.torn.com) only. See the LICENCE above.
  */
 
@@ -723,6 +727,7 @@
     '.ta-artgal .ta-unk img{filter:brightness(0);opacity:.35}',
     '.ta-artinst{display:flex;flex-direction:column;align-items:center;gap:8px;padding:4px 12px 14px;text-align:center}',
     '.ta-artinst .ta-btn{text-decoration:none;display:inline-block}',
+    '.ta-btn.ta-keygen{text-decoration:none;display:inline-block;padding:6px 12px;font-size:12.5px}',
     '.ta-devform{display:flex;flex-direction:column;gap:9px;padding:12px}',
     '.ta-devform p{margin:0;color:var(--muted);font-size:12px;line-height:1.4}',
     '.ta-devform label{display:flex;flex-direction:column;gap:4px;font-size:11.5px;color:var(--muted)}',
@@ -1392,14 +1397,15 @@
       '</div></div>' +
       '<div class="ta-group"><h3>Notifications</h3><div class="ta-list">' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#d0453a">🔔</span><div class="ta-rtext"><b>Torn event notifications</b><small>Shows your new Torn events on the phone while it is open</small></div><button type="button" class="ta-switch' + (store.get('evNotify', true) ? ' ta-on' : '') + '" data-set="evNotify"></button></div>' +
-        '<div class="ta-row"><span class="ta-ricon" style="background:#2f7bd1">🗝️</span><div class="ta-rtext"><b>Torn API key for event notifications</b><small>Needs a <strong style="display:inline;color:#ffd27a">Limited</strong> access key (it reads user → events). Optional: no game needs it, and Online play uses a separate Public key below.</small><small class="ta-evmsg' + (evState.ok === true ? ' ta-good' : evState.ok === false ? ' ta-bad' : '') + '">' + esc(evState.msg || (store.get('apiKey', '') ? 'Key saved.' : 'No key saved. Make a Limited key in Torn under Settings → API Keys.')) + '</small>' +
+        '<div class="ta-row"><span class="ta-ricon" style="background:#2f7bd1">🗝️</span><div class="ta-rtext"><b>Torn API key for event notifications</b><small>Best: a <strong style="display:inline;color:#ffd27a">Custom</strong> key that can only read your events and basic profile (user → basic, events). Tap “Generate custom API key”: Torn opens its own new-key page with those two selections ticked, you confirm there and paste the key here. A Limited key also works. Optional: no game needs it.</small><small class="ta-evmsg' + (evState.ok === true ? ' ta-good' : evState.ok === false ? ' ta-bad' : '') + '">' + esc(evState.msg || (store.get('apiKey', '') ? 'Key saved.' : 'No key saved. Make a Limited key in Torn under Settings → API Keys.')) + '</small>' +
+          '<div style="margin:6px 0 2px"><a class="ta-btn ta-keygen" href="https://www.torn.com/preferences.php#tab=api?step=addNewKey&title=Torn%20Arcade&user=basic,events" target="_blank" rel="noopener">🗝️ Generate custom API key</a></div>' +
           '<div class="ta-cheat"><input type="password" class="ta-cheatin ta-keyin" autocomplete="off" spellcheck="false" maxlength="16" placeholder="' + (store.get('apiKey', '') ? '••••••••••••••••' : 'Paste your API key') + '"><button type="button" class="ta-btn" data-set="keySave">Save</button>' + (store.get('apiKey', '') ? '<button type="button" class="ta-danger" data-set="keyDel">Remove</button>' : '') + '</div>' +
           '<table class="ta-tos"><tbody>' +
             '<tr><td>Data storage</td><td>Only locally (events are shown, never saved; Tornies map images can be saved in this browser\'s storage)</td></tr>' +
             '<tr><td>Data sharing</td><td>Nobody</td></tr>' +
             '<tr><td>Purpose of use</td><td>Public amusement (games) and event notifications on the phone</td></tr>' +
             '<tr><td>Key storage &amp; sharing</td><td>Stored locally / Used only for automation (event checks while the phone is open). Never shared.</td></tr>' +
-            '<tr><td>Key access level</td><td>Limited (user → events)</td></tr>' +
+            '<tr><td>Key access level</td><td>Custom (user → basic, events). A Limited key also works.</td></tr>' +
           '</tbody></table>' +
           '<small>Your key stays on this device and is only sent to api.torn.com, unless you choose to use it to verify for Online play below. Nothing is shared. See the top of the script for the full Terms of Service. Licensed for use on Torn only. <a class="ta-evlink" href="https://www.torn.com/api.html" target="_blank" rel="noopener">Torn API terms</a></small>' +
         '</div></div>' +
@@ -1557,7 +1563,7 @@
       (a.verified ? 'Verified Torn ID · on the global leaderboards' : 'Guest · not on the global leaderboards until you verify') + '</small>' + (a.verified ? msg : '') + '</div><button type="button" class="ta-btn" data-set="onlOut">Sign out</button></div>';
     if (!a || !a.verified) {
       h += '<div class="ta-row"><span class="ta-ricon" style="background:#2f7bd1">🗝️</span><div class="ta-rtext"><b>Verify your Torn ID</b><small>Proves who you are, so nobody can play as you and your results count on the global leaderboards.</small><small>Needs only a <strong style="display:inline;color:#ffd27a">Public</strong> access key (it reads user → basic: your name and Torn ID). ' + (saved ? 'Your saved event key is a Limited key: it works too, and still only your name and ID are read. If you\'d rather not send it, make a separate Public key in Torn under Settings → API Keys and paste it here.' : 'Make one in Torn under Settings → API Keys.') + '</small>' + msg +
-        (saved ? '<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="ta-btn" data-set="onlSaved"' + (onlBusy ? ' disabled' : '') + '>Use my saved key (Limited)</button></div>' : '') +
+        (saved ? '<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="ta-btn" data-set="onlSaved"' + (onlBusy ? ' disabled' : '') + '>Use my saved key</button></div>' : '') +
         '<div class="ta-cheat"><input type="password" class="ta-cheatin ta-onlkey" autocomplete="off" spellcheck="false" maxlength="16" placeholder="' + (saved ? 'Or paste a Public API key' : 'Paste a Public API key') + '"><button type="button" class="ta-btn" data-set="onlVerify"' + (onlBusy ? ' disabled' : '') + '>Verify</button></div>' +
         (!a ? '<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="ta-btn" data-set="onlGuest"' + (onlBusy ? ' disabled' : '') + '>Play as a guest instead</button></div>' : '') +
         '<table class="ta-tos"><tbody>' +
@@ -1565,7 +1571,7 @@
           '<tr><td>Data sharing</td><td>General public (your name, Torn ID, rating and best scores on the global leaderboards); players in your online games and trades see your name, Torn ID, moves and the Tornie you offer</td></tr>' +
           '<tr><td>Purpose of use</td><td>Public community tools (global leaderboards, online Torn Territories games and Tornie trades)</td></tr>' +
           '<tr><td>Key storage &amp; sharing</td><td>Not stored / Not shared (sent once to the Torn Arcade server to confirm your Torn ID with api.torn.com, then forgotten)</td></tr>' +
-          '<tr><td>Key access level</td><td>Public (user → basic). A Limited key also works; only your name and Torn ID are read.</td></tr>' +
+          '<tr><td>Key access level</td><td>Public (user → basic). Your custom key (user → basic, events) or a Limited key also works; only your name and Torn ID are read.</td></tr>' +
         '</tbody></table>' +
         '<small>The Torn Arcade server is run by Eaglewing [571041] and hosted on Railway. Guests need no key, but can\'t join the leaderboards, online games or trades. Delete your online account at any time below. <a class="ta-evlink" href="https://www.torn.com/api.html" target="_blank" rel="noopener">Torn API terms</a> · <a class="ta-evlink" href="https://railway.com/legal/privacy" target="_blank" rel="noopener noreferrer">Railway privacy policy</a></small>' +
         '</div></div>';
@@ -1986,7 +1992,7 @@
      Only runs while the phone is open and a key has been added in Settings. Every 5 seconds it asks
      api.torn.com for events newer than the last one it saw, and shows each new one as a banner.
      The key is never sent anywhere except api.torn.com. Events are shown, never stored. */
-  const EV_API = 'https://api.torn.com/v2/user/events', EV_EVERY = 5000;
+  const EV_API = 'https://api.torn.com/v2/user/events', EV_EVERY = 5000;   // (v1 fallback below)
   let evTimer = 0, evBusy = false, evBase = null, evSeen = {}, evQueue = [], evShowing = false, evHideT = 0, evBackoff = 0;
   let evState = {};
   const pushEl = $(root, '.ta-push');
@@ -1994,10 +2000,17 @@
     // Turn the event's HTML into plain text without running or loading anything.
     try { return (new DOMParser().parseFromString(String(html), 'text/html').body.textContent || '').replace(/\s+/g, ' ').trim(); } catch (e) { return String(html).replace(/<[^>]*>/g, ''); }
   }
+  // Events come from Torn's API (v2). If Torn turns a custom key away there (error 16, access), the same key is tried
+  // once on the older API path (v1, user → events, also api.torn.com), and that path is remembered for this key.
+  const EV_API1 = 'https://api.torn.com/user/';
+  let evV1 = null;   // the key that needed the older API
   async function evFetch(key, params) {
     const q = new URLSearchParams(Object.assign({ striptags: 'true', comment: 'TornArcade', key: key }, params));
-    const res = await fetch(EV_API + '?' + q.toString(), { method: 'GET', credentials: 'omit', cache: 'no-store', referrerPolicy: 'no-referrer' });
+    let url = EV_API + '?' + q.toString();
+    if (evV1 === key) { q.set('selections', 'events'); url = EV_API1 + '?' + q.toString(); }
+    const res = await fetch(url, { method: 'GET', credentials: 'omit', cache: 'no-store', referrerPolicy: 'no-referrer' });
     const j = await res.json();
+    if (j && j.error && j.error.code === 16 && evV1 !== key) { evV1 = key; return evFetch(key, params); }
     if (j && j.error) { const err = new Error(j.error.error || 'API error'); err.code = j.error.code; throw err; }
     let list = (j && j.events) || [];
     if (!Array.isArray(list)) list = Object.keys(list).map(function (id) { return Object.assign({ id: id }, list[id]); });
@@ -2006,7 +2019,7 @@
   function evErrorText(err) {
     const c = err && err.code;
     if (c === 2) return 'That key is not valid.';
-    if (c === 16) return 'That key does not have enough access. It needs Limited access.';
+    if (c === 16) return 'That key can\'t read your events. Use Generate custom API key (or a Limited key).';
     if (c === 5) return 'Too many API requests right now. Trying again shortly.';
     if (c === 13 || c === 18) return 'That key is paused or inactive in Torn.';
     if (c === 9 || c === 17) return 'The Torn API is unavailable right now.';
