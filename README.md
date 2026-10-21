@@ -6,6 +6,8 @@
 
 Torn Arcade is a Tampermonkey userscript that adds a **Mobile Phone** link to Torn's sidebar. Click it and a phone opens on top of the page with nine games, leaderboards and settings. Everything runs inside the phone, and every image, sound and piece of music is built into the script or its two optional Art Packs.
 
+> 🔁 **2.42.1:** Tornie trades are now online only (the old send-it-yourself trade codes are gone), and Settings → Cheat code is now **Redeem code**.
+>
 > ♞ **2.42: Chess.** Play the computer on three levels or play online with a 30 second move clock. **Public games and ⚡ Quick match** for Chess and Territories, so it's easy to find an opponent (invites by Torn ID still work). Territories' police raid has new artwork to match the Air Marshal.
 >
 > ✈️ **2.41: Torn Territories Flight Paths.** A new expansion played by the rules of Catan: Seafarers: fly from Torn City to islands named after Torn's travel destinations, first to 12 or 16 Respect, online too, with its own leaderboards. Classic Territories now plays to 14 Respect on the large map (the small map was retired).
@@ -79,14 +81,12 @@ A creature-collecting RPG set in Torn City. You start in Maple Hollow with one o
 - Win **8 Arena medals** from Torn City's Arena Leaders, then take on the **Torn Council** and the Champion.
 - Turn-based battles with 17 types, **181 moves**, status effects, boosters and evolutions. Every type has weak, medium and strong attacks of both kinds plus status moves, and Tornies of the same type learn different moves, so no two teams fight quite alike. **37 Training Discs** teach extra moves. The **Move Coach** in every Tornie Clinic teaches a Tornie any move it's high enough level for ($500), so Tornies caught before an update can pick up the new moves.
 - Day and night, live weather, fishing, a Day Care with eggs to hatch, rare golden Tornies, merits to earn and a Battle Tower.
-- Trade Tornies with friends, two ways, at any Clinic Tornie Locker:
-  - **Online trades** (optional, needs Online play and a verified Torn ID): offer a Tornie to a Torn ID; they get a notification on their phone and add one of theirs. You both see exactly what you'd get (species, level, stats and moves), and the swap only happens when **both** of you press Confirm. Until then the Torn Arcade server holds both Tornies like a middleman; cancel and each of you gets your own back. Each Tornie can only be collected once.
-  - **Trade codes** (no server): pack a Tornie into a code for one Torn ID and send it yourself, for example in a Torn message.
+- **Safe online trades** at any Clinic Tornie Locker (needs Online play and a verified Torn ID): offer a Tornie to a Torn ID; they get a notification on their phone and add one of theirs. You both see exactly what you'd get (species, level, stats and moves), and the swap only happens when **both** of you press Confirm. Until then the Torn Arcade server holds both Tornies like a middleman; cancel and each of you gets your own back. Each Tornie can only be collected once. Trades are online only, so every trade goes through the server and nobody can be short-changed.
 - Custom illustrated artwork for every Tornie and character, made specifically for Torn Arcade (from the optional Art Packs; pixel art without them), plus an animated title screen and an original soundtrack.
 - Illustrated towns and routes: soft shorelines, sandy beaches, snowy mountains, city streets and a neon casino strip, with swaying tall grass and lights that come on at night.
 - Illustrated interiors and caves: homes, clinics, shops, gyms, the casino, offices, hospitals and labs with detailed furniture, plus rocky caves with dirt floors, pools and ice.
 - Smooth maps: what is on screen is drawn during the normal fade, and the rest of the map (and the next map, as you head for an exit) is drawn only in quiet moments: battles, menus, dialogue and while you stand still. If you walk non-stop into a part that isn't ready yet, it briefly shows the classic pixel tiles instead of stuttering.
-- Gift codes: the developer may send you a gift code (Tornies, items or money). Paste it into Settings → Cheat code. Each code is signed, made for one Torn ID and works once, so codes can't be faked or shared.
+- Gift codes: the developer may send you a gift code (Tornies, items or money). Paste it into Settings → Redeem code. Each code is signed, made for one Torn ID and works once, so codes can't be faked or shared.
 - Running Shoes: sold in every Tornie Supplies shop once you have three medals ($10,000). Hold B (or Shift) to run. Map options in Settings → Tornies: **Detailed maps** (off for classic pixel maps on slower phones), **Save maps on this device** (maps you have visited open instantly next time), **Prepare all maps** (a one-off that draws and saves every map, indoors and out; about 40–100 MB of browser storage and a few minutes) and **Clear saved maps**.
 
 ### 👽 Torn Invasion

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.42.0
+// @version      2.42.1
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with nine game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -95,7 +95,7 @@
  *   talks to any other website. Every image and sound is built into the
  *   script or comes from the optional Art Packs below.
  * - GIFT CODES: the developer can send players signed gift codes (Tornies,
- *   items or money), redeemed in Settings > Cheat code. Each code is for one
+ *   items or money), redeemed in Settings > Redeem code. Each code is for one
  *   Torn ID and works once. They are checked in your browser with the
  *   developer's public key (Web Crypto); nothing is requested. Your Torn ID
  *   is read from the Torn page you are viewing, never requested.
@@ -629,7 +629,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gift codes', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.42.0';
+  const VERSION = '2.42.1';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -1294,7 +1294,7 @@
       '<div class="ta-devsub">Items</div><div class="ta-devitems"></div><button type="button" class="ta-btn ta-btn-alt" data-dev="additem">+ Item</button>' +
       '<label>Money ($, optional)<input class="ta-devin" data-f="money" inputmode="numeric"></label>' +
       '<div class="ta-devbtns"><button type="button" class="ta-btn" data-dev="make">Make code</button><button type="button" class="ta-btn ta-btn-alt" data-dev="lock">Lock</button></div>' +
-      (DEV.code ? '<p class="ta-devnote">Gift code (players paste it into Settings → Cheat code):</p><div class="ta-devcode ta-devgift">' + esc(DEV.code) + '</div><div class="ta-devbtns"><button type="button" class="ta-btn" data-dev="copycode">Copy code</button></div>' : '') +
+      (DEV.code ? '<p class="ta-devnote">Gift code (players paste it into Settings → Redeem code):</p><div class="ta-devcode ta-devgift">' + esc(DEV.code) + '</div><div class="ta-devbtns"><button type="button" class="ta-btn" data-dev="copycode">Copy code</button></div>' : '') +
       '</div></div></div>' +
       '<div class="ta-group"><h3>Codes made (' + log.length + ')</h3><div class="ta-list">' + (log.slice(0, 30).map(function (e, k) { return '<div class="ta-row"><div class="ta-rtext"><b>' + esc(e.id) + ' · for ' + esc(e.to) + '</b><small>' + esc(e.when) + ' · ' + esc(e.what) + '</small></div><button type="button" class="ta-btn ta-btn-alt ta-mapbtn" data-dev="copylog" data-k="' + k + '">Copy</button></div>'; }).join('') || '<div class="ta-row"><div class="ta-rtext"><small>No codes yet.</small></div></div>') + '</div></div>' +
       '<div class="ta-group"><h3>Key</h3><div class="ta-list"><div class="ta-devform"><div class="ta-devbtns"><button type="button" class="ta-btn ta-btn-alt" data-dev="copypub">Copy public key</button><button type="button" class="ta-btn ta-btn-alt" data-dev="backup">Download encrypted backup</button><button type="button" class="ta-btn ta-btn-alt" data-dev="chpass">Change passphrase</button></div>' +
@@ -1423,8 +1423,8 @@
         '<div class="ta-row"><span class="ta-ricon" style="background:#6a5acd">💾</span><div class="ta-rtext"><b>Save maps on this device</b><small>Keeps each map you have visited as images in this browser\'s storage, so it opens instantly next time with no loading. Stays on this device only; nothing is uploaded or shared.</small></div><button type="button" class="ta-switch' + (store.get('saveMaps', true) ? ' ta-on' : '') + '" data-set="saveMaps"></button></div>' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#8a4ad0">🧭</span><div class="ta-rtext"><b>Prepare all maps</b><small class="ta-mapmsg">' + mapMsg() + '</small></div><button type="button" class="ta-btn ta-mapbtn" data-set="mapPrep">' + (mapInfo() && mapInfo().running ? 'Stop' : 'Prepare') + '</button></div>' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#7a7f8a">🧹</span><div class="ta-rtext"><b>Clear saved maps</b><small>Deletes the map images saved on this device (your game save is not touched). Maps are drawn again as you visit them.</small></div><button type="button" class="ta-danger" data-set="mapClear">Clear</button></div>' +
-        '<div class="ta-row"><span class="ta-ricon" style="background:#1c9a8a">🔑</span><div class="ta-rtext"><b>Cheat code</b><small class="ta-cheatmsg">Know a secret word, or got a gift code? Enter it here.</small>' +
-          '<div class="ta-cheat"><input type="text" class="ta-cheatin" autocomplete="off" spellcheck="false" maxlength="600" placeholder="Enter code"><button type="button" class="ta-btn" data-set="cheat">Enter</button></div></div></div>' +
+        '<div class="ta-row"><span class="ta-ricon" style="background:#1c9a8a">🔑</span><div class="ta-rtext"><b>Redeem code</b><small class="ta-cheatmsg">Got a code from Eaglewing, or know a secret word? Enter it here.</small>' +
+          '<div class="ta-cheat"><input type="text" class="ta-cheatin" autocomplete="off" spellcheck="false" maxlength="600" placeholder="Enter code"><button type="button" class="ta-btn" data-set="cheat">Redeem</button></div></div></div>' +
       '</div></div>' +
       '<div class="ta-group"><h3>Data</h3><div class="ta-list">' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#d08a10">🏆</span><div class="ta-rtext"><b>Reset best scores</b><small>Clears the scores for every mini-game</small></div><button type="button" class="ta-danger" data-set="resetBest">Reset</button></div>' +
@@ -1438,7 +1438,7 @@
         '<div class="ta-about"><b>Torn Arcade · Mobile Phone</b><br>Version ' + VERSION + ' by Eaglewing [571041]<br>' +
         'Everything runs on your device. The phone never loads Torn pages. If you add an API key, it only asks the official Torn API for your new events while the phone is open. It talks to no other websites unless you turn on Online play, which uses the Torn Arcade server.<br><br>&copy; 2026 Eaglewing [571041]. All rights reserved. This script may not be copied, modified or redistributed without permission.</div></div></div>';
   }
-  /* Cheat codes. Only a SHA-256 fingerprint of each code is stored here, never the code itself.
+  /* Redeem codes. Only a SHA-256 fingerprint of each code is stored here, never the code itself.
      Codes are not case-sensitive. Each one works once per Tornies save. */
   const CHEATS = { '757ec2a6bba2f2b62ae16465ef99cff4394de5181c0639dd5e8c70963eb609df': { id: 'bars5', item: 'energy_bar', n: 5, msg: '5 Energy Bars added to your Tornies bag!' },
     '9e116eb4d45dd699c837170557f929d34edd6b962bc6d39406b289632ba6c992': { id: 'bars25', item: 'energy_bar', n: 25, msg: '25 Energy Bars added to your Tornies bag!' },
@@ -12373,11 +12373,10 @@
     r12.signs.push([28, 13, 'A crate stencilled: PROPERTY OF THE TORN CITY DUMP.|Someone has scrawled underneath: "Service hatch is inside the fence, bottom-right corner."']);
   })();
 
-  /* ================= Trading Tornies with codes (no server, no API, no network requests) =================
-     A Tornie is packed into a short text code. The code names the player it is meant for, can only be
-     received once, and stops working if anything in it is changed. The sender loses the Tornie when the
-     code is made, so one Tornie can never be in two places. Players send codes to each other themselves.
-     The player's own Torn ID is read from the Torn page they are viewing (nothing is requested). */
+  /* ================= Tornie packing for online trades =================
+     A Tornie is packed into a short text code for the Torn Arcade server to hold during an online trade.
+     The code names the player it is meant for and stops working if anything in it is changed.
+     (Trading by sending codes to each other yourself was removed in 2.42.1: trades are online only.) */
   const TRADE_VER = 2, TRADE_PREFIX = 'TORNIE-', TRADE_SALT = 'torn-arcade/tornies/trade/v1';
 
   // Your own Torn player ID, read from the page you have open. 0 if it can't be found.
@@ -12509,23 +12508,10 @@
     });
   }
 
-  async function needTornId() {
-    const me = tornId();
-    if (!me) { await say('The trade terminal can\'t find your Torn ID on this page.|Open any normal Torn page while logged in (your home page works) and try again.'); return 0; }
-    G.tid = G.tid || me;
-    return me;
-  }
-
+  // The Clinic Tornie Locker's TRADE option: trades only happen online, through the Torn Arcade server.
   async function tradeMenu() {
     G.trades = G.trades || { out: [] };
-    while (true) {
-      const c = await menu(['ONLINE TRADES', 'SEND A CODE', 'RECEIVE A CODE', 'SENT CODES', 'BACK'], { x: 4, y: 4 });
-      if (c === 0) await onlineTrades();
-      else if (c === 1) await tradeSend();
-      else if (c === 2) await tradeReceive();
-      else if (c === 3) await tradeSent();
-      else return;
-    }
+    await onlineTrades();
   }
 
   async function pickTradeMon() {
@@ -12545,57 +12531,6 @@
       draw: function () { box(128, 4, 108, 96); const mon = G.box[sel]; if (mon) { ctx.drawImage(monSprite(mon.sp, false, mon.rk), 150, 8, 64, 64); if (mon.rk) star(222, 14, 4.5); text(SP[mon.sp].name + '  Lv' + mon.lv, 182, 78, '#303846', { sz: 8, al: 'center' }); } }
     });
     return i < 0 ? null : { list: G.box, i: i };
-  }
-
-  async function tradeSend() {
-    const me = await needTornId(); if (!me) return;
-    const pick = await pickTradeMon(); if (!pick) return;
-    const mon = pick.list[pick.i];
-    if (SP[mon.sp].event) { await say(SP[mon.sp].name + ' won\'t go in the trade capsule. It just keeps climbing back out.|Some Tornies can\'t be traded.'); return; }
-    const raw = await tradeBox({ title: 'Send ' + monName(mon) + ' to which player?', note: 'Type their Torn player ID (the number in [brackets] after their name). Only that player will be able to receive it.', placeholder: 'e.g. 571041', ok: 'Next' });
-    if (raw === null) return;
-    const to = Number(String(raw).replace(/[^\d]/g, ''));
-    if (!to || to > 99999999) { await say('That doesn\'t look like a Torn player ID.'); return; }
-    if (to === me) { await say('You can\'t trade with yourself!'); return; }
-    if (!(await yesno('Send ' + (mon.rk ? 'GOLDEN ' : '') + monName(mon) + ' (Lv' + mon.lv + ') to player [' + to + ']?|Once the code is made, ' + monName(mon) + ' leaves your save for good.'))) return;
-    const id = Math.floor(Math.random() * 4294967295) >>> 0;
-    if (!mon.ot) { mon.ot = me; mon.otn = G.name; }
-    const code = encodeTrade(mon, me, G.name, to, id);
-    pick.list.splice(pick.i, 1); gstat('tradesOut');
-    G.trades.out.push({ code: code, to: to, sp: mon.sp, lv: mon.lv, name: monName(mon), at: Date.now() });
-    if (G.trades.out.length > 30) G.trades.out.shift();
-    saveGame();
-    jingle('item');
-    await say(monName(mon) + ' was packed into a trade code. Bye, ' + monName(mon) + '!');
-    await tradeBox({ title: 'Trade code for [' + to + ']', note: 'Copy this code and send it to player [' + to + '] in a Torn message. They enter it at any Clinic Tornie Locker. You can see it again under SENT CODES.', value: code, multi: true, readonly: true, copy: true, cancel: false, ok: 'Done' });
-  }
-
-  async function tradeSent() {
-    const out = (G.trades && G.trades.out) || [];
-    if (!out.length) { await say('You haven\'t sent any Tornies yet.'); return; }
-    const items = out.slice().reverse().map(function (t) { return { label: t.name, right: '[' + t.to + ']' }; });
-    const i = await menu(items, { x: 4, y: 4, w: 200, visible: 8 });
-    if (i < 0) return;
-    const t = out[out.length - 1 - i];
-    await tradeBox({ title: t.name + ' (Lv' + t.lv + ') for [' + t.to + ']', note: 'Sent ' + new Date(t.at).toLocaleDateString() + '. Only player [' + t.to + '] can receive it.', value: t.code, multi: true, readonly: true, copy: true, cancel: false, ok: 'Done' });
-  }
-
-  async function tradeReceive() {
-    const me = await needTornId(); if (!me) return;
-    const code = await tradeBox({ title: 'Receive a Tornie', note: 'Paste the trade code you were sent. It starts with ' + TRADE_PREFIX, multi: true, placeholder: TRADE_PREFIX + '...', ok: 'Receive' });
-    if (code === null || !code.trim()) return;
-    const r = decodeTrade(code);
-    if (r.err === 'newer') { await say('This code was made with a newer version of Torn Arcade.|Update the script, then try again.'); return; }
-    if (r.err) { await say('That code doesn\'t work. Check it was copied in full, with nothing changed.'); return; }
-    if (r.to !== me) { await say('This Tornie is meant for player [' + r.to + '], not you.'); return; }
-    if (usedTrades()[me + ':' + r.id] || (G.trades.inIds || []).indexOf(r.id) >= 0) { await say('This code has already been received. Each code only works once.'); return; }
-    markTradeUsed(me, r.id);
-    G.trades.inIds = (G.trades.inIds || []).concat([r.id]).slice(-200);
-    const mon = r.mon, where = addMon(mon); gstat('tradesIn'); checkMerits();
-    saveGame();
-    jingle('get');
-    await say('{P} received ' + (mon.rk ? 'a GOLDEN ' : '') + SP[mon.sp].name + (mon.nick ? ' "' + mon.nick + '"' : '') + ' (Lv' + mon.lv + ') from ' + (r.fromName ? r.fromName + ' ' : 'player ') + '[' + r.from + ']!');
-    if (where === 'box') await say('Your team is full, so it went to your Tornie Locker.');
   }
 
   /* ================= Safe online trades (optional: needs Online play and a verified Torn ID) =================
@@ -13265,7 +13200,7 @@
     ['hatch1', 'Side', 'New Arrival', 'Hatch an Egg.', 1, function () { return st('hatched'); }, ['energy_bar', 1], 10],
     ['hatch10', 'Side', 'Egg Expert', 'Hatch 10 Eggs.', 10, function () { return st('hatched'); }, ['energy_bar', 5], 50],
     ['dc10', 'Side', 'Day Care Regular', 'Your Tornies grow 10 levels at the Day Care.', 10, function () { return st('dcLevels'); }, ['money', 5000], 25],
-    ['trade1', 'Side', 'Trader', 'Send or receive a Tornie with a trade code.', 1, function () { return st('tradesOut') + st('tradesIn'); }, ['energy_bar', 1], 10],
+    ['trade1', 'Side', 'Trader', 'Complete an online Tornie trade.', 1, function () { return st('tradesIn'); }, ['energy_bar', 1], 10],
     ['boost10', 'Side', 'Pharmacy Regular', 'Use 10 boosters on your Tornies.', 10, function () { return st('boosters'); }, ['opium', 1], 25],
     ['steps10k', 'Side', 'Marathon', 'Walk 100,000 steps.', 100000, function () { return G.steps || 0; }, ['xanax', 2], 25],
     ['tower7', 'Battle Tower', 'Tower Climber', 'Win 7 Battle Tower battles in a row.', 7, function () { return (G.tower && G.tower.best) || 0; }, ['bp', 10], 25],
@@ -15884,7 +15819,7 @@
       open: function () { if (iwOn) iwDbOpen(); },
       info: function () { return iwOn ? iwPrepInfo() : null; }
     },
-    // Used by cheat codes: gives items once per save. Returns 'ok', 'used' or 'nosave'.
+    // Used by redeem codes: gives items once per save. Returns 'ok', 'used' or 'nosave'.
     redeem: function (flag, id, n) {
       const d = G || loadSave();
       if (!d) return 'nosave';
