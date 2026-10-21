@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.39.0
+// @version      2.40.0
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with eight game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -319,7 +319,21 @@
     };
   })();
   let storeHook = null;   // set by Cloud saves: notes which game's save just changed
-    function getBest(key) { return (store.get('best', {}) || {})[key]; }
+    /* 2.40 fresh start: with the new (optional) global leaderboards, every game except Tornies starts again from zero,
+     so everyone is on equal terms. Runs once on each device, before any game loads. Your Tornies save, trade and
+     gift codes, settings and API key are not touched. Torn Invasion (a separate add-on) resets itself in its 3.1.0
+     update, and the leaderboards only take Invasion scores made after that. */
+  (function () {
+    if (store.get('fresh240', 0)) return;
+    const had = ['pocket', 'best', 'fdefence', 'eggdash', 'bogies', 'territoriesStats', 'welcomed', 'betaSeen', 'invSummary'].some(function (k) { const v = store.get(k, null); return v && (typeof v !== 'object' || Object.keys(v).length); });
+    ['best', 'fdefence', 'eggdash', 'bogies', 'territories', 'territoriesStats', 'invSummary', 'flappyDiff', 'onlSent'].forEach(function (k) { store.set(k, null); });
+    try { const old = GM_getValue('invasion', null); if (old && typeof old === 'object') { const k = {}; ['difficulty', 'sensitivity', 'invertY', 'gfx'].forEach(function (n) { if (old[n] !== undefined) k[n] = old[n]; }); GM_setValue('invasion', k); } } catch (e) {}
+    const c = store.get('cloud', null);   // cloud copies of the reset games are cleared on the server too: forget them here
+    if (c && c.slots) { Object.keys(c.slots).forEach(function (sl) { if (sl !== 'tornies') delete c.slots[sl]; }); store.set('cloud', c); }
+    store.set('fresh240', 1);
+    if (had) store.set('news240', 1);   // players who already had progress get the "what's new" notice
+  })();
+  function getBest(key) { return (store.get('best', {}) || {})[key]; }
   // Saves a score if it beats the best. lower=true when fewer is better. Returns true for a new best.
   let bestHook = null;   // set by Online play: sends a new best to the global leaderboards (verified players only)
   function record(key, value, lower) {
@@ -579,7 +593,7 @@
     { id: 'pocket', name: 'Tornies',        icon: '🐾', bg: ['#4fd8b8', '#0f7a6a'] , desc: 'A creature-collecting adventure across Torn City. Catch 178 Tornies, win 8 Arena medals and take on the Torn Council.' },
     { id: 'invasion', name: 'Invasion', title: 'Torn Invasion', icon: '👽', bg: ['#6be38a', '#14532a'] , desc: 'A 3D alien shooter. Fight through alien-infested Torn City with pistol, shotgun and plasma rifle. Needs the free Torn Invasion add-on.' },
     { id: 'bogies', name: 'Angry Bogies', icon: '😠', bg: ['#ff9a5a', '#c8382a'] , desc: 'Bogie versus the Racket. Fling Bogies from a slingshot, smash the hideouts and knock out every thug. Fifteen levels, three stars each.' },
-    { id: 'defence', name: 'Faction Defence', icon: '🛡️', bg: ['#7fb0ff', '#2a4f9a'], desc: 'Hold your Faction HQ against Racket raids. Build and upgrade defenders beside the road, survive 40 waves on 6 maps and spend your War Chest in the Armoury.' },
+    { id: 'defence', name: 'Faction Defence', icon: '🛡️', bg: ['#7fb0ff', '#2a4f9a'], desc: 'Hold your Faction HQ against Racket raids. Build and upgrade defenders beside the road, survive 30 waves on 6 maps and spend your War Chest in the Armoury.' },
     { id: 'bombs',  name: 'Dirty Bombs',    icon: '☢️', bg: ['#ffe066', '#c99a10'] , desc: 'Clear the city block by block without setting off a dirty bomb. Numbers show how many bombs are nearby.' },
     { id: 'flappy', name: 'Flappy Torn',    icon: '🐦', bg: ['#6cc8ff', '#1f72c8'] , desc: 'Fly through the gaps in the pipes over Torn City. Every pipe you pass is a point.' },
     { id: 'eggdash', name: 'Egg Dash', title: "Anton's Egg Dash", icon: '🐰', bg: ['#8a5ae8', '#2a1458'], desc: 'Run the rooftops of Torn City as Anton in his bunny onesie. Grab the Easter eggs, jump the gaps and stay ahead of the police. One endless run that keeps getting faster.' },
@@ -607,7 +621,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gift codes', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.39.0';
+  const VERSION = '2.40.0';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -651,8 +665,9 @@
     '.ta-widget b{display:block;font:300 52px/1 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;letter-spacing:-1px}',
     '.ta-widget span{display:block;margin-top:4px;font-size:13px;opacity:.9}',
     '.ta-widget em{display:inline-block;margin-top:8px;font-style:normal;font-size:10.5px;font-weight:800;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:rgba(47,123,209,.55)}',
-    '.ta-lock{position:absolute;right:12px;top:12px;height:30px;border-radius:15px;border:0;padding:0 11px 0 9px;margin:0;background:rgba(255,255,255,.14);color:#fff;font:700 13px system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;cursor:pointer;display:flex;align-items:center;gap:4px}',
+    '.ta-lock{position:absolute;z-index:2;right:12px;top:12px;height:30px;border-radius:15px;border:0;padding:0 11px 0 9px;margin:0;background:rgba(255,255,255,.14);color:#fff;font:700 13px system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;cursor:pointer;display:flex;align-items:center;gap:4px}',
     '.ta-lock:hover{background:rgba(255,255,255,.26)}',
+    '.ta-wclock{position:relative;z-index:1;pointer-events:none}',
     '.ta-lbrank{flex:none;width:30px;text-align:center;font-weight:800;font-size:13px;color:var(--muted,#9aa7b8)}',
     '.ta-lbr{flex:none;font-weight:800;font-variant-numeric:tabular-nums;color:#ffcf4a}',
     '.ta-lbme{background:rgba(47,123,209,.16)}',
@@ -811,6 +826,8 @@
     '.ta-clash{position:absolute;inset:0;z-index:70;display:grid;place-items:center;padding:16px;background:rgba(5,8,13,.72);backdrop-filter:blur(4px)}', '.ta-clash[hidden]{display:none}',
     '.ta-clashbox{display:grid;gap:10px;width:min(330px,100%);padding:16px;border-radius:18px;background:var(--panel,#0f1823);border:1px solid var(--line2,#2c4466);color:var(--text,#dfe8f3);font:500 13px/1.35 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}',
     '.ta-clashbox b{font-size:15px}', '.ta-clashbox>small{color:var(--muted,#8a9bb0)}',
+    '.ta-news .ta-clashbox{width:min(360px,100%);max-height:calc(100% - 24px);overflow-y:auto}', '.ta-news p{margin:0;font-size:12.5px;color:var(--text,#dfe8f3)}', '.ta-news p strong{color:#ffd27a}',
+    '.ta-clashbox .ta-btn2{background:#3a4656;box-shadow:none}',
     '.ta-clashbox .ta-btn{display:grid;gap:2px;text-align:left;padding:10px 12px}', '.ta-clashbox .ta-btn small{font-weight:500;opacity:.85}',
     '.ta-onpush{cursor:pointer;z-index:61}', '.ta-onpush .ta-pushicon{background:linear-gradient(160deg,#ffcf4a,#c8902a)}',
     '.ta-push.ta-out{animation:ta-pushout .3s ease-in forwards}',
@@ -885,6 +902,22 @@
   // (Anyone who already used the beta has a saved setting such as betaSeen, so they don't see it.)
   const noteEl = $(root, '.ta-note');
   if (!store.get('welcomed', false) && !store.get('betaSeen', '')) noteEl.hidden = false;
+  // What's new in 2.40 (shown once, to players who already had progress): the optional online service and the fresh start.
+  const newsEl = document.createElement('div');
+  newsEl.className = 'ta-clash ta-news'; newsEl.hidden = true;
+  newsEl.innerHTML = '<div class="ta-clashbox"><b>📱 Torn Arcade update: new online features</b>' +
+    '<p><strong>Optional Online play.</strong> Join the <strong>global leaderboards</strong> for every game, play <strong>Torn Territories online</strong> with friends (invite them by Torn ID), make <strong>safe Tornie trades</strong> online and keep your progress in step on your phone and PC with <strong>cloud saves</strong>. It\'s <strong>off until you turn it on</strong> in Settings → Online, and needs only a Public API key. Every game still works without it.</p>' +
+    '<p><strong>A fresh start for everyone.</strong> To make the new leaderboards fair, every game except Tornies has been reset to zero: Angry Bogies, Faction Defence, Anton\'s Egg Dash, Torn Territories, Dirty Bombs, Flappy Torn and Torn Invasion. <strong>Your Tornies save is untouched.</strong></p>' +
+    '<p><strong>Also new:</strong> Faction Defence now has 30 waves with a much tougher final ten, and Flappy Torn is one difficulty (Hard) for everyone.</p>' +
+    '<button type="button" class="ta-btn" data-news="online"><span>Set up Online play</span><small>Opens Settings → Online</small></button>' +
+    '<button type="button" class="ta-btn ta-btn2" data-news="later"><span>Maybe later</span><small>You can turn it on any time in Settings</small></button></div>';
+  $(root, '.ta-screen').appendChild(newsEl);
+  function showNews() { if (store.get('news240', 0) === 1) newsEl.hidden = false; }
+  newsEl.addEventListener('click', function (e) {
+    const b = e.target.closest('[data-news]'); if (!b) return;
+    store.set('news240', 2); newsEl.hidden = true; sfx.click();
+    if (b.dataset.news === 'online') { openApp('settings'); setTimeout(function () { const t = settingsBox.querySelector('[data-set="onlOn"]'); if (t) t.closest('.ta-group').scrollIntoView({ block: 'start' }); }, 60); }
+  });
   $(noteEl, '.ta-notex').addEventListener('click', function (e) { e.stopPropagation(); noteEl.hidden = true; store.set('welcomed', true); fitHome(); try { sfx.click(); } catch (e2) {} });
 
 
@@ -1500,7 +1533,7 @@
       const bad = function () { resolve({ status: 0, body: { error: 'offline', message: 'Couldn\'t reach the Torn Arcade server. Try again in a minute.' } }); };
       if (!o.on) return resolve({ status: 0, body: { error: 'off', message: 'Online play is off.' } });
       if (typeof GM_xmlhttpRequest !== 'function') return bad();
-      const h = { 'Content-Type': 'application/json' };
+      const h = { 'Content-Type': 'application/json', 'X-Arcade-Version': VERSION };
       if (o.token) h.Authorization = 'Bearer ' + o.token;
       try {
         GM_xmlhttpRequest({ method: method, url: ONLINE_URL + path, headers: h, data: body ? JSON.stringify(body) : undefined, timeout: wait || 15000, anonymous: true,
@@ -1807,7 +1840,7 @@
     });
     if (bog) out['bogies:total'] = bog;
     try { const t = games.pocket && games.pocket.summary && games.pocket.summary(); if (t) { if (t.caught) out['tornies:caught'] = t.caught; if (t.badges) out['tornies:medals'] = t.badges; } } catch (e) {}
-    try { const iv = games.invasion && games.invasion.summary && games.invasion.summary(); const d = iv && iv.diffs && iv.diffs.find(function (x) { return x.name === 'Standard'; }); if (d && d.best > 0) out['invasion:standard'] = Math.floor(d.best); } catch (e) {}
+    try { const iv = games.invasion && games.invasion.summary && games.invasion.summary(); const d = iv && iv.season === 2 && iv.diffs && iv.diffs.find(function (x) { return x.name === 'Standard'; }); if (d && d.best > 0) out['invasion:standard'] = Math.floor(d.best); } catch (e) {}
     return out;
   }
   // Send the bests that changed since last time (verified players only).
@@ -1923,7 +1956,7 @@
       try { document.activeElement.blur(); } catch (e) {}
     }
     applyWallpaper(); tickClock(); clockTimer = setInterval(tickClock, 5000);
-    evStart(); inboxStart();
+    evStart(); inboxStart(); showNews();
     setOrientation(wantsLand(current), false);
     win.classList.remove('ta-turn-l', 'ta-turn-p');
     refreshNav();
@@ -15891,7 +15924,7 @@
   // Old Torn Invasion progress (kept in this script's storage) is handed over once when the new game asks.
   (function () {
   const INV_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade-Invasion.user.js';
-  const INV_WANT = '3.0.2';   // newest Invasion version this phone knows about (filled in at build time)
+  const INV_WANT = '3.1.0';   // newest Invasion version this phone knows about (filled in at build time)
   const inv = { ok: false, ver: '', old: false, playing: false, summary: store.get('invSummary', null) };
   function verLess(a, b) { const x = String(a).split('.').map(Number), y = String(b).split('.').map(Number); for (let i = 0; i < 3; i++) { if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) < (y[i] || 0); } return false; }
   // badge on the Invasion icon, like the Art Pack apps: download when missing, update arrow when out of date
@@ -15947,7 +15980,7 @@
     if (first && isOpen && current === 'invasion' && !inv.old) { setOrientation(wantsLand('invasion'), true); send('enter', { muted: muted }); }
   });
   document.addEventListener('ta-inv-state', function (e) { try { inv.playing = !!JSON.parse(e.detail).playing; } catch (er) {} });
-  document.addEventListener('ta-inv-summary', function (e) { try { inv.summary = JSON.parse(e.detail); store.set('invSummary', inv.summary); } catch (er) {} });
+  document.addEventListener('ta-inv-summary', function (e) { try { const sm = JSON.parse(e.detail); if (sm && sm.season !== 2) return; inv.summary = sm; store.set('invSummary', inv.summary); } catch (er) {} });   // only scores from after the 2.40 fresh start
   render(); invBadge();
   document.dispatchEvent(new CustomEvent('ta-inv-ping'));
   games.invasion = {
@@ -17222,12 +17255,12 @@
 
   /* ================= Faction Defence (tower defence) =================
      Racket raiders walk the roads towards your Faction HQ. Build defenders on the marked spots beside the road,
-     upgrade them with the cash you earn in the game, and survive 40 waves. After each game, part of what you earned
+     upgrade them with the cash you earn in the game, and survive 30 waves. After each game, part of what you earned
      goes into the War Chest, which is spent in the Armoury on unlocks and permanent upgrades.
      All of this belongs to Faction Defence only: nothing is shared with the other apps and nothing is requested
      from anywhere. The map pictures come from the optional Character Art pack; without it simple maps are drawn. */
   (function () {
-    const W = 960, H = 540, K = 0.625, STEP = 1 / 60, WAVES = 40, SC = 1.45;   // SC: size of people and defenders on the map
+    const W = 960, H = 540, K = 0.625, STEP = 1 / 60, WAVES = 30, SC = 1.45;   // SC: size of people and defenders on the map
     const TAU = Math.PI * 2;
     // Maps: routes (already smoothed) and build spots are in the artwork's own pixels (1536 x 864) and scaled by K.
     // They come from art/fd2/layout.py, which also drew the blueprint the artwork was painted from, so they match exactly.
@@ -17296,15 +17329,19 @@
     };
     // When each raider type first appears, per map (wave number).
     const INTRO = [{ biker: 8, brute: 14, medic: 20 }, { biker: 6, brute: 11, medic: 16 }, { biker: 6, brute: 10, medic: 14 }, { biker: 5, brute: 11, medic: 13 }, { biker: 5, brute: 8, medic: 11 }, { biker: 4, brute: 8, medic: 10 }];
-    const BOSSES = { 10: ['boss'], 20: ['riot'], 30: ['boss', 'riot'], 40: ['jugg'] };
+    const BOSSES = { 10: ['boss'], 20: ['riot'], 30: ['jugg'] };
+    // From wave 21 the Racket sends its best: tougher raiders (LT.hp, LT.hp2) and bigger groups (LT.n), so the last ten waves
+    // are a real test even with a built-up defence. (2.40: 30 waves; play-testing showed waves 21+ were too easy.)
+    const LATE = 20, LT = { hp: 0.3, hp2: 0.017, n: 0.8, boss: 0.035, maps: [0.55, 0.7, 0.85, 1, 0.9, 1] };   // maps: how hard the late climb is on each map (gentler on the first maps)
     function waveList(mi, w) {
       const I = INTRO[mi], out = [], np = MAPS[mi].paths.length;
       const add = function (t, n, gap) { for (let i = 0; i < n; i++) out.push({ t: t, gap: gap }); };
-      add('thug', 5 + Math.floor(w * 0.8), 0.8);
-      if (w >= I.biker) add('biker', 2 + Math.floor((w - I.biker) * 0.4), 0.45);
-      if (w >= I.brute) add('brute', 1 + Math.floor((w - I.brute) * 0.33), 1.15);
-      if (w >= I.medic) add('medic', 1 + Math.floor((w - I.medic) * 0.17), 1.0);
-      // bosses: the Enforcer at 10, the Riot Captain at 20, both at 30, and the Juggernaut to finish (escorting Don Varro on the last map)
+      const late = Math.max(0, w - LATE) * LT.maps[mi];
+      add('thug', 5 + Math.floor(w * 0.8) + Math.floor(late * LT.n), 0.8);
+      if (w >= I.biker) add('biker', 2 + Math.floor((w - I.biker) * 0.4) + Math.floor(late * LT.n * 0.6), 0.45);
+      if (w >= I.brute) add('brute', 1 + Math.floor((w - I.brute) * 0.33) + Math.floor(late * LT.n * 0.4), 1.15);
+      if (w >= I.medic) add('medic', 1 + Math.floor((w - I.medic) * 0.17) + Math.floor(late * LT.n * 0.25), 1.0);
+      // bosses: the Enforcer at 10, the Riot Captain at 20, and the Juggernaut to finish (escorting Don Varro on the last map)
       (BOSSES[w] || []).forEach(function (t) { out.push({ t: t, gap: 2.2 }); });
       if (w === WAVES && mi === MAPS.length - 1) out.push({ t: 'don', gap: 2.2 });
       // mix the order a little (the same every time, so a wave plays the same way twice)
@@ -17336,9 +17373,9 @@
       if (moved) store.set('best', all);
       store.set('fdefence', save);
     }
-    if ((save.v || 0) < 3) {   // 2.27.1: the game went from 20 to 40 waves with new bosses, so everyone starts again on equal terms
+    if ((save.v || 0) < 4) {   // 2.40: 30 waves with a harder last ten, and a fresh start for everyone (2.27.1: 40 waves)
       const had = save.open > 0 || Object.keys(save.stars).length > 0 || save.chest > 0 || Object.keys(save.best).length > 0;
-      Object.assign(save, { open: 0, stars: {}, best: {}, chest: 0, own: {}, lv: {}, strikes: 0, v: 3, resetNote: had ? 1 : 0 });
+      Object.assign(save, { open: 0, stars: {}, best: {}, chest: 0, own: {}, lv: {}, strikes: 0, v: 4, resetNote: had ? 1 : 0 });
       const all = store.get('best', {}) || {}; let gone = false;
       Object.keys(all).forEach(function (k) { if (/^defence:/.test(k)) { delete all[k]; gone = true; } });
       if (gone) store.set('best', all);
@@ -17349,7 +17386,7 @@
     function armLv(k) { return save.lv[k] || 0; }
 
     /* ---------- Panel ---------- */
-    const panel = makePanel('defence', 'Faction Defence', 'Defend your Faction HQ from Racket raids. Build defenders beside the road and survive 40 waves.',
+    const panel = makePanel('defence', 'Faction Defence', 'Defend your Faction HQ from Racket raids. Build defenders beside the road and survive 30 waves.',
       '<button type="button" class="ta-btn ta-btn-alt ta-fd-maps">Maps</button><button type="button" class="ta-btn ta-fd-next">Next wave</button>',
       [['wave', 'Wave', '–'], ['cash', 'Cash', '–'], ['hq', 'HQ', '–'], ['chest', 'War Chest', '$0']],
       '<canvas class="ta-canvas"></canvas>',
@@ -17358,7 +17395,7 @@
 
     let st = 'select', mi = 0, M = MAPS[0], wave = 0, cash = 0, hq = 20, hqMax = 20, speed = 1, paused = false;
     let leakLog = [], raiders = [], towers = [], shots = [], fires = [], fx = [], floats = [], queue = [], spawnT = 0, waveOn = false;
-    let banked = 0, paidIn = 0, shopping = false;   // War Chest money already paid in during this game, and the wave-30 Armoury visit
+    let banked = 0, paidIn = 0, shopping = false;   // War Chest money already paid in during this game, and the wave-20 Armoury visit
     let sel = null, menu = null, strikeMode = false, earned = 0, kills = 0, leaked = 0, endT = 0, result = null, btns = [], t = 0, raf = 0, last = 0, acc = 0, active = false, shake = 0;
 
     function startMap(i, resume) {
@@ -17374,7 +17411,7 @@
       }
       st = 'play'; endT = 0; showStats(); mapImg();
     }
-    function checkpoint() {   // saved at the end of waves 10, 20 and 30
+    function checkpoint() {   // saved at the end of waves 10 and 20
       save.runs = save.runs || {};
       save.runs[mi] = { wave: wave, cash: cash, hq: hq, hqMax: hqMax, banked: banked, paidIn: paidIn, earned: earned, kills: kills, leaked: leaked,
         towers: towers.map(function (q) { return q && { t: q.t, lv: q.lv, spent: q.spent, dealt: Math.round(q.dealt || 0) }; }) };
@@ -17383,11 +17420,14 @@
     function nextWave() {
       if (st !== 'play' || wave >= WAVES) return;
       if (queue.length) return;   // the current wave is still arriving
-      if (bossHold()) { floatText(W / 2, 118, 'Clear the boss wave first', '#ffd65a'); snd('alarm'); return; }   // waves 10, 20 and 30 must be finished (milestone payout, wave-30 Armoury)
+      if (bossHold()) { floatText(W / 2, 118, 'Clear the boss wave first', '#ffd65a'); snd('alarm'); return; }   // waves 10 and 20 must be finished (milestone payout, wave-20 Armoury)
       if (wave > 0 && raiders.length) { const b = 5 + wave; cash += b; floatText(W - 120, 60, '+$' + b + ' early', '#7ee07e'); }   // the early-start bonus; this wave's own bonus still waits until its group is finished
       wave++; queue = waveList(mi, wave); queue.forEach(function (o) { o.w = wave; }); groups[wave] = queue.length; spawnT = 0.6; waveOn = true; snd('horn'); showStats();
     }
-    function hpMult(w, big) { return big ? 0.72 + 0.06 * (w - 1) : 0.72 + 0.09 * (w - 1) + 0.0012 * (w - 1) * (w - 1); }   // toughness by wave: raiders about x2.9 at 20 and x6 at 40; bosses grow more gently
+    function hpMult(w, big) {
+      const late = Math.max(0, w - LATE) * LT.maps[mi];
+      return big ? 0.72 + 0.06 * (w - 1) + LT.boss * late : 0.72 + 0.09 * (w - 1) + 0.0012 * (w - 1) * (w - 1) + LT.hp * late + LT.hp2 * late * late;
+    }   // toughness by wave: raiders about x2.9 at 20 and x6 at 40; bosses grow more gently
     function spawn(o) {
       const D = RD[o.t], m = M.mult * hpMult(wave, !!D.big) * (D.big ? M.bossHp || 1 : 1), hp = Math.round(D.hp * m);
       raiders.push({ w: o.w || wave, t: o.t, D: D, P: M.paths[o.p], d: 0, hp: hp, max: hp, sh: D.shield ? Math.round(hp * D.shield) : 0, shMax: D.shield ? Math.round(hp * D.shield) : 0, slowT: 0, slow: 0, lane: ((raiders.length * 7919) % 11 - 5) * 1.2, x: -99, y: -99, a: 0, hurt: 0, seed: Math.random() * 10, id: Math.random() });
@@ -17502,9 +17542,9 @@
       }
     }
 
-    // Every ten waves the War Chest is paid what this game has earned so far, plus a milestone reward.
-    // After wave 30 the Armoury opens until the next wave starts.
-    const MILESTONE = { 10: 50, 20: 75, 30: 100 }, SHOP_WAVE = 30, EARLY_BONUS = 7;
+    // At waves 10 and 20 the War Chest is paid what this game has earned so far, plus a milestone reward.
+    // After wave 20 the Armoury opens until the next wave starts, for the final ten waves.
+    const MILESTONE = { 10: 60, 20: 120 }, SHOP_WAVE = 20, EARLY_BONUS = 7;
     function chestSoFar() { return Math.round(earned * 0.035) + wave * 4; }
     function payMilestone() {
       const due = chestSoFar() - banked, add = due + MILESTONE[wave];
@@ -17824,7 +17864,7 @@
         const bw = 560, bh = 230, bx = (W - bw) / 2, by = (H - bh) / 2;
         pill(bx, by, bw, bh, '#162034', 'rgba(127,176,255,.6)');
         tx('Faction Defence has been rebuilt', W / 2, by + 36, 22, '#ffd65a', 'center', 900);
-        wrapText('Every map now has 40 waves, with new bosses: the Riot Captain and the Juggernaut. Because the game changed so much, everyone\'s Faction Defence progress (stars, maps, War Chest and Armoury) has been reset so all players start on equal terms.', bx + 28, by + 74, bw - 56, 14, '#c3d0e2', 20);
+        wrapText('Every map now has 30 waves, and the last ten are much tougher: bigger, harder Racket crews and the Juggernaut to finish. To start everyone on equal terms, everyone\'s Faction Defence progress (stars, maps, War Chest and Armoury) has been reset so all players start on equal terms.', bx + 28, by + 74, bw - 56, 14, '#c3d0e2', 20);
         button(W / 2 - 80, by + bh - 52, 160, 38, 'Let\'s go', function () { save.resetNote = 0; persist(); }, {});
         return;
       }

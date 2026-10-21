@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade - Invasion
 // @namespace    https://github.com/Eaglewing91
-// @version      3.0.2
+// @version      3.1.0
 // @description  Torn Invasion 3D, a 3D alien shooter for the Torn Arcade mobile phone. Needs Torn Arcade. Opens inside the phone's Invasion app. Makes no requests of any kind.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -1185,7 +1185,7 @@
    takes over progress from the old Torn Invasion once, when the phone hands it over. */
 (function () {
   'use strict';
-  const PROTO = 1, VER = '3.0.2';
+  const PROTO = 1, VER = '3.1.0';
   /* ---------- Storage ---------- */
   const S = (function () {
     let d = {};
@@ -1194,6 +1194,9 @@
     return d;
   })();
   function save() { try { GM_setValue('invasion3d', S); } catch (e) {} }
+  // 3.1.0 (Torn Arcade 2.40): a fresh start for everyone with the new global leaderboards. Runs once, on this device,
+  // with no page reload: best scores, unlocked levels and achievement progress go back to zero. Settings are kept.
+  if (!S.fresh240) { S.stats = {}; S.best = {}; S.reached = {}; S.classic = null; S.legacyDone = true; S.fresh240 = 1; save(); }
   const stats = (function () { const s = S.stats; s.kills = s.kills || {}; s.total = s.total || 0; s.w = s.w || {}; s.boom = s.boom || 0; s.flaw = s.flaw || 0; s.clear = s.clear || 0; s.wins = s.wins || {}; s.heads = s.heads || 0; return s; })();
   const set = S.set; if (set.sens === undefined) set.sens = 5; if (set.invert === undefined) set.invert = false; if (!set.gfx) set.gfx = 'high'; set.diff = 'standard';   // one standard difficulty
   ['easy', 'normal', 'hard'].forEach(function (d) { if (S.best[d]) { S.best.standard = Math.max(S.best.standard || 0, S.best[d]); delete S.best[d]; } if (S.reached[d]) { S.reached.standard = Math.max(S.reached.standard || 0, S.reached[d]); delete S.reached[d]; } });   // 3.0.0 had three
@@ -1235,7 +1238,7 @@
     send('ta-inv-summary', {
       levels: LEVELS.filter(function (l) { return l.ready; }).length, ach: countEarned(),
       diffs: Object.keys(DIFFS).filter(function (d) { return S.best[d] || S.reached[d]; }).map(function (d) { return { name: DIFFS[d].name, best: S.best[d] || 0, level: Math.max(1, S.reached[d] || 0) }; }),
-      classic: S.classic || null
+      classic: S.classic || null, season: 2   // season 2: scores made after the 2.40 fresh start (the only ones the leaderboards take)
     });
   }
   function playing(p) { send('ta-inv-state', { playing: !!p }); }
