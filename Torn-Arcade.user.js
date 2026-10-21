@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.40.0
+// @version      2.41.0
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with eight game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -597,7 +597,7 @@
     { id: 'bombs',  name: 'Dirty Bombs',    icon: '☢️', bg: ['#ffe066', '#c99a10'] , desc: 'Clear the city block by block without setting off a dirty bomb. Numbers show how many bombs are nearby.' },
     { id: 'flappy', name: 'Flappy Torn',    icon: '🐦', bg: ['#6cc8ff', '#1f72c8'] , desc: 'Fly through the gaps in the pipes over Torn City. Every pipe you pass is a point.' },
     { id: 'eggdash', name: 'Egg Dash', title: "Anton's Egg Dash", icon: '🐰', bg: ['#8a5ae8', '#2a1458'], desc: 'Run the rooftops of Torn City as Anton in his bunny onesie. Grab the Easter eggs, jump the gaps and stay ahead of the police. One endless run that keeps getting faster.' },
-    { id: 'territories', name: 'Territories', title: 'Torn Territories', icon: '🏘️', bg: ['#4a8ad8', '#1a3a6a'], desc: 'A district-building board game. Build roads, safehouses and HQs across Torn City, trade with rival factions and dodge the police raids. First to 10 Respect wins. Play against the computer or pass-and-play.' }
+    { id: 'territories', name: 'Territories', title: 'Torn Territories', icon: '🏘️', bg: ['#4a8ad8', '#1a3a6a'], desc: 'A district-building board game. Build roads, safehouses and HQs across Torn City, trade with rival factions and dodge the police raids. Classic (first to 14 Respect) or the Flight Paths expansion: fly to islands named after Torn\'s travel destinations (first to 12 or 16). Play against the computer, pass-and-play or online.' }
   ];
   // Home-screen icons for the games: small WebP pictures stored as text in the script (nothing is downloaded).
   const APP_ART = {
@@ -617,11 +617,11 @@
   // The optional Art Pack scripts, as apps on the bottom row of the home screen (see renderArt).
   const ART_APPS = [
     { id: 'artT', pack: 'tornies', name: 'Tornies Art', title: 'Tornies Art Pack', icon: '🎨', bg: ['#7ad8a8', '#1f7a5a'], size: '1.4 MB', what: 'the illustrated artwork for all 179 Tornies' },
-    { id: 'artC', pack: 'chars', name: 'Character Art', title: 'Character Art Pack', icon: '🖌️', bg: ['#c39bff', '#5a3ab8'], size: '1.3 MB', what: 'illustrated portraits for the gym leaders, story characters, trainers and your outfits, plus the Faction Defence maps and the Egg Dash and Torn Territories artwork' }
+    { id: 'artC', pack: 'chars', name: 'Character Art', title: 'Character Art Pack', icon: '🖌️', bg: ['#c39bff', '#5a3ab8'], size: '1.4 MB', what: 'illustrated portraits for the gym leaders, story characters, trainers and your outfits, plus the Faction Defence maps and the Egg Dash and Torn Territories artwork' }
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gift codes', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.40.0';
+  const VERSION = '2.41.0';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -1809,7 +1809,7 @@
      Territories is ranked by the online rating the server keeps. Every other board ranks best scores, which your phone
      sends once you're verified: right after you verify, when you open the Global tab, and when you set a new best. */
   const LB_GAMES = [
-    { id: 'territories', boards: [['territories', 'Online rating']] },
+    { id: 'territories', boards: [['territories', 'Classic rating'], ['territories:fp12', 'Flight Paths 12'], ['territories:fp16', 'Flight Paths 16']] },   // separate ratings, so wins to 12 and to 16 never mix
     { id: 'pocket', boards: [['tornies:caught', 'Tornies caught'], ['tornies:medals', 'Arena medals']] },
     { id: 'invasion', boards: [['invasion:standard', 'Best score']] },
     { id: 'bogies', boards: [['bogies:total', 'Total score']] },
@@ -1871,7 +1871,7 @@
     const g = LB_GAMES.find(function (x) { return x.id === lbGame; }) || LB_GAMES[0];
     let h = '<div class="ta-lbgames">' + LB_GAMES.map(function (x) { const a = appInfo(x.id); return a ? '<button type="button" class="ta-lbgame' + (x.id === g.id ? ' ta-on' : '') + '" data-lbg="' + x.id + '" title="' + esc(a.title || a.name) + '">' + iconSmall(a) + '<span>' + esc(a.name) + '</span></button>' : ''; }).join('') + '</div>';
     if (g.boards.length > 1) h += '<div class="ta-lbmodes">' + g.boards.map(function (b) { return '<button type="button" class="ta-lbmode' + (b[0] === lbBoard ? ' ta-on' : '') + '" data-lbb="' + b[0] + '">' + esc(b[1]) + '</button>'; }).join('') + '</div>';
-    const bname = (g.boards.find(function (b) { return b[0] === lbBoard; }) || g.boards[0])[1], c = lbCache[lbBoard], rated = lbBoard === 'territories';
+    const bname = (g.boards.find(function (b) { return b[0] === lbBoard; }) || g.boards[0])[1], c = lbCache[lbBoard], rated = lbBoard.indexOf('territories') === 0;
     let body;
     if (!c || c.loading) body = '<div class="ta-row"><div class="ta-rtext"><small>Loading…</small></div></div>';
     else if (c.error) body = '<div class="ta-row"><div class="ta-rtext"><small>' + esc(c.error) + '</small></div><button type="button" class="ta-btn" data-lb="retry">Retry</button></div>';
@@ -8641,7 +8641,7 @@
   const ARTP = {};                              // packs received: { ver, n }
   const ART_KEYS = {
     tornies: function (k) { return /^\d{1,3}$/.test(k) && +k >= 1 && +k <= DEX_SIZE; },
-    chars: function (k) { return /^[a-z0-9]{2,16}$/.test(k) && (k in PAL || /^outfit[0-3]$/.test(k) || /^fd(westgate|docks|midtown|casino|industrial|hideout)$/.test(k) || /^wp(neon|crimson|casino|jungle|riviera)$/.test(k) || /^ed(head|body|arm|leg|egg|gold|rotten|carrot|drone|ac|sack|bg(downtown|casino|docks|industrial))$/.test(k) || /^tt(brick|wood|wheat|ore|cotton|none)$/.test(k)); }
+    chars: function (k) { return /^[a-z0-9]{2,16}$/.test(k) && (k in PAL || /^outfit[0-3]$/.test(k) || /^fd(westgate|docks|midtown|casino|industrial|hideout)$/.test(k) || /^wp(neon|crimson|casino|jungle|riviera)$/.test(k) || /^ed(head|body|arm|leg|egg|gold|rotten|carrot|drone|ac|sack|bg(downtown|casino|docks|industrial))$/.test(k) || /^tt(brick|wood|wheat|ore|cotton|none|sky|gold|marshal)$/.test(k)); }
   };
   const ART_B64 = /^UklGR[A-Za-z0-9+/]+={0,2}$/;   // base64 of a RIFF/WebP file
   function artOn(pack) { return store.get('art_' + pack, true) !== false; }
@@ -18815,14 +18815,18 @@
       wheat: { name: 'Wheat Fields', fill: ['#efc64a', '#b0861a'] },
       ore: { name: 'Ore Mine', fill: ['#7f8aa0', '#434b5e'] },
       cotton: { name: 'Cotton Mill', fill: ['#cdbfe6', '#7d6ea8'] },
-      none: { name: 'Racket HQ', fill: ['#4a4458', '#2a2636'] }
+      none: { name: 'Racket HQ', fill: ['#4a4458', '#2a2636'] },
+      sky: { name: 'Open Sky', fill: ['#6fa8e8', '#2d5c9e'] },            // Flight Paths only
+      gold: { name: 'Smuggler\'s Den', fill: ['#f5cf55', '#9a6512'] }      // Flight Paths only: pays any card you choose
     };
-    const COST = { route: { brick: 1, wood: 1 }, safe: { brick: 1, wood: 1, wheat: 1, cotton: 1 }, hq: { wheat: 2, ore: 3 }, fav: { wheat: 1, ore: 1, cotton: 1 } };
+    // Flight Paths: the islands are named after Torn's travel destinations
+    const ISLANDS = ['Mexico', 'Cayman Islands', 'Canada', 'Hawaii', 'United Kingdom', 'Argentina', 'Switzerland', 'Japan', 'China', 'UAE', 'South Africa'];
+    const COST = { route: { brick: 1, wood: 1 }, safe: { brick: 1, wood: 1, wheat: 1, cotton: 1 }, hq: { wheat: 2, ore: 3 }, fav: { wheat: 1, ore: 1, cotton: 1 }, fly: { wood: 1, cotton: 1 } };
     const FAV = {
       crew: { name: 'Call in the Crew', text: 'Send the police raid to any district and take a card from a rival there.' },
       supply: { name: 'Supply Run', text: 'Take any 2 cards from the bank.' },
       deal: { name: 'Street Deal', text: 'Name a resource. Every rival hands over all they have of it.' },
-      roads: { name: 'Road Crew', text: 'Claim 2 roads for free.' },
+      roads: { name: 'Road Crew', text: 'Claim 2 roads for free (roads or flight routes in Flight Paths).' },
       respect: { name: 'Councillor\'s Favour', text: '+1 Respect, kept secret until you win.' }
     };
     const COLOURS = [['#3fd17a', 'Green'], ['#ff4a5a', 'Red'], ['#ffb02e', 'Orange'], ['#5aa8ff', 'Blue'], ['#b07aff', 'Purple'], ['#ff7ac8', 'Pink'], ['#2fd0c0', 'Teal'], ['#f2f2f2', 'White']];
@@ -18875,20 +18879,145 @@
       }
       return { hexes: hexes, verts: verts, edges: edges, ports: ports };
     }
+    /* Flight Paths board: Torn City (the mainland) and four islands in open sky. Islands never touch the mainland or each
+       other, so the only way there is a chain of flight routes. Hex fields: res ('sky' for open sky), num, isl (0 = mainland,
+       1-4 = islands). Edges know which hexes they border (hs) and whether a road (land) or flight route (sky) can go there;
+       the edge of the board counts as sky. */
+    // Based on Seafarers' large (5-6 player) "Heading for New Shores": a 30-district main island (the large Catan
+    // board: 28 districts and 2 Racket HQs) and 11 harbours, all on the main island, with bigger islands (5, 5, 5 and 4
+    // districts, 3 of them Smuggler's Dens). 49 districts in all, against Classic's 37.
+    const FP = { rows: [8, 9, 10, 11, 12, 11, 10, 9, 8], main: 30, islands: [5, 5, 5, 4],
+      mainPool: { brick: 5, wood: 6, wheat: 6, ore: 5, cotton: 6, none: 2 }, islPool: { brick: 3, wood: 4, wheat: 3, ore: 3, cotton: 3, gold: 3 },
+      mainNums: [2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 6, 6, 6, 8, 8, 8, 9, 9, 9, 10, 10, 10, 11, 11, 11, 12, 12], islNums: [2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12, 4],
+      ports: ['any', 'any', 'any', 'any', 'any', 'brick', 'wood', 'wheat', 'ore', 'cotton', 'cotton'] };
+    function makeBoardFP() {
+      const centres = [];
+      FP.rows.forEach(function (L, ri) {
+        const r = ri - (FP.rows.length - 1) / 2;
+        for (let k = 0; k < L; k++) centres.push([CX + (k - (L - 1) / 2) * R * Math.sqrt(3), CY + r * 1.5 * R]);
+      });
+      const N = centres.length, nb = centres.map(function (c, i) { return centres.map(function (d, j) { return j; }).filter(function (j) { return j !== i && Math.hypot(c[0] - centres[j][0], c[1] - centres[j][1]) < R * 1.9; }); });
+      const pick = function (a) { return a[Math.floor(rnd() * a.length)]; };
+      let isl, tries = 0;
+      for (;;) {   // grow the mainland, then the islands, until everything fits
+        tries++; isl = Array(N).fill(-1);
+        // the mainland starts a little left of centre; it prefers frontier hexes with more mainland neighbours (compact)
+        const mid = centres.map(function (c, i) { return i; }).sort(function (a, b) { return Math.hypot(centres[a][0] - (CX - R * 2.6), centres[a][1] - CY) - Math.hypot(centres[b][0] - (CX - R * 2.6), centres[b][1] - CY); })[0];
+        isl[mid] = 0; let size = 1;
+        while (size < FP.main) {
+          const fr = []; isl.forEach(function (v, i) { if (v === 0) nb[i].forEach(function (j) { if (isl[j] < 0 && fr.indexOf(j) < 0) fr.push(j); }); });
+          const w = fr.map(function (j) { return nb[j].filter(function (k) { return isl[k] === 0; }).length; }), mx = Math.max.apply(null, w);
+          isl[pick(fr.filter(function (j, k) { return w[k] >= Math.min(mx, 2); }))] = 0; size++;
+        }
+        const blocked = function (j, id) { return isl[j] >= 0 || nb[j].some(function (k) { return isl[k] >= 0 && isl[k] !== id; }); };
+        let ok = true;
+        FP.islands.forEach(function (n, k) {
+          if (!ok) return;
+          const id = k + 1, free = centres.map(function (c, i) { return i; }).filter(function (j) { return !blocked(j, id); });
+          if (!free.length) { ok = false; return; }
+          isl[pick(free)] = id;
+          for (let m = 1; m < n; m++) {
+            const fr = []; isl.forEach(function (v, i) { if (v === id) nb[i].forEach(function (j) { if (!blocked(j, id) && fr.indexOf(j) < 0) fr.push(j); }); });
+            if (!fr.length) { ok = false; return; }
+            isl[pick(fr)] = id;
+          }
+        });
+        if (ok || tries > 200) break;
+      }
+      const land = isl.map(function (v, i) { return v >= 0 ? i : -1; }).filter(function (i) { return i >= 0; });
+      const mainHexes = land.filter(function (i) { return isl[i] === 0; }), islHexes = land.filter(function (i) { return isl[i] > 0; });
+      let res, nums, ok2 = false;
+      const bag = function (o) { const a = []; Object.keys(o).forEach(function (t) { for (let i = 0; i < o[t]; i++) a.push(t); }); return shuffle(a); };
+      while (!ok2) {
+        res = Array(N).fill('sky');
+        const mp = bag(FP.mainPool), ip = bag(FP.islPool);
+        mainHexes.forEach(function (i) { res[i] = mp.pop(); });
+        islHexes.forEach(function (i) { res[i] = ip.pop(); });
+        // every island has at least one ordinary district (not only Smuggler's Dens)
+        if ([1, 2, 3, 4].some(function (k) { return islHexes.filter(function (i) { return isl[i] === k; }).every(function (i) { return res[i] === 'gold'; }); })) continue;
+        nums = Array(N).fill(0); const mn = shuffle(FP.mainNums.slice()), inn = shuffle(FP.islNums.slice());
+        mainHexes.forEach(function (i) { if (res[i] !== 'none') nums[i] = mn.pop(); });
+        islHexes.forEach(function (i) { nums[i] = inn.pop(); });
+        ok2 = land.every(function (i) { return !(nums[i] === 6 || nums[i] === 8) || nb[i].every(function (j) { return !(nums[j] === 6 || nums[j] === 8); }); });
+      }
+      const hexes = centres.map(function (c, i) { return { cx: c[0], cy: c[1], res: res[i], num: nums[i], isl: isl[i], verts: [] }; });
+      const verts = [], edges = [], vk = {}, ek = {};
+      hexes.forEach(function (h, hi) {
+        const ids = [];
+        for (let i = 0; i < 6; i++) {
+          const a = Math.PI / 180 * (60 * i - 30), x = h.cx + R * Math.cos(a), y = h.cy + R * Math.sin(a), key = Math.round(x) + ',' + Math.round(y);
+          if (vk[key] === undefined) { vk[key] = verts.length; verts.push({ x: x, y: y, hexes: [], adj: [], edges: [], owner: -1, lvl: 0, port: null }); }
+          ids.push(vk[key]); verts[vk[key]].hexes.push(hi);
+        }
+        h.verts = ids;
+        for (let i = 0; i < 6; i++) {
+          const a = ids[i], b = ids[(i + 1) % 6], key = Math.min(a, b) + '-' + Math.max(a, b);
+          if (ek[key] === undefined) { ek[key] = edges.length; edges.push({ a: a, b: b, owner: -1, hn: 0, hx: hi, hs: [] }); verts[a].adj.push(b); verts[b].adj.push(a); verts[a].edges.push(ek[key]); verts[b].edges.push(ek[key]); }
+          edges[ek[key]].hn++; edges[ek[key]].hs.push(hi);
+        }
+      });
+      verts.forEach(function (V) { V.land = V.hexes.some(function (h) { return hexes[h].res !== 'sky'; }); });
+      edges.forEach(function (E) {
+        E.land = E.hs.some(function (h) { return hexes[h].res !== 'sky'; });
+        E.sky = E.hn < 2 || E.hs.some(function (h) { return hexes[h].res === 'sky'; });
+        if (E.land) E.hx = E.hs.filter(function (h) { return hexes[h].res !== 'sky'; })[0];   // the land side (harbours point away from it)
+      });
+      // harbours on the coasts (land meets sky), spread round the board
+      function ang(E) { return Math.atan2((verts[E.a].y + verts[E.b].y) / 2 - CY, (verts[E.a].x + verts[E.b].x) / 2 - CX); }
+      const coast = edges.map(function (E, i) { return i; }).filter(function (i) { const E = edges[i]; return E.land && E.sky && hexes[E.hx].isl === 0; })   // harbours: Torn City only
+        .sort(function (a, b) { return ang(edges[a]) - ang(edges[b]); });
+      const kinds = shuffle(FP.ports.slice()), ports = [], used = {};
+      for (let i = 0; i < kinds.length && coast.length; i++) {
+        let e = coast[(Math.round(i * coast.length / kinds.length) + Math.floor(rnd() * 2)) % coast.length], tries2 = 0;
+        while ((used[edges[e].a] || used[edges[e].b]) && tries2++ < coast.length) e = coast[(coast.indexOf(e) + 1) % coast.length];
+        const E = edges[e], H = hexes[E.hx];
+        if (used[E.a] || used[E.b]) continue;
+        [E.a, E.b].concat(verts[E.a].adj, verts[E.b].adj).forEach(function (v) { used[v] = 1; });
+        const mx = (verts[E.a].x + verts[E.b].x) / 2, my = (verts[E.a].y + verts[E.b].y) / 2, dx = mx - H.cx, dy = my - H.cy, d = Math.hypot(dx, dy);
+        ports.push({ e: e, kind: kinds[i], x: mx + dx / d * 30, y: my + dy / d * 30 });
+        verts[E.a].port = kinds[i]; verts[E.b].port = kinds[i];
+      }
+      const names = shuffle(ISLANDS.slice()).slice(0, FP.islands.length);
+      // the Air Marshal starts out in open sky, away from Torn City (like the Seafarers pirate ship)
+      const far = hexes.map(function (h, i) { return i; }).filter(function (i) { return hexes[i].res === 'sky' && nb[i].every(function (j) { return isl[j] !== 0; }); });
+      return { hexes: hexes, verts: verts, edges: edges, ports: ports, islands: ['Torn City'].concat(names), marshal: far.length ? pick(far) : -1 };
+    }
     /* ---------- Rules ---------- */
     function P(i) { return G.players[i]; }
     function cards(p) { return RES.reduce(function (s, r) { return s + p.hand[r]; }, 0); }
-    function stock(r) { return (G.size === 'large' ? 24 : 19) - G.players.reduce(function (s, q) { return s + q.hand[r]; }, 0); }   // the bank holds 19 of each (24 on the large map)
+    function stock(r) { return (G.size === 'standard' ? 19 : 24) - G.players.reduce(function (s, q) { return s + q.hand[r]; }, 0); }   // the bank holds 19 of each (24 on the large map)
     function canAfford(p, c) { return Object.keys(c).every(function (r) { return p.hand[r] >= c[r]; }); }
     function pay(p, c) { Object.keys(c).forEach(function (r) { p.hand[r] -= c[r]; }); }
     function spaced(v) { return G.verts[v].owner < 0 && G.verts[v].adj.every(function (a) { return G.verts[a].owner < 0; }); }
-    function safeOK(pi, v, setup) { return spaced(v) && (setup || G.verts[v].edges.some(function (e) { return G.edges[e].owner === pi; })); }
+    function fp() { return G.mode === 'fp'; }
+    function mainland(v) { return G.verts[v].hexes.some(function (h) { return G.hexes[h].isl === 0; }); }
+    function safeOK(pi, v, setup) {
+      if (fp() && (!G.verts[v].land || (setup && !mainland(v)))) return false;   // Flight Paths: on land, and the first two on Torn City
+      return spaced(v) && (setup || G.verts[v].edges.some(function (e) { return G.edges[e].owner === pi; }));
+    }
+    // Roads join your buildings and other roads; flight routes join your buildings and other flight routes. They only
+    // link up with each other at one of your own safehouses or HQs.
     function routeOK(pi, e) {
       const E = G.edges[e]; if (E.owner >= 0) return false;
+      if (fp() && !E.land) return false;
       if (G.phase === 'setup') return E.a === G.setup.last || E.b === G.setup.last;
-      return [E.a, E.b].some(function (v) { const V = G.verts[v]; return V.owner === pi || (V.owner < 0 && V.edges.some(function (x) { return x !== e && G.edges[x].owner === pi; })); });
+      return [E.a, E.b].some(function (v) { const V = G.verts[v]; return V.owner === pi || (V.owner < 0 && V.edges.some(function (x) { return x !== e && G.edges[x].owner === pi && G.edges[x].k !== 'fly'; })); });
+    }
+    function flyOK(pi, e) {
+      if (!fp()) return false;
+      const E = G.edges[e]; if (E.owner >= 0 || !E.sky || E.hs.indexOf(G.marshal) >= 0) return false;   // not past the Air Marshal
+      if (G.phase === 'setup') return E.a === G.setup.last || E.b === G.setup.last;
+      return [E.a, E.b].some(function (v) { const V = G.verts[v]; return V.owner === pi || (V.owner < 0 && V.edges.some(function (x) { return x !== e && G.edges[x].owner === pi && G.edges[x].k === 'fly'; })); });
+    }
+    // A flight route at the open end of a chain (not built this turn, not next to the Air Marshal) can be moved once a turn.
+    function openFly(pi, e) {
+      const E = G.edges[e];
+      if (!fp() || E.owner !== pi || E.k !== 'fly' || E.t === G.turn || E.hs.indexOf(G.marshal) >= 0) return false;
+      return [E.a, E.b].some(function (v) { return G.verts[v].owner !== pi && !G.verts[v].edges.some(function (x) { return x !== e && G.edges[x].owner === pi && G.edges[x].k === 'fly'; }); });
     }
     function anyRoute(pi) { return G.edges.some(function (E, e) { return routeOK(pi, e); }); }
+    function anyFly(pi) { return fp() && G.edges.some(function (E, e) { return flyOK(pi, e); }); }
+    function anyFree(pi) { const p = P(pi); return (p.routes > 0 && anyRoute(pi)) || (p.flights > 0 && anyFly(pi)); }
     function anySafe(pi) { return G.verts.some(function (V, v) { return safeOK(pi, v); }); }
     function rate(pi, r) {
       let best = 4;
@@ -18897,15 +19026,17 @@
     }
     function routeLen(pi) {
       let best = 0;
-      function dfs(v, used, len) {
+      function dfs(v, used, len, kind) {
         if (len > best) best = len;
         if (len > 0 && G.verts[v].owner >= 0 && G.verts[v].owner !== pi) return;   // a rival's building cuts the road
         G.verts[v].edges.forEach(function (e) {
           const E = G.edges[e]; if (E.owner !== pi || used[e]) return;
-          used[e] = 1; dfs(E.a === v ? E.b : E.a, used, len + 1); used[e] = 0;
+          const k = E.k === 'fly' ? 'f' : 'r';
+          if (kind && k !== kind && G.verts[v].owner !== pi) return;   // roads and flight routes only join at your own building
+          used[e] = 1; dfs(E.a === v ? E.b : E.a, used, len + 1, k); used[e] = 0;
         });
       }
-      G.edges.forEach(function (E) { if (E.owner === pi) { dfs(E.a, {}, 0); dfs(E.b, {}, 0); } });
+      G.edges.forEach(function (E) { if (E.owner === pi) { dfs(E.a, {}, 0, null); dfs(E.b, {}, 0, null); } });
       return best;
     }
     function awards() {
@@ -18918,11 +19049,15 @@
       }
       G.players.forEach(function (p, i) { if (p.crew >= 3 && G.bigCrew !== i && (G.bigCrew < 0 || p.crew > P(G.bigCrew).crew)) { G.bigCrew = i; say(name(i) + ' now ' + (you(i) ? 'have' : 'has') + ' the Biggest Crew. +2 Respect.'); } });
     }
+    // Respect needed to win: Classic 14 since 2.41 (with 20 roads, 6 safehouses, 5 HQs and 7 Councillor's Favours);
+    // Flight Paths 12 or 16, chosen at the start. Games started before 2.41 keep their old target of 10.
+    function WIN() { return (G && G.win) || 10; }
     function respect(pi, all) {
       let s = 0;
       G.verts.forEach(function (V) { if (V.owner === pi) s += V.lvl; });
       if (G.longest === pi) s += 2;
       if (G.bigCrew === pi) s += 2;
+      if (G.bonus) s += 2 * G.bonus.filter(function (b) { return b.p === pi; }).length;   // Flight Paths: +2 for your first safehouse on each island (as in Seafarers)
       if (all) s += P(pi).favs.filter(function (f) { return f.t === 'respect'; }).length;
       return s;
     }
@@ -18932,9 +19067,9 @@
     function verb(i, v) { return you(i) ? v : v + (/(s|sh|ch)$/.test(v) ? 'es' : 's'); }
     function say(t) { G.log.unshift(t); if (G.log.length > 80) G.log.pop(); }
     function checkWin(pi) {
-      if (G.phase === 'over' || respect(pi, true) < 10) return false;
+      if (G.phase === 'over' || respect(pi, true) < WIN()) return false;
       G.phase = 'over'; G.winner = pi;
-      say(name(pi) + ' ' + verb(pi, 'reach') + ' 10 Respect and take' + (you(pi) ? '' : 's') + ' over Torn City!');
+      say(name(pi) + ' ' + verb(pi, 'reach') + ' ' + WIN() + ' Respect and take' + (you(pi) ? '' : 's') + ' over Torn City!');
       env.win(pi);
       return true;
     }
@@ -18949,15 +19084,18 @@
         G.discardQ = G.players.map(function (p, i) { return i; }).filter(function (i) { return cards(P(i)) > 7; });
         G.afterRaid = 'main'; G.phase = G.discardQ.length ? 'discard' : 'raid';
         env.snd('raid');
-      } else { produce(n); G.phase = 'main'; }
+      } else { produce(n); G.phase = G.goldQ && G.goldQ.length ? 'gold' : 'main'; }
     }
     function produce(n) {
-      const got = G.players.map(function () { return {}; });
+      const got = G.players.map(function () { return {}; }), gold = G.players.map(function () { return 0; });
       G.hexes.forEach(function (H, hi) {
         if (H.num !== n) return;
         if (hi === G.raid) { if (H.verts.some(function (v) { return G.verts[v].owner >= 0; })) say('The raided ' + DIST[H.res].name + ' pays nothing.'); return; }
-        H.verts.forEach(function (v) { const V = G.verts[v]; if (V.owner >= 0) got[V.owner][H.res] = (got[V.owner][H.res] || 0) + V.lvl; });
+        H.verts.forEach(function (v) { const V = G.verts[v]; if (V.owner < 0) return; if (H.res === 'gold') gold[V.owner] += V.lvl; else got[V.owner][H.res] = (got[V.owner][H.res] || 0) + V.lvl; });
       });
+      // Smuggler's Den: each faction owed picks its cards (starting with whoever rolled)
+      G.goldQ = [];
+      for (let k = 0; k < G.players.length; k++) { const i = (G.cur + k) % G.players.length; if (gold[i]) G.goldQ.push({ p: i, n: gold[i] }); }
       RES.forEach(function (r) {   // the bank runs short: one faction owed gets what's left, two or more get nothing
         const owed = got.map(function (g) { return g[r] || 0; }), total = owed.reduce(function (a, b) { return a + b; }, 0), left = stock(r);
         if (!total || total <= left) return;
@@ -18979,14 +19117,24 @@
       G.discardQ.shift();
       if (!G.discardQ.length) G.phase = 'raid';
     }
+    // Who can be robbed: factions with a building on the raided district, or (Air Marshal) a flight route on that sky.
     function victims(pi, h) {
-      const out = [];
-      G.hexes[h].verts.forEach(function (v) { const o = G.verts[v].owner; if (o >= 0 && o !== pi && cards(P(o)) > 0 && out.indexOf(o) < 0) out.push(o); });
+      const out = [], add = function (o) { if (o >= 0 && o !== pi && cards(P(o)) > 0 && out.indexOf(o) < 0) out.push(o); };
+      if (G.hexes[h].res === 'sky') G.edges.forEach(function (E) { if (E.k === 'fly' && E.hs.indexOf(h) >= 0) add(E.owner); });
+      else G.hexes[h].verts.forEach(function (v) { add(G.verts[v].owner); });
       return out;
     }
+    function robHex() { return G.robHex !== undefined && G.robHex >= 0 ? G.robHex : G.raid; }
+    function islandName(h) { return G.islands && G.hexes[h].isl > 0 ? G.islands[G.hexes[h].isl] : ''; }
     function moveRaid(pi, h) {
-      G.raid = h;
-      say(name(pi) + ' ' + verb(pi, 'send') + ' the police raid to the ' + DIST[G.hexes[h].res].name + (G.hexes[h].num ? ' (' + G.hexes[h].num + ')' : '') + '.');
+      if (G.hexes[h].res === 'sky') {   // Flight Paths: the Air Marshal grounds flight routes on this sky and robs a flyer
+        G.marshal = h;
+        say(name(pi) + ' ' + verb(pi, 'send') + ' the Air Marshal into the sky.');
+      } else {
+        G.raid = h;
+        say(name(pi) + ' ' + verb(pi, 'send') + ' the police raid to the ' + DIST[G.hexes[h].res].name + (G.hexes[h].num ? ' (' + G.hexes[h].num + ')' : '') + (islandName(h) ? ' in ' + islandName(h) : '') + '.');
+      }
+      G.robHex = h;
       const v = victims(pi, h);
       if (!v.length) G.phase = G.afterRaid;
       else if (v.length === 1) steal(pi, v[0]);
@@ -19012,6 +19160,13 @@
       const p = P(pi);
       if (!setup) pay(p, COST.safe);
       G.verts[v].owner = pi; G.verts[v].lvl = 1; p.safes--;
+      if (fp() && !setup) {   // Overseas Connections: +2 Respect for your first safehouse on each island
+        const h = G.verts[v].hexes.filter(function (x) { return G.hexes[x].isl > 0; })[0];
+        if (h !== undefined && !G.bonus.some(function (b) { return b.p === pi && b.i === G.hexes[h].isl; })) {
+          G.bonus.push({ p: pi, i: G.hexes[h].isl });
+          say('Overseas Connections: ' + name(pi) + ' ' + verb(pi, 'land') + ' in ' + G.islands[G.hexes[h].isl] + '. +2 Respect.');
+        }
+      }
       env.snd('safe');
       if (setup) {
         G.setup.last = v; G.setup.step = 'route';
@@ -19021,19 +19176,20 @@
       } else say(name(pi) + ' ' + verb(pi, 'open') + ' a safehouse. +1 Respect.');
       awards();
     }
-    function placeRoute(pi, e, free) {
+    function placeRoute(pi, e, free, fly) {
       const p = P(pi);
-      if (!free) pay(p, COST.route);
-      G.edges[e].owner = pi; p.routes--;
-      env.snd('road');
+      if (!free) pay(p, fly ? COST.fly : COST.route);
+      G.edges[e].owner = pi;
+      if (fly) { G.edges[e].k = 'fly'; G.edges[e].t = G.turn; p.flights--; } else p.routes--;
+      env.snd(fly ? 'fly' : 'road');
       if (G.phase === 'setup') {
         G.setup.i++; G.setup.step = 'safe'; G.setup.last = -1;
         if (G.setup.i >= G.setup.order.length) { G.phase = 'roll'; G.cur = 0; say('The city is carved up. ' + name(0) + ' ' + verb(0, 'roll') + ' first.'); }
         else G.cur = G.setup.order[G.setup.i];
         return;
       }
-      say(name(pi) + ' ' + verb(pi, 'build') + ' a road' + (free ? ' for free' : '') + '.');
-      if (G.phase === 'roads') { G.free--; if (G.free <= 0 || !p.routes || !anyRoute(pi)) G.phase = 'main'; }
+      say(name(pi) + ' ' + verb(pi, fly ? 'open' : 'build') + (fly ? ' a flight route' : ' a road') + (free ? ' for free' : '') + '.');
+      if (G.phase === 'roads') { G.free--; if (G.free <= 0 || !anyFree(pi)) G.phase = 'main'; }
       awards();
     }
     function upgrade(pi, v) {
@@ -19073,12 +19229,17 @@
       const p = P(pi), hasSafe = G.verts.some(function (V) { return V.owner === pi && V.lvl === 1; }), o = [];
       if (hasSafe && p.hqs) o.push(['hq', shortOf(p, COST.hq) - 0.3]);
       if (p.safes && anySafe(pi)) o.push(['safe', shortOf(p, COST.safe) - 0.5]);
-      else if (p.routes && p.safes) o.push(['route', shortOf(p, { brick: 2, wood: 2, wheat: 1, cotton: 1 }) - 0.4]);
+      else if (p.safes && (p.routes || p.flights)) o.push(['route', shortOf(p, expandCost(pi)) - 0.4]);
       if (G.deck.length) o.push(['fav', shortOf(p, COST.fav) + 1.2]);
       if (!o.length) return 'fav';
       return o.sort(function (a, b) { return a[1] - b[1]; })[0][0];
     }
-    function planCost(pi) { const pl = plan(pi); return pl === 'route' ? { brick: 2, wood: 2, wheat: 1, cotton: 1 } : COST[pl]; }
+    function planCost(pi) { const pl = plan(pi); return pl === 'route' ? expandCost(pi) : COST[pl]; }
+    // Saving up to expand: a road (or flight route) and most of a safehouse
+    function expandCost(pi) {
+      if (fp()) { const b = bestExpand(pi); if (b && b.fly) return { wood: 2, cotton: 2, brick: 1, wheat: 1 }; }
+      return { brick: 2, wood: 2, wheat: 1, cotton: 1 };
+    }
     function need(pi) { const p = P(pi), c = planCost(pi), out = {}; RES.forEach(function (r) { out[r] = Math.max(0, (c[r] || 0) - p.hand[r]); }); return out; }
     function worth(pi, r) { const n = need(pi), p = P(pi); return 1 + (n[r] ? 1.6 : 0) - (p.hand[r] >= 4 ? 0.5 : 0); }
     // What faction `who` holds as far as faction `by` can tell: every card collected, traded and spent is announced,
@@ -19104,15 +19265,15 @@
     function wantsDeal(pi, give, want, from) {
       const p = P(pi);
       if (RES.some(function (r) { return (want[r] || 0) > p.hand[r]; })) return { ok: false, why: 'cards' };
-      const vis = respect(from, false), D = G.diff;
-      if (vis >= (D === 'hard' ? 7 : D === 'normal' ? 8 : 9)) return { ok: false, why: 'leader' };
+      const vis = respect(from, false), D = G.diff, W = WIN();   // how close to winning counts relative to the target
+      if (vis >= W - (D === 'hard' ? 3 : D === 'normal' ? 2 : 1)) return { ok: false, why: 'leader' };
       let gain = 0;
       RES.forEach(function (r) { gain += (give[r] || 0) * worth(pi, r) - (want[r] || 0) * worth(pi, r); });
       const before = est(from, pi), after = Object.assign({}, before);
       RES.forEach(function (r) { after[r] = (after[r] || 0) + (want[r] || 0) - (give[r] || 0); });
       const th = unlocks(from, before, after), worthIt = D === 'easy' ? -0.2 : D === 'normal' ? 0.4 : 0.9;
       // never hand the last card for an HQ to someone close to winning; on Hard never hand anyone their HQ
-      if ((th >= 2 && (D === 'hard' || vis + 1 >= (D === 'normal' ? 8 : 9))) || (th >= 1.5 && vis + 1 >= (D === 'easy' ? 10 : 9))) return { ok: false, why: 'threat' };
+      if ((th >= 2 && (D === 'hard' || vis + 1 >= W - (D === 'normal' ? 2 : 1))) || (th >= 1.5 && vis + 1 >= W - (D === 'easy' ? 0 : 1))) return { ok: false, why: 'threat' };
       const penalty = th * (D === 'easy' ? 0.25 : D === 'normal' ? 0.6 : 1);
       if (gain - penalty > worthIt) return { ok: true };
       return { ok: false, why: gain > worthIt ? 'threat' : 'value' };
@@ -19149,9 +19310,73 @@
       G.hexes[h].verts.forEach(function (v) { const o = G.verts[v].owner; if (o >= 0 && o !== pi) s += pips(G.hexes[h].num) * G.verts[v].lvl * (1 + respect(o, false) / 5) + (cards(P(o)) ? 1 : 0); });
       return s + (G.diff === 'easy' ? rnd() * 6 : 0);
     }
+    // Air Marshal: how much grounding the flight routes on this sky hurts the others
+    function hurtSky(h, pi) {
+      const by = {}; let s = 0;
+      G.edges.forEach(function (E) { if (E.k === 'fly' && E.hs.indexOf(h) >= 0 && E.owner !== pi) by[E.owner] = (by[E.owner] || 0) + 1; });
+      Object.keys(by).forEach(function (o) { s += by[o] * 1.2 * (1 + respect(+o, false) / 5) + (cards(P(+o)) ? 1 : 0); });
+      return s;
+    }
     function bestRaid(pi) {
-      return G.hexes.map(function (H, i) { return i; }).filter(function (i) { return i !== G.raid && G.hexes[i].verts.every(function (v) { return G.verts[v].owner !== pi; }); })
+      const land = G.hexes.map(function (H, i) { return i; }).filter(function (i) { return G.hexes[i].res !== 'sky' && i !== G.raid && G.hexes[i].verts.every(function (v) { return G.verts[v].owner !== pi; }); })
         .sort(function (a, b) { return hurt(b, pi) - hurt(a, pi); })[0];
+      if (!fp()) return land;
+      const sky = G.hexes.map(function (H, i) { return i; }).filter(function (i) { return G.hexes[i].res === 'sky' && i !== G.marshal && !G.edges.some(function (E) { return E.owner === pi && E.hs.indexOf(i) >= 0; }); })
+        .sort(function (a, b) { return hurtSky(b, pi) - hurtSky(a, pi); })[0];
+      // ground a rival's flight routes when they're heading somewhere (it blocks building and moving there), more often on Hard
+      if (sky !== undefined && (land === undefined || (hurtSky(sky, pi) >= 3 && rnd() < (G.diff === 'hard' ? 0.5 : G.diff === 'normal' ? 0.35 : 0.2)))) return sky;
+      return land;
+    }
+    // Flight Paths: where to build next. Looks a few steps ahead along open roads or open sky for a free spot,
+    // and values a spot on an island it hasn't reached yet (the Overseas Connections bonus).
+    function siteScore(w, pi) {
+      let s = vScore(w, pi);
+      const h = G.verts[w].hexes.filter(function (x) { return G.hexes[x].isl > 0; })[0];
+      if (h !== undefined && !G.bonus.some(function (b) { return b.p === pi && b.i === G.hexes[h].isl; })) s += 6;
+      return s;
+    }
+    function reach(pi, e, fly) {   // flights look further ahead: islands are a few hexes of open sky away
+      const seen = {}, F = fly ? [0.9, 0.82, 0.74, 0.66, 0.58, 0.5, 0.43, 0.36, 0.3] : [0.9, 0.7, 0.5, 0.36, 0.25];
+      let best = -1, front = [G.edges[e].a, G.edges[e].b];
+      front.forEach(function (v) { seen[v] = 1; });
+      for (let d = 0; d < F.length && front.length; d++) {
+        const next = [];
+        front.forEach(function (v) {
+          const V = G.verts[v];
+          if (V.owner >= 0 && V.owner !== pi) return;
+          if (V.land && spaced(v)) best = Math.max(best, siteScore(v, pi) * F[d]);
+          V.edges.forEach(function (x) {
+            const E = G.edges[x]; if (E.owner >= 0 || !(fly ? E.sky && E.hs.indexOf(G.marshal) < 0 : E.land)) return;
+            const w = E.a === v ? E.b : E.a; if (!seen[w]) { seen[w] = 1; next.push(w); }
+          });
+        });
+        front = next;
+      }
+      return best;
+    }
+    function bestExpand(pi) {
+      const p = P(pi); let best = null;
+      G.edges.forEach(function (E, e) {
+        if (p.routes > 0 && routeOK(pi, e)) { const s = reach(pi, e, false); if (!best || s > best.s) best = { e: e, fly: false, s: s }; }
+        if (p.flights > 0 && flyOK(pi, e)) { const s = reach(pi, e, true) - 0.15; if (!best || s > best.s) best = { e: e, fly: true, s: s }; }
+      });
+      return best && best.s > 0 ? best : null;
+    }
+    // Smuggler's Den: take what the next build needs, then whatever it holds least of
+    function aiGold(pi) {
+      const q = G.goldQ[0], p = P(pi), n = need(pi), picks = [];
+      for (let k = 0; k < q.n; k++) {
+        const r = RES.filter(function (x) { return stock(x) > picks.filter(function (y) { return y === x; }).length; })
+          .sort(function (a, b) { return ((n[b] || 0) - picks.filter(function (y) { return y === b; }).length) - ((n[a] || 0) - picks.filter(function (y) { return y === a; }).length) || (p.hand[a] - p.hand[b]); })[0];
+        if (r) picks.push(r);
+      }
+      takeGold(pi, picks);
+    }
+    function takeGold(pi, picks) {
+      picks.forEach(function (r) { P(pi).hand[r]++; });
+      if (picks.length) { say(name(pi) + ' ' + verb(pi, 'pick') + ' ' + picks.map(function (r) { return RN[r]; }).join(', ') + ' from the Smuggler\'s Den.'); env.collect(pi, picks.slice()); }
+      G.goldQ.shift();
+      if (!G.goldQ.length) { G.phase = 'main'; }
     }
     function bestRoute(pi) {
       let best = -1, bs = -Infinity;
@@ -19177,7 +19402,8 @@
         if (G.setup.step === 'safe') {
           const v = G.verts.map(function (V, i) { return i; }).filter(function (i) { return safeOK(pi, i, true); }).sort(function (a, b) { return vScore(b, pi) - vScore(a, pi); })[0];
           placeSafe(pi, v, true);
-        } else placeRoute(pi, bestRoute(pi), true);
+        } else if (fp()) { const b = bestExpand(pi) || { e: G.edges.findIndex(function (E, e) { return routeOK(pi, e) || flyOK(pi, e); }), fly: false }; placeRoute(pi, b.e, true, b.fly || !routeOK(pi, b.e)); }
+        else placeRoute(pi, bestRoute(pi), true);
         return;
       }
       if (G.phase === 'roll') {
@@ -19186,15 +19412,18 @@
         rollDice(); return;
       }
       if (G.phase === 'raid') { const h = bestRaid(pi); if (h === undefined) { G.phase = G.afterRaid; return; } moveRaid(pi, h); return; }
-      if (G.phase === 'steal') { const v = victims(pi, G.raid).sort(function (a, b) { return respect(b, false) - respect(a, false); }); steal(pi, v[0]); return; }
-      if (G.phase === 'roads') { const e = p.routes ? bestRoute(pi) : -1; if (e < 0) { G.phase = 'main'; return; } placeRoute(pi, e, true); return; }
+      if (G.phase === 'steal') { const v = victims(pi, robHex()).sort(function (a, b) { return respect(b, false) - respect(a, false); }); steal(pi, v[0]); return; }
+      if (G.phase === 'roads') {
+        if (fp()) { const b = bestExpand(pi); if (!b) { G.phase = 'main'; return; } placeRoute(pi, b.e, true, b.fly); return; }
+        const e = p.routes ? bestRoute(pi) : -1; if (e < 0) { G.phase = 'main'; return; } placeRoute(pi, e, true); return;
+      }
       if (G.phase !== 'main') return;
       if (checkWin(pi)) return;
       if (G.aiActs = (G.aiActs || 0) + 1, G.aiActs > 14) { endTurn(); return; }
       const fi = p.favs.findIndex(function (f) { return canPlay(pi, f); });
       if (fi >= 0) {   // play a favour card when it helps
         const t = p.favs[fi].t, n = need(pi), short = RES.filter(function (r) { return n[r]; });
-        if (t === 'roads' && p.routes && anyRoute(pi)) { useFav(pi, fi); G.free = 2; G.phase = 'roads'; return; }
+        if (t === 'roads' && anyFree(pi)) { useFav(pi, fi); G.free = 2; G.phase = 'roads'; return; }
         if (t === 'supply' && short.length && short.reduce(function (s, r) { return s + n[r]; }, 0) <= 2) { useFav(pi, fi); const got = []; short.concat(short, RES).forEach(function (r) { if (got.length < 2 && stock(r) > got.filter(function (x) { return x === r; }).length) got.push(r); }); got.forEach(function (r) { p.hand[r]++; }); say(p.name + ' brings in ' + got.map(function (r) { return RN[r]; }).join(' and ') + '.'); return; }
         if (t === 'deal' && short.length) {
           const r = short.slice().sort(function (a, b) { return others(pi, b) - others(pi, a); })[0];
@@ -19211,7 +19440,10 @@
         const v = G.verts.map(function (V, i) { return i; }).filter(function (i) { return safeOK(pi, i); }).sort(function (a, b) { return vScore(b, pi) - vScore(a, pi); })[0];
         if (v !== undefined) { placeSafe(pi, v, false); return; }
       }
-      if (p.routes && canAfford(p, COST.route) && (plan(pi) === 'route' || (cards(p) > 7 && plan(pi) !== 'hq' && !anySafe(pi)))) { const e = bestRoute(pi); if (e >= 0) { placeRoute(pi, e, false); return; } }
+      if (fp()) {
+        const b = (plan(pi) === 'route' || (cards(p) > 7 && plan(pi) !== 'hq' && !anySafe(pi))) ? bestExpand(pi) : null;
+        if (b && canAfford(p, b.fly ? COST.fly : COST.route)) { placeRoute(pi, b.e, false, b.fly); return; }
+      } else if (p.routes && canAfford(p, COST.route) && (plan(pi) === 'route' || (cards(p) > 7 && plan(pi) !== 'hq' && !anySafe(pi)))) { const e = bestRoute(pi); if (e >= 0) { placeRoute(pi, e, false); return; } }
       const n = need(pi), short = RES.filter(function (r) { return n[r]; });
       if (short.length && short.reduce(function (s, r) { return s + n[r]; }, 0) <= 3) {
         const plain = planCost(pi);   // trade with the bank or a harbour for a missing card
@@ -19234,21 +19466,24 @@
       if (checkWin(pi)) return;
       endTurn();
     }
-    /* ---------- New game. o: { size, diff, speed, online, players: [{ name, col, ai, id }] } ---------- */
+    /* ---------- New game. o: { mode: 'classic' | 'fp', win (Flight Paths: 12 or 16), diff, speed, online, players: [{ name, col, ai, id }] }
+       Classic is always the large map (the small map was retired in 2.41). ---------- */
     function newGame(o) {
-      const size = o.size === 'standard' ? 'standard' : 'large', B = makeBoard(size);
-      const players = o.players.map(function (s) { return { name: s.name, col: s.col, ai: !!s.ai, id: s.id || 0, hand: { brick: 0, wood: 0, wheat: 0, ore: 0, cotton: 0 }, favs: [], crew: 0, routes: 15, safes: 5, hqs: 4 }; });
-      const big = size === 'large';
-      const deck = shuffle(Array(big ? 20 : 14).fill('crew').concat(Array(5).fill('respect'), Array(big ? 3 : 2).fill('supply'), Array(big ? 3 : 2).fill('deal'), Array(big ? 3 : 2).fill('roads')));
+      const mode = o.mode === 'fp' ? 'fp' : 'classic', size = mode === 'fp' ? 'fp' : 'large', B = mode === 'fp' ? makeBoardFP() : makeBoard('large');
+      const win = mode === 'fp' ? (Number(o.win) === 16 ? 16 : 12) : 14;
+      const players = o.players.map(function (s) { return { name: s.name, col: s.col, ai: !!s.ai, id: s.id || 0, hand: { brick: 0, wood: 0, wheat: 0, ore: 0, cotton: 0 }, favs: [], crew: 0,
+        routes: mode === 'fp' ? 15 : 20, flights: mode === 'fp' ? 15 : 0, safes: mode === 'fp' ? 5 : 6, hqs: mode === 'fp' ? 4 : 5 }; });
+      const deck = shuffle(Array(20).fill('crew').concat(Array(mode === 'fp' ? 5 : 7).fill('respect'), Array(3).fill('supply'), Array(3).fill('deal'), Array(3).fill('roads')));
       const n = players.length, order = [];
       for (let i = 0; i < n; i++) order.push(i);
       for (let i = n - 1; i >= 0; i--) order.push(i);
       const xs = B.hexes.map(function (h) { return h.cx; }).concat(B.ports.map(function (p) { return p.x; })), ys = B.hexes.map(function (h) { return h.cy; }).concat(B.ports.map(function (p) { return p.y; }));
       const x0 = Math.min.apply(null, xs) - R - 14, x1 = Math.max.apply(null, xs) + R + 14, y0 = Math.min.apply(null, ys) - R - 34, y1 = Math.max.apply(null, ys) + R + 12;
-      G = { v: 1, size: size, vb: [x0, y0, x1 - x0, y1 - y0].map(Math.round).join(' '), hexes: B.hexes, verts: B.verts, edges: B.edges, ports: B.ports, players: players, deck: deck, diff: o.diff || 'normal', speed: o.speed || 750, online: !!o.online,
+      G = { v: 1, mode: mode, size: size, islands: B.islands || null, marshal: B.marshal !== undefined ? B.marshal : -1, bonus: [], goldQ: [], vb: [x0, y0, x1 - x0, y1 - y0].map(Math.round).join(' '), hexes: B.hexes, verts: B.verts, edges: B.edges, ports: B.ports, players: players, deck: deck, diff: o.diff || 'normal', speed: o.speed || 750, online: !!o.online,
         raid: B.hexes.findIndex(function (h) { return h.res === 'none'; }), cur: order[0], phase: 'setup', setup: { order: order, i: 0, step: 'safe', last: -1 },
-        dice: null, turn: 0, playedFav: false, free: 0, discardQ: [], afterRaid: 'main', longest: -1, bigCrew: -1, winner: -1, log: [], offer: null, ask: null, auto: null, counted: false };
-      say('A new game begins. Each faction opens two safehouses, each with a road. The second safehouse pays its starting cards.');
+        win: win, dice: null, turn: 0, playedFav: false, free: 0, discardQ: [], afterRaid: 'main', longest: -1, bigCrew: -1, winner: -1, log: [], offer: null, ask: null, auto: null, counted: false };
+      say(mode === 'fp' ? 'A new Flight Paths game begins. Each faction opens two safehouses in Torn City, each with a road or a flight route. Fly out to ' + B.islands.slice(1).join(', ') + ' for +2 Respect each. First to ' + win + ' Respect wins.'
+        : 'A new game begins. Each faction opens two safehouses, each with a road. The second safehouse pays its starting cards. First to ' + win + ' Respect wins.');
       return G;
     }
     // Who the game is waiting for, and whether that seat is played by the computer right now
@@ -19256,6 +19491,7 @@
     function waiting() {
       if (!G || G.phase === 'over') return -1;
       if (G.phase === 'discard') return G.discardQ[0];
+      if (G.phase === 'gold') return G.goldQ[0].p;
       if (G.phase === 'offer') return G.offer.to;
       return G.cur;
     }
@@ -19266,12 +19502,14 @@
     function aiMove() {
       const w = waiting(); if (w < 0) return;
       if (G.phase === 'discard') { aiDiscard(w); return; }
+      if (G.phase === 'gold') { aiGold(w); return; }
       if (G.phase === 'offer') { answerOffer(w, false); return; }
       aiStep();
     }
     // Hand a person's turn (or the decision they're stuck on) to the computer.
     function takeOver(i) {
       if (G.phase === 'discard' && G.discardQ[0] === i) { say(P(i).name + ' was too slow. Cards were handed over for them.'); aiDiscard(i); return; }
+      if (G.phase === 'gold' && G.goldQ[0].p === i) { say(P(i).name + ' was too slow. The computer picked their Smuggler\'s Den cards.'); aiGold(i); return; }
       if (G.phase === 'offer' && G.offer.to === i) { say(P(i).name + ' didn\'t answer in time.'); answerOffer(i, false); return; }
       if (G.cur === i && !isAI(i)) { G.auto = { p: i, k: moveKey() }; say(P(i).name + ' ran out of time. The computer plays this turn for them.'); }
     }
@@ -19318,6 +19556,29 @@
         else return no();
         checkWin(pi);
       }
+      else if (t === 'fly') {   // Flight Paths: open a flight route
+        if (!cur || !num(a.e, G.edges.length)) return no();
+        if (G.phase === 'setup' && G.setup.step === 'route' && flyOK(pi, a.e)) placeRoute(pi, a.e, true, true);
+        else if (G.phase === 'roads' && flyOK(pi, a.e) && p.flights) placeRoute(pi, a.e, true, true);
+        else if (main && flyOK(pi, a.e) && canAfford(p, COST.fly) && p.flights) placeRoute(pi, a.e, false, true);
+        else return no();
+        checkWin(pi);
+      }
+      else if (t === 'move') {   // Flight Paths: move the flight route at the open end of a chain (once a turn)
+        if (!main || !fp() || G.movedT === G.turn || !num(a.e, G.edges.length) || !num(a.to, G.edges.length) || a.e === a.to || !openFly(pi, a.e)) return no();
+        const E = G.edges[a.e]; E.owner = -1; delete E.k; const tt = E.t; delete E.t;
+        if (!flyOK(pi, a.to)) { E.owner = pi; E.k = 'fly'; E.t = tt; return no(); }
+        const T = G.edges[a.to]; T.owner = pi; T.k = 'fly'; T.t = G.turn; G.movedT = G.turn;
+        env.snd('fly'); say(name(pi) + ' ' + verb(pi, 'move') + ' a flight route.');
+        awards(); checkWin(pi);
+      }
+      else if (t === 'gold') {   // Flight Paths: pick your Smuggler's Den cards
+        const q = G.goldQ && G.goldQ[0];
+        if (G.phase !== 'gold' || !q || q.p !== pi || !Array.isArray(a.picks)) return no();
+        const want = Math.min(q.n, RES.reduce(function (s2, r) { return s2 + stock(r); }, 0));
+        if (a.picks.length !== want || a.picks.some(function (r) { return RES.indexOf(r) < 0 || stock(r) < a.picks.filter(function (x) { return x === r; }).length; })) return no();
+        takeGold(pi, a.picks);
+      }
       else if (t === 'hq') { if (!main || !num(a.v, G.verts.length) || G.verts[a.v].owner !== pi || G.verts[a.v].lvl !== 1 || !canAfford(p, COST.hq) || !p.hqs) return no(); upgrade(pi, a.v); checkWin(pi); }
       else if (t === 'fav') { if (!main || !G.deck.length || !canAfford(p, COST.fav)) return no(); buyFav(pi); checkWin(pi); }
       else if (t === 'bank') {
@@ -19330,8 +19591,12 @@
         say(name(pi) + ' ' + verb(pi, 'trade') + ' ' + k + ' ' + RN[g] + ' for 1 ' + RN[w] + (k < 4 ? ' at a harbour.' : ' with the bank.'));
       }
       else if (t === 'end') { if (!main) return no(); if (!checkWin(pi)) endTurn(); }
-      else if (t === 'raid') { if (!cur || G.phase !== 'raid' || !num(a.h, G.hexes.length) || a.h === G.raid) return no(); moveRaid(pi, a.h); }
-      else if (t === 'rob') { if (!cur || G.phase !== 'steal' || victims(pi, G.raid).indexOf(a.v) < 0) return no(); steal(pi, a.v); }
+      else if (t === 'raid') {
+        if (!cur || G.phase !== 'raid' || !num(a.h, G.hexes.length)) return no();
+        if (G.hexes[a.h].res === 'sky' ? (!fp() || a.h === G.marshal) : a.h === G.raid) return no();
+        moveRaid(pi, a.h);
+      }
+      else if (t === 'rob') { if (!cur || G.phase !== 'steal' || victims(pi, robHex()).indexOf(a.v) < 0) return no(); steal(pi, a.v); }
       else if (t === 'discard') {
         if (G.phase !== 'discard' || G.discardQ[0] !== pi || !okHand(a.take)) return no();
         if (sum(a.take) !== Math.floor(cards(p) / 2) || RES.some(function (r) { return (a.take[r] || 0) > p.hand[r]; })) return no();
@@ -19341,7 +19606,7 @@
         const f = p.favs[a.idx];
         if (!num(a.idx, p.favs.length) || !canPlay(pi, f)) return no();
         if (f.t === 'crew') { useFav(pi, a.idx); p.crew++; awards(); G.afterRaid = G.phase; G.phase = 'raid'; checkWin(pi); }
-        else if (f.t === 'roads') { useFav(pi, a.idx); G.free = 2; G.phase = anyRoute(pi) && p.routes ? 'roads' : 'main'; }
+        else if (f.t === 'roads') { useFav(pi, a.idx); G.free = 2; G.phase = anyFree(pi) ? 'roads' : 'main'; }
         else if (f.t === 'supply') {
           const pk = a.picks;
           if (!Array.isArray(pk) || pk.length !== 2 || pk.some(function (r) { return RES.indexOf(r) < 0 || stock(r) < pk.filter(function (x) { return x === r; }).length; })) return no();
@@ -19386,7 +19651,7 @@
     // A copy of the game for one player's screen: other factions' cards and favours are hidden, and so is the deck.
     function viewFor(Gx, seat) {
       const g = JSON.parse(JSON.stringify(Gx)), over = g.phase === 'over';
-      g.bank = {}; RES.forEach(function (r) { g.bank[r] = (g.size === 'large' ? 24 : 19) - Gx.players.reduce(function (s, q) { return s + q.hand[r]; }, 0); });
+      g.bank = {}; RES.forEach(function (r) { g.bank[r] = (g.size === 'standard' ? 19 : 24) - Gx.players.reduce(function (s, q) { return s + q.hand[r]; }, 0); });
       g.players.forEach(function (p, i) {
         if (i === seat || over) return;
         p.n = RES.reduce(function (s, r) { return s + p.hand[r]; }, 0);
@@ -19400,10 +19665,10 @@
     }
     return {
       get: function () { return G; }, set: function (g) { G = g; },
-      RES: RES, RN: RN, DIST: DIST, COST: COST, FAV: FAV, MAPS: MAPS, R: R, CX: CX, CY: CY,
+      RES: RES, RN: RN, DIST: DIST, COST: COST, FAV: FAV, MAPS: MAPS, R: R, CX: CX, CY: CY, ISLANDS: ISLANDS,
       newGame: newGame, act: act, aiMove: aiMove, aiStep: aiStep, aiDiscard: aiDiscard, takeOver: takeOver, waiting: waiting, isAI: isAI, viewFor: viewFor, answers: answers,
-      P: P, cards: cards, stock: stock, canAfford: canAfford, spaced: spaced, safeOK: safeOK, routeOK: routeOK, anyRoute: anyRoute, anySafe: anySafe, rate: rate, routeLen: routeLen,
-      respect: respect, humans: humans, you: you, name: name, verb: verb, say: say, checkWin: checkWin, canPlay: canPlay, victims: victims, pips: pips, list: list, sum: sum,
+      P: P, cards: cards, stock: stock, canAfford: canAfford, spaced: spaced, safeOK: safeOK, routeOK: routeOK, flyOK: flyOK, openFly: openFly, anyRoute: anyRoute, anyFly: anyFly, anyFree: anyFree, anySafe: anySafe, robHex: robHex, fp: fp, rate: rate, routeLen: routeLen,
+      respect: respect, WIN: WIN, humans: humans, you: you, name: name, verb: verb, say: say, checkWin: checkWin, canPlay: canPlay, victims: victims, pips: pips, list: list, sum: sum,
       wantsDeal: wantsDeal, counter: counter, est: est, produce: produce
     };
   }
@@ -19411,7 +19676,7 @@
 
   /* ================= Torn Territories (district-building board game) =================
      Build roads, safehouses and HQs across a map of Torn City districts. Districts pay out Brick, Wood, Wheat, Ore
-     and Cotton when their number is rolled. First faction to 10 Respect wins. You against computer factions, or
+     and Cotton when their number is rolled. First faction to 14 Respect wins. You against computer factions, or
      pass-and-play on one device. Illustrated districts come from the Character Art pack (keys 'tt…'); without it
      the districts are drawn by the script. Games on this device make no requests and touch nothing on Torn's page.
      Online games (optional, see 'Online games' below) are run by the Torn Arcade server with the same engine. */
@@ -19455,7 +19720,7 @@
       '.ta-tt button.ta-tt-sm{padding:4px 9px;text-align:center}',
       '.ta-tt .ta-tt-go{background:var(--tg);color:#1a1530;border-color:var(--tg);text-align:center;font-size:14px}',
       '.ta-tt select{font:inherit;font-size:12.5px;font-weight:600;background:var(--tp2);color:#f1ecff;border:1px solid var(--tl);border-radius:7px;padding:3px 4px;margin:0;height:auto}',
-      '.ta-tt-game{position:absolute;inset:0;display:grid;grid-template-columns:minmax(0,1fr) 272px;gap:8px}',
+      '.ta-tt-game{position:absolute;inset:0;display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:8px}',
       '.ta-tt.ta-tt-narrow .ta-tt-game{grid-template-columns:1fr;grid-template-rows:minmax(0,1.1fr) minmax(0,1fr)}',
       '.ta-tt-board{position:relative;min-width:0;min-height:0;border-radius:12px;border:1px solid var(--tl);overflow:hidden;background:radial-gradient(ellipse at 50% 50%,#1d3a5c 0%,#142a46 45%,#0c1830 75%)}',
       '.ta-tt-scroll{position:absolute;inset:0;overflow:auto;overscroll-behavior:contain}',
@@ -19496,7 +19761,7 @@
       '.ta-tt-pls{display:grid;gap:5px}',
       '.ta-tt-pl{display:grid;grid-template-columns:10px 1fr auto;gap:1px 6px;align-items:center}',
       '.ta-tt-pl i{width:10px;height:10px;border-radius:3px;display:block}',
-      '.ta-tt-pl .ta-tt-r{font-weight:800;color:var(--tg);font-size:15px;font-variant-numeric:tabular-nums}',
+      '.ta-tt-pl .ta-tt-r{font-weight:800;color:var(--tg);font-size:15px;font-variant-numeric:tabular-nums}', '.ta-tt-r small,[data-tt="myResp"] small{font-size:.72em;font-weight:600;opacity:.6;margin-left:1px}',
       '.ta-tt-pl .ta-tt-meta{grid-column:2/4;color:var(--tm);font-size:11px}',
       '.ta-tt-pl.ta-tt-turn>span:nth-child(2){color:var(--tg)}',
       '.ta-tt-badge{display:inline-block;background:#3a2f12;color:var(--tg);border-radius:5px;padding:0 4px;margin-left:4px;font-size:10.5px;font-weight:800}',
@@ -19520,7 +19785,9 @@
       '.ta-tt-ans{display:grid;grid-template-columns:10px 1fr auto;gap:6px;align-items:center}',
       '.ta-tt-ans i{width:10px;height:10px;border-radius:3px}',
       '.ta-tt-title{position:absolute;inset:0;overflow-y:auto;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:8px;align-content:start}',
-      '.ta-tt.ta-tt-narrow .ta-tt-title{grid-template-columns:1fr}',
+      '.ta-tt.ta-tt-narrow .ta-tt-title,.ta-tt.ta-tt-stack .ta-tt-title{grid-template-columns:minmax(0,1fr)}', '.ta-tt-title{align-items:start}',
+      '.ta-tt.ta-tt-narrow .ta-tt-seat{grid-template-columns:12px minmax(0,1fr) auto auto}', '.ta-tt.ta-tt-narrow .ta-tt-row select{max-width:100%}',
+      '.ta-tt.ta-tt-narrow .ta-tt-ids{grid-template-columns:1fr 1fr 1fr}',
       '.ta-tt-title h2{margin:0;font-size:22px;font-weight:900;letter-spacing:.02em}',
       '.ta-tt-title h2 span{color:var(--tg)}',
       '.ta-tt-seat{display:grid;grid-template-columns:12px 1fr auto auto;gap:5px;align-items:center}',
@@ -19537,14 +19804,43 @@
       '.ta-tt-og b{font-size:12.5px}', '.ta-tt-og small{color:var(--tm);font-size:11.5px}',
       '.ta-tt-og .ta-tt-btns{display:flex;gap:5px;flex-wrap:wrap}',
       '.ta-tt-og.ta-tt-inv{border-color:var(--tg)}',
-      '.ta-tt-msg{font-size:12px;color:#ffd27a}'
+      '.ta-tt-msg{font-size:12px;color:#ffd27a}',
+      '.ta-tt .ta-tt-card h4{font-size:11px!important;line-height:1.2!important;letter-spacing:.09em!important;font-weight:800!important;margin:2px 0 -2px!important;padding:0!important;color:var(--tm)!important;text-transform:none!important;font-family:inherit!important;border:0!important;background:none!important}',
+      '.ta-tt-list{display:grid;gap:4px}',
+      '.ta-tt .ta-tt-li{grid-template-columns:26px minmax(0,1fr) auto 38px;align-items:center;gap:7px;padding:6px 7px}',
+      '.ta-tt-li-i{width:26px;height:26px;border-radius:7px;background:#2c2450;color:var(--tg);display:grid;place-items:center}', '.ta-tt-li-i svg{width:18px;height:18px}',
+      '.ta-tt-li-t{display:grid;min-width:0}', '.ta-tt-li-t b{font-size:13px}', '.ta-tt-li-t small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+      '.ta-tt-li-c{display:flex;gap:2px;justify-content:flex-end}',
+      '.ta-tt-chip{position:relative;width:20px;height:20px;border-radius:5px;background:#2a2346;display:grid;place-items:center;font-style:normal}', '.ta-tt-chip svg{width:15px;height:15px}',
+      '.ta-tt-chip b{position:absolute;right:-3px;bottom:-4px;font-size:9.5px;background:#f6f1ff;color:#1a1530;border-radius:6px;padding:0 3px;line-height:13px}',
+      '.ta-tt-chip.ta-tt-lack{background:#4a1c2a;box-shadow:inset 0 0 0 1px #ff6a7a}',
+      '.ta-tt-free{color:var(--tm);font-size:11px}',
+      '.ta-tt .ta-tt-li em{font-style:normal;font-weight:600;font-size:10.5px;color:var(--tm);text-align:right;white-space:nowrap}',
+      '.ta-tt .ta-tt-li.ta-tt-on .ta-tt-li-i{background:var(--tg);color:#1a1530}',
+      '.ta-tt-bank{display:grid;grid-template-columns:auto minmax(0,1fr) auto minmax(0,1fr);gap:4px;align-items:center;color:var(--tm);font-size:12px}', '.ta-tt-bank select{min-width:0;width:100%}', '.ta-tt-bank button{grid-column:1/-1;text-align:center}'
     ].join('\n'));
 
-    const panel = makePanel('territories', 'Torn Territories', 'Build roads, safehouses and HQs across Torn City. First to 10 Respect wins.', '', [],
+    // One row of the build / trade list: icon, name, what it does, its cost (each card turns red when you're short) and pieces left
+    const LI_ICON = {
+      road: '<path d="M4 22L22 4" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="M4 22L22 4" stroke="#1a1530" stroke-width="1.2" stroke-dasharray="2 3"/>',
+      fly: '<path d="M3 14l9-2l5-8h3l-2 8h5l2-3h2l-1 4l1 4h-2l-2-3h-5l2 8h-3l-5-8z" fill="currentColor"/>',
+      safe: '<path d="M5 22v-10l8-7l8 7v10z" fill="currentColor"/><rect x="11" y="15" width="4" height="7" fill="#1a1530"/>',
+      hq: '<path d="M3 23v-12h6v-6h8v-3h6v21z" fill="currentColor"/><rect x="12" y="9" width="3" height="3" fill="#1a1530"/><rect x="17" y="9" width="3" height="3" fill="#1a1530"/><rect x="17" y="14" width="3" height="3" fill="#1a1530"/>',
+      fav: '<rect x="6" y="3" width="14" height="20" rx="2" fill="currentColor"/><path d="M13 8l1.5 3h3l-2.5 2l1 3l-3-2l-3 2l1-3l-2.5-2h3z" fill="#1a1530"/>',
+      move: '<path d="M4 13h18M17 8l5 5l-5 5M9 8l-5 5l5 5" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+      deal: '<path d="M3 9h15l-4-4M23 17h-15l4 4" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>'
+    };
+    function li(id, ico, name, note, cost, nId, hidden) {
+      return '<button class="ta-tt-li" data-tt="' + id + '"' + (hidden ? ' hidden' : '') + '><span class="ta-tt-li-i"><svg viewBox="0 0 26 26" aria-hidden="true">' + LI_ICON[ico] + '</svg></span>' +
+        '<span class="ta-tt-li-t"><b>' + name + '</b><small>' + note + '</small></span>' +
+        '<span class="ta-tt-li-c">' + (cost === false ? '' : cost ? Object.keys(cost).map(function (r) { return '<i class="ta-tt-chip" data-r="' + r + '" data-n="' + cost[r] + '" title="' + cost[r] + ' ' + RN[r] + '">' + icon(r) + (cost[r] > 1 ? '<b>' + cost[r] + '</b>' : '') + '</i>'; }).join('') : '<small class="ta-tt-free">Free</small>') + '</span>' +
+        (nId ? '<em data-tt="' + nId + '"></em>' : '<em></em>') + '</button>';
+    }
+    const panel = makePanel('territories', 'Torn Territories', 'Build roads, safehouses and HQs across Torn City. First to 14 Respect wins.', '', [],
       '<div class="ta-tt">' +
       '<div class="ta-tt-title" data-tt="title">' +
         '<div class="ta-tt-card"><h2>TORN <span>TERRITORIES</span></h2><h4>NEW GAME</h4><div class="ta-tt-pls" data-tt="seats"></div>' +
-          '<div class="ta-tt-row"><span>Map</span><select data-tt="size" aria-label="Map size"><option value="large">Large: 37 districts</option><option value="standard">Standard: 19 districts</option></select></div>' +
+          '<div class="ta-tt-row"><span>Game</span><select data-tt="gmode" aria-label="Game"><option value="classic">Classic: Torn City, first to 14 Respect</option><option value="fp12">Flight Paths: fly to the islands, first to 12</option><option value="fp16">Flight Paths: fly to the islands, first to 16</option></select></div>' +
           '<div class="ta-tt-row"><span>Rivals</span><select data-tt="diff" aria-label="Rival difficulty"><option value="easy">Easy</option><option value="normal">Normal</option><option value="hard">Hard</option></select><span>Speed</span><select data-tt="speed" aria-label="Rival speed"><option value="750">Normal</option><option value="300">Fast</option><option value="40">Instant</option></select><span>Music</span><select data-tt="music" aria-label="Background music"><option value="on">On</option><option value="off">Off</option></select></div>' +
           '<button class="ta-tt-sm" data-tt="full2">Play full screen</button><button class="ta-tt-go" data-tt="start">Start a new game</button><button class="ta-tt-sm" data-tt="cont" hidden>Continue your saved game</button>' +
           '<div class="ta-tt-empty" data-tt="record"></div>' +
@@ -19554,7 +19850,10 @@
           '<p>Every turn starts with a roll of the dice. Every district with that number pays out to the buildings on its corners: <b>1 card</b> for a safehouse, <b>2</b> for an HQ.</p>' +
           '<div class="ta-tt-costs"><span>Road</span><span>Brick + Wood. Roads link up your territory.</span><span>Safehouse</span><span>Brick + Wood + Wheat + Cotton. 1 Respect. Goes on one of your roads, two corners from any other building.</span><span>HQ</span><span>2 Wheat + 3 Ore. Upgrades a safehouse: 2 Respect, double pay.</span><span>Favour card</span><span>Wheat + Ore + Cotton. Crew, Supply Run, Street Deal, Road Crew or a secret +1 Respect.</span></div>' +
           '<p>Roll a <b>7</b> and the <b>police raid</b> moves: anyone holding more than 7 cards hands over half, the raided district stops paying, and the roller takes a card from a rival there.</p>' +
-          '<p>Trade with rivals, or with the bank at 4 for 1. The bank holds 19 of each card (24 on the large map); if it runs short, nobody collects that card unless only one faction is owed it. You have 15 roads, 5 safehouses and 4 HQs. Harbours give 3 for 1, or 2 for 1 in one resource. <b>Longest Road</b> (5+) and <b>Biggest Crew</b> (3+ Crew cards played) are worth 2 Respect each. First to <b>10 Respect</b> on their own turn wins.</p></div>' +
+          '<p>Trade with rivals, or with the bank at 4 for 1. The bank holds 19 of each card (24 on the large map); if it runs short, nobody collects that card unless only one faction is owed it. You have 20 roads, 6 safehouses and 5 HQs. Harbours give 3 for 1, or 2 for 1 in one resource. <b>Longest Road</b> (5+) and <b>Biggest Crew</b> (3+ Crew cards played) are worth 2 Respect each. First to <b>14 Respect</b> on their own turn wins.</p>' +
+          '<h4>FLIGHT PATHS</h4><p>Torn City sits in open sky, with four islands named after Torn\'s travel destinations. Your first two safehouses go on Torn City, each with a road or a flight route.</p>' +
+          '<div class="ta-tt-costs"><span>Flight route</span><span>Wood + Cotton. Goes on the sky, starting from one of your safehouses or HQs on the coast, or from the end of your own flight routes. Roads and flight routes only join at your own buildings.</span><span>Move a flight</span><span>Once a turn you can move the flight route at the open end of a chain (not one you built this turn).</span><span>Islands</span><span>Your first safehouse on each island earns <b>+2 Respect</b> (Overseas Connections).</span><span>Smuggler\'s Den</span><span>Pays any card you choose.</span><span>Air Marshal</span><span>On a 7 (or a Crew card) you can send the Air Marshal to the sky instead of the police raid: no flight routes can be built or moved next to it, and you rob a faction with a flight route there.</span></div>' +
+          '<p>Longest Road counts roads and flight routes together. First to <b>12 or 16 Respect</b> (you choose) wins. Flight Paths has 15 roads, 15 flight routes, 6 safehouses and 5 HQs.</p></div>' +
       '</div>' +
       '<div class="ta-tt-game" data-tt="game" hidden>' +
         '<div class="ta-tt-board"><div class="ta-tt-scroll" data-tt="scroll"><svg data-tt="svg" role="img" aria-label="The Torn City board" preserveAspectRatio="xMidYMid meet"></svg></div>' +
@@ -19562,10 +19861,16 @@
         '<div class="ta-tt-side">' +
           '<div class="ta-tt-card" data-tt="meCard"><div class="ta-tt-me"><span data-tt="meName"></span><span>Respect<strong data-tt="myResp">0</strong> <small data-tt="secret"></small></span></div><div class="ta-tt-hand" data-tt="hand"></div><div class="ta-tt-empty" data-tt="last" hidden></div><div class="ta-tt-favs" data-tt="favs"></div></div>' +
           '<div class="ta-tt-card" data-tt="acts"><button class="ta-tt-go" data-tt="roll">Roll the dice</button>' +
-            '<div class="ta-tt-btns"><button data-tt="bRoute"><span>Road <em data-tt="nRoute"></em></span><small>Brick · Wood</small></button><button data-tt="bSafe"><span>Safehouse <em data-tt="nSafe"></em></span><small>Brick · Wood · Wheat · Cotton</small></button>' +
-            '<button data-tt="bHQ"><span>Upgrade to HQ <em data-tt="nHQ"></em></span><small>2 Wheat · 3 Ore</small></button><button data-tt="bFav"><span>Favour card <em data-tt="nFav"></em></span><small>Wheat · Ore · Cotton</small></button></div>' +
-            '<button data-tt="bDeal"><span>Trade with rivals</span><small>Offer some of your cards for theirs</small></button>' +
-            '<div class="ta-tt-row"><span>Bank</span><select data-tt="give" aria-label="Give to the bank"></select><span>for</span><select data-tt="get" aria-label="Get from the bank"></select><button class="ta-tt-sm" data-tt="bTrade">Trade</button></div>' +
+            '<h4>BUILD</h4><div class="ta-tt-list">' +
+              li('bRoute', 'road', 'Road', 'Links up your territory', { brick: 1, wood: 1 }, 'nRoute') +
+              li('bFly', 'fly', 'Flight route', 'From the coast, out over the sky', { wood: 1, cotton: 1 }, 'nFly', true) +
+              li('bSafe', 'safe', 'Safehouse', '+1 Respect · pays 1 card', { brick: 1, wood: 1, wheat: 1, cotton: 1 }, 'nSafe') +
+              li('bHQ', 'hq', 'Upgrade to HQ', '+1 Respect · pays 2 cards', { wheat: 2, ore: 3 }, 'nHQ') +
+              li('bFav', 'fav', 'Favour card', 'Crew, deals or secret Respect', { wheat: 1, ore: 1, cotton: 1 }, 'nFav') +
+              li('bMove', 'move', 'Move a flight', 'Open end of a chain · once a turn', null, null, true) +
+            '</div>' +
+            '<h4>TRADE</h4><div class="ta-tt-list">' + li('bDeal', 'deal', 'Trade with rivals', 'Offer some of your cards for theirs', false, null) + '</div>' +
+            '<div class="ta-tt-bank"><span>Bank</span><select data-tt="give" aria-label="Give to the bank"></select><span>for</span><select data-tt="get" aria-label="Get from the bank"></select><button class="ta-tt-sm" data-tt="bTrade">Trade</button></div>' +
             '<button class="ta-tt-go" data-tt="end">End turn</button></div>' +
           '<div class="ta-tt-card"><h4>FACTIONS</h4><div class="ta-tt-pls" data-tt="players"></div></div>' +
           '<div class="ta-tt-card"><h4>STREET TALK</h4><div class="ta-tt-log" data-tt="log"></div></div>' +
@@ -19580,8 +19885,14 @@
     const svg = Q('svg');
     let G = null;   // the whole game (saved in Tampermonkey storage)
     const UI = { last: null, aiTraded: false, zoom: 1, mode: null, viewer: -1, flash: [], dlg: null, timer: 0, aiActs: 0, asked: false, rolled: false, sawOver: false, live: false };
-    const opts = Object.assign({ size: 'large', diff: 'normal', speed: 750, seats: [['human', 0], ['ai', 1], ['ai', 2], ['ai', 3]] }, store.get('territoriesOpts', null) || {});
+    const opts = Object.assign({ game: 'classic', diff: 'normal', speed: 750, seats: [['human', 0], ['ai', 1], ['ai', 2], ['ai', 3]] }, store.get('territoriesOpts', null) || {});
+    if (['classic', 'fp12', 'fp16'].indexOf(opts.game) < 0) opts.game = 'classic';
+    delete opts.size;   // the small map was retired in 2.41
+    // Records against the computer: Classic at the top level (as before), Flight Paths per target (fp12, fp16)
     const stats = Object.assign({ games: 0, wins: 0, fastest: 0 }, store.get('territoriesStats', null) || {});
+    function statsFor(k) { if (k === 'classic') return stats; if (!stats[k]) stats[k] = { games: 0, wins: 0, fastest: 0 }; return stats[k]; }
+    function gameKey(g) { return g && g.mode === 'fp' ? 'fp' + g.win : 'classic'; }
+    const GAME_NAME = { classic: 'Classic', fp12: 'Flight Paths (12)', fp16: 'Flight Paths (16)' };
 
     const rnd = Math.random;   // music
 
@@ -19596,7 +19907,8 @@
       dice: [[0, 520, 0.04, 'square', 0.03], [60, 380, 0.04, 'square', 0.03], [120, 640, 0.05, 'square', 0.03]],
       raid: [[150, 2200, 0.12, 'sine', 0.03, 2600], [300, 2200, 0.3, 'sine', 0.03, 1800], [500, 760, 0.18, 'square', 0.022], [690, 600, 0.18, 'square', 0.022], [880, 760, 0.18, 'square', 0.022]],   // a whistle and a siren
       lose: [[0, 520, 0.12, 'triangle', 0.04, 260]],
-      pick: [[0, 700, 0.05, 'triangle', 0.03]]
+      pick: [[0, 700, 0.05, 'triangle', 0.03]],
+      fly: [[0, 300, 0.5, 'sawtooth', 0.012, 900], [80, 600, 0.45, 'sine', 0.02, 1400]]   // a jet whoosh: opening or moving a flight route
     };
     const PLUCK = { brick: 392, wood: 440, wheat: 523, ore: 587, cotton: 659 };   // collecting: one soft note per resource
     function snd(k) { if (UI.live && FX[k]) seq(FX[k]); }
@@ -19664,7 +19976,7 @@
     /* ---------- New game ---------- */
     function newGame() {
       const seats = opts.seats.filter(function (s) { return s[0] !== 'off'; });
-      G = E.newGame({ size: opts.size, diff: opts.diff, speed: opts.speed, players: seats.map(function (s) { const i = opts.seats.indexOf(s); return { name: NAMES[i], col: COLOURS[s[1]][0], ai: s[0] === 'ai' }; }) });
+      G = E.newGame({ mode: opts.game === 'classic' ? 'classic' : 'fp', win: opts.game === 'fp16' ? 16 : 12, diff: opts.diff, speed: opts.speed, players: seats.map(function (s) { const i = opts.seats.indexOf(s); return { name: NAMES[i], col: COLOURS[s[1]][0], ai: s[0] === 'ai' }; }) });
       UI.mode = null; UI.viewer = -1; UI.dlg = null; UI.sawOver = false; UI.last = null;
       sfx.win();
       tick();
@@ -19672,16 +19984,19 @@
 
     const P = E.P, cards = function (p) { return p.n !== undefined ? p.n : E.cards(p); }, stock = function (r) { return G && G.bank ? G.bank[r] : E.stock(r); };
     const canAfford = E.canAfford, safeOK = E.safeOK, routeOK = E.routeOK, anyRoute = E.anyRoute, anySafe = E.anySafe, rate = E.rate, routeLen = E.routeLen, pips = E.pips;
+    const flyOK = E.flyOK, openFly = E.openFly, anyFly = E.anyFly;
+    function fp() { return !!G && G.mode === 'fp'; }
     const respect = E.respect, humans = E.humans, you = E.you, name = E.name, verb = E.verb, say = E.say, checkWin = E.checkWin, canPlay = E.canPlay, victims = E.victims;
     function act(pi, a) { if (ON) { onAct(a); return { sent: true }; } const r = E.act(pi, a); if (r.err) sfx.miss(); return r; }
     // Best scores against the computer (games on this device with one person playing).
     function wonGame(pi) {
       if (G.counted || humans() !== 1) return;
-      G.counted = true; stats.games++;
+      const k = gameKey(G), S = statsFor(k), pre = k === 'classic' ? 'territories:' : 'territories-' + k + ':';
+      G.counted = true; S.games++;
       if (!P(pi).ai) {
-        stats.wins++; const turns = Math.floor(G.turn / G.players.length) + 1;
-        if (!stats.fastest || turns < stats.fastest) stats.fastest = turns;
-        record('territories:wins', stats.wins); record('territories:fastest', turns, true);
+        S.wins++; const turns = Math.floor(G.turn / G.players.length) + 1;
+        if (!S.fastest || turns < S.fastest) S.fastest = turns;
+        record(pre + 'wins', S.wins); record(pre + 'fastest', turns, true);
         confetti(panel.querySelector('.ta-stage')); sfx.win();
       } else snd('lose');
       store.set('territoriesStats', stats);
@@ -19693,10 +20008,11 @@
       clearTimeout(UI.timer);
       if (ON) {   // online: the server runs the game; open the dialog the game is waiting on you for, close stale ones
         const w = waitingHuman(), dk = UI.dlg && UI.dlg.kind;
-        if ((dk === 'discard' || dk === 'steal' || dk === 'offer') && w !== UI.viewer) UI.dlg = null;
+        if ((dk === 'discard' || dk === 'steal' || dk === 'offer' || dk === 'gold') && w !== UI.viewer) UI.dlg = null;
         if ((dk === 'trade' || dk === 'supply' || dk === 'deal') && !mine()) UI.dlg = null;
         if (w >= 0 && w === UI.viewer && !UI.dlg) {
-          if (G.phase === 'discard') UI.dlg = { kind: 'discard', take: {} };
+          if (G.phase === 'gold') UI.dlg = { kind: 'gold', picks: [] };
+          else if (G.phase === 'discard') UI.dlg = { kind: 'discard', take: {} };
           else if (G.phase === 'steal') UI.dlg = { kind: 'steal' };
           else if (G.phase === 'offer') UI.dlg = { kind: 'offer' };
         }
@@ -19708,7 +20024,8 @@
       if (w >= 0 && hu > 1 && UI.viewer !== w) UI.dlg = { kind: 'pass', who: w };
       else if (UI.dlg && UI.dlg.kind === 'pass') UI.dlg = null;
       if (w >= 0 && !UI.dlg) {
-        if (G.phase === 'discard') UI.dlg = { kind: 'discard', take: {} };
+        if (G.phase === 'gold') UI.dlg = { kind: 'gold', picks: [] };
+        else if (G.phase === 'discard') UI.dlg = { kind: 'discard', take: {} };
         else if (G.phase === 'steal') UI.dlg = { kind: 'steal' };
         else if (G.phase === 'offer') UI.dlg = { kind: 'offer' };
       }
@@ -19721,10 +20038,12 @@
     function mine() { return !!G && G.phase !== 'over' && !E.isAI(G.cur) && UI.viewer === G.cur && !(UI.dlg && UI.dlg.kind === 'pass'); }
     function on(id, fn) { Q(id).addEventListener('click', fn); }
     on('roll', function () { if (!mine() || G.phase !== 'roll') return; act(G.cur, { t: 'roll' }); tick(); });
-    function setMode(m) { if (!mine() || G.phase !== 'main') return; UI.mode = UI.mode === m ? null : m; sfx.click(); render(); }
+    function setMode(m) { if (!mine() || G.phase !== 'main') return; UI.mode = UI.mode === m ? null : m; UI.moveFrom = -1; sfx.click(); render(); }
     on('bRoute', function () { setMode('route'); });
     on('bSafe', function () { setMode('safe'); });
     on('bHQ', function () { setMode('hq'); });
+    on('bFly', function () { if (mine() && (G.phase === 'setup' || G.phase === 'roads')) { UI.mode = UI.mode === 'fly' ? null : 'fly'; sfx.click(); render(); return; } setMode('fly'); });
+    on('bMove', function () { UI.moveFrom = -1; setMode('move'); });
     on('bFav', function () { if (!mine()) return; act(G.cur, { t: 'fav' }); tick(); });
     on('bTrade', function () {
       if (!mine() || G.phase !== 'main') return;
@@ -19734,7 +20053,7 @@
     on('bDeal', function () { if (!mine() || G.phase !== 'main') return; UI.dlg = { kind: 'trade', give: {}, want: {}, answers: null }; sfx.click(); render(); });
     on('end', function () { if (!mine() || G.phase !== 'main') return; sfx.click(); act(G.cur, { t: 'end' }); tick(); });
     on('quit', function () { clearTimeout(UI.timer); sfx.click(); ON = null; showTitle(); });
-    function clickHex(hi) { if (!mine() || G.phase !== 'raid' || hi === G.raid) return; act(G.cur, { t: 'raid', h: hi }); tick(); }
+    function clickHex(hi) { if (!mine() || G.phase !== 'raid' || hi === G.raid || hi === G.marshal) return; act(G.cur, { t: 'raid', h: hi }); tick(); }
     function clickVert(v) {
       if (!mine()) return;
       const pi = G.cur, p = P(pi);
@@ -19743,10 +20062,37 @@
       else return;
       tick();
     }
+    // In setup and with Road Crew, an edge that could be either a road or a flight route becomes a road unless the
+    // Flight route button is on; edges out in the sky can only be flight routes.
+    function edgeKind(e) {
+      if (UI.mode === 'fly') return flyOK(G.cur, e) ? 'fly' : null;
+      if (UI.mode === 'route') return routeOK(G.cur, e) ? 'route' : null;
+      if (G.phase === 'setup' || G.phase === 'roads') return routeOK(G.cur, e) && (G.phase !== 'roads' || P(G.cur).routes) ? 'route' : flyOK(G.cur, e) && (G.phase !== 'roads' || P(G.cur).flights) ? 'fly' : null;
+      return null;
+    }
+    function moveTargets(from) {   // where the chosen flight route could go: checked with it taken off the board
+      const Ed = G.edges[from], keep = [Ed.owner, Ed.k, Ed.t], out = [];
+      Ed.owner = -1; delete Ed.k; delete Ed.t;
+      G.edges.forEach(function (x, i) { if (i !== from && flyOK(G.cur, i)) out.push(i); });
+      Ed.owner = keep[0]; Ed.k = keep[1]; Ed.t = keep[2];
+      return out;
+    }
     function clickEdge(e) {
       if (!mine()) return;
       const pi = G.cur, p = P(pi);
-      if (G.phase === 'setup' || G.phase === 'roads' || UI.mode === 'route') { if (act(pi, { t: 'route', e: e }).err) return; if (UI.mode === 'route') UI.mode = canAfford(p, COST.route) && p.routes && anyRoute(pi) ? 'route' : null; }
+      if (UI.mode === 'move') {
+        if (UI.moveFrom < 0 || UI.moveFrom === undefined) { if (!openFly(pi, e)) return; UI.moveFrom = e; sfx.click(); render(); return; }
+        if (e === UI.moveFrom) { UI.moveFrom = -1; render(); return; }
+        if (act(pi, { t: 'move', e: UI.moveFrom, to: e }).err) return;
+        UI.mode = null; UI.moveFrom = -1; tick(); return;
+      }
+      const k = edgeKind(e);
+      if (!k) return;
+      if (G.phase === 'setup' || G.phase === 'roads' || UI.mode === k) {
+        if (act(pi, { t: k === 'fly' ? 'fly' : 'route', e: e }).err) return;
+        if (UI.mode === 'route') UI.mode = canAfford(p, COST.route) && p.routes && anyRoute(pi) ? 'route' : null;
+        else if (UI.mode === 'fly') UI.mode = G.phase === 'main' && canAfford(p, COST.fly) && p.flights && anyFly(pi) ? 'fly' : null;
+      }
       else return;
       tick();
     }
@@ -19778,8 +20124,11 @@
         bx.innerHTML = '<h3>POLICE RAID</h3><p>' + (humans() > 1 && !ON ? esc(P(pi).name) + ' is' : 'You\'re') + ' holding <b>' + cards(P(pi)) + ' cards</b>. Hand over ' + need + ' of them.</p>' + steppers('take', d.take, P(pi).hand) +
           '<button class="ta-tt-go" data-a="discard"' + (sel === need ? '' : ' disabled') + '>Hand over ' + sel + ' of ' + need + '</button>';
       } else if (d.kind === 'steal') {
-        bx.innerHTML = '<h3>WHO DO YOU ROB?</h3><p>Take one card at random from a rival on this district.</p><div class="ta-tt-pls">' +
-          victims(G.cur, G.raid).map(function (v) { return '<div class="ta-tt-ans"><i style="background:' + P(v).col + '"></i><span>' + esc(P(v).name) + ' · ' + cards(P(v)) + ' cards</span><button class="ta-tt-sm" data-a="rob" data-v="' + v + '">Rob</button></div>'; }).join('') + '</div>';
+        bx.innerHTML = '<h3>WHO DO YOU ROB?</h3><p>Take one card at random from a rival ' + (G.hexes[E.robHex()].res === 'sky' ? 'with a flight route on this sky' : 'on this district') + '.</p><div class="ta-tt-pls">' +
+          victims(G.cur, E.robHex()).map(function (v) { return '<div class="ta-tt-ans"><i style="background:' + P(v).col + '"></i><span>' + esc(P(v).name) + ' · ' + cards(P(v)) + ' cards</span><button class="ta-tt-sm" data-a="rob" data-v="' + v + '">Rob</button></div>'; }).join('') + '</div>';
+      } else if (d.kind === 'gold') {
+        const q = G.goldQ[0], want = Math.min(q.n, RES.reduce(function (a, r) { return a + stock(r); }, 0));
+        bx.innerHTML = '<h3>SMUGGLER\'S DEN</h3><p>' + (humans() > 1 && !ON ? esc(P(q.p).name) + ' picks' : 'Pick') + ' ' + want + ' card' + (want === 1 ? '' : 's') + ' of any kind (' + d.picks.length + ' of ' + want + ' picked' + (d.picks.length ? ': ' + d.picks.map(function (r) { return RN[r]; }).join(', ') : '') + ').</p><div class="ta-tt-picks">' + RES.map(function (r) { const n = stock(r) - d.picks.filter(function (x) { return x === r; }).length; return '<button data-a="gold" data-r="' + r + '"' + (n > 0 ? '' : ' disabled') + '>' + icon(r) + RN[r] + '<small>' + n + ' in the bank</small></button>'; }).join('') + '</div>';
       } else if (d.kind === 'supply') {
         bx.innerHTML = '<h3>SUPPLY RUN</h3><p>Pick 2 cards from the bank (' + d.picks.length + ' of 2 picked' + (d.picks.length ? ': ' + RN[d.picks[0]] : '') + ').</p><div class="ta-tt-picks">' + RES.map(function (r) { const n = stock(r) - d.picks.filter(function (x) { return x === r; }).length; return '<button data-a="pick" data-r="' + r + '"' + (n > 0 ? '' : ' disabled') + '>' + icon(r) + RN[r] + '<small>' + n + ' in the bank</small></button>'; }).join('') + '</div><button class="ta-tt-sm" data-a="close">Keep the card for later</button>';
       } else if (d.kind === 'deal') {
@@ -19800,7 +20149,7 @@
           '<div class="ta-tt-btns"><button class="ta-tt-go" data-a="yes"' + (can ? '' : ' disabled') + '>Deal</button><button class="ta-tt-sm" data-a="no">No thanks</button></div>';
       } else if (d.kind === 'over') {
         const w = G.winner;
-        bx.innerHTML = '<h3>' + ((ON ? w === UI.viewer : you(w)) ? 'TORN CITY IS YOURS' : esc(P(w).name.toUpperCase()) + ' WINS') + '</h3><p>Final Respect, counting secret Councillor\'s Favours: ' + G.players.map(function (p, i) { return esc(p.name) + ' <b>' + respect(i, true) + '</b>'; }).join(' · ') + '</p><div class="ta-tt-btns"><button class="ta-tt-go" data-a="again">' + (ON ? 'Back to your games' : 'New game') + '</button><button class="ta-tt-sm" data-a="close">Look at the board</button></div>';
+        bx.innerHTML = '<h3>' + ((ON ? w === UI.viewer : you(w)) ? 'TORN CITY IS YOURS' : esc(P(w).name.toUpperCase()) + ' WINS') + '</h3><p>Final Respect, counting secret Councillor\'s Favours: ' + G.players.map(function (p, i) { return esc(p.name) + ' <b>' + respect(i, true) + '/' + E.WIN() + '</b>'; }).join(' · ') + '</p><div class="ta-tt-btns"><button class="ta-tt-go" data-a="again">' + (ON ? 'Back to your games' : 'New game') + '</button><button class="ta-tt-sm" data-a="close">Look at the board</button></div>';
       }
     }
     Q('dlgBox').addEventListener('click', function (e) {
@@ -19825,6 +20174,13 @@
         return;
       }
       if (a === 'deal') { UI.dlg = null; act(G.cur, { t: 'play', idx: d.idx, res: r }); tick(); return; }
+      if (a === 'gold') {
+        const q = G.goldQ[0], want = Math.min(q.n, RES.reduce(function (s2, x) { return s2 + stock(x); }, 0));
+        d.picks.push(r); sfx.click();
+        if (d.picks.length >= want) { UI.dlg = null; act(q.p, { t: 'gold', picks: d.picks.slice() }); tick(); }
+        else render();
+        return;
+      }
       if (a === 'offer') {
         if (ON) { onAct({ t: 'ask', give: d.give, want: d.want }).then(function (x) { if (x.status === 200 && UI.dlg === d) { d.answers = x.body.answers || []; render(); } }); return; }
         const r2 = act(G.cur, { t: 'ask', give: d.give, want: d.want }); if (r2.err) return;
@@ -19851,7 +20207,9 @@
         cotton: [['circle', { cx: -6, cy: -4, r: 6 }], ['circle', { cx: 6, cy: -4, r: 6 }], ['circle', { cx: 0, cy: -10, r: 6 }], ['rect', { x: -1, y: 1, width: 2, height: 10 }]],
         wheat: [['rect', { x: -1, y: -12, width: 2, height: 24 }], ['ellipse', { cx: -4, cy: -6, rx: 3, ry: 5 }], ['ellipse', { cx: 4, cy: -6, rx: 3, ry: 5 }], ['ellipse', { cx: -4, cy: 3, rx: 3, ry: 5 }], ['ellipse', { cx: 4, cy: 3, rx: 3, ry: 5 }]],
         ore: [['path', { d: 'M-14 9l6-13l8-5l10 6l4 12z' }]],
-        none: [['path', { d: 'M-12 8h24v-12l-6 -6l-6 6l-6 -6l-6 6z' }]]
+        none: [['path', { d: 'M-12 8h24v-12l-6 -6l-6 6l-6 -6l-6 6z' }]],
+        gold: [['path', { d: 'M-13 8l4-12h18l4 12z' }], ['rect', { x: -6, y: -10, width: 12, height: 5, rx: 1 }], ['circle', { cx: 0, cy: 2, r: 3 }]],
+        sky: []
       }[res];
       const gg = el('g', { transform: 'translate(' + x + ' ' + y + ')', fill: 'rgba(255,255,255,.38)' }, g);
       a.forEach(function (p) { el(p[0], p[1], gg); });
@@ -19871,22 +20229,36 @@
       });
       const hexPts = []; for (let i = 0; i < 6; i++) { const a = Math.PI / 180 * (60 * i - 30); hexPts.push((R * Math.cos(a)).toFixed(1) + ',' + (R * Math.sin(a)).toFixed(1)); }
       el('polygon', { points: hexPts.join(' '), id: 'ta-tt-hex' }, el('clipPath', { id: 'ta-tt-clip' }, defs));
-      G.ports.forEach(function (pt) {
-        const e = E[pt.e], a = V[e.a], b = V[e.b];
-        el('line', { x1: a.x, y1: a.y, x2: pt.x, y2: pt.y, stroke: '#8a7a5a', 'stroke-width': 4 }); el('line', { x1: b.x, y1: b.y, x2: pt.x, y2: pt.y, stroke: '#8a7a5a', 'stroke-width': 4 });
-        el('circle', { cx: pt.x, cy: pt.y, r: 16, fill: '#f6f1ff', stroke: '#8a7a5a', 'stroke-width': 2 });
-        if (pt.kind === 'any') txt(pt.x, pt.y + 4.5, '3:1', 13, '#1a1530');
-        else { const g = el('g', { transform: 'translate(' + (pt.x - 8) + ' ' + (pt.y - 14) + ') scale(.55)' }); g.innerHTML = ICON[pt.kind]; txt(pt.x, pt.y + 12, '2:1', 9.5, '#1a1530'); }
-      });
       const gB = el('g', {});
       H.forEach(function (h) {
+        if (h.res === 'sky') return;
         const pts = []; for (let i = 0; i < 6; i++) { const a = Math.PI / 180 * (60 * i - 30); pts.push((h.cx + (R + 9) * Math.cos(a)).toFixed(1) + ',' + (h.cy + (R + 9) * Math.sin(a)).toFixed(1)); }
-        el('polygon', { points: pts.join(' '), fill: '#2a2440' }, gB);
+        el('polygon', { points: pts.join(' '), fill: fp() ? '#e9dcb0' : '#2a2440' }, gB);   // Flight Paths: a sandy shoreline round the land
       });
       const raidPick = act && G.phase === 'raid', roll = G.dice ? G.dice[0] + G.dice[1] : 0;
       H.forEach(function (h, hi) {
-        const g = el('g', {}), img = art(h.res);
-        const poly = el('polygon', { points: h.verts.map(function (v) { return V[v].x.toFixed(1) + ',' + V[v].y.toFixed(1); }).join(' '), fill: 'url(#ta-tt-g-' + h.res + ')', stroke: '#1a1530', 'stroke-width': 3 }, g);
+        const g = el('g', {}), img = art(h.res), sky = h.res === 'sky';
+        const poly = el('polygon', { points: h.verts.map(function (v) { return V[v].x.toFixed(1) + ',' + V[v].y.toFixed(1); }).join(' '), fill: 'url(#ta-tt-g-' + h.res + ')', stroke: sky ? 'rgba(255,255,255,.18)' : '#1a1530', 'stroke-width': sky ? 1 : 3 }, g);
+        if (sky) {   // open sky: a few clouds (or the illustrated sky), and the Air Marshal if he's here
+          if (img) { const ig = el('g', { transform: 'translate(' + h.cx + ' ' + h.cy + ')', 'clip-path': 'url(#ta-tt-clip)' }, g); el('image', { href: img, x: -R, y: -R, width: 2 * R, height: 2 * R, preserveAspectRatio: 'xMidYMid slice' }, ig); }
+          else if (hi % 3 === 0) { const cg = el('g', { transform: 'translate(' + (h.cx + (hi % 5) * 4 - 8) + ' ' + (h.cy + (hi % 7) * 3 - 9) + ')', fill: 'rgba(255,255,255,.55)' }, g); el('ellipse', { cx: 0, cy: 0, rx: 16, ry: 6 }, cg); el('ellipse', { cx: -6, cy: -5, rx: 8, ry: 6 }, cg); el('ellipse', { cx: 5, cy: -6, rx: 7, ry: 6 }, cg); }
+          if (hi === G.marshal) {
+            const mg = el('g', { transform: 'translate(' + h.cx + ' ' + h.cy + ')' }, g), mimg = art('marshal');
+            el('circle', { r: 22, fill: 'rgba(16,12,31,.78)', stroke: '#ffcf4a', 'stroke-width': 2 }, mg);
+            if (mimg) {   // the illustrated Air Marshal token (Character Art pack)
+              el('clipPath', { id: 'ta-tt-mc' }, mg).appendChild(document.createElementNS(NS, 'circle')).setAttribute('r', 21);
+              el('image', { href: mimg, x: -21, y: -21, width: 42, height: 42, 'clip-path': 'url(#ta-tt-mc)' }, mg);
+              el('circle', { r: 22, fill: 'none', stroke: '#ffcf4a', 'stroke-width': 2.5 }, mg);
+            } else el('path', { d: 'M-15 1l11-2l7-11h4l-3 11l9 0l3-4h3l-1 6l1 6h-3l-3-4l-9 0l3 11h-4l-7-11l-11-2z', fill: '#f6f1ff' }, mg);
+            if (!mimg) el('path', { d: 'M-5-19l5-3l5 3v4l-5 2l-5-2z', fill: '#ffcf4a' }, mg);
+            txt(0, 34, 'AIR MARSHAL', 9, '#ffcf4a', mg);
+          }
+          if (raidPick && hi !== G.marshal) {
+            const ring = el('polygon', { points: poly.getAttribute('points'), fill: 'rgba(0,0,0,0)', stroke: '#9fd0ff', 'stroke-width': 3, 'stroke-dasharray': '6 5' }, g);
+            ring.setAttribute('class', 'ta-tt-pick'); g.style.cursor = 'pointer'; g.addEventListener('click', function () { clickHex(hi); });
+          }
+          return;
+        }
         if (img) {
           const ig = el('g', { transform: 'translate(' + h.cx + ' ' + h.cy + ')', 'clip-path': 'url(#ta-tt-clip)' }, g);
           el('image', { href: img, x: -R, y: -R, width: 2 * R, height: 2 * R, preserveAspectRatio: 'xMidYMid slice' }, ig);
@@ -19911,14 +20283,50 @@
           ring.setAttribute('class', 'ta-tt-pick'); g.style.cursor = 'pointer'; g.addEventListener('click', function () { clickHex(hi); });
         }
       });
-      const pickRoute = act && ((G.phase === 'setup' && G.setup.step === 'route') || G.phase === 'roads' || (G.phase === 'main' && UI.mode === 'route'));
+      // harbours on top of the board (in Flight Paths they sit out on the sky)
+      G.ports.forEach(function (pt) {
+        const e = E[pt.e], a = V[e.a], b = V[e.b];
+        el('line', { x1: a.x, y1: a.y, x2: pt.x, y2: pt.y, stroke: '#8a7a5a', 'stroke-width': 4 }); el('line', { x1: b.x, y1: b.y, x2: pt.x, y2: pt.y, stroke: '#8a7a5a', 'stroke-width': 4 });
+        el('circle', { cx: pt.x, cy: pt.y, r: 16, fill: '#f6f1ff', stroke: '#8a7a5a', 'stroke-width': 2 });
+        if (pt.kind === 'any') txt(pt.x, pt.y + 4.5, '3:1', 13, '#1a1530');
+        else { const g = el('g', { transform: 'translate(' + (pt.x - 8) + ' ' + (pt.y - 14) + ') scale(.55)' }); g.innerHTML = ICON[pt.kind]; txt(pt.x, pt.y + 12, '2:1', 9.5, '#1a1530'); }
+      });
+      if (fp() && G.islands) G.islands.forEach(function (nm, k) {   // island names (Torn's travel destinations)
+        if (!k) return;
+        const hs = H.filter(function (h) { return h.isl === k; }); if (!hs.length) return;
+        const x = hs.reduce(function (a, h) { return a + h.cx; }, 0) / hs.length, y = Math.min.apply(null, hs.map(function (h) { return h.cy; })) - R - 12;
+        const bonus = (G.bonus || []).filter(function (b) { return b.i === k; }).map(function (b) { return P(b.p).col; });
+        const w = nm.length * 7.2 + 22 + bonus.length * 10, lg = el('g', { 'pointer-events': 'none' });
+        el('rect', { x: x - w / 2, y: y - 11, width: w, height: 19, rx: 9.5, fill: 'rgba(16,12,31,.8)', stroke: 'rgba(255,255,255,.5)', 'stroke-width': 1 }, lg);
+        txt(x - bonus.length * 5, y + 3.5, '✈ ' + nm.toUpperCase(), 10.5, '#fff', lg);
+        bonus.forEach(function (c, j) { el('circle', { cx: x + w / 2 - 10 - j * 10, cy: y - 1.5, r: 4, fill: c, stroke: '#0c0a16', 'stroke-width': 1 }, lg); });
+      });
+      const pickRoute = act && ((G.phase === 'setup' && G.setup.step === 'route') || G.phase === 'roads' || (G.phase === 'main' && (UI.mode === 'route' || UI.mode === 'fly')));
+      const moving = act && G.phase === 'main' && UI.mode === 'move', moveTo = moving && UI.moveFrom >= 0 ? moveTargets(UI.moveFrom) : [];
+      function plane(x, y, ang, col, parent) {   // a small plane in the owner's colour, pointing along the route
+        const pg = el('g', { transform: 'translate(' + x + ' ' + y + ') rotate(' + ang + ')' }, parent);
+        el('path', { d: 'M-11 0l8-1.5l5-7.5h3l-2 7.5h6l2.5-3h2l-1 4.5l1 4.5h-2l-2.5-3h-6l2 7.5h-3l-5-7.5z', fill: col, stroke: '#0c0a16', 'stroke-width': 1.6, 'stroke-linejoin': 'round' }, pg);
+      }
       E.forEach(function (e, i) {
         const a = V[e.a], b = V[e.b];
         if (e.owner >= 0) {
-          el('line', { x1: a.x, y1: a.y, x2: b.x, y2: b.y, stroke: '#0c0a16', 'stroke-width': 10, 'stroke-linecap': 'round' });
-          el('line', { x1: a.x, y1: a.y, x2: b.x, y2: b.y, stroke: P(e.owner).col, 'stroke-width': 6, 'stroke-linecap': 'round' });
-        } else if (pickRoute && routeOK(G.cur, i)) {
-          el('line', { x1: a.x, y1: a.y, x2: b.x, y2: b.y, stroke: '#ffcf4a', 'stroke-width': 7, 'stroke-linecap': 'round', 'stroke-dasharray': '4 6' });
+          if (e.k === 'fly') {   // a flight route: a dashed vapour trail with a plane in the middle
+            const ang = Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI, sel = moving && (UI.moveFrom === i || (UI.moveFrom < 0 && openFly(G.cur, i)));
+            el('line', { x1: a.x, y1: a.y, x2: b.x, y2: b.y, stroke: '#0c0a16', 'stroke-width': 7, 'stroke-linecap': 'round', opacity: 0.55 });
+            el('line', { x1: a.x, y1: a.y, x2: b.x, y2: b.y, stroke: P(e.owner).col, 'stroke-width': 4, 'stroke-linecap': 'round', 'stroke-dasharray': '7 5' });
+            plane((a.x + b.x) / 2, (a.y + b.y) / 2, ang, P(e.owner).col);
+            if (sel) {
+              el('line', { x1: a.x, y1: a.y, x2: b.x, y2: b.y, stroke: UI.moveFrom === i ? '#fff' : '#9fd0ff', 'stroke-width': 12, 'stroke-linecap': 'round', opacity: 0.5, class: 'ta-tt-pick' });
+              const hit = el('line', { x1: a.x, y1: a.y, x2: b.x, y2: b.y, stroke: 'rgba(0,0,0,0)', 'stroke-width': small ? 34 : 24, style: 'cursor:pointer' });
+              hit.addEventListener('click', function () { clickEdge(i); });
+            }
+          } else {
+            el('line', { x1: a.x, y1: a.y, x2: b.x, y2: b.y, stroke: '#0c0a16', 'stroke-width': 10, 'stroke-linecap': 'round' });
+            el('line', { x1: a.x, y1: a.y, x2: b.x, y2: b.y, stroke: P(e.owner).col, 'stroke-width': 6, 'stroke-linecap': 'round' });
+          }
+        } else if ((pickRoute && edgeKind(i)) || moveTo.indexOf(i) >= 0) {
+          const fly = moveTo.indexOf(i) >= 0 || edgeKind(i) === 'fly';
+          el('line', { x1: a.x, y1: a.y, x2: b.x, y2: b.y, stroke: fly ? '#9fd0ff' : '#ffcf4a', 'stroke-width': 7, 'stroke-linecap': 'round', 'stroke-dasharray': fly ? '2 6' : '4 6' });
           const hit = el('line', { x1: a.x, y1: a.y, x2: b.x, y2: b.y, stroke: 'rgba(0,0,0,0)', 'stroke-width': small ? 34 : 24, style: 'cursor:pointer', class: 'ta-tt-pick' });
           hit.addEventListener('click', function () { clickEdge(i); });
         }
@@ -19944,7 +20352,7 @@
       if (vi >= 0) {
         const me = P(vi), main = act && G.phase === 'main';
         Q('meName').textContent = me.name.toUpperCase(); Q('meName').style.color = me.col;
-        Q('myResp').textContent = hide ? '?' : respect(vi, true);
+        Q('myResp').innerHTML = (hide ? '?' : respect(vi, true)) + '<small>/' + (G.win || 10) + '</small>';
         const sec = me.favs.filter(function (f) { return f.t === 'respect'; }).length;
         Q('last').hidden = !UI.last || hide || UI.last.who !== vi; if (UI.last) Q('last').innerHTML = 'Last trade: you gave <b>' + list(UI.last.gave) + '</b> · you got <b>' + list(UI.last.got) + '</b>';
         Q('secret').textContent = !hide && sec ? '(' + sec + ' secret)' : '';
@@ -19954,32 +20362,41 @@
         }).join('') : '<div class="ta-tt-empty">No favour cards yet.</div>';
         Q('roll').disabled = !(act && G.phase === 'roll');
         Q('end').disabled = !main;
-        [['bRoute', 'route', me.routes && anyRoute(vi)], ['bSafe', 'safe', me.safes && anySafe(vi)], ['bHQ', 'hq', me.hqs && V.some(function (v) { return v.owner === vi && v.lvl === 1; })]].forEach(function (b) {
+        [['bRoute', 'route', me.routes && anyRoute(vi)], ['bSafe', 'safe', me.safes && anySafe(vi)], ['bHQ', 'hq', me.hqs && V.some(function (v) { return v.owner === vi && v.lvl === 1; })], ['bFly', 'fly', me.flights && anyFly(vi)]].forEach(function (b) {
           Q(b[0]).disabled = !(main && canAfford(me, COST[b[1]]) && b[2]); Q(b[0]).classList.toggle('ta-tt-on', UI.mode === b[1]);
         });
+        Q('bFly').hidden = Q('bMove').hidden = !fp();
+        if (fp()) {
+          const pickPhase = act && ((G.phase === 'setup' && G.setup.step === 'route') || G.phase === 'roads');
+          if (pickPhase) { Q('bFly').disabled = !anyFly(vi) || (G.phase === 'roads' && !me.flights); Q('bRoute').disabled = true; }   // toggle: place a flight route instead of a road
+          Q('bMove').disabled = !(main && G.movedT !== G.turn && E.some(function (x, i) { return openFly(vi, i) && moveTargets(i).length; }));
+          Q('bMove').classList.toggle('ta-tt-on', UI.mode === 'move');
+          Q('nFly').textContent = me.flights + ' left';
+        }
         Q('bFav').disabled = !(main && canAfford(me, COST.fav) && G.deck.length);
         Q('bDeal').disabled = !(main && cards(me) > 0 && G.players.some(function (p, i) { return i !== vi && (p.ai || ON); }));
         const gv = Q('give').value, gt = Q('get').value;
         Q('give').innerHTML = RES.map(function (r) { return '<option value="' + r + '">' + rate(vi, r) + ' ' + RN[r] + ' (have ' + me.hand[r] + ')</option>'; }).join('');
         Q('get').innerHTML = RES.map(function (r) { return '<option value="' + r + '">1 ' + RN[r] + ' (bank ' + stock(r) + ')</option>'; }).join('');
         Q('nRoute').textContent = me.routes + ' left'; Q('nSafe').textContent = me.safes + ' left'; Q('nHQ').textContent = me.hqs + ' left'; Q('nFav').textContent = G.deck.length + ' left';
+        box.querySelectorAll('.ta-tt-chip').forEach(function (c) { c.classList.toggle('ta-tt-lack', !hide && me.hand[c.dataset.r] < +c.dataset.n); });   // the cards you're short of
         Q('give').value = gv || 'brick'; Q('get').value = gt || 'ore';
         Q('bTrade').disabled = !(main && me.hand[Q('give').value] >= rate(vi, Q('give').value) && Q('give').value !== Q('get').value && stock(Q('get').value) > 0);
         UI.flash = [];
       }
       Q('players').innerHTML = G.players.map(function (p, i) {
         const b = (G.longest === i ? '<span class="ta-tt-badge">Longest Road</span>' : '') + (G.bigCrew === i ? '<span class="ta-tt-badge">Biggest Crew</span>' : '');
-        return '<div class="ta-tt-pl' + (G.cur === i && G.phase !== 'over' ? ' ta-tt-turn' : '') + '"><i style="background:' + p.col + '"></i><span>' + esc(p.name) + (p.ai ? '' : ' (human)') + b + '</span><span class="ta-tt-r">' + respect(i, (i === vi && !hide) || G.phase === 'over') + '</span>' +
-          '<span class="ta-tt-meta">' + cards(p) + ' cards · ' + p.favs.length + ' favours · road ' + routeLen(i) + ' · crew ' + p.crew + '</span></div>';
+        return '<div class="ta-tt-pl' + (G.cur === i && G.phase !== 'over' ? ' ta-tt-turn' : '') + '"><i style="background:' + p.col + '"></i><span>' + esc(p.name) + (p.ai ? '' : ' (human)') + b + '</span><span class="ta-tt-r">' + respect(i, (i === vi && !hide) || G.phase === 'over') + '<small>/' + (G.win || 10) + '</small></span>' +
+          '<span class="ta-tt-meta">' + cards(p) + ' cards · ' + p.favs.length + ' favours · road ' + routeLen(i) + ' · crew ' + p.crew + (fp() ? ' · islands ' + (G.bonus || []).filter(function (b) { return b.p === i; }).length : '') + '</span></div>';
       }).join('');
       Q('log').innerHTML = G.log.slice(0, 40).map(function (t) { return '<p>' + esc(t) + '</p>'; }).join('');
       const c = P(G.cur);
       Q('prompt').textContent = G.phase === 'over' ? (you(G.winner) ? 'You win!' : P(G.winner).name + ' wins.') :
-        !act ? (G.phase === 'discard' ? 'Police raid: handing over cards…' : G.phase === 'offer' ? P(G.offer.from).name + ' wants a deal.' : c.name + (G.phase === 'setup' ? ' is picking a spot…' : ' is moving…')) :
-        G.phase === 'setup' ? (G.setup.step === 'safe' ? 'Tap a gold spot for your ' + (G.setup.i < G.players.length ? 'first' : 'second') + ' safehouse.' : 'Tap a gold road next to it.') :
+        !act ? (G.phase === 'discard' ? 'Police raid: handing over cards…' : G.phase === 'gold' ? P(G.goldQ[0].p).name + ' is picking Smuggler\'s Den cards…' : G.phase === 'offer' ? P(G.offer.from).name + ' wants a deal.' : c.name + (G.phase === 'setup' ? ' is picking a spot…' : ' is moving…')) :
+        G.phase === 'setup' ? (G.setup.step === 'safe' ? 'Tap a gold spot for your ' + (G.setup.i < G.players.length ? 'first' : 'second') + ' safehouse' + (fp() ? ' in Torn City.' : '.') : fp() ? (UI.mode === 'fly' ? 'Tap a blue flight route next to it.' : 'Tap a gold road next to it, or press Flight route to fly from the coast.') : 'Tap a gold road next to it.') :
         G.phase === 'roll' ? 'Your turn. Roll the dice' + (c.favs.some(function (f) { return canPlay(G.cur, f); }) ? ', or play a Crew card first.' : '.') :
-        G.phase === 'raid' ? 'Tap a district to send the police raid there.' : G.phase === 'roads' ? 'Road Crew: build ' + G.free + ' more road' + (G.free > 1 ? 's' : '') + ' for free.' :
-        UI.mode === 'route' ? 'Tap a gold road to build it.' : UI.mode === 'safe' ? 'Tap a gold spot to open a safehouse.' : UI.mode === 'hq' ? 'Tap one of your safehouses to upgrade it.' : 'Build, trade or end your turn.';
+        G.phase === 'raid' ? (fp() ? 'Tap a district for the police raid, or the sky for the Air Marshal.' : 'Tap a district to send the police raid there.') : G.phase === 'roads' ? 'Road Crew: build ' + G.free + ' more road' + (fp() ? ' or flight route' : '') + (G.free > 1 ? 's' : '') + ' for free.' :
+        UI.mode === 'route' ? 'Tap a gold road to build it.' : UI.mode === 'fly' ? 'Tap a blue flight route to open it.' : UI.mode === 'move' ? (UI.moveFrom >= 0 ? 'Tap a blue spot to move the flight route there.' : 'Tap the flight route to move (the open end of a chain).') : UI.mode === 'safe' ? 'Tap a gold spot to open a safehouse.' : UI.mode === 'hq' ? 'Tap one of your safehouses to upgrade it.' : 'Build, trade or end your turn.';
       if (ON) { ON.prompt = Q('prompt').textContent; onClock(); }
       Q('quit').textContent = ON ? 'Back to your online games' : 'Back to the new game screen';
       if (G.phase === 'over' && !UI.dlg && !UI.sawOver) { UI.sawOver = true; UI.dlg = { kind: 'over' }; }
@@ -20022,8 +20439,9 @@
           '<select data-s="' + i + '" data-w="kind" aria-label="' + esc(NAMES[i]) + ' player"><option value="human"' + (s[0] === 'human' ? ' selected' : '') + '>Human</option><option value="ai"' + (s[0] === 'ai' ? ' selected' : '') + '>Computer</option>' + (i === 3 ? '<option value="off"' + (s[0] === 'off' ? ' selected' : '') + '>Not playing</option>' : '') + '</select>' +
           '<select data-s="' + i + '" data-w="col" aria-label="' + esc(NAMES[i]) + ' colour">' + COLOURS.map(function (c, k) { return '<option value="' + k + '"' + (s[1] === k ? ' selected' : '') + '>' + c[1] + '</option>'; }).join('') + '</select></div>';
       }).join('');
-      Q('size').value = opts.size; Q('diff').value = opts.diff; Q('speed').value = String(opts.speed); Q('music').value = opts.music === false ? 'off' : 'on';
-      Q('record').textContent = stats.games ? 'Your record against the computer: ' + stats.wins + ' win' + (stats.wins === 1 ? '' : 's') + ' in ' + stats.games + ' game' + (stats.games === 1 ? '' : 's') + (stats.fastest ? ' · fastest win in ' + stats.fastest + ' turns' : '') + '.' : '';
+      Q('gmode').value = opts.game; Q('diff').value = opts.diff; Q('speed').value = String(opts.speed); Q('music').value = opts.music === false ? 'off' : 'on';
+      const S = statsFor(opts.game);
+      Q('record').textContent = S.games ? 'Your ' + GAME_NAME[opts.game] + ' record against the computer: ' + S.wins + ' win' + (S.wins === 1 ? '' : 's') + ' in ' + S.games + ' game' + (S.games === 1 ? '' : 's') + (S.fastest ? ' · fastest win in ' + S.fastest + ' turns' : '') + '.' : '';
     }
     Q('seats').addEventListener('change', function (e) {
       const i = +e.target.dataset.s, w = e.target.dataset.w;
@@ -20038,19 +20456,33 @@
     function setMusic(onOff) { opts.music = onOff; store.set('territoriesOpts', opts); Q('music').value = onOff ? 'on' : 'off'; Q('mus').style.opacity = onOff ? '' : '.45'; if (onOff) musicStart(); else musicStop(); }
     Q('music').addEventListener('change', function () { setMusic(Q('music').value === 'on'); });
     on('mus', function () { setMusic(opts.music === false); });
-    ['size', 'diff', 'speed'].forEach(function (k) { Q(k).addEventListener('change', function () { opts[k] = k === 'speed' ? +Q(k).value : Q(k).value; store.set('territoriesOpts', opts); }); });
+    ['gmode', 'diff', 'speed'].forEach(function (k) { Q(k).addEventListener('change', function () { const o = k === 'gmode' ? 'game' : k; opts[o] = k === 'speed' ? +Q(k).value : Q(k).value; store.set('territoriesOpts', opts); if (k === 'gmode') { seatsHTML(); onCard(); } }); });
+    function narrow() {
+      box.classList.toggle('ta-tt-narrow', box.clientWidth > 0 && box.clientWidth < 560);
+      box.classList.toggle('ta-tt-stack', box.clientWidth > 0 && (box.clientWidth < 820 || box.clientHeight < 420));   // the new game screen as one scrolling column
+    }
+    // Small screens (phones, Torn PDA): open the board zoomed in so districts are big enough to tap, and let the
+    // player scroll around it; the zoom buttons still work. Big screens see the whole board.
+    function autoZoom() {
+      const sc = Q('scroll'), vb = (G && G.vb || '0 0 1 1').split(' ').map(Number);
+      if (!sc.clientWidth || !sc.clientHeight) return;
+      const hex = R * Math.sqrt(3) * Math.min(sc.clientWidth / vb[2], sc.clientHeight / vb[3]);
+      UI.zoom = hex < 40 ? Math.min(3, Math.ceil(46 / hex * 2) / 2) : 1;
+      render();
+      sc.scrollLeft = (sc.scrollWidth - sc.clientWidth) / 2; sc.scrollTop = (sc.scrollHeight - sc.clientHeight) / 2;
+    }
     function showTitle() {
-      clearTimeout(UI.timer);
+      clearTimeout(UI.timer); narrow();
       Q('game').hidden = true; Q('title').hidden = false; Q('dlg').hidden = true; UI.dlg = null; seatsHTML();
       const saved = store.get('territories', null);
       Q('cont').hidden = !(saved && saved.v === 1 && saved.phase && saved.phase !== 'over');
       onCard(); onLoadList();
     }
-    on('start', function () { sfx.click(); ON = null; Q('title').hidden = true; Q('game').hidden = false; newGame(); });
+    on('start', function () { sfx.click(); ON = null; Q('title').hidden = true; Q('game').hidden = false; newGame(); autoZoom(); });
     on('cont', function () {
       const s = store.get('territories', null); if (!s) return;
       ON = null; G = s; E.set(G); UI.viewer = -1; UI.dlg = null; UI.mode = null; UI.sawOver = false;
-      sfx.click(); Q('title').hidden = true; Q('game').hidden = false; tick();
+      sfx.click(); Q('title').hidden = true; Q('game').hidden = false; tick(); autoZoom();
     });
 
     /* ---------- Online games (optional: Settings → Online, verified players only) ----------
@@ -20069,17 +20501,18 @@
       }
       const games = onList || [];
       c.innerHTML = '<h4>PLAY ONLINE</h4>' + (onMsg ? '<div class="ta-tt-msg">' + esc(onMsg) + '</div>' : '') +
-        '<div class="ta-tt-empty">Invite 1 to 3 players by Torn ID. They get a notification on their phone. Empty seats are played by the computer. 30 seconds a move: if a player doesn\'t act in time, the computer plays that turn for them.</div>' +
+        '<div class="ta-tt-empty">Invite 1 to 3 players by Torn ID to a game of <b>' + GAME_NAME[opts.game] + '</b> (pick the game on the left). They get a notification on their phone. Empty seats are played by the computer. 30 seconds a move: if a player doesn\'t act in time, the computer plays that turn for them.</div>' +
         '<div class="ta-tt-ids">' + [0, 1, 2].map(function (i) { return '<input data-oid="' + i + '" inputmode="numeric" maxlength="9" placeholder="Torn ID" aria-label="Player ' + (i + 2) + ' Torn ID">'; }).join('') + '</div>' +
         '<button class="ta-tt-go" data-o="create">Invite and make a lobby</button>' +
         (games.length ? games.map(onRow).join('') : '<div class="ta-tt-empty">' + (onList ? 'No online games yet.' : 'Loading your online games…') + '</div>') +
         '<button class="ta-tt-sm" data-o="refresh">Refresh</button>';
     }
+    function lobbyGame(sz) { return sz === 'fp12' ? 'Flight Paths, first to 12' : sz === 'fp16' ? 'Flight Paths, first to 16' : sz === 'standard' ? 'Classic, small map' : 'Classic, first to 14'; }
     function onRow(g) {
       const seats = g.seats.map(function (s) { return esc(s.name) + (s.st === 'pending' ? ' (invited)' : s.st === 'declined' ? ' (said no)' : s.st === 'ai' ? ' (computer)' : s.st === 'left' ? ' (left)' : ''); }).join(', ');
       let btn = '', st = '';
       if (g.status === 'lobby') {
-        st = 'Waiting to start · ' + (g.size === 'standard' ? 'Standard' : 'Large') + ' map';
+        st = 'Waiting to start · ' + lobbyGame(g.size);
         if (g.invited) btn = '<button class="ta-tt-go" data-o="join" data-g="' + g.id + '">Join</button><button class="ta-tt-sm" data-o="decline" data-g="' + g.id + '">No thanks</button>';
         else if (g.you === 0) btn = '<button class="ta-tt-go" data-o="start" data-g="' + g.id + '">Start now</button><button class="ta-tt-sm" data-o="cancel" data-g="' + g.id + '">Cancel</button>';
         else btn = '<span class="ta-tt-empty">Waiting for ' + esc(g.host) + ' to start.</span><button class="ta-tt-sm" data-o="leave" data-g="' + g.id + '">Leave</button>';
@@ -20124,7 +20557,7 @@
       if (o === 'create') {
         const ids = Array.prototype.map.call(Q('online').querySelectorAll('[data-oid]'), function (i) { return Number(String(i.value).replace(/[^\d]/g, '')); }).filter(function (x) { return x > 0; });
         if (!ids.length) { onMsg = 'Type at least one Torn ID (the number in [brackets] after a name).'; onCard(); return; }
-        r = await onlReq('POST', '/v1/tt/games', { invite: ids, size: opts.size, col: opts.seats[0][1] });
+        r = await onlReq('POST', '/v1/tt/games', { invite: ids, size: opts.game === 'classic' ? 'large' : opts.game, col: opts.seats[0][1] });
         if (r.status === 200) onMsg = 'Lobby made. Your invites are on their way. Start whenever you\'re ready; anyone who hasn\'t joined is played by the computer.';
       } else r = await onlReq('POST', '/v1/tt/games/' + id + '/' + o);
       if (r.status !== 200) onMsg = r.body.message || 'That didn\'t work. Try again.';
@@ -20161,7 +20594,7 @@
       else {
         s.hexes = ON.board.hexes; s.ports = ON.board.ports;
         s.verts = ON.board.verts.map(function (v, i) { return Object.assign({}, v, { owner: s.vo[i][0], lvl: s.vo[i][1] }); });
-        s.edges = ON.board.edges.map(function (e, i) { return Object.assign({}, e, { owner: s.eo[i] }); });
+        s.edges = ON.board.edges.map(function (e, i) { const o = s.eo[i], x = Object.assign({}, e, { owner: Array.isArray(o) ? o[0] : o }); delete x.k; delete x.t; if (Array.isArray(o)) { x.k = 'fly'; x.t = o[1]; } return x; });
       }
       if (was && me >= 0 && was.players[me] && s.players[me]) {   // sounds for what just happened
         if (s.dice && (!was.dice || s.turn !== was.turn || s.dice.join() !== was.dice.join())) { snd('dice'); UI.rolled = true; }
@@ -20171,8 +20604,8 @@
         else if (s.verts.reduce(function (a, v) { return a + v.lvl; }, 0) > was.verts.reduce(function (a, v) { return a + v.lvl; }, 0)) snd('safe');
         if (g.waitingOn === me && !g.auto && (was.cur !== s.cur || was.phase !== s.phase) && !(was.cur === me && was.phase === s.phase)) seq([[0, 988, 0.07, 'sine', 0.06], [110, 1319, 0.12, 'sine', 0.06]]);
       }
-      G = s; E.set(G); UI.viewer = me;
-      tick();
+      const first = !G; G = s; E.set(G); UI.viewer = me;
+      tick(); if (first) autoZoom();
     }
     async function onAct(a) {
       const r = await onlReq('POST', '/v1/tt/games/' + ON.id + '/act', { a: a });
@@ -20200,13 +20633,16 @@
       openOnline: function (id) { if (id) onOpen(id); else { ON = null; showTitle(); } },
       viewing: function () { return ON ? ON.id : 0; },
       reload: function () {   // a cloud save arrived
-        Object.keys(stats).forEach(function (k) { delete stats[k]; }); Object.assign(stats, { games: 0, wins: 0, fastest: 0 }, store.get('territoriesStats', null) || {});
+        Object.keys(stats).forEach(function (k) { delete stats[k]; }); Object.assign(stats, { games: 0, wins: 0, fastest: 0 }, store.get('territoriesStats', null) || {});   // includes fp12 / fp16
         if (!ON) { clearTimeout(UI.timer); G = null; }
       },
       mute: function (m) { if (m) musicStop(); else musicStart(); },
       onEscape: function () { if (box.classList.contains('ta-tt-full')) { setFull(false); return true; } return false; },
-      relayout: function () { if (G && !Q('game').hidden) render(); },
-      bestText: function () { return stats.games ? stats.wins + ' win' + (stats.wins === 1 ? '' : 's') + ' in ' + stats.games + ' games' : 'No games yet'; },
+      relayout: function () { narrow(); if (G && !Q('game').hidden) render(); },
+      bestText: function () {
+        const parts = ['classic', 'fp12', 'fp16'].map(function (k) { const S = k === 'classic' ? stats : stats[k]; return S && S.games ? GAME_NAME[k] + ': ' + S.wins + ' win' + (S.wins === 1 ? '' : 's') + ' in ' + S.games : ''; }).filter(Boolean);
+        return parts.length ? parts.join(' · ') : 'No games yet';
+      },
       onKey: function (e) {
         if (!G || Q('game').hidden || !mine()) return false;
         const k = keyName(e);
