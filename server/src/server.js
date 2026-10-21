@@ -10,7 +10,11 @@ const trades = require('./trades');
 const saves = require('./saves');
 
 const PORT = Number(process.env.PORT) || 8080;
-const VERSION = '1.3.0';
+const VERSION = '1.4.0';
+// The 2.40 fresh start: scores and cloud saves for every game except Tornies must come from Torn Arcade 2.40.0 or later
+// (older copies still hold the scores from before the reset).
+const MIN_SCRIPT = [2, 40, 0];
+function newEnough(req) { const v = String(req.headers['x-arcade-version'] || '').split('.').map(Number); for (let i = 0; i < 3; i++) { if ((v[i] || 0) !== MIN_SCRIPT[i]) return (v[i] || 0) > MIN_SCRIPT[i]; } return true; }
 const GAMES = ['territories'];   // rated games, played on the server
 // Best-score leaderboards. These scores come from players' own devices, so each has limits that throw out
 // impossible values. dir: 'desc' = higher is better, 'asc' = lower is better (times).
@@ -21,7 +25,7 @@ BOARDS['bombs:normal'] = { dir: 'asc', min: 7, max: 86400 };
 BOARDS['bombs:hard'] = { dir: 'asc', min: 25, max: 86400 };
 BOARDS['eggdash:endless'] = { dir: 'desc', min: 1, max: 100000000 };
 BOARDS['bogies:total'] = { dir: 'desc', min: 1, max: 100000000 };
-for (let i = 1; i <= 6; i++) BOARDS['defence:' + i] = { dir: 'desc', min: 1, max: 40 };
+for (let i = 1; i <= 6; i++) BOARDS['defence:' + i] = { dir: 'desc', min: 1, max: 30 };   // 30 waves since 2.40
 BOARDS['tornies:caught'] = { dir: 'desc', min: 1, max: 179 };
 BOARDS['tornies:medals'] = { dir: 'desc', min: 1, max: 8 };
 BOARDS['invasion:standard'] = { dir: 'desc', min: 1, max: 100000000 };
@@ -125,6 +129,7 @@ async function route(req, res, url) {
     return send(res, 200, out);
   }
   // Send your best scores: keeps whichever is better, yours or the one already saved. Verified players only.
+  if (path === '/v1/scores' && method === 'POST' && !newEnough(req)) return fail(res, 426, 'update', 'Update Torn Arcade to send scores to the new leaderboards.');
   if (path === '/v1/scores' && method === 'POST') {
     if (limited(ip, 'scores', 30, 60000)) return fail(res, 429, 'slow_down', 'Too many score updates. Wait a minute.');
     const me = await whoAsks(req);
@@ -165,6 +170,7 @@ async function route(req, res, url) {
   const ctx = { whoAsks: whoAsks, send: send, fail: fail, readBody: readBody, limited: limited, ip: ip };
   if (path.indexOf('/v1/tt/') === 0) return tt.route(req, res, url, ctx);
   if (path === '/v1/trades' || path.indexOf('/v1/trades/') === 0) return trades.route(req, res, url, ctx);
+  if (method === 'PUT' && path.indexOf('/v1/saves/') === 0 && path !== '/v1/saves/tornies' && !newEnough(req)) return fail(res, 426, 'update', 'Update Torn Arcade to keep using cloud saves.');
   if (path === '/v1/saves' || path.indexOf('/v1/saves/') === 0) return saves.route(req, res, url, ctx);
   if (path === '/v1/inbox' && method === 'GET') {
     const who = await whoAsks(req);
@@ -192,12 +198,25 @@ async function route(req, res, url) {
   return fail(res, 404, 'not_found', 'Not found.');
 }
 
+// One-time jobs, each recorded so it never runs twice.
+async function freshStart() {
+  await db.q('CREATE TABLE IF NOT EXISTS server_jobs (name TEXT PRIMARY KEY, done_at TIMESTAMPTZ NOT NULL DEFAULT now())');
+  if ((await db.q("SELECT 1 FROM server_jobs WHERE name = 'fresh-start-2.40'")).rows.length) return;
+  // 2.40 fresh start: wipe every leaderboard except Tornies, the Territories ratings, and cloud saves of the reset games.
+  await db.q("DELETE FROM scores WHERE board NOT LIKE 'tornies:%'");
+  await db.q("DELETE FROM ratings WHERE game = 'territories'");
+  await db.q("CREATE TABLE IF NOT EXISTS cloud_saves (account_id BIGINT NOT NULL REFERENCES accounts(id) ON DELETE CASCADE, slot TEXT NOT NULL, data TEXT NOT NULL, ver INTEGER NOT NULL, size INTEGER NOT NULL, updated_at TIMESTAMPTZ NOT NULL DEFAULT now(), PRIMARY KEY (account_id, slot))");
+  await db.q("DELETE FROM cloud_saves WHERE slot <> 'tornies'");
+  await db.q("INSERT INTO server_jobs (name) VALUES ('fresh-start-2.40')");
+  console.log('fresh start 2.40 done');
+}
+
 const server = http.createServer(function (req, res) {
   const origin = req.headers.origin;
   if (origin && ORIGINS.indexOf(origin) >= 0) {
     res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Vary', 'Origin');
-    res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type');
+    res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type, X-Arcade-Version');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
     res.setHeader('Access-Control-Max-Age', '86400');
   }
@@ -214,7 +233,7 @@ const server = http.createServer(function (req, res) {
 server.requestTimeout = 15000;
 server.headersTimeout = 10000;
 
-db.migrate().then(function () { return tt.migrate(); }).then(function () { return trades.migrate(); }).then(function () { return saves.migrate(); }).then(function () {
+db.migrate().then(function () { return tt.migrate(); }).then(freshStart).then(function () { return trades.migrate(); }).then(function () { return saves.migrate(); }).then(function () {
   tt.start();
   server.listen(PORT, function () { console.log('Torn Arcade server ' + VERSION + ' on port ' + PORT); });
 }).catch(function (e) { console.error('database setup failed', e.message); process.exit(1); });

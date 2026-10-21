@@ -15,13 +15,13 @@ const fake = http.createServer((req, res) => {
 const fails = [];
 function check(name, ok, extra) { console.log((ok ? 'ok   ' : 'FAIL ') + name + (extra !== undefined ? '  ' + JSON.stringify(extra) : '')); if (!ok) fails.push(name); }
 async function call(method, p, body, token, origin) {
-  const h = { 'Content-Type': 'application/json' }; if (token) h.Authorization = 'Bearer ' + token; if (origin) h.Origin = origin;
+  const h = { 'Content-Type': 'application/json', 'X-Arcade-Version': '2.40.0' }; if (token) h.Authorization = 'Bearer ' + token; if (origin) h.Origin = origin;
   const r = await fetch('http://127.0.0.1:5870' + p, { method, headers: h, body: body ? JSON.stringify(body) : undefined });
   let j = null; try { j = await r.json(); } catch (e) {}
   return { status: r.status, body: j, headers: r.headers };
 }
 (async () => {
-  sql('DROP TABLE IF EXISTS tornie_trades, tt_games, scores, ratings, tokens, accounts CASCADE');
+  sql('DROP TABLE IF EXISTS server_jobs, tornie_trades, tt_games, scores, ratings, tokens, accounts CASCADE');
   const srv = spawn('node', [path.join(__dirname, '../src/server.js')], { env: Object.assign({}, process.env, { PORT: '5870', DATABASE_URL: 'postgres://postgres@localhost:5433/arcade', TORN_API: 'http://127.0.0.1:5871', NODE_PATH: path.join(__dirname, 'shim') }), stdio: ['ignore', 'pipe', 'pipe'] });
   let logs = ''; srv.stdout.on('data', d => logs += d); srv.stderr.on('data', d => logs += d);
   for (let i = 0; i < 50 && !/port 5870/.test(logs); i++) await new Promise(r => setTimeout(r, 100));
@@ -53,12 +53,12 @@ async function call(method, p, body, token, origin) {
     r = await call('GET', '/v1/leaderboard/territories', null, tokC); check('unranked player sees no rank', r.body.me.rank === null && r.body.me.games === 0, r.body.me);
     r = await call('GET', '/v1/leaderboard/chess'); check('unknown game', r.status === 404);
     // best-score boards
-    r = await call('POST', '/v1/scores', { scores: { 'flappy:hard': 40, 'bombs:hard': 120, 'defence:2': 33, 'tornies:caught': 90 } }, tokA);
+    r = await call('POST', '/v1/scores', { scores: { 'flappy:hard': 40, 'bombs:hard': 120, 'defence:2': 23, 'tornies:caught': 90 } }, tokA);
     check('send scores', r.status === 200 && r.body.saved === 4 && !r.body.rejected.length, r.body);
-    r = await call('POST', '/v1/scores', { scores: { 'flappy:hard': 30, 'bombs:hard': 150, 'defence:2': 39 } }, tokA);
+    r = await call('POST', '/v1/scores', { scores: { 'flappy:hard': 30, 'bombs:hard': 150, 'defence:2': 29 } }, tokA);
     r = await call('GET', '/v1/leaderboard/flappy:hard', null, tokA); check('keeps the higher score', r.body.players[0].value === 40 && r.body.me.rank === 1, r.body);
     r = await call('GET', '/v1/leaderboard/bombs:hard', null, tokA); check('times: keeps the lower', r.body.players[0].value === 120 && r.body.dir === 'asc', r.body);
-    r = await call('GET', '/v1/leaderboard/defence:2', null, tokA); check('improved score replaces', r.body.players[0].value === 39, r.body.players);
+    r = await call('GET', '/v1/leaderboard/defence:2', null, tokA); check('improved score replaces', r.body.players[0].value === 29, r.body.players);
     r = await call('POST', '/v1/scores', { scores: { 'defence:2': 41, 'bombs:hard': 3, 'tornies:caught': 500, 'flappy:hard': 1.5, 'chess:x': 9, 'eggdash:endless': 'lots' } }, tokA);
     check('impossible values rejected', r.body.saved === 0 && r.body.rejected.length === 6, r.body);
     r = await call('POST', '/v1/scores', { scores: { 'bombs:hard': 90 } }, tokC);
