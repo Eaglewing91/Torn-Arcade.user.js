@@ -23,14 +23,18 @@
       wheat: { name: 'Wheat Fields', fill: ['#efc64a', '#b0861a'] },
       ore: { name: 'Ore Mine', fill: ['#7f8aa0', '#434b5e'] },
       cotton: { name: 'Cotton Mill', fill: ['#cdbfe6', '#7d6ea8'] },
-      none: { name: 'Racket HQ', fill: ['#4a4458', '#2a2636'] }
+      none: { name: 'Racket HQ', fill: ['#4a4458', '#2a2636'] },
+      sky: { name: 'Open Sky', fill: ['#6fa8e8', '#2d5c9e'] },            // Flight Paths only
+      gold: { name: 'Smuggler\'s Den', fill: ['#f5cf55', '#9a6512'] }      // Flight Paths only: pays any card you choose
     };
-    const COST = { route: { brick: 1, wood: 1 }, safe: { brick: 1, wood: 1, wheat: 1, cotton: 1 }, hq: { wheat: 2, ore: 3 }, fav: { wheat: 1, ore: 1, cotton: 1 } };
+    // Flight Paths: the islands are named after Torn's travel destinations
+    const ISLANDS = ['Mexico', 'Cayman Islands', 'Canada', 'Hawaii', 'United Kingdom', 'Argentina', 'Switzerland', 'Japan', 'China', 'UAE', 'South Africa'];
+    const COST = { route: { brick: 1, wood: 1 }, safe: { brick: 1, wood: 1, wheat: 1, cotton: 1 }, hq: { wheat: 2, ore: 3 }, fav: { wheat: 1, ore: 1, cotton: 1 }, fly: { wood: 1, cotton: 1 } };
     const FAV = {
       crew: { name: 'Call in the Crew', text: 'Send the police raid to any district and take a card from a rival there.' },
       supply: { name: 'Supply Run', text: 'Take any 2 cards from the bank.' },
       deal: { name: 'Street Deal', text: 'Name a resource. Every rival hands over all they have of it.' },
-      roads: { name: 'Road Crew', text: 'Claim 2 roads for free.' },
+      roads: { name: 'Road Crew', text: 'Claim 2 roads for free (roads or flight routes in Flight Paths).' },
       respect: { name: 'Councillor\'s Favour', text: '+1 Respect, kept secret until you win.' }
     };
     const COLOURS = [['#3fd17a', 'Green'], ['#ff4a5a', 'Red'], ['#ffb02e', 'Orange'], ['#5aa8ff', 'Blue'], ['#b07aff', 'Purple'], ['#ff7ac8', 'Pink'], ['#2fd0c0', 'Teal'], ['#f2f2f2', 'White']];
@@ -83,20 +87,145 @@
       }
       return { hexes: hexes, verts: verts, edges: edges, ports: ports };
     }
+    /* Flight Paths board: Torn City (the mainland) and four islands in open sky. Islands never touch the mainland or each
+       other, so the only way there is a chain of flight routes. Hex fields: res ('sky' for open sky), num, isl (0 = mainland,
+       1-4 = islands). Edges know which hexes they border (hs) and whether a road (land) or flight route (sky) can go there;
+       the edge of the board counts as sky. */
+    // Based on Seafarers' large (5-6 player) "Heading for New Shores": a 30-district main island (the large Catan
+    // board: 28 districts and 2 Racket HQs) and 11 harbours, all on the main island, with bigger islands (5, 5, 5 and 4
+    // districts, 3 of them Smuggler's Dens). 49 districts in all, against Classic's 37.
+    const FP = { rows: [8, 9, 10, 11, 12, 11, 10, 9, 8], main: 30, islands: [5, 5, 5, 4],
+      mainPool: { brick: 5, wood: 6, wheat: 6, ore: 5, cotton: 6, none: 2 }, islPool: { brick: 3, wood: 4, wheat: 3, ore: 3, cotton: 3, gold: 3 },
+      mainNums: [2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 6, 6, 6, 8, 8, 8, 9, 9, 9, 10, 10, 10, 11, 11, 11, 12, 12], islNums: [2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12, 4],
+      ports: ['any', 'any', 'any', 'any', 'any', 'brick', 'wood', 'wheat', 'ore', 'cotton', 'cotton'] };
+    function makeBoardFP() {
+      const centres = [];
+      FP.rows.forEach(function (L, ri) {
+        const r = ri - (FP.rows.length - 1) / 2;
+        for (let k = 0; k < L; k++) centres.push([CX + (k - (L - 1) / 2) * R * Math.sqrt(3), CY + r * 1.5 * R]);
+      });
+      const N = centres.length, nb = centres.map(function (c, i) { return centres.map(function (d, j) { return j; }).filter(function (j) { return j !== i && Math.hypot(c[0] - centres[j][0], c[1] - centres[j][1]) < R * 1.9; }); });
+      const pick = function (a) { return a[Math.floor(rnd() * a.length)]; };
+      let isl, tries = 0;
+      for (;;) {   // grow the mainland, then the islands, until everything fits
+        tries++; isl = Array(N).fill(-1);
+        // the mainland starts a little left of centre; it prefers frontier hexes with more mainland neighbours (compact)
+        const mid = centres.map(function (c, i) { return i; }).sort(function (a, b) { return Math.hypot(centres[a][0] - (CX - R * 2.6), centres[a][1] - CY) - Math.hypot(centres[b][0] - (CX - R * 2.6), centres[b][1] - CY); })[0];
+        isl[mid] = 0; let size = 1;
+        while (size < FP.main) {
+          const fr = []; isl.forEach(function (v, i) { if (v === 0) nb[i].forEach(function (j) { if (isl[j] < 0 && fr.indexOf(j) < 0) fr.push(j); }); });
+          const w = fr.map(function (j) { return nb[j].filter(function (k) { return isl[k] === 0; }).length; }), mx = Math.max.apply(null, w);
+          isl[pick(fr.filter(function (j, k) { return w[k] >= Math.min(mx, 2); }))] = 0; size++;
+        }
+        const blocked = function (j, id) { return isl[j] >= 0 || nb[j].some(function (k) { return isl[k] >= 0 && isl[k] !== id; }); };
+        let ok = true;
+        FP.islands.forEach(function (n, k) {
+          if (!ok) return;
+          const id = k + 1, free = centres.map(function (c, i) { return i; }).filter(function (j) { return !blocked(j, id); });
+          if (!free.length) { ok = false; return; }
+          isl[pick(free)] = id;
+          for (let m = 1; m < n; m++) {
+            const fr = []; isl.forEach(function (v, i) { if (v === id) nb[i].forEach(function (j) { if (!blocked(j, id) && fr.indexOf(j) < 0) fr.push(j); }); });
+            if (!fr.length) { ok = false; return; }
+            isl[pick(fr)] = id;
+          }
+        });
+        if (ok || tries > 200) break;
+      }
+      const land = isl.map(function (v, i) { return v >= 0 ? i : -1; }).filter(function (i) { return i >= 0; });
+      const mainHexes = land.filter(function (i) { return isl[i] === 0; }), islHexes = land.filter(function (i) { return isl[i] > 0; });
+      let res, nums, ok2 = false;
+      const bag = function (o) { const a = []; Object.keys(o).forEach(function (t) { for (let i = 0; i < o[t]; i++) a.push(t); }); return shuffle(a); };
+      while (!ok2) {
+        res = Array(N).fill('sky');
+        const mp = bag(FP.mainPool), ip = bag(FP.islPool);
+        mainHexes.forEach(function (i) { res[i] = mp.pop(); });
+        islHexes.forEach(function (i) { res[i] = ip.pop(); });
+        // every island has at least one ordinary district (not only Smuggler's Dens)
+        if ([1, 2, 3, 4].some(function (k) { return islHexes.filter(function (i) { return isl[i] === k; }).every(function (i) { return res[i] === 'gold'; }); })) continue;
+        nums = Array(N).fill(0); const mn = shuffle(FP.mainNums.slice()), inn = shuffle(FP.islNums.slice());
+        mainHexes.forEach(function (i) { if (res[i] !== 'none') nums[i] = mn.pop(); });
+        islHexes.forEach(function (i) { nums[i] = inn.pop(); });
+        ok2 = land.every(function (i) { return !(nums[i] === 6 || nums[i] === 8) || nb[i].every(function (j) { return !(nums[j] === 6 || nums[j] === 8); }); });
+      }
+      const hexes = centres.map(function (c, i) { return { cx: c[0], cy: c[1], res: res[i], num: nums[i], isl: isl[i], verts: [] }; });
+      const verts = [], edges = [], vk = {}, ek = {};
+      hexes.forEach(function (h, hi) {
+        const ids = [];
+        for (let i = 0; i < 6; i++) {
+          const a = Math.PI / 180 * (60 * i - 30), x = h.cx + R * Math.cos(a), y = h.cy + R * Math.sin(a), key = Math.round(x) + ',' + Math.round(y);
+          if (vk[key] === undefined) { vk[key] = verts.length; verts.push({ x: x, y: y, hexes: [], adj: [], edges: [], owner: -1, lvl: 0, port: null }); }
+          ids.push(vk[key]); verts[vk[key]].hexes.push(hi);
+        }
+        h.verts = ids;
+        for (let i = 0; i < 6; i++) {
+          const a = ids[i], b = ids[(i + 1) % 6], key = Math.min(a, b) + '-' + Math.max(a, b);
+          if (ek[key] === undefined) { ek[key] = edges.length; edges.push({ a: a, b: b, owner: -1, hn: 0, hx: hi, hs: [] }); verts[a].adj.push(b); verts[b].adj.push(a); verts[a].edges.push(ek[key]); verts[b].edges.push(ek[key]); }
+          edges[ek[key]].hn++; edges[ek[key]].hs.push(hi);
+        }
+      });
+      verts.forEach(function (V) { V.land = V.hexes.some(function (h) { return hexes[h].res !== 'sky'; }); });
+      edges.forEach(function (E) {
+        E.land = E.hs.some(function (h) { return hexes[h].res !== 'sky'; });
+        E.sky = E.hn < 2 || E.hs.some(function (h) { return hexes[h].res === 'sky'; });
+        if (E.land) E.hx = E.hs.filter(function (h) { return hexes[h].res !== 'sky'; })[0];   // the land side (harbours point away from it)
+      });
+      // harbours on the coasts (land meets sky), spread round the board
+      function ang(E) { return Math.atan2((verts[E.a].y + verts[E.b].y) / 2 - CY, (verts[E.a].x + verts[E.b].x) / 2 - CX); }
+      const coast = edges.map(function (E, i) { return i; }).filter(function (i) { const E = edges[i]; return E.land && E.sky && hexes[E.hx].isl === 0; })   // harbours: Torn City only
+        .sort(function (a, b) { return ang(edges[a]) - ang(edges[b]); });
+      const kinds = shuffle(FP.ports.slice()), ports = [], used = {};
+      for (let i = 0; i < kinds.length && coast.length; i++) {
+        let e = coast[(Math.round(i * coast.length / kinds.length) + Math.floor(rnd() * 2)) % coast.length], tries2 = 0;
+        while ((used[edges[e].a] || used[edges[e].b]) && tries2++ < coast.length) e = coast[(coast.indexOf(e) + 1) % coast.length];
+        const E = edges[e], H = hexes[E.hx];
+        if (used[E.a] || used[E.b]) continue;
+        [E.a, E.b].concat(verts[E.a].adj, verts[E.b].adj).forEach(function (v) { used[v] = 1; });
+        const mx = (verts[E.a].x + verts[E.b].x) / 2, my = (verts[E.a].y + verts[E.b].y) / 2, dx = mx - H.cx, dy = my - H.cy, d = Math.hypot(dx, dy);
+        ports.push({ e: e, kind: kinds[i], x: mx + dx / d * 30, y: my + dy / d * 30 });
+        verts[E.a].port = kinds[i]; verts[E.b].port = kinds[i];
+      }
+      const names = shuffle(ISLANDS.slice()).slice(0, FP.islands.length);
+      // the Air Marshal starts out in open sky, away from Torn City (like the Seafarers pirate ship)
+      const far = hexes.map(function (h, i) { return i; }).filter(function (i) { return hexes[i].res === 'sky' && nb[i].every(function (j) { return isl[j] !== 0; }); });
+      return { hexes: hexes, verts: verts, edges: edges, ports: ports, islands: ['Torn City'].concat(names), marshal: far.length ? pick(far) : -1 };
+    }
     /* ---------- Rules ---------- */
     function P(i) { return G.players[i]; }
     function cards(p) { return RES.reduce(function (s, r) { return s + p.hand[r]; }, 0); }
-    function stock(r) { return (G.size === 'large' ? 24 : 19) - G.players.reduce(function (s, q) { return s + q.hand[r]; }, 0); }   // the bank holds 19 of each (24 on the large map)
+    function stock(r) { return (G.size === 'standard' ? 19 : 24) - G.players.reduce(function (s, q) { return s + q.hand[r]; }, 0); }   // the bank holds 19 of each (24 on the large map)
     function canAfford(p, c) { return Object.keys(c).every(function (r) { return p.hand[r] >= c[r]; }); }
     function pay(p, c) { Object.keys(c).forEach(function (r) { p.hand[r] -= c[r]; }); }
     function spaced(v) { return G.verts[v].owner < 0 && G.verts[v].adj.every(function (a) { return G.verts[a].owner < 0; }); }
-    function safeOK(pi, v, setup) { return spaced(v) && (setup || G.verts[v].edges.some(function (e) { return G.edges[e].owner === pi; })); }
+    function fp() { return G.mode === 'fp'; }
+    function mainland(v) { return G.verts[v].hexes.some(function (h) { return G.hexes[h].isl === 0; }); }
+    function safeOK(pi, v, setup) {
+      if (fp() && (!G.verts[v].land || (setup && !mainland(v)))) return false;   // Flight Paths: on land, and the first two on Torn City
+      return spaced(v) && (setup || G.verts[v].edges.some(function (e) { return G.edges[e].owner === pi; }));
+    }
+    // Roads join your buildings and other roads; flight routes join your buildings and other flight routes. They only
+    // link up with each other at one of your own safehouses or HQs.
     function routeOK(pi, e) {
       const E = G.edges[e]; if (E.owner >= 0) return false;
+      if (fp() && !E.land) return false;
       if (G.phase === 'setup') return E.a === G.setup.last || E.b === G.setup.last;
-      return [E.a, E.b].some(function (v) { const V = G.verts[v]; return V.owner === pi || (V.owner < 0 && V.edges.some(function (x) { return x !== e && G.edges[x].owner === pi; })); });
+      return [E.a, E.b].some(function (v) { const V = G.verts[v]; return V.owner === pi || (V.owner < 0 && V.edges.some(function (x) { return x !== e && G.edges[x].owner === pi && G.edges[x].k !== 'fly'; })); });
+    }
+    function flyOK(pi, e) {
+      if (!fp()) return false;
+      const E = G.edges[e]; if (E.owner >= 0 || !E.sky || E.hs.indexOf(G.marshal) >= 0) return false;   // not past the Air Marshal
+      if (G.phase === 'setup') return E.a === G.setup.last || E.b === G.setup.last;
+      return [E.a, E.b].some(function (v) { const V = G.verts[v]; return V.owner === pi || (V.owner < 0 && V.edges.some(function (x) { return x !== e && G.edges[x].owner === pi && G.edges[x].k === 'fly'; })); });
+    }
+    // A flight route at the open end of a chain (not built this turn, not next to the Air Marshal) can be moved once a turn.
+    function openFly(pi, e) {
+      const E = G.edges[e];
+      if (!fp() || E.owner !== pi || E.k !== 'fly' || E.t === G.turn || E.hs.indexOf(G.marshal) >= 0) return false;
+      return [E.a, E.b].some(function (v) { return G.verts[v].owner !== pi && !G.verts[v].edges.some(function (x) { return x !== e && G.edges[x].owner === pi && G.edges[x].k === 'fly'; }); });
     }
     function anyRoute(pi) { return G.edges.some(function (E, e) { return routeOK(pi, e); }); }
+    function anyFly(pi) { return fp() && G.edges.some(function (E, e) { return flyOK(pi, e); }); }
+    function anyFree(pi) { const p = P(pi); return (p.routes > 0 && anyRoute(pi)) || (p.flights > 0 && anyFly(pi)); }
     function anySafe(pi) { return G.verts.some(function (V, v) { return safeOK(pi, v); }); }
     function rate(pi, r) {
       let best = 4;
@@ -105,15 +234,17 @@
     }
     function routeLen(pi) {
       let best = 0;
-      function dfs(v, used, len) {
+      function dfs(v, used, len, kind) {
         if (len > best) best = len;
         if (len > 0 && G.verts[v].owner >= 0 && G.verts[v].owner !== pi) return;   // a rival's building cuts the road
         G.verts[v].edges.forEach(function (e) {
           const E = G.edges[e]; if (E.owner !== pi || used[e]) return;
-          used[e] = 1; dfs(E.a === v ? E.b : E.a, used, len + 1); used[e] = 0;
+          const k = E.k === 'fly' ? 'f' : 'r';
+          if (kind && k !== kind && G.verts[v].owner !== pi) return;   // roads and flight routes only join at your own building
+          used[e] = 1; dfs(E.a === v ? E.b : E.a, used, len + 1, k); used[e] = 0;
         });
       }
-      G.edges.forEach(function (E) { if (E.owner === pi) { dfs(E.a, {}, 0); dfs(E.b, {}, 0); } });
+      G.edges.forEach(function (E) { if (E.owner === pi) { dfs(E.a, {}, 0, null); dfs(E.b, {}, 0, null); } });
       return best;
     }
     function awards() {
@@ -126,11 +257,15 @@
       }
       G.players.forEach(function (p, i) { if (p.crew >= 3 && G.bigCrew !== i && (G.bigCrew < 0 || p.crew > P(G.bigCrew).crew)) { G.bigCrew = i; say(name(i) + ' now ' + (you(i) ? 'have' : 'has') + ' the Biggest Crew. +2 Respect.'); } });
     }
+    // Respect needed to win: Classic 14 since 2.41 (with 20 roads, 6 safehouses, 5 HQs and 7 Councillor's Favours);
+    // Flight Paths 12 or 16, chosen at the start. Games started before 2.41 keep their old target of 10.
+    function WIN() { return (G && G.win) || 10; }
     function respect(pi, all) {
       let s = 0;
       G.verts.forEach(function (V) { if (V.owner === pi) s += V.lvl; });
       if (G.longest === pi) s += 2;
       if (G.bigCrew === pi) s += 2;
+      if (G.bonus) s += 2 * G.bonus.filter(function (b) { return b.p === pi; }).length;   // Flight Paths: +2 for your first safehouse on each island (as in Seafarers)
       if (all) s += P(pi).favs.filter(function (f) { return f.t === 'respect'; }).length;
       return s;
     }
@@ -140,9 +275,9 @@
     function verb(i, v) { return you(i) ? v : v + (/(s|sh|ch)$/.test(v) ? 'es' : 's'); }
     function say(t) { G.log.unshift(t); if (G.log.length > 80) G.log.pop(); }
     function checkWin(pi) {
-      if (G.phase === 'over' || respect(pi, true) < 10) return false;
+      if (G.phase === 'over' || respect(pi, true) < WIN()) return false;
       G.phase = 'over'; G.winner = pi;
-      say(name(pi) + ' ' + verb(pi, 'reach') + ' 10 Respect and take' + (you(pi) ? '' : 's') + ' over Torn City!');
+      say(name(pi) + ' ' + verb(pi, 'reach') + ' ' + WIN() + ' Respect and take' + (you(pi) ? '' : 's') + ' over Torn City!');
       env.win(pi);
       return true;
     }
@@ -157,15 +292,18 @@
         G.discardQ = G.players.map(function (p, i) { return i; }).filter(function (i) { return cards(P(i)) > 7; });
         G.afterRaid = 'main'; G.phase = G.discardQ.length ? 'discard' : 'raid';
         env.snd('raid');
-      } else { produce(n); G.phase = 'main'; }
+      } else { produce(n); G.phase = G.goldQ && G.goldQ.length ? 'gold' : 'main'; }
     }
     function produce(n) {
-      const got = G.players.map(function () { return {}; });
+      const got = G.players.map(function () { return {}; }), gold = G.players.map(function () { return 0; });
       G.hexes.forEach(function (H, hi) {
         if (H.num !== n) return;
         if (hi === G.raid) { if (H.verts.some(function (v) { return G.verts[v].owner >= 0; })) say('The raided ' + DIST[H.res].name + ' pays nothing.'); return; }
-        H.verts.forEach(function (v) { const V = G.verts[v]; if (V.owner >= 0) got[V.owner][H.res] = (got[V.owner][H.res] || 0) + V.lvl; });
+        H.verts.forEach(function (v) { const V = G.verts[v]; if (V.owner < 0) return; if (H.res === 'gold') gold[V.owner] += V.lvl; else got[V.owner][H.res] = (got[V.owner][H.res] || 0) + V.lvl; });
       });
+      // Smuggler's Den: each faction owed picks its cards (starting with whoever rolled)
+      G.goldQ = [];
+      for (let k = 0; k < G.players.length; k++) { const i = (G.cur + k) % G.players.length; if (gold[i]) G.goldQ.push({ p: i, n: gold[i] }); }
       RES.forEach(function (r) {   // the bank runs short: one faction owed gets what's left, two or more get nothing
         const owed = got.map(function (g) { return g[r] || 0; }), total = owed.reduce(function (a, b) { return a + b; }, 0), left = stock(r);
         if (!total || total <= left) return;
@@ -187,14 +325,24 @@
       G.discardQ.shift();
       if (!G.discardQ.length) G.phase = 'raid';
     }
+    // Who can be robbed: factions with a building on the raided district, or (Air Marshal) a flight route on that sky.
     function victims(pi, h) {
-      const out = [];
-      G.hexes[h].verts.forEach(function (v) { const o = G.verts[v].owner; if (o >= 0 && o !== pi && cards(P(o)) > 0 && out.indexOf(o) < 0) out.push(o); });
+      const out = [], add = function (o) { if (o >= 0 && o !== pi && cards(P(o)) > 0 && out.indexOf(o) < 0) out.push(o); };
+      if (G.hexes[h].res === 'sky') G.edges.forEach(function (E) { if (E.k === 'fly' && E.hs.indexOf(h) >= 0) add(E.owner); });
+      else G.hexes[h].verts.forEach(function (v) { add(G.verts[v].owner); });
       return out;
     }
+    function robHex() { return G.robHex !== undefined && G.robHex >= 0 ? G.robHex : G.raid; }
+    function islandName(h) { return G.islands && G.hexes[h].isl > 0 ? G.islands[G.hexes[h].isl] : ''; }
     function moveRaid(pi, h) {
-      G.raid = h;
-      say(name(pi) + ' ' + verb(pi, 'send') + ' the police raid to the ' + DIST[G.hexes[h].res].name + (G.hexes[h].num ? ' (' + G.hexes[h].num + ')' : '') + '.');
+      if (G.hexes[h].res === 'sky') {   // Flight Paths: the Air Marshal grounds flight routes on this sky and robs a flyer
+        G.marshal = h;
+        say(name(pi) + ' ' + verb(pi, 'send') + ' the Air Marshal into the sky.');
+      } else {
+        G.raid = h;
+        say(name(pi) + ' ' + verb(pi, 'send') + ' the police raid to the ' + DIST[G.hexes[h].res].name + (G.hexes[h].num ? ' (' + G.hexes[h].num + ')' : '') + (islandName(h) ? ' in ' + islandName(h) : '') + '.');
+      }
+      G.robHex = h;
       const v = victims(pi, h);
       if (!v.length) G.phase = G.afterRaid;
       else if (v.length === 1) steal(pi, v[0]);
@@ -220,6 +368,13 @@
       const p = P(pi);
       if (!setup) pay(p, COST.safe);
       G.verts[v].owner = pi; G.verts[v].lvl = 1; p.safes--;
+      if (fp() && !setup) {   // Overseas Connections: +2 Respect for your first safehouse on each island
+        const h = G.verts[v].hexes.filter(function (x) { return G.hexes[x].isl > 0; })[0];
+        if (h !== undefined && !G.bonus.some(function (b) { return b.p === pi && b.i === G.hexes[h].isl; })) {
+          G.bonus.push({ p: pi, i: G.hexes[h].isl });
+          say('Overseas Connections: ' + name(pi) + ' ' + verb(pi, 'land') + ' in ' + G.islands[G.hexes[h].isl] + '. +2 Respect.');
+        }
+      }
       env.snd('safe');
       if (setup) {
         G.setup.last = v; G.setup.step = 'route';
@@ -229,19 +384,20 @@
       } else say(name(pi) + ' ' + verb(pi, 'open') + ' a safehouse. +1 Respect.');
       awards();
     }
-    function placeRoute(pi, e, free) {
+    function placeRoute(pi, e, free, fly) {
       const p = P(pi);
-      if (!free) pay(p, COST.route);
-      G.edges[e].owner = pi; p.routes--;
-      env.snd('road');
+      if (!free) pay(p, fly ? COST.fly : COST.route);
+      G.edges[e].owner = pi;
+      if (fly) { G.edges[e].k = 'fly'; G.edges[e].t = G.turn; p.flights--; } else p.routes--;
+      env.snd(fly ? 'fly' : 'road');
       if (G.phase === 'setup') {
         G.setup.i++; G.setup.step = 'safe'; G.setup.last = -1;
         if (G.setup.i >= G.setup.order.length) { G.phase = 'roll'; G.cur = 0; say('The city is carved up. ' + name(0) + ' ' + verb(0, 'roll') + ' first.'); }
         else G.cur = G.setup.order[G.setup.i];
         return;
       }
-      say(name(pi) + ' ' + verb(pi, 'build') + ' a road' + (free ? ' for free' : '') + '.');
-      if (G.phase === 'roads') { G.free--; if (G.free <= 0 || !p.routes || !anyRoute(pi)) G.phase = 'main'; }
+      say(name(pi) + ' ' + verb(pi, fly ? 'open' : 'build') + (fly ? ' a flight route' : ' a road') + (free ? ' for free' : '') + '.');
+      if (G.phase === 'roads') { G.free--; if (G.free <= 0 || !anyFree(pi)) G.phase = 'main'; }
       awards();
     }
     function upgrade(pi, v) {
@@ -281,12 +437,17 @@
       const p = P(pi), hasSafe = G.verts.some(function (V) { return V.owner === pi && V.lvl === 1; }), o = [];
       if (hasSafe && p.hqs) o.push(['hq', shortOf(p, COST.hq) - 0.3]);
       if (p.safes && anySafe(pi)) o.push(['safe', shortOf(p, COST.safe) - 0.5]);
-      else if (p.routes && p.safes) o.push(['route', shortOf(p, { brick: 2, wood: 2, wheat: 1, cotton: 1 }) - 0.4]);
+      else if (p.safes && (p.routes || p.flights)) o.push(['route', shortOf(p, expandCost(pi)) - 0.4]);
       if (G.deck.length) o.push(['fav', shortOf(p, COST.fav) + 1.2]);
       if (!o.length) return 'fav';
       return o.sort(function (a, b) { return a[1] - b[1]; })[0][0];
     }
-    function planCost(pi) { const pl = plan(pi); return pl === 'route' ? { brick: 2, wood: 2, wheat: 1, cotton: 1 } : COST[pl]; }
+    function planCost(pi) { const pl = plan(pi); return pl === 'route' ? expandCost(pi) : COST[pl]; }
+    // Saving up to expand: a road (or flight route) and most of a safehouse
+    function expandCost(pi) {
+      if (fp()) { const b = bestExpand(pi); if (b && b.fly) return { wood: 2, cotton: 2, brick: 1, wheat: 1 }; }
+      return { brick: 2, wood: 2, wheat: 1, cotton: 1 };
+    }
     function need(pi) { const p = P(pi), c = planCost(pi), out = {}; RES.forEach(function (r) { out[r] = Math.max(0, (c[r] || 0) - p.hand[r]); }); return out; }
     function worth(pi, r) { const n = need(pi), p = P(pi); return 1 + (n[r] ? 1.6 : 0) - (p.hand[r] >= 4 ? 0.5 : 0); }
     // What faction `who` holds as far as faction `by` can tell: every card collected, traded and spent is announced,
@@ -312,15 +473,15 @@
     function wantsDeal(pi, give, want, from) {
       const p = P(pi);
       if (RES.some(function (r) { return (want[r] || 0) > p.hand[r]; })) return { ok: false, why: 'cards' };
-      const vis = respect(from, false), D = G.diff;
-      if (vis >= (D === 'hard' ? 7 : D === 'normal' ? 8 : 9)) return { ok: false, why: 'leader' };
+      const vis = respect(from, false), D = G.diff, W = WIN();   // how close to winning counts relative to the target
+      if (vis >= W - (D === 'hard' ? 3 : D === 'normal' ? 2 : 1)) return { ok: false, why: 'leader' };
       let gain = 0;
       RES.forEach(function (r) { gain += (give[r] || 0) * worth(pi, r) - (want[r] || 0) * worth(pi, r); });
       const before = est(from, pi), after = Object.assign({}, before);
       RES.forEach(function (r) { after[r] = (after[r] || 0) + (want[r] || 0) - (give[r] || 0); });
       const th = unlocks(from, before, after), worthIt = D === 'easy' ? -0.2 : D === 'normal' ? 0.4 : 0.9;
       // never hand the last card for an HQ to someone close to winning; on Hard never hand anyone their HQ
-      if ((th >= 2 && (D === 'hard' || vis + 1 >= (D === 'normal' ? 8 : 9))) || (th >= 1.5 && vis + 1 >= (D === 'easy' ? 10 : 9))) return { ok: false, why: 'threat' };
+      if ((th >= 2 && (D === 'hard' || vis + 1 >= W - (D === 'normal' ? 2 : 1))) || (th >= 1.5 && vis + 1 >= W - (D === 'easy' ? 0 : 1))) return { ok: false, why: 'threat' };
       const penalty = th * (D === 'easy' ? 0.25 : D === 'normal' ? 0.6 : 1);
       if (gain - penalty > worthIt) return { ok: true };
       return { ok: false, why: gain > worthIt ? 'threat' : 'value' };
@@ -357,9 +518,73 @@
       G.hexes[h].verts.forEach(function (v) { const o = G.verts[v].owner; if (o >= 0 && o !== pi) s += pips(G.hexes[h].num) * G.verts[v].lvl * (1 + respect(o, false) / 5) + (cards(P(o)) ? 1 : 0); });
       return s + (G.diff === 'easy' ? rnd() * 6 : 0);
     }
+    // Air Marshal: how much grounding the flight routes on this sky hurts the others
+    function hurtSky(h, pi) {
+      const by = {}; let s = 0;
+      G.edges.forEach(function (E) { if (E.k === 'fly' && E.hs.indexOf(h) >= 0 && E.owner !== pi) by[E.owner] = (by[E.owner] || 0) + 1; });
+      Object.keys(by).forEach(function (o) { s += by[o] * 1.2 * (1 + respect(+o, false) / 5) + (cards(P(+o)) ? 1 : 0); });
+      return s;
+    }
     function bestRaid(pi) {
-      return G.hexes.map(function (H, i) { return i; }).filter(function (i) { return i !== G.raid && G.hexes[i].verts.every(function (v) { return G.verts[v].owner !== pi; }); })
+      const land = G.hexes.map(function (H, i) { return i; }).filter(function (i) { return G.hexes[i].res !== 'sky' && i !== G.raid && G.hexes[i].verts.every(function (v) { return G.verts[v].owner !== pi; }); })
         .sort(function (a, b) { return hurt(b, pi) - hurt(a, pi); })[0];
+      if (!fp()) return land;
+      const sky = G.hexes.map(function (H, i) { return i; }).filter(function (i) { return G.hexes[i].res === 'sky' && i !== G.marshal && !G.edges.some(function (E) { return E.owner === pi && E.hs.indexOf(i) >= 0; }); })
+        .sort(function (a, b) { return hurtSky(b, pi) - hurtSky(a, pi); })[0];
+      // ground a rival's flight routes when they're heading somewhere (it blocks building and moving there), more often on Hard
+      if (sky !== undefined && (land === undefined || (hurtSky(sky, pi) >= 3 && rnd() < (G.diff === 'hard' ? 0.5 : G.diff === 'normal' ? 0.35 : 0.2)))) return sky;
+      return land;
+    }
+    // Flight Paths: where to build next. Looks a few steps ahead along open roads or open sky for a free spot,
+    // and values a spot on an island it hasn't reached yet (the Overseas Connections bonus).
+    function siteScore(w, pi) {
+      let s = vScore(w, pi);
+      const h = G.verts[w].hexes.filter(function (x) { return G.hexes[x].isl > 0; })[0];
+      if (h !== undefined && !G.bonus.some(function (b) { return b.p === pi && b.i === G.hexes[h].isl; })) s += 6;
+      return s;
+    }
+    function reach(pi, e, fly) {   // flights look further ahead: islands are a few hexes of open sky away
+      const seen = {}, F = fly ? [0.9, 0.82, 0.74, 0.66, 0.58, 0.5, 0.43, 0.36, 0.3] : [0.9, 0.7, 0.5, 0.36, 0.25];
+      let best = -1, front = [G.edges[e].a, G.edges[e].b];
+      front.forEach(function (v) { seen[v] = 1; });
+      for (let d = 0; d < F.length && front.length; d++) {
+        const next = [];
+        front.forEach(function (v) {
+          const V = G.verts[v];
+          if (V.owner >= 0 && V.owner !== pi) return;
+          if (V.land && spaced(v)) best = Math.max(best, siteScore(v, pi) * F[d]);
+          V.edges.forEach(function (x) {
+            const E = G.edges[x]; if (E.owner >= 0 || !(fly ? E.sky && E.hs.indexOf(G.marshal) < 0 : E.land)) return;
+            const w = E.a === v ? E.b : E.a; if (!seen[w]) { seen[w] = 1; next.push(w); }
+          });
+        });
+        front = next;
+      }
+      return best;
+    }
+    function bestExpand(pi) {
+      const p = P(pi); let best = null;
+      G.edges.forEach(function (E, e) {
+        if (p.routes > 0 && routeOK(pi, e)) { const s = reach(pi, e, false); if (!best || s > best.s) best = { e: e, fly: false, s: s }; }
+        if (p.flights > 0 && flyOK(pi, e)) { const s = reach(pi, e, true) - 0.15; if (!best || s > best.s) best = { e: e, fly: true, s: s }; }
+      });
+      return best && best.s > 0 ? best : null;
+    }
+    // Smuggler's Den: take what the next build needs, then whatever it holds least of
+    function aiGold(pi) {
+      const q = G.goldQ[0], p = P(pi), n = need(pi), picks = [];
+      for (let k = 0; k < q.n; k++) {
+        const r = RES.filter(function (x) { return stock(x) > picks.filter(function (y) { return y === x; }).length; })
+          .sort(function (a, b) { return ((n[b] || 0) - picks.filter(function (y) { return y === b; }).length) - ((n[a] || 0) - picks.filter(function (y) { return y === a; }).length) || (p.hand[a] - p.hand[b]); })[0];
+        if (r) picks.push(r);
+      }
+      takeGold(pi, picks);
+    }
+    function takeGold(pi, picks) {
+      picks.forEach(function (r) { P(pi).hand[r]++; });
+      if (picks.length) { say(name(pi) + ' ' + verb(pi, 'pick') + ' ' + picks.map(function (r) { return RN[r]; }).join(', ') + ' from the Smuggler\'s Den.'); env.collect(pi, picks.slice()); }
+      G.goldQ.shift();
+      if (!G.goldQ.length) { G.phase = 'main'; }
     }
     function bestRoute(pi) {
       let best = -1, bs = -Infinity;
@@ -385,7 +610,8 @@
         if (G.setup.step === 'safe') {
           const v = G.verts.map(function (V, i) { return i; }).filter(function (i) { return safeOK(pi, i, true); }).sort(function (a, b) { return vScore(b, pi) - vScore(a, pi); })[0];
           placeSafe(pi, v, true);
-        } else placeRoute(pi, bestRoute(pi), true);
+        } else if (fp()) { const b = bestExpand(pi) || { e: G.edges.findIndex(function (E, e) { return routeOK(pi, e) || flyOK(pi, e); }), fly: false }; placeRoute(pi, b.e, true, b.fly || !routeOK(pi, b.e)); }
+        else placeRoute(pi, bestRoute(pi), true);
         return;
       }
       if (G.phase === 'roll') {
@@ -394,15 +620,18 @@
         rollDice(); return;
       }
       if (G.phase === 'raid') { const h = bestRaid(pi); if (h === undefined) { G.phase = G.afterRaid; return; } moveRaid(pi, h); return; }
-      if (G.phase === 'steal') { const v = victims(pi, G.raid).sort(function (a, b) { return respect(b, false) - respect(a, false); }); steal(pi, v[0]); return; }
-      if (G.phase === 'roads') { const e = p.routes ? bestRoute(pi) : -1; if (e < 0) { G.phase = 'main'; return; } placeRoute(pi, e, true); return; }
+      if (G.phase === 'steal') { const v = victims(pi, robHex()).sort(function (a, b) { return respect(b, false) - respect(a, false); }); steal(pi, v[0]); return; }
+      if (G.phase === 'roads') {
+        if (fp()) { const b = bestExpand(pi); if (!b) { G.phase = 'main'; return; } placeRoute(pi, b.e, true, b.fly); return; }
+        const e = p.routes ? bestRoute(pi) : -1; if (e < 0) { G.phase = 'main'; return; } placeRoute(pi, e, true); return;
+      }
       if (G.phase !== 'main') return;
       if (checkWin(pi)) return;
       if (G.aiActs = (G.aiActs || 0) + 1, G.aiActs > 14) { endTurn(); return; }
       const fi = p.favs.findIndex(function (f) { return canPlay(pi, f); });
       if (fi >= 0) {   // play a favour card when it helps
         const t = p.favs[fi].t, n = need(pi), short = RES.filter(function (r) { return n[r]; });
-        if (t === 'roads' && p.routes && anyRoute(pi)) { useFav(pi, fi); G.free = 2; G.phase = 'roads'; return; }
+        if (t === 'roads' && anyFree(pi)) { useFav(pi, fi); G.free = 2; G.phase = 'roads'; return; }
         if (t === 'supply' && short.length && short.reduce(function (s, r) { return s + n[r]; }, 0) <= 2) { useFav(pi, fi); const got = []; short.concat(short, RES).forEach(function (r) { if (got.length < 2 && stock(r) > got.filter(function (x) { return x === r; }).length) got.push(r); }); got.forEach(function (r) { p.hand[r]++; }); say(p.name + ' brings in ' + got.map(function (r) { return RN[r]; }).join(' and ') + '.'); return; }
         if (t === 'deal' && short.length) {
           const r = short.slice().sort(function (a, b) { return others(pi, b) - others(pi, a); })[0];
@@ -419,7 +648,10 @@
         const v = G.verts.map(function (V, i) { return i; }).filter(function (i) { return safeOK(pi, i); }).sort(function (a, b) { return vScore(b, pi) - vScore(a, pi); })[0];
         if (v !== undefined) { placeSafe(pi, v, false); return; }
       }
-      if (p.routes && canAfford(p, COST.route) && (plan(pi) === 'route' || (cards(p) > 7 && plan(pi) !== 'hq' && !anySafe(pi)))) { const e = bestRoute(pi); if (e >= 0) { placeRoute(pi, e, false); return; } }
+      if (fp()) {
+        const b = (plan(pi) === 'route' || (cards(p) > 7 && plan(pi) !== 'hq' && !anySafe(pi))) ? bestExpand(pi) : null;
+        if (b && canAfford(p, b.fly ? COST.fly : COST.route)) { placeRoute(pi, b.e, false, b.fly); return; }
+      } else if (p.routes && canAfford(p, COST.route) && (plan(pi) === 'route' || (cards(p) > 7 && plan(pi) !== 'hq' && !anySafe(pi)))) { const e = bestRoute(pi); if (e >= 0) { placeRoute(pi, e, false); return; } }
       const n = need(pi), short = RES.filter(function (r) { return n[r]; });
       if (short.length && short.reduce(function (s, r) { return s + n[r]; }, 0) <= 3) {
         const plain = planCost(pi);   // trade with the bank or a harbour for a missing card
@@ -442,21 +674,24 @@
       if (checkWin(pi)) return;
       endTurn();
     }
-    /* ---------- New game. o: { size, diff, speed, online, players: [{ name, col, ai, id }] } ---------- */
+    /* ---------- New game. o: { mode: 'classic' | 'fp', win (Flight Paths: 12 or 16), diff, speed, online, players: [{ name, col, ai, id }] }
+       Classic is always the large map (the small map was retired in 2.41). ---------- */
     function newGame(o) {
-      const size = o.size === 'standard' ? 'standard' : 'large', B = makeBoard(size);
-      const players = o.players.map(function (s) { return { name: s.name, col: s.col, ai: !!s.ai, id: s.id || 0, hand: { brick: 0, wood: 0, wheat: 0, ore: 0, cotton: 0 }, favs: [], crew: 0, routes: 15, safes: 5, hqs: 4 }; });
-      const big = size === 'large';
-      const deck = shuffle(Array(big ? 20 : 14).fill('crew').concat(Array(5).fill('respect'), Array(big ? 3 : 2).fill('supply'), Array(big ? 3 : 2).fill('deal'), Array(big ? 3 : 2).fill('roads')));
+      const mode = o.mode === 'fp' ? 'fp' : 'classic', size = mode === 'fp' ? 'fp' : 'large', B = mode === 'fp' ? makeBoardFP() : makeBoard('large');
+      const win = mode === 'fp' ? (Number(o.win) === 16 ? 16 : 12) : 14;
+      const players = o.players.map(function (s) { return { name: s.name, col: s.col, ai: !!s.ai, id: s.id || 0, hand: { brick: 0, wood: 0, wheat: 0, ore: 0, cotton: 0 }, favs: [], crew: 0,
+        routes: mode === 'fp' ? 15 : 20, flights: mode === 'fp' ? 15 : 0, safes: mode === 'fp' ? 5 : 6, hqs: mode === 'fp' ? 4 : 5 }; });
+      const deck = shuffle(Array(20).fill('crew').concat(Array(mode === 'fp' ? 5 : 7).fill('respect'), Array(3).fill('supply'), Array(3).fill('deal'), Array(3).fill('roads')));
       const n = players.length, order = [];
       for (let i = 0; i < n; i++) order.push(i);
       for (let i = n - 1; i >= 0; i--) order.push(i);
       const xs = B.hexes.map(function (h) { return h.cx; }).concat(B.ports.map(function (p) { return p.x; })), ys = B.hexes.map(function (h) { return h.cy; }).concat(B.ports.map(function (p) { return p.y; }));
       const x0 = Math.min.apply(null, xs) - R - 14, x1 = Math.max.apply(null, xs) + R + 14, y0 = Math.min.apply(null, ys) - R - 34, y1 = Math.max.apply(null, ys) + R + 12;
-      G = { v: 1, size: size, vb: [x0, y0, x1 - x0, y1 - y0].map(Math.round).join(' '), hexes: B.hexes, verts: B.verts, edges: B.edges, ports: B.ports, players: players, deck: deck, diff: o.diff || 'normal', speed: o.speed || 750, online: !!o.online,
+      G = { v: 1, mode: mode, size: size, islands: B.islands || null, marshal: B.marshal !== undefined ? B.marshal : -1, bonus: [], goldQ: [], vb: [x0, y0, x1 - x0, y1 - y0].map(Math.round).join(' '), hexes: B.hexes, verts: B.verts, edges: B.edges, ports: B.ports, players: players, deck: deck, diff: o.diff || 'normal', speed: o.speed || 750, online: !!o.online,
         raid: B.hexes.findIndex(function (h) { return h.res === 'none'; }), cur: order[0], phase: 'setup', setup: { order: order, i: 0, step: 'safe', last: -1 },
-        dice: null, turn: 0, playedFav: false, free: 0, discardQ: [], afterRaid: 'main', longest: -1, bigCrew: -1, winner: -1, log: [], offer: null, ask: null, auto: null, counted: false };
-      say('A new game begins. Each faction opens two safehouses, each with a road. The second safehouse pays its starting cards.');
+        win: win, dice: null, turn: 0, playedFav: false, free: 0, discardQ: [], afterRaid: 'main', longest: -1, bigCrew: -1, winner: -1, log: [], offer: null, ask: null, auto: null, counted: false };
+      say(mode === 'fp' ? 'A new Flight Paths game begins. Each faction opens two safehouses in Torn City, each with a road or a flight route. Fly out to ' + B.islands.slice(1).join(', ') + ' for +2 Respect each. First to ' + win + ' Respect wins.'
+        : 'A new game begins. Each faction opens two safehouses, each with a road. The second safehouse pays its starting cards. First to ' + win + ' Respect wins.');
       return G;
     }
     // Who the game is waiting for, and whether that seat is played by the computer right now
@@ -464,6 +699,7 @@
     function waiting() {
       if (!G || G.phase === 'over') return -1;
       if (G.phase === 'discard') return G.discardQ[0];
+      if (G.phase === 'gold') return G.goldQ[0].p;
       if (G.phase === 'offer') return G.offer.to;
       return G.cur;
     }
@@ -474,12 +710,14 @@
     function aiMove() {
       const w = waiting(); if (w < 0) return;
       if (G.phase === 'discard') { aiDiscard(w); return; }
+      if (G.phase === 'gold') { aiGold(w); return; }
       if (G.phase === 'offer') { answerOffer(w, false); return; }
       aiStep();
     }
     // Hand a person's turn (or the decision they're stuck on) to the computer.
     function takeOver(i) {
       if (G.phase === 'discard' && G.discardQ[0] === i) { say(P(i).name + ' was too slow. Cards were handed over for them.'); aiDiscard(i); return; }
+      if (G.phase === 'gold' && G.goldQ[0].p === i) { say(P(i).name + ' was too slow. The computer picked their Smuggler\'s Den cards.'); aiGold(i); return; }
       if (G.phase === 'offer' && G.offer.to === i) { say(P(i).name + ' didn\'t answer in time.'); answerOffer(i, false); return; }
       if (G.cur === i && !isAI(i)) { G.auto = { p: i, k: moveKey() }; say(P(i).name + ' ran out of time. The computer plays this turn for them.'); }
     }
@@ -526,6 +764,29 @@
         else return no();
         checkWin(pi);
       }
+      else if (t === 'fly') {   // Flight Paths: open a flight route
+        if (!cur || !num(a.e, G.edges.length)) return no();
+        if (G.phase === 'setup' && G.setup.step === 'route' && flyOK(pi, a.e)) placeRoute(pi, a.e, true, true);
+        else if (G.phase === 'roads' && flyOK(pi, a.e) && p.flights) placeRoute(pi, a.e, true, true);
+        else if (main && flyOK(pi, a.e) && canAfford(p, COST.fly) && p.flights) placeRoute(pi, a.e, false, true);
+        else return no();
+        checkWin(pi);
+      }
+      else if (t === 'move') {   // Flight Paths: move the flight route at the open end of a chain (once a turn)
+        if (!main || !fp() || G.movedT === G.turn || !num(a.e, G.edges.length) || !num(a.to, G.edges.length) || a.e === a.to || !openFly(pi, a.e)) return no();
+        const E = G.edges[a.e]; E.owner = -1; delete E.k; const tt = E.t; delete E.t;
+        if (!flyOK(pi, a.to)) { E.owner = pi; E.k = 'fly'; E.t = tt; return no(); }
+        const T = G.edges[a.to]; T.owner = pi; T.k = 'fly'; T.t = G.turn; G.movedT = G.turn;
+        env.snd('fly'); say(name(pi) + ' ' + verb(pi, 'move') + ' a flight route.');
+        awards(); checkWin(pi);
+      }
+      else if (t === 'gold') {   // Flight Paths: pick your Smuggler's Den cards
+        const q = G.goldQ && G.goldQ[0];
+        if (G.phase !== 'gold' || !q || q.p !== pi || !Array.isArray(a.picks)) return no();
+        const want = Math.min(q.n, RES.reduce(function (s2, r) { return s2 + stock(r); }, 0));
+        if (a.picks.length !== want || a.picks.some(function (r) { return RES.indexOf(r) < 0 || stock(r) < a.picks.filter(function (x) { return x === r; }).length; })) return no();
+        takeGold(pi, a.picks);
+      }
       else if (t === 'hq') { if (!main || !num(a.v, G.verts.length) || G.verts[a.v].owner !== pi || G.verts[a.v].lvl !== 1 || !canAfford(p, COST.hq) || !p.hqs) return no(); upgrade(pi, a.v); checkWin(pi); }
       else if (t === 'fav') { if (!main || !G.deck.length || !canAfford(p, COST.fav)) return no(); buyFav(pi); checkWin(pi); }
       else if (t === 'bank') {
@@ -538,8 +799,12 @@
         say(name(pi) + ' ' + verb(pi, 'trade') + ' ' + k + ' ' + RN[g] + ' for 1 ' + RN[w] + (k < 4 ? ' at a harbour.' : ' with the bank.'));
       }
       else if (t === 'end') { if (!main) return no(); if (!checkWin(pi)) endTurn(); }
-      else if (t === 'raid') { if (!cur || G.phase !== 'raid' || !num(a.h, G.hexes.length) || a.h === G.raid) return no(); moveRaid(pi, a.h); }
-      else if (t === 'rob') { if (!cur || G.phase !== 'steal' || victims(pi, G.raid).indexOf(a.v) < 0) return no(); steal(pi, a.v); }
+      else if (t === 'raid') {
+        if (!cur || G.phase !== 'raid' || !num(a.h, G.hexes.length)) return no();
+        if (G.hexes[a.h].res === 'sky' ? (!fp() || a.h === G.marshal) : a.h === G.raid) return no();
+        moveRaid(pi, a.h);
+      }
+      else if (t === 'rob') { if (!cur || G.phase !== 'steal' || victims(pi, robHex()).indexOf(a.v) < 0) return no(); steal(pi, a.v); }
       else if (t === 'discard') {
         if (G.phase !== 'discard' || G.discardQ[0] !== pi || !okHand(a.take)) return no();
         if (sum(a.take) !== Math.floor(cards(p) / 2) || RES.some(function (r) { return (a.take[r] || 0) > p.hand[r]; })) return no();
@@ -549,7 +814,7 @@
         const f = p.favs[a.idx];
         if (!num(a.idx, p.favs.length) || !canPlay(pi, f)) return no();
         if (f.t === 'crew') { useFav(pi, a.idx); p.crew++; awards(); G.afterRaid = G.phase; G.phase = 'raid'; checkWin(pi); }
-        else if (f.t === 'roads') { useFav(pi, a.idx); G.free = 2; G.phase = anyRoute(pi) && p.routes ? 'roads' : 'main'; }
+        else if (f.t === 'roads') { useFav(pi, a.idx); G.free = 2; G.phase = anyFree(pi) ? 'roads' : 'main'; }
         else if (f.t === 'supply') {
           const pk = a.picks;
           if (!Array.isArray(pk) || pk.length !== 2 || pk.some(function (r) { return RES.indexOf(r) < 0 || stock(r) < pk.filter(function (x) { return x === r; }).length; })) return no();
@@ -594,7 +859,7 @@
     // A copy of the game for one player's screen: other factions' cards and favours are hidden, and so is the deck.
     function viewFor(Gx, seat) {
       const g = JSON.parse(JSON.stringify(Gx)), over = g.phase === 'over';
-      g.bank = {}; RES.forEach(function (r) { g.bank[r] = (g.size === 'large' ? 24 : 19) - Gx.players.reduce(function (s, q) { return s + q.hand[r]; }, 0); });
+      g.bank = {}; RES.forEach(function (r) { g.bank[r] = (g.size === 'standard' ? 19 : 24) - Gx.players.reduce(function (s, q) { return s + q.hand[r]; }, 0); });
       g.players.forEach(function (p, i) {
         if (i === seat || over) return;
         p.n = RES.reduce(function (s, r) { return s + p.hand[r]; }, 0);
@@ -608,10 +873,10 @@
     }
     return {
       get: function () { return G; }, set: function (g) { G = g; },
-      RES: RES, RN: RN, DIST: DIST, COST: COST, FAV: FAV, MAPS: MAPS, R: R, CX: CX, CY: CY,
+      RES: RES, RN: RN, DIST: DIST, COST: COST, FAV: FAV, MAPS: MAPS, R: R, CX: CX, CY: CY, ISLANDS: ISLANDS,
       newGame: newGame, act: act, aiMove: aiMove, aiStep: aiStep, aiDiscard: aiDiscard, takeOver: takeOver, waiting: waiting, isAI: isAI, viewFor: viewFor, answers: answers,
-      P: P, cards: cards, stock: stock, canAfford: canAfford, spaced: spaced, safeOK: safeOK, routeOK: routeOK, anyRoute: anyRoute, anySafe: anySafe, rate: rate, routeLen: routeLen,
-      respect: respect, humans: humans, you: you, name: name, verb: verb, say: say, checkWin: checkWin, canPlay: canPlay, victims: victims, pips: pips, list: list, sum: sum,
+      P: P, cards: cards, stock: stock, canAfford: canAfford, spaced: spaced, safeOK: safeOK, routeOK: routeOK, flyOK: flyOK, openFly: openFly, anyRoute: anyRoute, anyFly: anyFly, anyFree: anyFree, anySafe: anySafe, robHex: robHex, fp: fp, rate: rate, routeLen: routeLen,
+      respect: respect, WIN: WIN, humans: humans, you: you, name: name, verb: verb, say: say, checkWin: checkWin, canPlay: canPlay, victims: victims, pips: pips, list: list, sum: sum,
       wantsDeal: wantsDeal, counter: counter, est: est, produce: produce
     };
   }

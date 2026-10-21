@@ -10,12 +10,12 @@ const trades = require('./trades');
 const saves = require('./saves');
 
 const PORT = Number(process.env.PORT) || 8080;
-const VERSION = '1.4.0';
+const VERSION = '1.5.0';
 // The 2.40 fresh start: scores and cloud saves for every game except Tornies must come from Torn Arcade 2.40.0 or later
 // (older copies still hold the scores from before the reset).
 const MIN_SCRIPT = [2, 40, 0];
 function newEnough(req) { const v = String(req.headers['x-arcade-version'] || '').split('.').map(Number); for (let i = 0; i < 3; i++) { if ((v[i] || 0) !== MIN_SCRIPT[i]) return (v[i] || 0) > MIN_SCRIPT[i]; } return true; }
-const GAMES = ['territories'];   // rated games, played on the server
+const GAMES = ['territories', 'territories:fp12', 'territories:fp16'];   // rated games, played on the server (Classic, Flight Paths to 12, to 16)
 // Best-score leaderboards. These scores come from players' own devices, so each has limits that throw out
 // impossible values. dir: 'desc' = higher is better, 'asc' = lower is better (times).
 const BOARDS = {};
@@ -110,7 +110,7 @@ async function route(req, res, url) {
   }
   // Best-score leaderboards (verified players only).
   let m;
-  if ((m = /^\/v1\/leaderboard\/([a-z]+:[a-z0-9]+)$/.exec(path)) && method === 'GET') {
+  if ((m = /^\/v1\/leaderboard\/([a-z]+:[a-z0-9]+)$/.exec(path)) && method === 'GET' && GAMES.indexOf(m[1]) < 0) {
     const B = BOARDS[m[1]];
     if (!B) return fail(res, 404, 'no_game', 'Unknown leaderboard.');
     const limit = Math.max(1, Math.min(100, Number(url.searchParams.get('limit')) || 50)), ord = B.dir === 'asc' ? 'ASC' : 'DESC';
@@ -149,7 +149,7 @@ async function route(req, res, url) {
     return send(res, 200, { saved: saved, rejected: rejected });
   }
   // The rated leaderboard (verified players only).
-  if ((m = /^\/v1\/leaderboard\/([a-z]+)$/.exec(path)) && method === 'GET') {
+  if ((m = /^\/v1\/leaderboard\/([a-z]+(?::fp1[26])?)$/.exec(path)) && method === 'GET') {
     if (GAMES.indexOf(m[1]) < 0) return fail(res, 404, 'no_game', 'Unknown game.');
     const limit = Math.max(1, Math.min(100, Number(url.searchParams.get('limit')) || 50));
     const rows = (await db.q(

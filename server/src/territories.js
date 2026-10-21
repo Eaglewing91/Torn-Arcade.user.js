@@ -77,7 +77,7 @@ function view(g, seat, hasBoard) {
   const v = g.E.viewFor(g.G, seat);
   v.log = v.log.slice(0, 40);
   if (hasBoard) {
-    v.vo = v.verts.map(function (x) { return [x.owner, x.lvl]; }); v.eo = v.edges.map(function (x) { return x.owner; });
+    v.vo = v.verts.map(function (x) { return [x.owner, x.lvl]; }); v.eo = v.edges.map(function (x) { return x.k === 'fly' ? [x.owner, x.t] : x.owner; });   // flight routes (Flight Paths) as [owner, turn built]
     delete v.verts; delete v.edges; delete v.hexes; delete v.ports;
   }
   return v;
@@ -115,17 +115,22 @@ let timer = null;
 function start() { if (!timer) timer = setInterval(tick, Math.max(10, Math.min(250, AI_MS))); if (timer.unref) timer.unref(); }
 
 /* ---------- Ratings (games with 2 or more people) ---------- */
+// Game types: 'large' (Classic, first to 14; 'standard' is the retired small map) and Flight Paths to 12 or 16.
+const GAME_TYPES = ['large', 'fp12', 'fp16'];
+function atLeast(req, min) { const v = String(req.headers['x-arcade-version'] || '').split('.').map(Number); for (let i = 0; i < 3; i++) { if ((v[i] || 0) !== min[i]) return (v[i] || 0) > min[i]; } return true; }
+function ratingKey(size) { return size === 'fp12' || size === 'fp16' ? 'territories:' + size : 'territories'; }
 async function finish(g) {
   if (g.row.status !== 'active') return;
   g.row.status = 'over'; g.seen = Date.now(); bump(g);
   const G = g.G, people = g.row.seats.map(function (s, i) { return { s: s, i: i }; }).filter(function (x) { return x.s.acc && (x.s.st === 'host' || x.s.st === 'joined' || x.s.st === 'left'); });
   if (people.length < 2) return;
+  const rk = ratingKey(g.row.size);   // Classic, Flight Paths to 12 and to 16 each have their own rating
   const E = g.E, score = people.map(function (x) { return x.i === G.winner ? 99 : E.respect(x.i, true); });
   try {
     const cur = {};
     for (const x of people) {
-      await db.q("INSERT INTO ratings (account_id, game) VALUES ($1, 'territories') ON CONFLICT DO NOTHING", [x.s.acc]);
-      cur[x.s.acc] = (await db.q("SELECT rating FROM ratings WHERE account_id = $1 AND game = 'territories'", [x.s.acc])).rows[0].rating;
+      await db.q("INSERT INTO ratings (account_id, game) VALUES ($1, $2) ON CONFLICT DO NOTHING", [x.s.acc, rk]);
+      cur[x.s.acc] = (await db.q("SELECT rating FROM ratings WHERE account_id = $1 AND game = $2", [x.s.acc, rk])).rows[0].rating;
     }
     const K = 32 / (people.length - 1);
     for (let a = 0; a < people.length; a++) {
@@ -136,8 +141,8 @@ async function finish(g) {
         const S = score[a] > score[b] ? 1 : score[a] === score[b] ? 0.5 : 0;
         d += K * (S - exp);
       }
-      await db.q("UPDATE ratings SET rating = rating + $2, games = games + 1, wins = wins + $3, updated_at = now() WHERE account_id = $1 AND game = 'territories'",
-        [people[a].s.acc, Math.round(d), people[a].i === G.winner ? 1 : 0]);
+      await db.q("UPDATE ratings SET rating = rating + $2, games = games + 1, wins = wins + $3, updated_at = now() WHERE account_id = $1 AND game = $4",
+        [people[a].s.acc, Math.round(d), people[a].i === G.winner ? 1 : 0, rk]);
     }
     G.rated = true; g.dirty = true;
   } catch (e) { console.error('tt rating', e.message); }
@@ -179,7 +184,7 @@ async function route(req, res, url, c) {
     const col = Number.isInteger(b.col) && b.col >= 0 && b.col < COLS.length ? b.col : 0;
     const left = COLS.map(function (x, i) { return i; }).filter(function (i) { return i !== col; });
     const seats = [{ acc: me.id, tornId: me.torn_id, name: me.name, col: COLS[col], st: 'host' }].concat(ids.map(function (id, k) { return { acc: null, tornId: id, name: '[' + id + ']', col: COLS[left[k]], st: 'pending' }; }));
-    const row = (await db.q("INSERT INTO tt_games (status, host, size, seats) VALUES ('lobby', $1, $2, $3) RETURNING *", [me.id, b.size === 'standard' ? 'standard' : 'large', JSON.stringify(seats)])).rows[0];
+    const row = (await db.q("INSERT INTO tt_games (status, host, size, seats) VALUES ('lobby', $1, $2, $3) RETURNING *", [me.id, GAME_TYPES.indexOf(b.size) >= 0 ? b.size : 'large', JSON.stringify(seats)])).rows[0];
     const g = load(row);
     return c.send(res, 200, { game: summary(g, me) });
   }
@@ -205,6 +210,7 @@ async function route(req, res, url, c) {
   if (method !== 'POST') return c.fail(res, 404, 'not_found', 'Not found.');
   if (what === 'join' || what === 'decline') {
     if (r.status !== 'lobby' || inv < 0) return c.fail(res, 400, 'not_now', 'That invite isn\'t open any more.');
+    if (what === 'join' && /^fp/.test(r.size) && !atLeast(req, [2, 41, 0])) return c.fail(res, 426, 'update', 'This is a Flight Paths game. Update Torn Arcade to 2.41 or newer to join it.');
     const s = r.seats[inv];
     if (what === 'join') { s.acc = me.id; s.name = me.name; s.st = 'joined'; } else s.st = 'declined';
     bump(g); await save(g);
@@ -214,7 +220,7 @@ async function route(req, res, url, c) {
     if (r.status !== 'lobby' || seat !== 0) return c.fail(res, 400, 'not_now', 'Only the host can start, before the game begins.');
     let k = 0;
     r.seats.forEach(function (s) { if (s.st === 'pending' || s.st === 'declined') { s.st = 'ai'; s.acc = null; s.name = AI_NAMES[k++]; } });
-    g.G = g.E.newGame({ size: r.size, diff: 'normal', speed: AI_MS, online: true, players: r.seats.map(function (s) { return { name: s.name, col: s.col, ai: s.st === 'ai', id: s.tornId || 0 }; }) });
+    g.G = g.E.newGame({ mode: /^fp/.test(r.size) ? 'fp' : 'classic', win: r.size === 'fp16' ? 16 : 12, diff: 'normal', speed: AI_MS, online: true, players: r.seats.map(function (s) { return { name: s.name, col: s.col, ai: s.st === 'ai', id: s.tornId || 0 }; }) });
     r.status = 'active'; g.waitKey = ''; bump(g); await save(g);
     return c.send(res, 200, { game: summary(g, me) });
   }
