@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.41.0
-// @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with eight game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
+// @version      2.42.0
+// @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with nine game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
 // @license      All Rights Reserved - for use on Torn (torn.com) only; no copying, modifying, redistribution or use elsewhere (see LICENCE below)
@@ -84,7 +84,7 @@
  * HOW IT WORKS
  * - Adds a "Mobile Phone" link under Calendar in Torn's sidebar (Areas). It is
  *   a copy of Torn's own Calendar row, so it matches the other links. Clicking
- *   it opens a mobile phone on top of the page with eight game apps, plus Scores
+ *   it opens a mobile phone on top of the page with nine game apps, plus Scores
  *   and Settings. Everything runs inside that phone. On pages without the
  *   sidebar, a small floating "Phone" button is shown instead.
  * - On pages where you don't open the phone, only the small part that adds
@@ -129,8 +129,8 @@
  *   device's own clock.
  * - ONLINE PLAY (optional, off until you turn it on in Settings > Online).
  *   EVERY GAME WORKS FULLY WITHOUT IT, and without any API key. Online play
- *   only adds global leaderboards, online Torn Territories games and safe
- *   online Tornie trades. While it's on, the phone talks to the Torn Arcade
+ *   only adds global leaderboards, online Torn Territories and Chess games
+ *   (invites, public games and Quick match) and safe online Tornie trades. While it's on, the phone talks to the Torn Arcade
  *   server (arcade-server-production-8ebd.up.railway.app, run by Eaglewing
  *   [571041] on Railway, declared above with @connect) with plain HTTPS
  *   requests through GM_xmlhttpRequest (no websockets), and to nothing else:
@@ -147,7 +147,8 @@
  *     games waiting on you and trades waiting on you (shown as
  *     notifications). While an online game is on screen: long polling for
  *     news (at most one request every 20 seconds when nothing happens);
- *     while your lobby waits to start, the game list every 5 seconds.
+ *     while an online lobby screen is open (Territories or Chess), the
+ *     game lists every 5 seconds.
  *   - CLOUD SAVES (a separate switch, off until you turn it on; verified
  *     players only): your game progress (Tornies, Faction Defence, Egg Dash,
  *     Angry Bogies, best scores and a Territories game in progress) is sent
@@ -203,7 +204,8 @@
  *                          in your online games and trades see your name,
  *                          Torn ID, moves and the Tornie you offer
  * - Purpose of Use:        Public community tools (global leaderboards,
- *                          online Torn Territories games and Tornie trades)
+ *                          online Torn Territories and Chess games and
+ *                          Tornie trades)
  * - Key Storage & Sharing: Not stored / Not shared (sent once to the Torn
  *                          Arcade server to confirm your Torn ID with
  *                          api.torn.com, then forgotten)
@@ -221,7 +223,7 @@
 
   /* ================= Starter =================
    * On every Torn page only this small part runs: it adds the "Mobile Phone" link (or a small floating
-   * button where there is no sidebar). The phone and all eight games are set up the first time you open it,
+   * button where there is no sidebar). The phone and all nine games are set up the first time you open it,
    * so pages where you never open the phone pay almost nothing. */
   let arcade = null;
   function startArcade() { if (!arcade) arcade = TA_MAIN(); return arcade; }
@@ -601,10 +603,12 @@
     { id: 'bombs',  name: 'Dirty Bombs',    icon: '☢️', bg: ['#ffe066', '#c99a10'] , desc: 'Clear the city block by block without setting off a dirty bomb. Numbers show how many bombs are nearby.' },
     { id: 'flappy', name: 'Flappy Torn',    icon: '🐦', bg: ['#6cc8ff', '#1f72c8'] , desc: 'Fly through the gaps in the pipes over Torn City. Every pipe you pass is a point.' },
     { id: 'eggdash', name: 'Egg Dash', title: "Anton's Egg Dash", icon: '🐰', bg: ['#8a5ae8', '#2a1458'], desc: 'Run the rooftops of Torn City as Anton in his bunny onesie. Grab the Easter eggs, jump the gaps and stay ahead of the police. One endless run that keeps getting faster.' },
-    { id: 'territories', name: 'Territories', title: 'Torn Territories', icon: '🏘️', bg: ['#4a8ad8', '#1a3a6a'], desc: 'A district-building board game. Build roads, safehouses and HQs across Torn City, trade with rival factions and dodge the police raids. Classic (first to 14 Respect) or the Flight Paths expansion: fly to islands named after Torn\'s travel destinations (first to 12 or 16). Play against the computer, pass-and-play or online.' }
+    { id: 'territories', name: 'Territories', title: 'Torn Territories', icon: '🏘️', bg: ['#4a8ad8', '#1a3a6a'], desc: 'A district-building board game. Build roads, safehouses and HQs across Torn City, trade with rival factions and dodge the police raids. Classic (first to 14 Respect) or the Flight Paths expansion: fly to islands named after Torn\'s travel destinations (first to 12 or 16). Play against the computer, pass-and-play or online.' },
+    { id: 'chess', name: 'Chess', title: 'Chess', icon: '♞', bg: ['#e8c88a', '#7a5230'], desc: 'Classic chess against the computer (Easy, Normal, Hard), or online against other Torn players with Quick match, public games and invites. 30 seconds a move online.' },
   ];
   // Home-screen icons for the games: small WebP pictures stored as text in the script (nothing is downloaded).
   const APP_ART = {
+    chess: 'UklGRsIFAABXRUJQVlA4ILYFAADwGwCdASqAAIAAPmEskUYkIqGhJZdNIIAMCWUIcAGLSEH8z7JEavmN949bvSNt5bucgZrWr8t+UuVb/JZz77kuOax//pfCp1Mu8Gsbxu+hVoEej/Rm33M/wxTeGc5vm0W3GpLH4/nugSXPqoiLx2y4IE2RxXwfOEwec40x04184CHRX7vyMLTHtnjvNnQjEYQMmiS8kt07Si3+0NRwe8DCLPUM+NHg+s6qkj0Kt3F++jFZuFSbdEfsJ5+Tkl6sOT49wYAns4qlTydcbtxRoj+OzWyx1vqP7V3XfZZRNrMrMkQL811lj+AAAP6qs3o8Rzz4blwXKVdCfWuUorCSeb+9YUYFyCAUU0o69XRWG2uAEJVaoLu930PqIvSkhnMvwCLBEZlvmPSeMt+4IWTItEIZnO7PFmjyrUr55oftERirHqMvR/Mhtn3y6Ge5rKZ8u5x0verHsDc5fsTst/XVXP9leTRYP2f4U3jW1NDRxTae0U7iL/cIrzUSO73K/hYlHf+AkwZZSdPvSEzeSwK1RFrPKN63NsKFsFu+XEl+8pljb9QP1tcHoYHxVr30YN4/TOR5YLogqnjxC/EXSBIzB0YkArW6PFvkaZY/ZJ7LvXLdQZVyf5hTq+7p7hOyMKXzoZS5nNaETxQXsjuO2k8xBtyt/Wx+cUfwcCioChUnkJRGxGAqleGPltSXQr8Gju93PrTP5/qtfENSRssbUb617RPQoeOiPJEvsrxfbJ7f8GgH6bspijsonbRPVUKkV+bxPWeZd+l969Fk+rt0gH/vy6nogsLNiwVRhTX1r/YwpPBRCMM/vFVHR5lNKLyJrCBXW47MjwrXvhSDSbjL8CAr66F/O17BEFZwwuqh/o85t/WqC83hbNLVJRvUvJb34QQs071eTorVXInf/S2xH/f8r/7NuWS1126A2aFd971vvU6vOMr49OzjvpAMg34VS8uLih1mzd9XLZt5LBxGnstQF3EApF/9ZP1WhgAPw59L/RsjdhvuItLJPvGcl5blkJGi96SjCngSvT+l0c2HpeFQJ0tbDFmecglvABDNQ2g2QH+L5wMQMe/53nbfGarYzoO29LJmB3qDoiaVWC8tksmboFtBpTzT/gZq9QWHqlGnW/ngTjk0ia4lt1+Mjx60xj5ZbvSrp7Du+BFUF+YHPt6Rwu7q/dtJztdkop/Q4HYv2KuzAO+qruUJms0LngUnebue5FZF5NG2AtVYMd6QG3qJBkpIjEiQ9mj0jOxGPI3Jod9L/CMBVwJs5BDa02s2KR8iB/JNscrs6uWyrhl0Dfx60x6Om9KJOsfha4bsQxwkBG4ontDtyKE3z7vcQkzYu+v6fHuWAPN0C27GheN9u0ptXvmC9w2tfRJQ6yUdIN5tXx2r1wDrJyNmJ/MO6+iuhn52e64dk5mAk9XBc9nTO1pi5c/+Sbo614wH/2twslzNDVO8DTNyxxBcfDtmd1tC5BDaYRvnOCVQbLYZwE3T/fpxxBuqaFsUdIRIDpNkjQn/HG3aLDy06lkn/kOi2XCG+zoSkfWGtAUF1WY2B2WxfAKOf38FGxbbWHWs60baFiT88xnCuroF/GCZpQ/r5a9xNlb/LyM9NsZC9OnWGBbjIEv7N/wWpSTGeJ6WahNeZdcC7tfY3A/DLs5Q+v0Edvtpzpd4KHWCASMZamLp/ysOzS2WXVM0829qnf6iDZqsaieId6/aAMkbuB4T5hnR1wzAVxwznBBHjI45qTWmXcRVRHZy/dlpWnC+6OvRZ5+9ZCD1ExE1yv21vpGOmflfI4uO/TevF0936MG/azCaQ6Na8Jr9dMgiIKor1QY4ISKfFte9mGvKi5CCt/hK7TngjpiEkbczeA2nCaoCQmaIMIkXoHhlo0Aqb/5BPGWvJVdtb/FBZ6/D49YxAAJ+/NLBh0LvcDKMNjsL0fQCmdzD+FL6Svse/sAHdajQAAAA',
     pocket: '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',
     invasion: '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',
     bogies: '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',
@@ -625,7 +629,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gift codes', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.41.0';
+  const VERSION = '2.42.0';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -888,7 +892,7 @@
           '<span class="ta-sicons"><span class="ta-bars"><i style="height:4px"></i><i style="height:6px"></i><i style="height:8.5px"></i><i style="height:11px"></i></span><span>TornTel</span><span class="ta-batt"><i></i></span></span></div>' +
         '<div class="ta-home">' +
           '<div class="ta-widget"><button type="button" class="ta-lock" data-act="close" title="Lock phone (closes it; your games are saved)">🔒 Lock</button><b class="ta-wclock">00:00</b><span class="ta-wdate"></span><em>Torn City Time</em></div>' +
-          '<div class="ta-note" hidden><span class="ta-noteicon">👋</span><div class="ta-notetext"><b>Welcome to Torn Arcade v' + VERSION + '!</b><small>Eight games in your pocket. Start with Tornies, and grab the free Art Packs on the bottom row for illustrated artwork. Bugs or ideas? Message Eaglewing [571041].</small></div><button type="button" class="ta-notex" title="Dismiss">✕</button></div>' +
+          '<div class="ta-note" hidden><span class="ta-noteicon">👋</span><div class="ta-notetext"><b>Welcome to Torn Arcade v' + VERSION + '!</b><small>Nine games in your pocket. Start with Tornies, and grab the free Art Packs on the bottom row for illustrated artwork. Bugs or ideas? Message Eaglewing [571041].</small></div><button type="button" class="ta-notex" title="Dismiss">✕</button></div>' +
           '<div class="ta-grid">' + GAMES.map(appButton).join('') + '</div>' +
           '<div class="ta-grid ta-artrow">' + ART_APPS.map(appButton).join('') + '</div>' +
           '<div class="ta-dock">' + SYS_APPS.map(function (a) { return (a.id === 'settings' ? appButton(DEV_APP).replace('<button ', '<button hidden ') : '') + appButton(a); }).join('') + '</div>' +
@@ -1569,7 +1573,7 @@
         '<table class="ta-tos"><tbody>' +
           '<tr><td>Data storage</td><td>Persistent - until account deletion (on the Torn Arcade server: your Torn ID, name, best scores, online rating, online game records, Tornie trades and, if you turn them on, cloud saves of your game progress)</td></tr>' +
           '<tr><td>Data sharing</td><td>General public (your name, Torn ID, rating and best scores on the global leaderboards); players in your online games and trades see your name, Torn ID, moves and the Tornie you offer</td></tr>' +
-          '<tr><td>Purpose of use</td><td>Public community tools (global leaderboards, online Torn Territories games and Tornie trades)</td></tr>' +
+          '<tr><td>Purpose of use</td><td>Public community tools (global leaderboards, online Torn Territories and Chess games and Tornie trades)</td></tr>' +
           '<tr><td>Key storage &amp; sharing</td><td>Not stored / Not shared (sent once to the Torn Arcade server to confirm your Torn ID with api.torn.com, then forgotten)</td></tr>' +
           '<tr><td>Key access level</td><td>Public (user → basic). Your custom key (user → basic, events) or a Limited key also works; only your name and Torn ID are read.</td></tr>' +
         '</tbody></table>' +
@@ -1790,6 +1794,12 @@
     const r = await onlReq('GET', '/v1/inbox');
     if (r.status !== 200) return;
     const first = !inboxSeen; if (first) inboxSeen = {};
+    (r.body.invites || []).filter(function (x) { return x.game === 'chess'; }).forEach(function (x) { const k = 'ci' + x.id; if (!inboxSeen[k]) { inboxSeen[k] = 1; onNote('Chess', x.from + ' [' + x.fromId + '] invited you to a game of chess. Tap to answer.', function () { openApp('chess'); games.chess.openOnline(0); }); } });
+    (r.body.turns || []).filter(function (x) { return x.game === 'chess'; }).forEach(function (x) {
+      const watching = current === 'chess' && games.chess.viewing && games.chess.viewing() === x.id;
+      if (!watching && !inboxSeen['ct' + x.id]) { inboxSeen['ct' + x.id] = 1; setTimeout(function () { delete inboxSeen['ct' + x.id]; }, 60000); onNote('Chess', 'It\'s your move in online game ' + x.id + '. ' + Math.ceil((x.left || 0) / 1000) + ' seconds left.', function () { openApp('chess'); games.chess.openOnline(x.id); }); }
+    });
+    r.body.invites = (r.body.invites || []).filter(function (x) { return x.game !== 'chess'; }); r.body.turns = (r.body.turns || []).filter(function (x) { return x.game !== 'chess'; });
     (r.body.invites || []).forEach(function (x) { const k = 'i' + x.id; if (!inboxSeen[k]) { inboxSeen[k] = 1; onNote('Torn Territories', x.from + ' [' + x.fromId + '] invited you to an online game. Tap to answer.', function () { openApp('territories'); games.territories.openOnline(0); }); } });
     (r.body.turns || []).forEach(function (x) {
       const k = 't' + x.id + ':' + Math.floor(Date.now() / 25000);
@@ -1815,7 +1825,8 @@
      Territories is ranked by the online rating the server keeps. Every other board ranks best scores, which your phone
      sends once you're verified: right after you verify, when you open the Global tab, and when you set a new best. */
   const LB_GAMES = [
-    { id: 'territories', boards: [['territories', 'Classic rating'], ['territories:fp12', 'Flight Paths 12'], ['territories:fp16', 'Flight Paths 16']] },   // separate ratings, so wins to 12 and to 16 never mix
+    { id: 'territories', boards: [['territories', 'Classic rating'], ['territories:fp12', 'Flight Paths 12'], ['territories:fp16', 'Flight Paths 16']] },
+    { id: 'chess', boards: [['chess', 'Online rating']] },   // separate ratings, so wins to 12 and to 16 never mix
     { id: 'pocket', boards: [['tornies:caught', 'Tornies caught'], ['tornies:medals', 'Arena medals']] },
     { id: 'invasion', boards: [['invasion:standard', 'Best score']] },
     { id: 'bogies', boards: [['bogies:total', 'Total score']] },
@@ -1877,7 +1888,7 @@
     const g = LB_GAMES.find(function (x) { return x.id === lbGame; }) || LB_GAMES[0];
     let h = '<div class="ta-lbgames">' + LB_GAMES.map(function (x) { const a = appInfo(x.id); return a ? '<button type="button" class="ta-lbgame' + (x.id === g.id ? ' ta-on' : '') + '" data-lbg="' + x.id + '" title="' + esc(a.title || a.name) + '">' + iconSmall(a) + '<span>' + esc(a.name) + '</span></button>' : ''; }).join('') + '</div>';
     if (g.boards.length > 1) h += '<div class="ta-lbmodes">' + g.boards.map(function (b) { return '<button type="button" class="ta-lbmode' + (b[0] === lbBoard ? ' ta-on' : '') + '" data-lbb="' + b[0] + '">' + esc(b[1]) + '</button>'; }).join('') + '</div>';
-    const bname = (g.boards.find(function (b) { return b[0] === lbBoard; }) || g.boards[0])[1], c = lbCache[lbBoard], rated = lbBoard.indexOf('territories') === 0;
+    const bname = (g.boards.find(function (b) { return b[0] === lbBoard; }) || g.boards[0])[1], c = lbCache[lbBoard], rated = lbBoard.indexOf('territories') === 0 || lbBoard === 'chess';
     let body;
     if (!c || c.loading) body = '<div class="ta-row"><div class="ta-rtext"><small>Loading…</small></div></div>';
     else if (c.error) body = '<div class="ta-row"><div class="ta-rtext"><small>' + esc(c.error) + '</small></div><button type="button" class="ta-btn" data-lb="retry">Retry</button></div>';
@@ -1888,7 +1899,7 @@
         const mine = o.account && o.account.tornId === p.tornId;
         return '<div class="ta-lbt' + (mine ? ' ta-lbme' : '') + '"><span class="ta-lbrank">' + (p.rank <= 3 ? ['🥇', '🥈', '🥉'][p.rank - 1] : p.rank) + '</span><span class="ta-lbname"><b>' + esc(p.name) + '</b>' +
           (rated ? '<small>' + p.wins + ' wins · ' + p.games + ' games</small>' : '') + '</span><a class="ta-lbid" href="https://www.torn.com/profiles.php?XID=' + Number(p.tornId) + '" target="_blank" rel="noopener" title="Open ' + esc(p.name) + '\'s Torn profile">' + Number(p.tornId) + '</a><span class="ta-lbr">' + (rated ? p.rating : lbFmt(lbBoard, p.value).replace(/^Wave /, '')) + '</span></div>';
-      }).join('') : '<div class="ta-row"><div class="ta-rtext"><b>No one on this board yet</b><small>' + (rated ? 'Online Torn Territories games are coming in the next update. Ratings start at 1200.' : 'Be the first: verified players\' best scores appear here.') + '</small></div></div>';
+      }).join('') : '<div class="ta-row"><div class="ta-rtext"><b>No one on this board yet</b><small>' + (rated ? 'Win an online game to get on this board. Ratings start at 1200.' : 'Be the first: verified players\' best scores appear here.') + '</small></div></div>';
       const me = d.me, loc = localBests()[lbBoard];
       const line = !o.account ? 'Sign in under Settings → Online to see your rank.' : !o.account.verified ? 'Verify your Torn ID under Settings → Online to appear here.' :
         me && me.rank ? 'You: #' + me.rank + ' · ' + (rated ? 'rating ' + me.rating + ' · ' + me.wins + ' wins from ' + me.games + ' games' : lbFmt(lbBoard, me.value)) :
@@ -8654,7 +8665,7 @@
   const ARTP = {};                              // packs received: { ver, n }
   const ART_KEYS = {
     tornies: function (k) { return /^\d{1,3}$/.test(k) && +k >= 1 && +k <= DEX_SIZE; },
-    chars: function (k) { return /^[a-z0-9]{2,16}$/.test(k) && (k in PAL || /^outfit[0-3]$/.test(k) || /^fd(westgate|docks|midtown|casino|industrial|hideout)$/.test(k) || /^wp(neon|crimson|casino|jungle|riviera)$/.test(k) || /^ed(head|body|arm|leg|egg|gold|rotten|carrot|drone|ac|sack|bg(downtown|casino|docks|industrial))$/.test(k) || /^tt(brick|wood|wheat|ore|cotton|none|sky|gold|marshal)$/.test(k)); }
+    chars: function (k) { return /^[a-z0-9]{2,16}$/.test(k) && (k in PAL || /^outfit[0-3]$/.test(k) || /^fd(westgate|docks|midtown|casino|industrial|hideout)$/.test(k) || /^wp(neon|crimson|casino|jungle|riviera)$/.test(k) || /^ed(head|body|arm|leg|egg|gold|rotten|carrot|drone|ac|sack|bg(downtown|casino|docks|industrial))$/.test(k) || /^tt(brick|wood|wheat|ore|cotton|none|sky|gold|marshal|police)$/.test(k)); }
   };
   const ART_B64 = /^UklGR[A-Za-z0-9+/]+={0,2}$/;   // base64 of a RIFF/WebP file
   function artOn(pack) { return store.get('art_' + pack, true) !== false; }
@@ -20285,7 +20296,14 @@
           txt(h.cx, h.cy + 11, h.num, 15, hot ? '#d0283a' : '#1a1530', g);
           const pp = pips(h.num); for (let k = 0; k < pp; k++) el('circle', { cx: h.cx - (pp - 1) * 2.5 + k * 5, cy: h.cy + 16, r: 1.4, fill: hot ? '#d0283a' : '#1a1530' }, g);
         }
-        if (hi === G.raid) {   // the police raid: a patrol car
+        const pimg = hi === G.raid ? art('police') : null;
+        if (pimg) {   // the police raid: the illustrated riot police token (Character Art pack), like the Air Marshal
+          const pg = el('g', { transform: 'translate(' + (h.cx + 26) + ' ' + (h.cy - 4) + ')' }, g);
+          el('circle', { r: 21, fill: 'rgba(16,12,31,.78)', stroke: '#5aa8ff', 'stroke-width': 2 }, pg);
+          el('clipPath', { id: 'ta-tt-pc' }, pg).appendChild(document.createElementNS(NS, 'circle')).setAttribute('r', 20);
+          el('image', { href: pimg, x: -20, y: -20, width: 40, height: 40, 'clip-path': 'url(#ta-tt-pc)' }, pg);
+          el('circle', { r: 21, fill: 'none', stroke: '#5aa8ff', 'stroke-width': 2.5 }, pg);
+        } else if (hi === G.raid) {   // the police raid: a patrol car (drawn by the script)
           const pg = el('g', { transform: 'translate(' + (h.cx + 27) + ' ' + (h.cy - 2) + ')' }, g);
           el('rect', { x: -14, y: -7, width: 28, height: 13, rx: 4, fill: '#1c2a5a', stroke: '#fff', 'stroke-width': 1.5 }, pg);
           el('rect', { x: -7, y: -12, width: 6, height: 5, fill: '#ff3a4a' }, pg); el('rect', { x: 1, y: -12, width: 6, height: 5, fill: '#3a7aff' }, pg);
@@ -20469,7 +20487,7 @@
     function setMusic(onOff) { opts.music = onOff; store.set('territoriesOpts', opts); Q('music').value = onOff ? 'on' : 'off'; Q('mus').style.opacity = onOff ? '' : '.45'; if (onOff) musicStart(); else musicStop(); }
     Q('music').addEventListener('change', function () { setMusic(Q('music').value === 'on'); });
     on('mus', function () { setMusic(opts.music === false); });
-    ['gmode', 'diff', 'speed'].forEach(function (k) { Q(k).addEventListener('change', function () { const o = k === 'gmode' ? 'game' : k; opts[o] = k === 'speed' ? +Q(k).value : Q(k).value; store.set('territoriesOpts', opts); if (k === 'gmode') { seatsHTML(); onCard(); } }); });
+    ['gmode', 'diff', 'speed'].forEach(function (k) { Q(k).addEventListener('change', function () { const o = k === 'gmode' ? 'game' : k; opts[o] = k === 'speed' ? +Q(k).value : Q(k).value; store.set('territoriesOpts', opts); if (k === 'gmode') { seatsHTML(); onPub = null; onCard(); onLoadList(); } }); });
     function narrow() {
       box.classList.toggle('ta-tt-narrow', box.clientWidth > 0 && box.clientWidth < 560);
       box.classList.toggle('ta-tt-stack', box.clientWidth > 0 && (box.clientWidth < 820 || box.clientHeight < 420));   // the new game screen as one scrolling column
@@ -20503,7 +20521,7 @@
        shows the game and sends your moves. While an online game is on screen it asks the server for news by long
        polling (plain HTTPS requests; no websockets), and the title screen checks your game list every few seconds
        while one of your games is waiting to start. Nothing is sent with Online play off. */
-    let ON = null, onList = null, onMsg = '', onGen = 0, onListT = 0, onClockT = 0;
+    let ON = null, onList = null, onPub = null, onMsg = '', onGen = 0, onListT = 0, onClockT = 0;
     function onReady() { const o = onl(); return !!(o.on && o.token && o.account && o.account.verified); }
     function onWait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
     function onCard() {
@@ -20512,11 +20530,15 @@
         c.innerHTML = '<h4>PLAY ONLINE</h4><div class="ta-tt-empty">Play against other Torn players, live. Optional: turn on Online play and verify your Torn ID in Settings → Online. Everything else here works without it.</div><button class="ta-tt-sm" data-o="settings">Open Settings</button>';
         return;
       }
-      const games = onList || [];
+      const games = onList || [], pub = onPub || [];
       c.innerHTML = '<h4>PLAY ONLINE</h4>' + (onMsg ? '<div class="ta-tt-msg">' + esc(onMsg) + '</div>' : '') +
+        '<div class="ta-tt-btns"><button class="ta-tt-go" data-o="quick">⚡ Quick match</button><button class="ta-tt-sm" data-o="public">Make a public game</button></div>' +
+        '<div class="ta-tt-empty">Quick match puts you in the next public ' + GAME_NAME[opts.game] + ' game waiting for players, or opens one. A public game starts by itself when all 4 seats are taken, or when its host starts it (empty seats are played by the computer).</div>' +
         '<div class="ta-tt-empty">Invite 1 to 3 players by Torn ID to a game of <b>' + GAME_NAME[opts.game] + '</b> (pick the game on the left). They get a notification on their phone. Empty seats are played by the computer. 30 seconds a move: if a player doesn\'t act in time, the computer plays that turn for them.</div>' +
         '<div class="ta-tt-ids">' + [0, 1, 2].map(function (i) { return '<input data-oid="' + i + '" inputmode="numeric" maxlength="9" placeholder="Torn ID" aria-label="Player ' + (i + 2) + ' Torn ID">'; }).join('') + '</div>' +
         '<button class="ta-tt-go" data-o="create">Invite and make a lobby</button>' +
+        '<h4>PUBLIC GAMES · ' + esc(GAME_NAME[opts.game]) + '</h4>' + (pub.length ? pub.map(onRow).join('') : '<div class="ta-tt-empty">' + (onPub ? 'No public games waiting. Use Quick match or make one.' : 'Loading…') + '</div>') +
+        '<h4>YOUR GAMES</h4>' +
         (games.length ? games.map(onRow).join('') : '<div class="ta-tt-empty">' + (onList ? 'No online games yet.' : 'Loading your online games…') + '</div>') +
         '<button class="ta-tt-sm" data-o="refresh">Refresh</button>';
     }
@@ -20525,8 +20547,9 @@
       const seats = g.seats.map(function (s) { return esc(s.name) + (s.st === 'pending' ? ' (invited)' : s.st === 'declined' ? ' (said no)' : s.st === 'ai' ? ' (computer)' : s.st === 'left' ? ' (left)' : ''); }).join(', ');
       let btn = '', st = '';
       if (g.status === 'lobby') {
-        st = 'Waiting to start · ' + lobbyGame(g.size);
-        if (g.invited) btn = '<button class="ta-tt-go" data-o="join" data-g="' + g.id + '">Join</button><button class="ta-tt-sm" data-o="decline" data-g="' + g.id + '">No thanks</button>';
+        st = (g.public ? 'Public · ' + g.open + ' open seat' + (g.open === 1 ? '' : 's') + ' · ' : 'Waiting to start · ') + lobbyGame(g.size);
+        if (g.you < 0 && !g.invited) btn = '<button class="ta-tt-go" data-o="join" data-g="' + g.id + '">Join</button>';
+        else if (g.invited) btn = '<button class="ta-tt-go" data-o="join" data-g="' + g.id + '">Join</button><button class="ta-tt-sm" data-o="decline" data-g="' + g.id + '">No thanks</button>';
         else if (g.you === 0) btn = '<button class="ta-tt-go" data-o="start" data-g="' + g.id + '">Start now</button><button class="ta-tt-sm" data-o="cancel" data-g="' + g.id + '">Cancel</button>';
         else btn = '<span class="ta-tt-empty">Waiting for ' + esc(g.host) + ' to start.</span><button class="ta-tt-sm" data-o="leave" data-g="' + g.id + '">Leave</button>';
       } else if (g.status === 'active') {
@@ -20538,22 +20561,24 @@
       }
       return '<div class="ta-tt-og' + (g.invited || (g.status === 'active' && g.waitingOn === g.you) ? ' ta-tt-inv' : '') + '"><b>Game ' + g.id + ' · ' + esc(g.host) + '\'s lobby</b><small>' + st + '</small><small>' + seats + '</small><div class="ta-tt-btns">' + btn + '</div></div>';
     }
+    function pubSize() { return opts.game === 'classic' ? 'large' : opts.game; }
     async function onLoadList() {
       clearInterval(onListT); onListT = 0;
       if (!onReady() || !UI.live) return;
-      const r = await onlReq('GET', '/v1/tt/games');
-      if (r.status === 200) { onList = r.body.games; if (r.body.games.some(function (g) { return g.status === 'lobby'; })) onListT = setInterval(onRefresh, 5000); }
-      else onMsg = r.body.message || 'Couldn\'t load your online games.';
+      const r = await onlReq('GET', '/v1/tt/games'), p = await onlReq('GET', '/v1/tt/public?size=' + pubSize());
+      if (r.status === 200) onList = r.body.games; else onMsg = r.body.message || 'Couldn\'t load your online games.';
+      if (p.status === 200) onPub = p.body.games;
+      onListT = setInterval(onRefresh, 5000);   // while this screen is open: your games and the public list
       if (!Q('title').hidden) onCard();
     }
     async function onRefresh() {
       if (!UI.live || Q('title').hidden || !onReady()) { clearInterval(onListT); onListT = 0; return; }
-      const r = await onlReq('GET', '/v1/tt/games');
+      const r = await onlReq('GET', '/v1/tt/games'), p = await onlReq('GET', '/v1/tt/public?size=' + pubSize());
+      if (p.status === 200) onPub = p.body.games;
       if (r.status !== 200) return;
       const was = onList || []; onList = r.body.games;
       const started = onList.find(function (g) { return g.status === 'active' && g.you >= 0 && was.some(function (w) { return w.id === g.id && w.status === 'lobby'; }); });
       if (started) { onOpen(started.id); return; }   // your lobby just started: straight into the game
-      if (!onList.some(function (g) { return g.status === 'lobby'; })) { clearInterval(onListT); onListT = 0; }
       if (document.activeElement && document.activeElement.closest && document.activeElement.closest('.ta-tt-online')) return;   // don't redraw while typing
       onCard();
     }
@@ -20567,14 +20592,21 @@
       if ((o === 'leave' || o === 'cancel') && !b.classList.contains('ta-sure')) { b.classList.add('ta-sure'); b.textContent = 'Tap again'; setTimeout(function () { if (b.isConnected) { b.classList.remove('ta-sure'); b.textContent = o === 'leave' ? 'Leave' : 'Cancel'; } }, 3000); return; }
       b.disabled = true;
       let r;
-      if (o === 'create') {
+      if (o === 'quick' || o === 'public') {
+        const ids = o === 'public' ? Array.prototype.map.call(Q('online').querySelectorAll('[data-oid]'), function (i) { return Number(String(i.value).replace(/[^\d]/g, '')); }).filter(function (x) { return x > 0; }) : [];
+        r = await onlReq('POST', o === 'quick' ? '/v1/tt/quick' : '/v1/tt/games', { size: pubSize(), col: opts.seats[0][1], public: true, invite: ids });
+        if (r.status === 200) {
+          if (r.body.game.status === 'active') { await onLoadList(); onOpen(r.body.game.id); return; }
+          onMsg = r.body.matched ? 'You\'re in ' + r.body.game.host + '\'s public game. It starts when all seats are taken or the host starts it.' : 'Public game made' + (ids.length ? ' and invites sent' : '') + '. It\'s in the public list; start whenever you like.';
+        }
+      } else if (o === 'create') {
         const ids = Array.prototype.map.call(Q('online').querySelectorAll('[data-oid]'), function (i) { return Number(String(i.value).replace(/[^\d]/g, '')); }).filter(function (x) { return x > 0; });
         if (!ids.length) { onMsg = 'Type at least one Torn ID (the number in [brackets] after a name).'; onCard(); return; }
-        r = await onlReq('POST', '/v1/tt/games', { invite: ids, size: opts.game === 'classic' ? 'large' : opts.game, col: opts.seats[0][1] });
+        r = await onlReq('POST', '/v1/tt/games', { invite: ids, size: pubSize(), col: opts.seats[0][1] });
         if (r.status === 200) onMsg = 'Lobby made. Your invites are on their way. Start whenever you\'re ready; anyone who hasn\'t joined is played by the computer.';
       } else r = await onlReq('POST', '/v1/tt/games/' + id + '/' + o);
       if (r.status !== 200) onMsg = r.body.message || 'That didn\'t work. Try again.';
-      else if (o === 'start' || o === 'join') { await onLoadList(); if (o === 'start') { onOpen(id); return; } }
+      else if (o === 'start' || o === 'join') { await onLoadList(); if (o === 'start' || (r.body.game && r.body.game.status === 'active')) { onOpen(id); return; } }
       onLoadList();
     });
     Q('online').addEventListener('keydown', function (e) { if (e.key === 'Enter' && e.target.dataset.oid !== undefined) { e.preventDefault(); const b = Q('online').querySelector('[data-o="create"]'); if (b) b.click(); } });
@@ -20664,6 +20696,730 @@
         return false;
       }
     };
+  })();
+
+  /* ================= Chess: the rules engine and the computer player =================
+     Full rules: castling, en passant, promotion, check, checkmate, stalemate, the 50-move rule, threefold repetition
+     and insufficient material. The same code runs on the phone (games against the computer) and on the Torn Arcade
+     server (online games, where the server checks every move and plays timed-out moves). No screen, sound or storage.
+     A game is one plain object (S) that can be saved or sent as JSON:
+       b: 64 squares, index 0 = a8 ... 63 = h1; each '' or colour + piece, e.g. 'wK', 'bP'
+       turn 'w' | 'b', castle 'KQkq' subset, ep: en-passant target square or -1, half: 50-move clock, full: move number,
+       moves: [{ from, to, promo, san, cap }], reps: { positionKey: count }, result: null | 'w' | 'b' | 'draw', reason */
+  function ChessEngine(env) {
+    env = env || {};
+    const rnd = env.rnd || Math.random;
+    const FILES = 'abcdefgh';
+    const VAL = { P: 100, N: 320, B: 330, R: 500, Q: 900, K: 0 };
+    // Piece-square tables from White's side (index 0 = a8). Black uses the mirror.
+    const PST = {
+      P: [0, 0, 0, 0, 0, 0, 0, 0, 50, 50, 50, 50, 50, 50, 50, 50, 10, 10, 20, 30, 30, 20, 10, 10, 5, 5, 10, 25, 25, 10, 5, 5, 0, 0, 0, 20, 20, 0, 0, 0, 5, -5, -10, 0, 0, -10, -5, 5, 5, 10, 10, -20, -20, 10, 10, 5, 0, 0, 0, 0, 0, 0, 0, 0],
+      N: [-50, -40, -30, -30, -30, -30, -40, -50, -40, -20, 0, 0, 0, 0, -20, -40, -30, 0, 10, 15, 15, 10, 0, -30, -30, 5, 15, 20, 20, 15, 5, -30, -30, 0, 15, 20, 20, 15, 0, -30, -30, 5, 10, 15, 15, 10, 5, -30, -40, -20, 0, 5, 5, 0, -20, -40, -50, -40, -30, -30, -30, -30, -40, -50],
+      B: [-20, -10, -10, -10, -10, -10, -10, -20, -10, 0, 0, 0, 0, 0, 0, -10, -10, 0, 5, 10, 10, 5, 0, -10, -10, 5, 5, 10, 10, 5, 5, -10, -10, 0, 10, 10, 10, 10, 0, -10, -10, 10, 10, 10, 10, 10, 10, -10, -10, 5, 0, 0, 0, 0, 5, -10, -20, -10, -10, -10, -10, -10, -10, -20],
+      R: [0, 0, 0, 0, 0, 0, 0, 0, 5, 10, 10, 10, 10, 10, 10, 5, -5, 0, 0, 0, 0, 0, 0, -5, -5, 0, 0, 0, 0, 0, 0, -5, -5, 0, 0, 0, 0, 0, 0, -5, -5, 0, 0, 0, 0, 0, 0, -5, -5, 0, 0, 0, 0, 0, 0, -5, 0, 0, 0, 5, 5, 0, 0, 0],
+      Q: [-20, -10, -10, -5, -5, -10, -10, -20, -10, 0, 0, 0, 0, 0, 0, -10, -10, 0, 5, 5, 5, 5, 0, -10, -5, 0, 5, 5, 5, 5, 0, -5, 0, 0, 5, 5, 5, 5, 0, -5, -10, 5, 5, 5, 5, 5, 0, -10, -10, 0, 5, 0, 0, 0, 0, -10, -20, -10, -10, -5, -5, -10, -10, -20],
+      K: [-30, -40, -40, -50, -50, -40, -40, -30, -30, -40, -40, -50, -50, -40, -40, -30, -30, -40, -40, -50, -50, -40, -40, -30, -30, -40, -40, -50, -50, -40, -40, -30, -20, -30, -30, -40, -40, -30, -30, -20, -10, -20, -20, -20, -20, -20, -20, -10, 20, 20, 0, 0, 0, 0, 20, 20, 20, 30, 10, 0, 0, 10, 30, 20],
+      KE: [-50, -40, -30, -20, -20, -30, -40, -50, -30, -20, -10, 0, 0, -10, -20, -30, -30, -10, 20, 30, 30, 20, -10, -30, -30, -10, 30, 40, 40, 30, -10, -30, -30, -10, 30, 40, 40, 30, -10, -30, -30, -10, 20, 30, 30, 20, -10, -30, -30, -30, 0, 0, 0, 0, -30, -30, -50, -30, -30, -30, -30, -30, -30, -50]
+    };
+    const KN = [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]];
+    const KG = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]];
+    const DIAG = [[-1, -1], [-1, 1], [1, -1], [1, 1]], ORTH = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+    function sqName(i) { return FILES[i % 8] + (8 - Math.floor(i / 8)); }
+    function at(r, f) { return r >= 0 && r < 8 && f >= 0 && f < 8 ? r * 8 + f : -1; }
+    function opp(c) { return c === 'w' ? 'b' : 'w'; }
+
+    function newGame() {
+      const back = ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'], b = Array(64).fill('');
+      for (let f = 0; f < 8; f++) { b[f] = 'b' + back[f]; b[8 + f] = 'bP'; b[48 + f] = 'wP'; b[56 + f] = 'w' + back[f]; }
+      const S = { v: 1, b: b, turn: 'w', castle: 'KQkq', ep: -1, half: 0, full: 1, moves: [], reps: {}, result: null, reason: '' };
+      S.reps[key(S)] = 1;
+      return S;
+    }
+    function key(S) { return S.b.join(',') + '|' + S.turn + '|' + S.castle + '|' + S.ep; }
+
+    /* ---------- Move generation ---------- */
+    function attacked(b, sq, by) {   // is square sq attacked by colour `by`?
+      const r = Math.floor(sq / 8), f = sq % 8;
+      const pr = by === 'w' ? r + 1 : r - 1;   // a white pawn attacks from the rank below (higher index)
+      for (const df of [-1, 1]) { const s = at(pr, f + df); if (s >= 0 && b[s] === by + 'P') return true; }
+      for (const d of KN) { const s = at(r + d[0], f + d[1]); if (s >= 0 && b[s] === by + 'N') return true; }
+      for (const d of KG) { const s = at(r + d[0], f + d[1]); if (s >= 0 && b[s] === by + 'K') return true; }
+      for (const d of DIAG) for (let k = 1; k < 8; k++) { const s = at(r + d[0] * k, f + d[1] * k); if (s < 0) break; if (b[s]) { if (b[s] === by + 'B' || b[s] === by + 'Q') return true; break; } }
+      for (const d of ORTH) for (let k = 1; k < 8; k++) { const s = at(r + d[0] * k, f + d[1] * k); if (s < 0) break; if (b[s]) { if (b[s] === by + 'R' || b[s] === by + 'Q') return true; break; } }
+      return false;
+    }
+    function kingSq(b, c) { return b.indexOf(c + 'K'); }
+    function inCheck(S, c) { return attacked(S.b, kingSq(S.b, c || S.turn), opp(c || S.turn)); }
+    function pseudo(S, capsOnly) {
+      const b = S.b, c = S.turn, o = opp(c), out = [];
+      for (let i = 0; i < 64; i++) {
+        const p = b[i]; if (!p || p[0] !== c) continue;
+        const t = p[1], r = Math.floor(i / 8), f = i % 8;
+        if (t === 'P') {
+          const dir = c === 'w' ? -1 : 1, start = c === 'w' ? 6 : 1, last = c === 'w' ? 0 : 7;
+          const add = function (to, cap, flag) { if (Math.floor(to / 8) === last) ['Q', 'R', 'B', 'N'].forEach(function (q) { out.push({ from: i, to: to, promo: q, cap: cap }); }); else out.push({ from: i, to: to, cap: cap, flag: flag }); };
+          const one = at(r + dir, f);
+          if (!capsOnly && one >= 0 && !b[one]) { add(one, ''); const two = at(r + 2 * dir, f); if (r === start && !b[two]) add(two, '', 'd'); }
+          for (const df of [-1, 1]) { const s = at(r + dir, f + df); if (s < 0) continue; if (b[s] && b[s][0] === o) add(s, b[s]); else if (s === S.ep) add(s, o + 'P', 'e'); }
+        } else if (t === 'N' || t === 'K') {
+          for (const d of (t === 'N' ? KN : KG)) { const s = at(r + d[0], f + d[1]); if (s < 0 || (b[s] && b[s][0] === c)) continue; if (capsOnly && !b[s]) continue; out.push({ from: i, to: s, cap: b[s] }); }
+          if (t === 'K' && !capsOnly) {   // castling: not out of, through or into check
+            const home = c === 'w' ? 60 : 4, ks = c === 'w' ? 'K' : 'k', qs = c === 'w' ? 'Q' : 'q';
+            if (i === home && !attacked(b, home, o)) {
+              if (S.castle.indexOf(ks) >= 0 && !b[home + 1] && !b[home + 2] && b[home + 3] === c + 'R' && !attacked(b, home + 1, o) && !attacked(b, home + 2, o)) out.push({ from: i, to: home + 2, cap: '', flag: 'k' });
+              if (S.castle.indexOf(qs) >= 0 && !b[home - 1] && !b[home - 2] && !b[home - 3] && b[home - 4] === c + 'R' && !attacked(b, home - 1, o) && !attacked(b, home - 2, o)) out.push({ from: i, to: home - 2, cap: '', flag: 'q' });
+            }
+          }
+        } else {
+          const dirs = t === 'B' ? DIAG : t === 'R' ? ORTH : DIAG.concat(ORTH);
+          for (const d of dirs) for (let k = 1; k < 8; k++) {
+            const s = at(r + d[0] * k, f + d[1] * k); if (s < 0) break;
+            if (b[s]) { if (b[s][0] === o) out.push({ from: i, to: s, cap: b[s] }); break; }
+            if (!capsOnly) out.push({ from: i, to: s, cap: '' });
+          }
+        }
+      }
+      return out;
+    }
+    // Make a move on S in place and return what's needed to undo it (fast, for the search).
+    function make(S, m) {
+      const b = S.b, p = b[m.from], c = p[0], u = { m: m, p: p, castle: S.castle, ep: S.ep, half: S.half, full: S.full, turn: S.turn };
+      b[m.to] = m.promo ? c + m.promo : p; b[m.from] = '';
+      if (m.flag === 'e') b[m.to + (c === 'w' ? 8 : -8)] = '';
+      if (m.flag === 'k') { b[m.to - 1] = b[m.to + 1]; b[m.to + 1] = ''; }
+      if (m.flag === 'q') { b[m.to + 1] = b[m.to - 2]; b[m.to - 2] = ''; }
+      let cs = S.castle;
+      if (p[1] === 'K') cs = cs.replace(c === 'w' ? /[KQ]/g : /[kq]/g, '');
+      [[63, 'K'], [56, 'Q'], [7, 'k'], [0, 'q']].forEach(function (x) { if (m.from === x[0] || m.to === x[0]) cs = cs.replace(x[1], ''); });
+      S.castle = cs;
+      S.ep = m.flag === 'd' ? (m.from + m.to) / 2 : -1;
+      S.half = p[1] === 'P' || m.cap ? 0 : S.half + 1;
+      if (c === 'b') S.full++;
+      S.turn = opp(c);
+      return u;
+    }
+    function unmake(S, u) {
+      const b = S.b, m = u.m, c = u.p[0];
+      b[m.from] = u.p; b[m.to] = m.flag === 'e' ? '' : m.cap;
+      if (m.flag === 'e') b[m.to + (c === 'w' ? 8 : -8)] = m.cap;
+      if (m.flag === 'k') { b[m.to + 1] = b[m.to - 1]; b[m.to - 1] = ''; }
+      if (m.flag === 'q') { b[m.to - 2] = b[m.to + 1]; b[m.to + 1] = ''; }
+      S.castle = u.castle; S.ep = u.ep; S.half = u.half; S.full = u.full; S.turn = u.turn;
+    }
+    function legal(S, capsOnly) {
+      const c = S.turn;
+      return pseudo(S, capsOnly).filter(function (m) { const u = make(S, m), ok = !attacked(S.b, kingSq(S.b, c), opp(c)); unmake(S, u); return ok; });
+    }
+
+    /* ---------- Notation and game end ---------- */
+    function san(S, m, all) {
+      const p = S.b[m.from], t = p[1];
+      let s;
+      if (m.flag === 'k') s = 'O-O'; else if (m.flag === 'q') s = 'O-O-O';
+      else {
+        s = t === 'P' ? (m.cap ? FILES[m.from % 8] : '') : t;
+        if (t !== 'P' && t !== 'K') {
+          const twins = all.filter(function (x) { return x.to === m.to && x.from !== m.from && S.b[x.from] === p; });
+          if (twins.length) {
+            const sameF = twins.some(function (x) { return x.from % 8 === m.from % 8; }), sameR = twins.some(function (x) { return Math.floor(x.from / 8) === Math.floor(m.from / 8); });
+            s += !sameF ? FILES[m.from % 8] : !sameR ? String(8 - Math.floor(m.from / 8)) : sqName(m.from);
+          }
+        }
+        s += (m.cap ? 'x' : '') + sqName(m.to) + (m.promo ? '=' + m.promo : '');
+      }
+      const u = make(S, m), check = inCheck(S), mate = check && !legal(S).length; unmake(S, u);
+      return s + (mate ? '#' : check ? '+' : '');
+    }
+    function insufficient(b) {
+      const ps = b.filter(Boolean).filter(function (p) { return p[1] !== 'K'; });
+      if (!ps.length) return true;
+      if (ps.length === 1 && (ps[0][1] === 'B' || ps[0][1] === 'N')) return true;
+      if (ps.every(function (p) { return p[1] === 'B'; })) {   // bishops all on one colour of square
+        const cols = {}; b.forEach(function (p, i) { if (p && p[1] === 'B') cols[(Math.floor(i / 8) + i % 8) % 2] = 1; });
+        return Object.keys(cols).length === 1;
+      }
+      return false;
+    }
+    function checkEnd(S) {
+      const moves = legal(S);
+      if (!moves.length) { if (inCheck(S)) { S.result = opp(S.turn); S.reason = 'checkmate'; } else { S.result = 'draw'; S.reason = 'stalemate'; } }
+      else if (S.half >= 100) { S.result = 'draw'; S.reason = '50-move rule'; }
+      else if ((S.reps[key(S)] || 0) >= 3) { S.result = 'draw'; S.reason = 'threefold repetition'; }
+      else if (insufficient(S.b)) { S.result = 'draw'; S.reason = 'insufficient material'; }
+      return S.result;
+    }
+    // Play a move given as { from, to, promo }. Returns { ok, san } or { err }.
+    function play(S, mv) {
+      if (!S || S.result) return { err: 'over' };
+      if (!mv || !Number.isInteger(mv.from) || !Number.isInteger(mv.to)) return { err: 'bad' };
+      const all = legal(S), m = all.find(function (x) { return x.from === mv.from && x.to === mv.to && (x.promo || '') === (x.promo ? (mv.promo || 'Q') : ''); });
+      if (!m) return { err: 'illegal' };
+      const s = san(S, m, all);
+      make(S, m);
+      S.moves.push({ from: m.from, to: m.to, promo: m.promo || '', san: s, cap: m.cap || '' });
+      S.reps[key(S)] = (S.reps[key(S)] || 0) + 1;
+      checkEnd(S);
+      return { ok: true, san: s };
+    }
+    function resign(S, c, why) { if (S.result) return; S.result = opp(c); S.reason = why || 'resignation'; }
+
+    /* ---------- The computer player: alpha-beta search with quiescence ---------- */
+    function evaluate(S) {   // from the side to move
+      const b = S.b; let s = 0, mat = 0;
+      for (let i = 0; i < 64; i++) { const p = b[i]; if (p && p[1] !== 'K' && p[1] !== 'P') mat += VAL[p[1]]; }
+      const endgame = mat <= 1600;
+      for (let i = 0; i < 64; i++) {
+        const p = b[i]; if (!p) continue;
+        const t = p[1], idx = p[0] === 'w' ? i : (7 - Math.floor(i / 8)) * 8 + i % 8;
+        const v = VAL[t] + (t === 'K' && endgame ? PST.KE[idx] : PST[t][idx]);
+        s += p[0] === 'w' ? v : -v;
+      }
+      if (endgame && Math.abs(s) > 250) {   // winning endgame: drive the other king to the edge and bring your own king closer
+        const win = s > 0 ? 'w' : 'b', lk = kingSq(b, opp(win)), wk = kingSq(b, win);
+        const lr = Math.floor(lk / 8), lf = lk % 8, edge = Math.max(3 - lr, lr - 4) + Math.max(3 - lf, lf - 4);
+        const close = 14 - (Math.abs(lr - Math.floor(wk / 8)) + Math.abs(lf - wk % 8));
+        const bonus = 12 * edge + 5 * close;
+        s += win === 'w' ? bonus : -bonus;
+      }
+      return S.turn === 'w' ? s : -s;
+    }
+    function order(ms) { return ms.sort(function (a, b) { return ((b.cap ? VAL[b.cap[1]] * 10 : 0) + (b.promo ? 800 : 0)) - ((a.cap ? VAL[a.cap[1]] * 10 : 0) + (a.promo ? 800 : 0)); }); }
+    function quiesce(S, alpha, beta, ctx) {
+      ctx.nodes++;
+      const stand = evaluate(S);
+      if (stand >= beta) return beta;
+      if (stand > alpha) alpha = stand;
+      const c = S.turn, ms = order(pseudo(S, true));
+      for (const m of ms) {
+        const u = make(S, m);
+        if (attacked(S.b, kingSq(S.b, c), opp(c))) { unmake(S, u); continue; }
+        const sc = -quiesce(S, -beta, -alpha, ctx); unmake(S, u);
+        if (sc >= beta) return beta;
+        if (sc > alpha) alpha = sc;
+      }
+      return alpha;
+    }
+    function search(S, depth, alpha, beta, ctx, ply) {
+      if (ctx.stop || (ctx.nodes & 1023) === 0 && Date.now() > ctx.until) { ctx.stop = true; return 0; }
+      if (depth <= 0) return quiesce(S, alpha, beta, ctx);
+      ctx.nodes++;
+      const c = S.turn, ms = order(pseudo(S, false));
+      let any = false;
+      for (const m of ms) {
+        const u = make(S, m);
+        if (attacked(S.b, kingSq(S.b, c), opp(c))) { unmake(S, u); continue; }
+        any = true;
+        const sc = -search(S, depth - 1, -beta, -alpha, ctx, ply + 1); unmake(S, u);
+        if (ctx.stop) return 0;
+        if (sc >= beta) return beta;
+        if (sc > alpha) alpha = sc;
+      }
+      if (!any) return attacked(S.b, kingSq(S.b, c), opp(c)) ? -100000 + ply : 0;   // mated (prefer the quickest mate) or stalemate
+      return alpha;
+    }
+    // Best move for the side to move. diff: 'easy' | 'normal' | 'hard'. ms: time limit.
+    function bestMove(S0, diff, ms) {
+      const S = JSON.parse(JSON.stringify({ b: S0.b, turn: S0.turn, castle: S0.castle, ep: S0.ep, half: S0.half, full: S0.full }));
+      const moves = legal(S); if (!moves.length) return null;
+      const D = { easy: { depth: 1, noise: 120, wild: 0.25 }, normal: { depth: 3, noise: 15, wild: 0 }, hard: { depth: 5, noise: 0, wild: 0 } }[diff] || { depth: 3, noise: 15, wild: 0 };
+      if (D.wild && rnd() < D.wild) return moves[Math.floor(rnd() * moves.length)];   // Easy sometimes just plays something
+      const ctx = { nodes: 0, until: Date.now() + (ms || (diff === 'hard' ? 1500 : 600)), stop: false };
+      let best = moves[0], order1 = order(moves.slice());
+      for (let depth = 1; depth <= D.depth; depth++) {   // iterative deepening: the best move so far is searched first
+        let alpha = -Infinity, top = null;
+        const list = [best].concat(order1.filter(function (m) { return m !== best; })), done = [];
+        for (const m of list) {
+          const u = make(S, m), sc = -search(S, depth - 1, -Infinity, D.noise ? Infinity : -alpha, ctx, 1); unmake(S, u);
+          if (ctx.stop) break;
+          const v = sc + (D.noise ? (rnd() - 0.5) * D.noise : 0);
+          done.push(m);
+          if (v > alpha) { alpha = v; top = m; }
+        }
+        if (top && (!ctx.stop || done.length > 1)) best = top;
+        if (ctx.stop) break;
+        if (alpha > 90000) break;   // found a mate
+      }
+      return { from: best.from, to: best.to, promo: best.promo || '' };
+    }
+    // A copy for the screen: legal moves for the side to move, whether it's check
+    function info(S) { return { moves: legal(S).map(function (m) { return { from: m.from, to: m.to, promo: m.promo || '' }; }), check: inCheck(S), king: kingSq(S.b, S.turn) }; }
+
+    return { _make: make, _unmake: unmake, newGame: newGame, play: play, legal: legal, bestMove: bestMove, info: info, inCheck: inCheck, resign: resign, sqName: sqName, VAL: VAL, checkEnd: checkEnd, key: key };
+  }
+  if (typeof module !== 'undefined' && module.exports) module.exports = ChessEngine;
+
+  /* ================= Chess =================
+     Classic chess on the phone: against the computer (Easy, Normal, Hard) or online against other Torn players
+     (optional: Online play, verified Torn ID). Classic Staunton-style pieces and board, drawn by the script.
+     Games against the computer make no requests and touch nothing on Torn's page. Online games are run by the Torn
+     Arcade server with the same rules engine (chess-engine.js): 30 seconds a move; if you run out of time the computer
+     moves for you, up to 3 times a game, and the 4th time you lose on time. */
+  (function () {
+    const CE = ChessEngine({});
+    const NS = 'http://www.w3.org/2000/svg';
+    const PN = { K: 'King', Q: 'Queen', R: 'Rook', B: 'Bishop', N: 'Knight', P: 'Pawn' };
+    // Classic Staunton-style pieces, drawn in a 45 x 45 box (original drawings made for Torn Arcade).
+    const SHAPE = {
+      P: '<circle cx="22.5" cy="13" r="5"/><path d="M17.5 20.5h10l-1 1.6c2.6 3.6 4 7.6 4.6 11.4h-17.2c.6-3.8 2-7.8 4.6-11.4z"/><path d="M13 33.5h19c1.4 0 2.5 1.1 2.5 2.5v1.5h-24v-1.5c0-1.4 1.1-2.5 2.5-2.5z"/><rect x="9.5" y="37.5" width="26" height="3.5" rx="1.5"/>',
+      R: '<path d="M12 9h4v3h3.5V9h6v3H29V9h4v7.5l-2.5 2.5h-16L12 16.5z"/><path d="M15 19h15l1 13H14z"/><path d="M12.5 32h20c1.4 0 2.5 1.1 2.5 2.5V37H10v-2.5c0-1.4 1.1-2.5 2.5-2.5z"/><rect x="8.5" y="37" width="28" height="4" rx="1.5"/><path class="d" d="M14.6 19h15.8M14.2 31.6h16.6" fill="none"/>',
+      N: '<path d="M22 9c8.5.8 13.4 6.6 13 28H15c0-8.5 9.4-6.3 7.6-13.3-2.6 2.4-6 3.4-8.4 3.8-2.4.4-4.3-1.5-3.6-3.8.9-2.9 3.4-3.7 5.2-6.6 1.6-2.4 1.4-4.2 2.6-5.6.6-1 1.8-1.7 2.6-1.4z"/><path d="M13 37h22.5v4H13z"/><circle class="d" cx="17.2" cy="17.6" r="1.4"/><path class="d" d="M24.5 13.5c4.5 2.5 7.8 9 7.2 19" fill="none"/><path class="d" d="M11.6 23.6l1.6-.4" fill="none"/>',
+      B: '<circle cx="22.5" cy="7.5" r="2.6"/><path d="M22.5 10.2c-5.4 3.8-8.4 8.6-7.4 13.4.5 2.5 2.2 4.4 4.4 5.4h6c2.2-1 3.9-2.9 4.4-5.4 1-4.8-2-9.6-7.4-13.4z"/><path d="M17 29h11l-.8 3.2h-9.4z"/><path d="M12.5 32.2h20c1.4 0 2.5 1.1 2.5 2.5V37H10v-2.3c0-1.4 1.1-2.5 2.5-2.5z"/><rect x="8.5" y="37" width="28" height="4" rx="1.5"/><path class="d" d="M24.6 14.8l-4.2 5.4M19 29h7" fill="none"/>',
+      Q: '<circle cx="8" cy="11.5" r="2.4"/><circle cx="15.3" cy="8.3" r="2.4"/><circle cx="22.5" cy="7" r="2.4"/><circle cx="29.7" cy="8.3" r="2.4"/><circle cx="37" cy="11.5" r="2.4"/><path d="M9 13.5l3.6 12.8 2.8-14.6 3.6 13.3 3.5-14.3 3.5 14.3 3.6-13.3 2.8 14.6L36 13.5l-3 15.5H12z"/><path d="M12 29h21l-1 3.2H13z"/><path d="M12.5 32.2h20c1.4 0 2.5 1.1 2.5 2.5V37H10v-2.3c0-1.4 1.1-2.5 2.5-2.5z"/><rect x="8.5" y="37" width="28" height="4" rx="1.5"/>',
+      K: '<path d="M21.2 3.5h2.6v3.2H27v2.6h-3.2V13h-2.6V9.3H18V6.7h3.2z"/><path d="M22.5 12.6c3.4 0 5.4 2.6 4.8 5.6 4-2.8 9.8-1.2 9.8 4.2 0 3.6-3.6 6.4-5.6 7.4H13.5c-2-1-5.6-3.8-5.6-7.4 0-5.4 5.8-7 9.8-4.2-.6-3 1.4-5.6 4.8-5.6z"/><path d="M13.5 29.8h18l-.8 2.6H14.3z"/><path d="M12.5 32.4h20c1.4 0 2.5 1.1 2.5 2.5V37H10v-2.1c0-1.4 1.1-2.5 2.5-2.5z"/><rect x="8.5" y="37" width="28" height="4" rx="1.5"/><path class="d" d="M22.5 18.6v10.8M15 25.5c4.6-1.4 10.4-1.4 15 0" fill="none"/>'
+    };
+    function pieceSVG(p, size, cls) {
+      const c = p[0], t = p[1], g = c === 'w' ? 'url(#ta-ch-gw)' : 'url(#ta-ch-gb)';
+      return '<svg class="ta-ch-pc' + (cls ? ' ' + cls : '') + '" viewBox="0 0 45 45" width="' + (size || 45) + '" height="' + (size || 45) + '" aria-label="' + (c === 'w' ? 'White' : 'Black') + ' ' + PN[t] + '">' +
+        '<g fill="' + g + '" stroke="' + (c === 'w' ? '#1b1b1b' : '#050505') + '" stroke-width="1.5" stroke-linejoin="round" class="ta-ch-' + c + '">' + SHAPE[t] + '</g></svg>';
+    }
+    const DEFS = '<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>' +
+      '<linearGradient id="ta-ch-gw" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".55" stop-color="#f1ede4"/><stop offset="1" stop-color="#c9c1b0"/></linearGradient>' +
+      '<linearGradient id="ta-ch-gb" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5a5652"/><stop offset=".5" stop-color="#2a2725"/><stop offset="1" stop-color="#0d0c0b"/></linearGradient>' +
+      '</defs></svg>';
+
+    GM_addStyle([
+      '.ta-panel[data-game="chess"] .ta-stage{padding:6px;align-items:stretch;justify-content:stretch;background:#16120e}',
+      '.ta-ch{position:absolute;inset:6px;--cp:#211b15;--cp2:#2c241c;--cl:#4a3b2c;--cm:#bfa98d;--cg:#f2c45a;color:#f6efe4;font-size:13px;line-height:1.3}',
+      '.ta-ch [hidden]{display:none!important}',
+      '.ta-ch button{appearance:none;font:inherit;font-weight:700;font-size:13px;color:#f6efe4;background:var(--cp2);border:1px solid var(--cl);border-radius:9px;padding:6px 9px;margin:0;cursor:pointer;line-height:1.2}',
+      '.ta-ch button:hover:not(:disabled){border-color:var(--cm)}', '.ta-ch button:disabled{opacity:.4;cursor:default}',
+      '.ta-ch .ta-ch-go{background:var(--cg);color:#21180c;border-color:var(--cg)}',
+      '.ta-ch select,.ta-ch input{font:inherit;font-size:13px;background:var(--cp2);color:#f6efe4;border:1px solid var(--cl);border-radius:8px;padding:5px 7px;margin:0;min-width:0}',
+      '.ta-ch-card{background:var(--cp);border:1px solid var(--cl);border-radius:12px;padding:10px;display:grid;gap:8px;align-content:start}',
+      '.ta-ch .ta-ch-card h4{margin:0!important;padding:0!important;font-size:11px!important;line-height:1.2!important;letter-spacing:.09em!important;font-weight:800!important;color:var(--cm)!important;font-family:inherit!important;border:0!important;background:none!important;text-transform:none!important}',
+      '.ta-ch-title{position:absolute;inset:0;overflow-y:auto;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:8px;align-content:start;align-items:start}',
+      '.ta-ch.ta-ch-stack .ta-ch-title{grid-template-columns:minmax(0,1fr)}',
+      '.ta-ch-title h2{margin:0;font-size:24px;font-weight:900;letter-spacing:.03em}', '.ta-ch-title h2 span{color:var(--cg)}',
+      '.ta-ch-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;color:var(--cm);font-size:12.5px}',
+      '.ta-ch-seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px}', '.ta-ch-seg button.ta-on{background:#4a3a20;border-color:var(--cg);color:#fff}',
+      '.ta-ch-note{color:var(--cm);font-size:12px}', '.ta-ch-msg{color:#ffd27a;font-size:12.5px}',
+      '.ta-ch-og{display:grid;gap:4px;background:var(--cp2);border:1px solid var(--cl);border-radius:10px;padding:8px}', '.ta-ch-og.ta-ch-hot{border-color:var(--cg)}',
+      '.ta-ch-og b{font-size:13px}', '.ta-ch-og small{color:var(--cm);font-size:11.5px}', '.ta-ch-og .ta-ch-row{gap:5px}',
+      '.ta-ch-hero{display:grid;grid-template-columns:repeat(6,1fr);gap:2px;padding:6px 4px;border-radius:10px;background:linear-gradient(180deg,#f0d9b5,#b58863)}', '.ta-ch-hero svg{width:100%;height:auto}',
+      // game screen
+      '.ta-ch-game{position:absolute;inset:0;display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:8px}',
+      '.ta-ch.ta-ch-narrow .ta-ch-game{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);overflow-y:auto}',
+      '.ta-ch-boardwrap{position:relative;min-width:0;min-height:0;display:grid;place-items:center}',
+      '.ta-ch-board{position:relative;width:var(--bs);height:var(--bs);border-radius:8px;box-shadow:0 0 0 6px #3a2a1c,0 0 0 8px #6b4f34,0 10px 30px rgba(0,0,0,.55);overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}',
+      '.ta-ch-sq{position:absolute;width:12.5%;height:12.5%}',
+      '.ta-ch-sq.l{background:linear-gradient(135deg,#f3e2c2,#ead3ab)}', '.ta-ch-sq.d{background:linear-gradient(135deg,#bf926a,#a87b55)}',
+      '.ta-ch-sq.ta-ch-last.l{background:#f3e48a}', '.ta-ch-sq.ta-ch-last.d{background:#d6bb5c}',
+      '.ta-ch-sq.ta-ch-sel{box-shadow:inset 0 0 0 4px rgba(255,214,90,.95)}',
+      '.ta-ch-sq.ta-ch-chk{background:radial-gradient(circle,#ff3b3b 0%,rgba(230,40,40,.75) 45%,rgba(200,0,0,0) 75%)!important}',
+      '.ta-ch-dot{position:absolute;width:12.5%;height:12.5%;display:grid;place-items:center;pointer-events:none}',
+      '.ta-ch-dot::after{content:"";width:28%;height:28%;border-radius:50%;background:rgba(30,30,30,.32)}',
+      '.ta-ch-dot.ta-ch-cap::after{width:84%;height:84%;background:none;box-shadow:inset 0 0 0 calc(var(--bs) * .007 + 3px) rgba(30,30,30,.32)}',
+      '.ta-ch-coord{position:absolute;z-index:3;text-shadow:0 0 2px rgba(0,0,0,.15);font-size:calc(var(--bs) * .024 + 3px);font-weight:800;pointer-events:none;opacity:.85}',
+      '.ta-ch-piece{position:absolute;width:12.5%;height:12.5%;display:grid;place-items:center;pointer-events:none;transition:none;filter:drop-shadow(0 calc(var(--bs) * .006) calc(var(--bs) * .006) rgba(0,0,0,.45))}',
+      '.ta-ch-piece svg{width:92%;height:92%}', '.ta-ch-piece.ta-ch-anim{transition:transform .22s cubic-bezier(.3,.7,.3,1)}', '.ta-ch-piece.ta-ch-drag{z-index:5;filter:drop-shadow(0 8px 10px rgba(0,0,0,.5));transition:none}',
+      '.ta-ch-side{min-width:0;min-height:0;overflow-y:auto;display:grid;gap:8px;align-content:start}',
+      '.ta-ch-pl{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:8px;align-items:center;padding:6px 8px;border-radius:10px;background:var(--cp2);border:1px solid var(--cl)}',
+      '.ta-ch-pl.ta-ch-turn{border-color:var(--cg);box-shadow:0 0 0 1px var(--cg) inset}',
+      '.ta-ch-pl .ta-ch-av{width:28px;height:28px;border-radius:7px;display:grid;place-items:center}', '.ta-ch-pl .ta-ch-av svg{width:26px;height:26px}',
+      '.ta-ch-pl b{display:block;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}', '.ta-ch-pl small{color:var(--cm);font-size:11.5px}',
+      '.ta-ch-caps{display:flex;flex-wrap:wrap;gap:0;min-height:16px}', '.ta-ch-caps svg{width:17px;height:17px;margin-right:-4px}',
+      '.ta-ch-clock{font-variant-numeric:tabular-nums;font-weight:900;font-size:16px;padding:3px 7px;border-radius:7px;background:#1a1510;color:#f6efe4}', '.ta-ch-clock.ta-ch-low{background:#7a1b1b}',
+      '.ta-ch-moves{max-height:150px;overflow-y:auto;display:grid;grid-template-columns:28px 1fr 1fr;gap:2px 6px;font-size:12.5px;font-variant-numeric:tabular-nums}',
+      '.ta-ch-moves span{padding:1px 4px;border-radius:4px}', '.ta-ch-moves .n{color:var(--cm)}', '.ta-ch-moves .cur{background:#4a3a20;color:#fff}',
+      '.ta-ch-status{font-weight:800;color:var(--cg);font-size:13.5px;min-height:18px}',
+      '.ta-ch-btns{display:grid;grid-template-columns:1fr 1fr;gap:6px}',
+      '.ta-ch-dlg{position:absolute;inset:0;background:rgba(8,6,4,.62);display:grid;place-items:center;z-index:10;padding:12px}',
+      '.ta-ch-box{background:var(--cp);border:1px solid var(--cl);border-radius:14px;padding:14px;display:grid;gap:10px;max-width:340px;width:100%;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.6)}',
+      '.ta-ch-box h3{margin:0;font-size:18px;color:var(--cg);font-weight:900}', '.ta-ch-box p{margin:0;color:#e8dccb}',
+      '.ta-ch-promo{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}', '.ta-ch-promo button{display:grid;place-items:center;padding:4px;background:linear-gradient(135deg,#f3e2c2,#bf926a)}', '.ta-ch-promo svg{width:52px;height:52px}'
+    ].join('\n'));
+
+    const panel = makePanel('chess', 'Chess', 'Classic chess against the computer, or online against other Torn players.', '', [],
+      '<div class="ta-ch">' + DEFS +
+      '<div class="ta-ch-title" data-c="title">' +
+        '<div class="ta-ch-card"><h2>TORN <span>CHESS</span></h2>' +
+          '<div class="ta-ch-hero" aria-hidden="true">' + ['wK', 'wQ', 'wR', 'bB', 'bN', 'bP'].map(function (p) { return pieceSVG(p, 40); }).join('') + '</div>' +
+          '<h4>PLAY THE COMPUTER</h4>' +
+          '<div class="ta-ch-row">You play</div><div class="ta-ch-seg" data-c="side"><button data-v="w">White</button><button data-v="r">Random</button><button data-v="b">Black</button></div>' +
+          '<div class="ta-ch-row">Computer</div><div class="ta-ch-seg" data-c="diff"><button data-v="easy">Easy</button><button data-v="normal">Normal</button><button data-v="hard">Hard</button></div>' +
+          '<button class="ta-ch-go" data-c="start">Start a new game</button><button data-c="cont" hidden>Continue your game</button>' +
+          '<div class="ta-ch-note" data-c="record"></div></div>' +
+        '<div class="ta-ch-card" data-c="online"></div>' +
+        '<div class="ta-ch-card"><h4>HOW TO PLAY</h4><div class="ta-ch-note">Tap a piece to see where it can go, then tap a square (or drag the piece). Checkmate the other king to win. All the usual rules apply: castling, en passant, promotion, and draws by stalemate, threefold repetition, the 50-move rule or too little material left.</div>' +
+          '<div class="ta-ch-note">Online: 30 seconds a move. If you run out of time, the computer moves for you, up to 3 times a game. The 4th time you lose on time. Games between two players change your chess rating on the global leaderboard.</div></div>' +
+      '</div>' +
+      '<div class="ta-ch-game" data-c="game" hidden>' +
+        '<div class="ta-ch-boardwrap" data-c="wrap"><div class="ta-ch-board" data-c="board"></div></div>' +
+        '<div class="ta-ch-side">' +
+          '<div class="ta-ch-pl" data-c="pTop"></div>' +
+          '<div class="ta-ch-card"><div class="ta-ch-status" data-c="status"></div><div class="ta-ch-moves" data-c="moves"></div></div>' +
+          '<div class="ta-ch-pl" data-c="pBot"></div>' +
+          '<div class="ta-ch-btns"><button data-c="flip">Flip board</button><button data-c="undo">Undo</button><button data-c="resign">Resign</button><button data-c="back">Back</button></div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="ta-ch-dlg" data-c="dlg" hidden><div class="ta-ch-box" data-c="dlgBox"></div></div>' +
+      '</div>', '');
+    const box = $(panel, '.ta-ch');
+    function Q(id) { return box.querySelector('[data-c="' + id + '"]'); }
+    const opts = Object.assign({ side: 'w', diff: 'normal' }, store.get('chessOpts', null) || {});
+    const stats = Object.assign({ easy: [0, 0, 0], normal: [0, 0, 0], hard: [0, 0, 0] }, store.get('chessStats', null) || {});   // wins, losses, draws
+    // The game on screen. Against the computer: { S, me: 'w' | 'b', diff }. Online: ON holds the server game.
+    let L = null, ON = null, sel = -1, flip = false, anim = null, busy = false, aiT = 0, live = false, dlg = null, drag = null;
+    const SND = {
+      move: [[0, 260, 0.06, 'triangle', 0.06, 180]], cap: [[0, 300, 0.05, 'square', 0.03, 140], [40, 180, 0.08, 'triangle', 0.06, 90]],
+      check: [[0, 880, 0.08, 'triangle', 0.04], [90, 1175, 0.12, 'triangle', 0.04]], castle: [[0, 260, 0.05, 'triangle', 0.05], [110, 300, 0.06, 'triangle', 0.05]],
+      win: [[0, 523, 0.12, 'triangle', 0.05], [120, 659, 0.12, 'triangle', 0.05], [240, 784, 0.25, 'triangle', 0.05]], lose: [[0, 392, 0.2, 'triangle', 0.05, 260]], tick: [[0, 1400, 0.03, 'square', 0.015]]
+    };
+    function snd(k) { if (live && SND[k]) seq(SND[k]); }
+
+    /* ---------- Whose game, and what can be played ---------- */
+    function S() { return ON ? ON.state : L && L.S; }
+    function myColour() { return ON ? (ON.game && ON.game.you === 1 ? 'b' : 'w') : L ? L.me : 'w'; }
+    function myMove() { const s = S(); return !!s && !s.result && s.turn === myColour() && !busy && !(ON && (!ON.game || ON.game.status !== 'active')); }
+    function info() { return S() ? CE.info(S()) : { moves: [], check: false, king: -1 }; }
+
+    /* ---------- Drawing the board ---------- */
+    function boardSize() {
+      const w = Q('wrap'), avail = Math.min(w.clientWidth - 16, (box.classList.contains('ta-ch-narrow') ? box.clientWidth * 0.98 : w.clientHeight - 16));
+      return Math.max(200, Math.floor(avail / 8) * 8);
+    }
+    function xy(i) { const r = Math.floor(i / 8), f = i % 8; return flip ? [7 - f, 7 - r] : [f, r]; }
+    function render() {
+      const s = S(); if (!s || Q('game').hidden) return;
+      box.classList.toggle('ta-ch-narrow', box.clientWidth < 620);
+      const b = Q('board'), size = boardSize(), inf = info(), last = s.moves[s.moves.length - 1], mine = myMove();
+      b.style.setProperty('--bs', size + 'px');
+      let h = '';
+      for (let i = 0; i < 64; i++) {
+        const p = xy(i), light = (Math.floor(i / 8) + i % 8) % 2 === 0;
+        let cls = 'ta-ch-sq ' + (light ? 'l' : 'd');
+        if (last && (i === last.from || i === last.to)) cls += ' ta-ch-last';
+        if (i === sel) cls += ' ta-ch-sel';
+        if (inf.check && i === inf.king) cls += ' ta-ch-chk';
+        h += '<div class="' + cls + '" data-sq="' + i + '" style="left:' + p[0] * 12.5 + '%;top:' + p[1] * 12.5 + '%"></div>';
+      }
+      for (let k = 0; k < 8; k++) {   // coordinates in the corners of the edge squares, coloured against the square under them
+        const fSq = flip ? 7 - k : k, bottom = flip ? fSq : 56 + fSq, rSq = flip ? 7 - k : k, left = flip ? rSq * 8 + 7 : rSq * 8;
+        const ink = function (i) { return (Math.floor(i / 8) + i % 8) % 2 === 0 ? '#a87b55' : '#f3e2c2'; };
+        h += '<span class="ta-ch-coord" style="left:calc(' + (k * 12.5 + 12.5) + '% - 1.1em);bottom:2px;color:' + ink(bottom) + '">' + 'abcdefgh'[fSq] + '</span>';
+        h += '<span class="ta-ch-coord" style="left:3px;top:calc(' + (k * 12.5) + '% + 2px);color:' + ink(left) + '">' + (8 - rSq) + '</span>';
+      }
+      if (sel >= 0 && mine) inf.moves.filter(function (m) { return m.from === sel && !(m.promo && m.promo !== 'Q'); }).forEach(function (m) { const p = xy(m.to); h += '<div class="ta-ch-dot' + (s.b[m.to] || (s.b[m.from][1] === 'P' && m.from % 8 !== m.to % 8) ? ' ta-ch-cap' : '') + '" style="left:' + p[0] * 12.5 + '%;top:' + p[1] * 12.5 + '%"></div>'; });
+      for (let i = 0; i < 64; i++) {
+        if (!s.b[i]) continue;
+        const p = xy(i);
+        h += '<div class="ta-ch-piece" data-pc="' + i + '" style="left:' + p[0] * 12.5 + '%;top:' + p[1] * 12.5 + '%">' + pieceSVG(s.b[i]) + '</div>';
+      }
+      b.innerHTML = h;
+      if (anim) {   // slide the piece that just moved (and the rook when castling)
+        const a = anim; anim = null;
+        [[a.from, a.to]].concat(a.rook ? [a.rook] : []).forEach(function (mv) {
+          const el = b.querySelector('[data-pc="' + mv[1] + '"]'); if (!el) return;
+          const f = xy(mv[0]), t = xy(mv[1]);
+          el.style.transform = 'translate(' + (f[0] - t[0]) * 100 + '%,' + (f[1] - t[1]) * 100 + '%)';
+          void el.offsetWidth; el.classList.add('ta-ch-anim'); el.style.transform = '';
+        });
+      }
+      renderSide();
+    }
+    function captured(s, colour) {   // pieces of `colour` that have been taken
+      const start = { P: 8, N: 2, B: 2, R: 2, Q: 1, K: 1 }, now = {};
+      s.b.forEach(function (p) { if (p && p[0] === colour) now[p[1]] = (now[p[1]] || 0) + 1; });
+      s.moves.forEach(function (m) { if (m.promo && ((s.moves.indexOf(m) % 2 === 0) === (colour === 'w'))) { now.P = (now.P || 0) + 1; now[m.promo]--; } });
+      let out = '';
+      ['Q', 'R', 'B', 'N', 'P'].forEach(function (t) { for (let k = 0; k < start[t] - (now[t] || 0); k++) out += pieceSVG(colour + t, 17); });
+      return out;
+    }
+    function material(s) { let w = 0; s.b.forEach(function (p) { if (p) w += (p[0] === 'w' ? 1 : -1) * ({ P: 1, N: 3, B: 3, R: 5, Q: 9, K: 0 })[p[1]]; }); return w; }
+    function playerHTML(colour) {
+      const s = S(), you = colour === myColour(), turn = !s.result && s.turn === colour;
+      let name, sub;
+      if (ON) { const st = ON.game.seats[colour === 'w' ? 0 : 1]; name = st.name + (you ? ' (you)' : ''); sub = (colour === 'w' ? 'White' : 'Black') + (st.auto ? ' · computer moved ' + st.auto + ' of ' + ON.game.strikes : ''); }
+      else { name = you ? 'You' : 'Computer (' + L.diff[0].toUpperCase() + L.diff.slice(1) + ')'; sub = colour === 'w' ? 'White' : 'Black'; }
+      const adv = material(s) * (colour === 'w' ? 1 : -1);
+      let clock = '';
+      if (ON && turn && ON.game.status === 'active') { const left = Math.max(0, Math.ceil((ON.left - Date.now()) / 1000)); clock = '<span class="ta-ch-clock' + (left <= 10 ? ' ta-ch-low' : '') + '">0:' + String(left).padStart(2, '0') + '</span>'; }
+      return '<span class="ta-ch-av" style="background:' + (colour === 'w' ? '#f3e2c2' : '#3a3530') + '">' + pieceSVG(colour + 'K', 26) + '</span>' +
+        '<span><b>' + esc(name) + '</b><small>' + esc(sub) + '</small><div class="ta-ch-caps">' + captured(s, colour === 'w' ? 'b' : 'w') + (adv > 0 ? '<small style="margin-left:6px">+' + adv + '</small>' : '') + '</div></span>' + (clock || '<span></span>');
+    }
+    function renderSide() {
+      const s = S(), top = flip ? 'w' : 'b', bot = flip ? 'b' : 'w';
+      Q('pTop').innerHTML = playerHTML(top); Q('pBot').innerHTML = playerHTML(bot);
+      Q('pTop').classList.toggle('ta-ch-turn', !s.result && s.turn === top); Q('pBot').classList.toggle('ta-ch-turn', !s.result && s.turn === bot);
+      let mv = '';
+      for (let i = 0; i < s.moves.length; i += 2) mv += '<span class="n">' + (i / 2 + 1) + '.</span><span' + (i === s.moves.length - 1 ? ' class="cur"' : '') + '>' + esc(s.moves[i].san) + '</span><span' + (i + 1 === s.moves.length - 1 ? ' class="cur"' : '') + '>' + (s.moves[i + 1] ? esc(s.moves[i + 1].san) : '') + '</span>';
+      const ml = Q('moves'); ml.innerHTML = mv || '<span></span><span class="n">No moves yet</span><span></span>'; ml.scrollTop = ml.scrollHeight;
+      const inf = info();
+      Q('status').textContent = s.result ? resultText(s) : ON && ON.game.status === 'lobby' ? 'Waiting for an opponent…' : (s.turn === myColour() ? 'Your move' : (ON ? 'Their move' : 'Computer is thinking…')) + (inf.check ? ' · Check!' : '') + (ON && s.note ? ' · ' + s.note : '');
+      Q('undo').hidden = !!ON; Q('undo').disabled = !L || busy || L.S.moves.length < (L.me === 'w' ? 1 : 2) || !!L.S.result;
+      Q('resign').disabled = !!s.result || (ON && ON.game.status !== 'active');
+      Q('back').textContent = ON ? 'Back to lobby' : 'Back';
+    }
+    function resultText(s) {
+      if (s.result === 'draw') return 'Draw · ' + s.reason;
+      const won = s.result === myColour();
+      return (won ? 'You win' : (ON ? 'You lose' : 'Computer wins')) + ' · ' + (s.reason === 'checkmate' ? 'checkmate' : s.reason === 'resignation' ? (won ? 'they resigned' : 'resigned') : s.reason);
+    }
+
+    /* ---------- Moving pieces: tap or drag ---------- */
+    function squareAt(ev) {
+      const r = Q('board').getBoundingClientRect(), x = Math.floor((ev.clientX - r.left) / r.width * 8), y = Math.floor((ev.clientY - r.top) / r.height * 8);
+      if (x < 0 || x > 7 || y < 0 || y > 7) return -1;
+      return flip ? (7 - y) * 8 + (7 - x) : y * 8 + x;
+    }
+    function tryMove(from, to) {
+      const s = S(), ms = info().moves.filter(function (m) { return m.from === from && m.to === to; });
+      if (!ms.length) return false;
+      if (ms.length > 1) { dlg = { kind: 'promo', from: from, to: to }; showDlg(); return true; }
+      doMove({ from: from, to: to, promo: '' }); return true;
+    }
+    function doMove(m) {
+      const s = S(), p = s.b[m.from], castle = p[1] === 'K' && Math.abs(m.to - m.from) === 2;
+      sel = -1;
+      if (ON) {   // the server checks and plays it; show it straight away
+        const copy = JSON.parse(JSON.stringify(s)), r = CE.play(copy, m); if (r.err) return;
+        effects(s, copy, m, castle); ON.state = copy; ON.pending = true; render();
+        onlReq('POST', '/v1/chess/games/' + ON.id + '/move', m).then(function (x) { if (!ON) return; ON.pending = false; if (x.status !== 200) { ON.note = (x.body && x.body.message) || 'That move didn\'t reach the server.'; sfx.miss(); onPollNow(); } });
+        return;
+      }
+      const before = JSON.parse(JSON.stringify(s)), r = CE.play(s, m); if (r.err) return;
+      effects(before, s, m, castle); save(); render(); afterMove();
+    }
+    function effects(before, after, m, castle) {
+      anim = { from: m.from, to: m.to, rook: castle ? (m.to > m.from ? [m.from + 3, m.from + 1] : [m.from - 4, m.from - 1]) : null };
+      const capd = !!before.b[m.to] || (before.b[m.from][1] === 'P' && m.from % 8 !== m.to % 8);
+      snd(CE.inCheck(after) ? 'check' : castle ? 'castle' : capd ? 'cap' : 'move');
+    }
+    Q('board').addEventListener('pointerdown', function (ev) {
+      if (!myMove()) return;
+      const i = squareAt(ev), s = S(); if (i < 0) return;
+      if (sel >= 0 && i !== sel && tryMove(sel, i)) return;
+      if (s.b[i] && s.b[i][0] === myColour()) {
+        sel = i; render(); sfx.click();
+        const el = Q('board').querySelector('[data-pc="' + i + '"]');
+        if (el) { drag = { from: i, el: el, x: ev.clientX, y: ev.clientY, moved: false }; try { Q('board').setPointerCapture(ev.pointerId); } catch (e) {} }
+      } else if (sel >= 0) { sel = -1; render(); }
+    });
+    Q('board').addEventListener('pointermove', function (ev) {
+      if (!drag) return;
+      const dx = ev.clientX - drag.x, dy = ev.clientY - drag.y;
+      if (!drag.moved && Math.hypot(dx, dy) < 6) return;
+      drag.moved = true; drag.el.classList.add('ta-ch-drag'); drag.el.style.transform = 'translate(' + dx + 'px,' + dy + 'px)';
+    });
+    Q('board').addEventListener('pointerup', function (ev) {
+      const d = drag; drag = null; if (!d) return;
+      if (!d.moved) return;   // a tap: the piece stays selected
+      const to = squareAt(ev);
+      if (to >= 0 && to !== d.from && tryMove(d.from, to)) { anim = null; return; }
+      d.el.classList.remove('ta-ch-drag'); d.el.style.transform = '';
+    });
+
+    /* ---------- Against the computer ---------- */
+    function save() { store.set('chess', L && !L.S.result ? L : null); }
+    function afterMove() {
+      const s = L.S;
+      if (s.result) { finished(); return; }
+      if (s.turn !== L.me) {
+        busy = true; render();
+        clearTimeout(aiT);
+        aiT = setTimeout(function () {   // let the move animation play, then think
+          if (!L || L.S !== s) { busy = false; return; }
+          const m = CE.bestMove(s, L.diff, L.diff === 'hard' ? 1000 : 500);
+          busy = false;
+          if (m) { const before = JSON.parse(JSON.stringify(s)); CE.play(s, m); effects(before, s, m, before.b[m.from][1] === 'K' && Math.abs(m.to - m.from) === 2); }
+          save(); render(); if (s.result) finished();
+        }, 380);
+      }
+    }
+    function finished() {
+      const s = S();
+      if (!ON && L && !L.counted) {
+        L.counted = true; const st = stats[L.diff] || [0, 0, 0];
+        if (s.result === 'draw') st[2]++; else if (s.result === L.me) { st[0]++; record('chess:wins-' + L.diff, st[0]); } else st[1]++;
+        stats[L.diff] = st; store.set('chessStats', stats); save();
+      }
+      const won = s.result === myColour();
+      snd(s.result === 'draw' ? 'move' : won ? 'win' : 'lose');
+      if (won) confetti(panel.querySelector('.ta-stage'));
+      dlg = { kind: 'over' }; showDlg();
+    }
+    function newLocal() {
+      const me = opts.side === 'r' ? (Math.random() < 0.5 ? 'w' : 'b') : opts.side;
+      L = { S: CE.newGame(), me: me, diff: opts.diff }; ON = null; flip = me === 'b'; sel = -1; busy = false;
+      openGame(); save(); afterMove();
+    }
+    function openGame() { Q('title').hidden = true; Q('game').hidden = false; dlg = null; showDlg(); render(); }
+
+    /* ---------- Dialogs ---------- */
+    function showDlg() {
+      const d = Q('dlg'), bx = Q('dlgBox');
+      if (!dlg) { d.hidden = true; return; }
+      d.hidden = false;
+      if (dlg.kind === 'promo') {
+        const c = myColour();
+        bx.innerHTML = '<h3>PROMOTE YOUR PAWN</h3><div class="ta-ch-promo">' + ['Q', 'R', 'B', 'N'].map(function (t) { return '<button data-promo="' + t + '" aria-label="' + PN[t] + '">' + pieceSVG(c + t, 52) + '</button>'; }).join('') + '</div><button data-dl="close">Cancel</button>';
+      } else if (dlg.kind === 'resign') {
+        bx.innerHTML = '<h3>RESIGN?</h3><p>' + (ON ? 'Your opponent wins and your rating changes.' : 'The computer wins this game.') + '</p><div class="ta-ch-btns"><button class="ta-ch-go" data-dl="resign">Resign</button><button data-dl="close">Keep playing</button></div>';
+      } else if (dlg.kind === 'over') {
+        const s = S(), won = s.result === myColour(), draw = s.result === 'draw';
+        bx.innerHTML = '<h3>' + (draw ? 'DRAW' : won ? 'YOU WIN!' : 'GAME OVER') + '</h3><p>' + esc(resultText(s)) + (ON && s.rated ? ' · rated' : '') + '</p><div class="ta-ch-btns"><button class="ta-ch-go" data-dl="again">' + (ON ? 'Back to lobby' : 'New game') + '</button><button data-dl="close">Look at the board</button></div>';
+      }
+    }
+    Q('dlgBox').addEventListener('click', function (e) {
+      const b = e.target.closest('button'); if (!b) return;
+      if (b.dataset.promo) { const d = dlg; dlg = null; showDlg(); doMove({ from: d.from, to: d.to, promo: b.dataset.promo }); return; }
+      const a = b.dataset.dl; sfx.click();
+      if (a === 'close') { dlg = null; showDlg(); return; }
+      if (a === 'resign') {
+        dlg = null; showDlg();
+        if (ON) onlReq('POST', '/v1/chess/games/' + ON.id + '/resign').then(onPollNow);
+        else if (L) { CE.resign(L.S, L.me); save(); render(); finished(); }
+        return;
+      }
+      if (a === 'again') { dlg = null; showDlg(); if (ON) { ON = null; showTitle(); } else newLocal(); }
+    });
+
+    /* ---------- Buttons ---------- */
+    function on(id, fn) { Q(id).addEventListener('click', fn); }
+    on('flip', function () { flip = !flip; sfx.click(); render(); });
+    on('undo', function () {   // take back your last move (and the computer's reply)
+      if (!L || busy) return;
+      const s = L.S, keep = s.moves.slice(0, Math.max(0, s.moves.length - (s.turn === L.me ? 2 : 1)));
+      const n = CE.newGame(); keep.forEach(function (m) { CE.play(n, m); });
+      L.S = n; sel = -1; sfx.click(); save(); render(); afterMove();
+    });
+    on('resign', function () { if (S() && !S().result) { dlg = { kind: 'resign' }; showDlg(); } });
+    on('back', function () { sfx.click(); clearTimeout(aiT); busy = false; if (ON) { ON = null; } showTitle(); });
+    on('start', function () { sfx.click(); newLocal(); });
+    on('cont', function () { const g = store.get('chess', null); if (!g || !g.S) return; sfx.click(); L = g; ON = null; flip = L.me === 'b'; sel = -1; openGame(); afterMove(); });
+    function seg(id, key) {
+      Q(id).addEventListener('click', function (e) { const b = e.target.closest('button'); if (!b) return; opts[key] = b.dataset.v; store.set('chessOpts', opts); sfx.click(); titleHTML(); });
+    }
+    seg('side', 'side'); seg('diff', 'diff');
+
+    /* ---------- Title screen ---------- */
+    function titleHTML() {
+      Q('side').querySelectorAll('button').forEach(function (b) { b.classList.toggle('ta-on', b.dataset.v === opts.side); });
+      Q('diff').querySelectorAll('button').forEach(function (b) { b.classList.toggle('ta-on', b.dataset.v === opts.diff); });
+      const st = stats[opts.diff] || [0, 0, 0];
+      Q('record').textContent = st[0] + st[1] + st[2] ? 'Your record against ' + opts.diff[0].toUpperCase() + opts.diff.slice(1) + ': ' + st[0] + ' won · ' + st[1] + ' lost · ' + st[2] + ' drawn' : '';
+      const g = store.get('chess', null); Q('cont').hidden = !(g && g.S && !g.S.result);
+    }
+    function showTitle() {
+      clearTimeout(aiT); busy = false; dlg = null; showDlg();
+      box.classList.toggle('ta-ch-stack', box.clientWidth > 0 && (box.clientWidth < 820 || box.clientHeight < 420));
+      Q('game').hidden = true; Q('title').hidden = false; titleHTML(); onCard(); onLoad();
+    }
+
+    /* ---------- Online (optional: Settings → Online, verified players only) ----------
+       The Torn Arcade server runs online games with the same rules engine. While the lobby is on screen it checks
+       your games and the public games every 5 seconds; while a game is on screen it asks for news by long polling
+       (plain HTTPS; no websockets). Nothing is sent with Online play off. */
+    let onMine = null, onPublic = null, onMsg = '', onT = 0, onGen = 0, clockT = 0;
+    function onReady() { const o = onl(); return !!(o.on && o.token && o.account && o.account.verified); }
+    function onCard() {
+      const c = Q('online');
+      if (!onReady()) { c.innerHTML = '<h4>PLAY ONLINE</h4><div class="ta-ch-note">Play other Torn players: Quick match, public games or invite a friend by Torn ID. Optional: turn on Online play and verify your Torn ID in Settings → Online. Everything else here works without it.</div><button data-o="settings">Open Settings</button>'; return; }
+      const mine = onMine || [], pub = onPublic || [];
+      c.innerHTML = '<h4>PLAY ONLINE</h4>' + (onMsg ? '<div class="ta-ch-msg">' + esc(onMsg) + '</div>' : '') +
+        '<div class="ta-ch-btns"><button class="ta-ch-go" data-o="quick">⚡ Quick match</button><button data-o="public">Make a public game</button></div>' +
+        '<div class="ta-ch-row"><input data-o="id" inputmode="numeric" maxlength="9" placeholder="Torn ID" aria-label="Torn ID to invite" style="flex:1"><button data-o="invite">Invite</button></div>' +
+        '<div class="ta-ch-note">You play ' + (opts.side === 'w' ? 'White' : opts.side === 'b' ? 'Black' : 'a random colour') + ' in games you host (set it under Play the computer). 30 seconds a move.</div>' +
+        '<h4>YOUR GAMES</h4>' + (mine.length ? mine.map(row).join('') : '<div class="ta-ch-note">' + (onMine ? 'No online games yet.' : 'Loading…') + '</div>') +
+        '<h4>PUBLIC GAMES</h4>' + (pub.length ? pub.map(row).join('') : '<div class="ta-ch-note">' + (onPublic ? 'Nobody is waiting right now. Make a public game or use Quick match.' : 'Loading…') + '</div>');
+    }
+    function row(g) {
+      const opp = g.seats.filter(function (s, i) { return i !== g.you; }).map(function (s) { return s.st === 'open' ? 'open seat' : s.st === 'pending' ? s.name + ' (invited)' : s.name; }).join('');
+      let st = '', btn = '';
+      if (g.status === 'lobby') {
+        if (g.you < 0 && g.invited) { st = esc(g.host) + ' invited you'; btn = '<button class="ta-ch-go" data-o="join" data-g="' + g.id + '">Play</button><button data-o="decline" data-g="' + g.id + '">No thanks</button>'; }
+        else if (g.you < 0) { st = esc(g.host) + ' is waiting for an opponent'; btn = '<button class="ta-ch-go" data-o="join" data-g="' + g.id + '">Join</button>'; }
+        else { st = g.public ? 'Public · waiting for an opponent' : 'Waiting for ' + esc(opp); btn = '<button data-o="cancel" data-g="' + g.id + '">Cancel</button>'; }
+      } else if (g.status === 'active') {
+        st = 'Playing ' + esc(opp) + ' · ' + (g.waitingOn === g.you ? '<b style="color:var(--cg)">your move</b>' : 'their move'); btn = '<button class="ta-ch-go" data-o="open" data-g="' + g.id + '">Open</button>';
+      } else { st = 'Finished · ' + (g.result === 'draw' ? 'draw' : (g.result === 'w') === (g.you === 0) ? 'you won' : 'you lost') + ' (' + esc(g.reason) + ')'; btn = '<button data-o="open" data-g="' + g.id + '">Look</button>'; }
+      return '<div class="ta-ch-og' + ((g.status === 'active' && g.waitingOn === g.you) || g.invited ? ' ta-ch-hot' : '') + '"><b>Game ' + g.id + (g.you >= 0 ? ' · you play ' + (g.you === 0 ? 'White' : 'Black') : '') + '</b><small>' + st + '</small><div class="ta-ch-row">' + btn + '</div></div>';
+    }
+    async function onLoad() {
+      clearInterval(onT); onT = 0;
+      if (!onReady() || !live) return;
+      await onRefresh(true);
+      onT = setInterval(function () { onRefresh(false); }, 5000);
+    }
+    async function onRefresh(first) {
+      if (!live || Q('title').hidden || !onReady()) { clearInterval(onT); onT = 0; return; }
+      const a = await onlReq('GET', '/v1/chess/games'), b = await onlReq('GET', '/v1/chess/public');
+      const was = onMine || [];
+      if (a.status === 200) onMine = a.body.games; else if (first) onMsg = (a.body && a.body.message) || 'Couldn\'t load your online games.';
+      if (b.status === 200) onPublic = b.body.games;
+      const started = (onMine || []).find(function (g) { return g.status === 'active' && was.some(function (w) { return w.id === g.id && w.status === 'lobby'; }); });
+      if (started && !Q('title').hidden) { onOpen(started.id); return; }   // someone joined your game: straight in
+      if (document.activeElement && document.activeElement.closest && document.activeElement.closest('[data-c="online"] input')) return;   // don't redraw while typing
+      if (!Q('title').hidden) onCard();
+    }
+    Q('online').addEventListener('click', async function (e) {
+      const b = e.target.closest('button[data-o]'); if (!b || b.disabled) return;
+      const o = b.dataset.o, id = +b.dataset.g; sfx.click(); onMsg = '';
+      if (o === 'settings') { openApp('settings'); return; }
+      if (o === 'open') { onOpen(id); return; }
+      b.disabled = true;
+      let r;
+      const side = opts.side === 'r' ? 'random' : opts.side;
+      if (o === 'quick') { r = await onlReq('POST', '/v1/chess/quick', { side: side }); if (r.status === 200) { if (r.body.game.status === 'active') { onOpen(r.body.game.id); return; } onMsg = 'Waiting for an opponent. Your game is in the public list; it starts as soon as someone joins.'; } }
+      else if (o === 'public') { r = await onlReq('POST', '/v1/chess/games', { public: true, side: side }); if (r.status === 200) onMsg = 'Public game made. It starts as soon as someone joins.'; }
+      else if (o === 'invite') {
+        const n = Number(String(Q('online').querySelector('[data-o="id"]').value).replace(/[^\d]/g, ''));
+        if (!n) { onMsg = 'Type a Torn ID (the number in [brackets] after a name).'; onCard(); return; }
+        r = await onlReq('POST', '/v1/chess/games', { invite: n, side: side }); if (r.status === 200) onMsg = 'Invite sent. They get a notification on their phone.';
+      } else { r = await onlReq('POST', '/v1/chess/games/' + id + '/' + o); if (r.status === 200 && o === 'join' && r.body.game.status === 'active') { onOpen(id); return; } }
+      if (r && r.status !== 200) onMsg = (r.body && r.body.message) || 'That didn\'t work. Try again.';
+      await onRefresh(false); onCard();
+    });
+    Q('online').addEventListener('keydown', function (e) { if (e.key === 'Enter' && e.target.dataset.o === 'id') { e.preventDefault(); Q('online').querySelector('[data-o="invite"]').click(); } });
+    function onOpen(id) {
+      clearInterval(onT); onT = 0;
+      ON = { id: id, ver: -1, gen: ++onGen, game: null, state: null, left: 0 }; L = null; sel = -1;
+      Q('title').hidden = true; Q('game').hidden = false; dlg = null; showDlg();
+      Q('status').textContent = 'Connecting…';
+      onPoll(ON.gen);
+      clearInterval(clockT); clockT = setInterval(function () { if (!ON || !live) { clearInterval(clockT); clockT = 0; return; } if (ON.state && ON.game && ON.game.status === 'active') renderSide(); }, 1000);
+    }
+    function onPollNow() { if (ON) { ON.ver = -1; if (!ON.polling) onPoll(ON.gen); } }
+    async function onPoll(gen) {
+      while (ON && ON.gen === gen && live) {
+        if (ON.polling) return;
+        ON.polling = true;
+        const r = await onlReq('GET', '/v1/chess/games/' + ON.id + '?wait=1&v=' + ON.ver, null, 30000);
+        if (!ON || ON.gen !== gen) return;
+        ON.polling = false;
+        if (r.status === 200) onApply(r.body);
+        else if (r.status === 401 || r.status === 403 || r.status === 404) { onMsg = (r.body && r.body.message) || 'That game isn\'t available.'; ON = null; showTitle(); return; }
+        else await new Promise(function (z) { setTimeout(z, 3000); });
+        if (ON && ON.game && (ON.game.status === 'over' || ON.game.status === 'cancelled')) { ON.polling = false; return; }
+      }
+      if (ON) ON.polling = false;
+    }
+    function onApply(b) {
+      const g = b.game, was = ON.state;
+      ON.game = g; ON.ver = g.ver; ON.left = Date.now() + (g.left || 0);
+      if (ON.pending) return;   // our own move is on its way; keep showing it
+      if (b.state) {
+        const s = b.state;
+        if (was && s.moves.length === was.moves.length + 1) { const m = s.moves[s.moves.length - 1]; effects(was, s, m, was.b[m.from] && was.b[m.from][1] === 'K' && Math.abs(m.to - m.from) === 2); }
+        if (!was) flip = g.you === 1;
+        if (s.turn === myColour() && (!was || was.turn !== s.turn) && !s.result) seq([[0, 988, 0.07, 'sine', 0.05], [110, 1319, 0.1, 'sine', 0.05]]);   // your move
+        ON.state = s;
+        render();
+        if (s.result && (!was || !was.result)) finished();
+      } else { Q('status').textContent = g.status === 'cancelled' ? 'This game was cancelled.' : 'Waiting for an opponent…'; }
+    }
+
+        games.chess = {
+      enter: function () { live = true; if (ON) { onPoll(ON.gen); render(); } else if (L && !Q('game').hidden) { render(); afterMove(); } else showTitle(); },
+      leave: function () { live = false; clearTimeout(aiT); busy = false; clearInterval(onT); onT = 0; clearInterval(clockT); clockT = 0; },
+      openOnline: function (id) { if (id) onOpen(id); else { ON = null; showTitle(); } },
+      viewing: function () { return ON ? ON.id : 0; },
+      onEscape: function () { if (dlg) { dlg = null; showDlg(); return true; } if (sel >= 0) { sel = -1; render(); return true; } return false; },
+      relayout: function () { if (!Q('game').hidden) render(); else box.classList.toggle('ta-ch-stack', box.clientWidth < 820 || box.clientHeight < 420); },
+      reload: function () { Object.assign(stats, { easy: [0, 0, 0], normal: [0, 0, 0], hard: [0, 0, 0] }, store.get('chessStats', null) || {}); if (!ON) L = null; },
+      bestText: function () { const w = ['easy', 'normal', 'hard'].reduce(function (a, k) { return a + ((stats[k] || [0])[0] || 0); }, 0), n = ['easy', 'normal', 'hard'].reduce(function (a, k) { const s = stats[k] || [0, 0, 0]; return a + s[0] + s[1] + s[2]; }, 0); return n ? w + ' win' + (w === 1 ? '' : 's') + ' in ' + n + ' games against the computer' : 'No games yet'; }
+    };
+    window.addEventListener('resize', function () { if (live && !Q('game').hidden) render(); });
   })();
 
   /* ================= Wiring ================= */

@@ -1,7 +1,9 @@
 // Online Torn Territories. The server runs every online game with the same rules engine as the phone (tt-engine.js),
 // so it checks every move, rolls the dice and deals the cards. Players only ever see their own cards.
-// - Lobby: the host invites up to 3 players by Torn ID. Invites show up on their phones (GET /v1/inbox).
-// - The host starts the game; seats nobody took are played by the computer.
+// - Lobby: the host invites up to 3 players by Torn ID (invites show up on their phones, GET /v1/inbox), and/or makes
+//   the game public: open seats anyone can take from the public lobby list or with Quick match.
+// - The host starts the game (seats nobody took are played by the computer); a public game also starts by itself
+//   once every seat is filled.
 // - 30-second timer: when the game waits on a person (their turn, a discard or a trade offer) and they don't act
 //   within 30 seconds, the computer makes that move (for a turn: plays the rest of that turn) and play goes on.
 // - Live updates: GET .../:id?v=<version>&wait=1 waits up to 20 seconds for something to change (long polling,
@@ -35,6 +37,7 @@ CREATE TABLE IF NOT EXISTS tt_games (
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS tt_games_status ON tt_games(status);
+ALTER TABLE tt_games ADD COLUMN IF NOT EXISTS public BOOLEAN NOT NULL DEFAULT FALSE;   -- listed in the public lobby (2.42)
 `;
 async function migrate() {
   await db.q(SCHEMA);
@@ -51,7 +54,7 @@ function load(row) {
 }
 async function save(g) {
   g.dirty = false;
-  await db.q('UPDATE tt_games SET status = $2, seats = $3, state = $4, ver = $5, updated_at = now() WHERE id = $1', [g.row.id, g.row.status, JSON.stringify(g.row.seats), g.G ? JSON.stringify(g.G) : null, g.row.ver]);
+  await db.q('UPDATE tt_games SET status = $2, seats = $3, state = $4, ver = $5, public = $6, updated_at = now() WHERE id = $1', [g.row.id, g.row.status, JSON.stringify(g.row.seats), g.G ? JSON.stringify(g.G) : null, g.row.ver, !!g.row.public]);
 }
 // Something changed: new version, save soon, wake everyone waiting for news.
 function bump(g) {
@@ -64,7 +67,7 @@ function seatOf(g, acc) { return g.row.seats.findIndex(function (s) { return s.a
 function summary(g, me) {
   const r = g.row, G = g.G;
   return {
-    id: Number(r.id), status: r.status, size: r.size, ver: r.ver, host: r.seats[0].name,
+    id: Number(r.id), game: 'territories', status: r.status, size: r.size, ver: r.ver, host: r.seats[0].name, public: !!r.public, open: r.seats.filter(function (s) { return s.st === 'open'; }).length,
     seats: r.seats.map(function (s) { return { name: s.name, tornId: s.tornId || 0, col: s.col, st: s.st }; }),
     you: me ? seatOf(g, me.id) : -1,
     invited: me ? r.seats.some(function (s) { return s.tornId === me.torn_id && s.st === 'pending'; }) : false,
@@ -157,6 +160,25 @@ async function myGames(me) {
   });
   return out.sort(function (a, b) { return b.id - a.id; });
 }
+function openGames(me, size) {   // public lobbies with a free seat
+  const out = [];
+  live.forEach(function (g) { const r = g.row; if (r.status === 'lobby' && r.public && seatOf(g, me.id) < 0 && (!size || r.size === size) && r.seats.some(function (s) { return s.st === 'open'; })) out.push(summary(g, me)); });
+  return out.sort(function (a, b) { return a.id - b.id; }).slice(0, 30);
+}
+function startGame(g) {
+  const r = g.row; let k = 0;
+  r.seats.forEach(function (s) { if (s.st === 'pending' || s.st === 'declined' || s.st === 'open') { s.st = 'ai'; s.acc = null; s.name = AI_NAMES[k++]; } });
+  g.G = g.E.newGame({ mode: /^fp/.test(r.size) ? 'fp' : 'classic', win: r.size === 'fp16' ? 16 : 12, diff: 'normal', speed: AI_MS, online: true, players: r.seats.map(function (s) { return { name: s.name, col: s.col, ai: s.st === 'ai', id: s.tornId || 0 }; }) });
+  r.status = 'active'; r.public = false; g.waitKey = ''; bump(g);
+}
+async function newLobby(me, size, col, ids, pub) {
+  col = Number.isInteger(col) && col >= 0 && col < COLS.length ? col : 0;
+  const left = COLS.map(function (x, i) { return i; }).filter(function (i) { return i !== col; });
+  const seats = [{ acc: me.id, tornId: me.torn_id, name: me.name, col: COLS[col], st: 'host' }].concat(ids.map(function (id, k) { return { acc: null, tornId: id, name: '[' + id + ']', col: COLS[left[k]], st: 'pending' }; }));
+  if (pub) while (seats.length < 4) seats.push({ acc: null, tornId: 0, name: 'Open seat', col: COLS[left[seats.length - 1]], st: 'open' });
+  const row = (await db.q("INSERT INTO tt_games (status, host, size, seats, public) VALUES ('lobby', $1, $2, $3, $4) RETURNING *", [me.id, GAME_TYPES.indexOf(size) >= 0 ? size : 'large', JSON.stringify(seats), !!pub])).rows[0];
+  return load(row);
+}
 async function inbox(me) {
   const invites = [], turns = [];
   live.forEach(function (g) {
@@ -175,18 +197,28 @@ async function route(req, res, url, c) {
   if (!me.verified) return c.fail(res, 403, 'verify_first', 'Verify your Torn ID to play online games.');
   let m;
   if (path === '/v1/tt/games' && method === 'GET') return c.send(res, 200, { games: await myGames(me) });
-  if (path === '/v1/tt/games' && method === 'POST') {
-    if (c.limited(c.ip, 'ttnew', 10, 10 * 60000)) return c.fail(res, 429, 'slow_down', 'Too many new games. Wait a few minutes.');
-    const b = await c.readBody(req), ids = Array.isArray(b.invite) ? b.invite.map(Number) : [];
-    if (ids.length < 1 || ids.length > 3 || ids.some(function (x) { return !(x > 0 && x < 1e8) || x === me.torn_id; }) || new Set(ids).size !== ids.length) return c.fail(res, 400, 'bad_invite', 'Invite 1 to 3 other players by their Torn ID.');
+  if (path === '/v1/tt/public' && method === 'GET') return c.send(res, 200, { games: openGames(me, GAME_TYPES.indexOf(url.searchParams.get('size')) >= 0 ? url.searchParams.get('size') : null) });
+  if ((path === '/v1/tt/games' || path === '/v1/tt/quick') && method === 'POST') {
+    if (c.limited(c.ip, 'ttnew', 15, 10 * 60000)) return c.fail(res, 429, 'slow_down', 'Too many new games. Wait a few minutes.');
+    const b = await c.readBody(req), size = GAME_TYPES.indexOf(b.size) >= 0 ? b.size : 'large';
+    if (/^fp/.test(size) && !atLeast(req, [2, 41, 0])) return c.fail(res, 426, 'update', 'Update Torn Arcade to 2.41 or newer to play Flight Paths.');
+    if (path === '/v1/tt/quick') {   // take a seat in the oldest public lobby of this game type, or open one
+      const wait = openGames(me, size)[0];
+      if (wait) {
+        const g = live.get(wait.id), s = g.row.seats.find(function (x) { return x.st === 'open'; });
+        s.acc = me.id; s.tornId = me.torn_id; s.name = me.name; s.st = 'joined';
+        if (!g.row.seats.some(function (x) { return x.st === 'open' || x.st === 'pending'; })) startGame(g); else bump(g);
+        await save(g); return c.send(res, 200, { game: summary(g, me), matched: true });
+      }
+      let mine = null; live.forEach(function (g) { if (!mine && g.row.status === 'lobby' && g.row.public && g.row.size === size && seatOf(g, me.id) >= 0) mine = g; });
+      if (mine) return c.send(res, 200, { game: summary(mine, me), matched: false });
+    }
+    const ids = path === '/v1/tt/quick' ? [] : Array.isArray(b.invite) ? b.invite.map(Number) : [], pub = path === '/v1/tt/quick' || !!b.public;
+    if (ids.length > 3 || (!pub && ids.length < 1) || ids.some(function (x) { return !(x > 0 && x < 1e8) || x === me.torn_id; }) || new Set(ids).size !== ids.length) return c.fail(res, 400, 'bad_invite', 'Invite 1 to 3 other players by their Torn ID, or make the game public.');
     let open = 0; live.forEach(function (g) { if (g.row.host === me.id && (g.row.status === 'lobby' || g.row.status === 'active')) open++; });
     if (open >= 3) return c.fail(res, 400, 'too_many', 'You already have 3 online games going. Finish or cancel one first.');
-    const col = Number.isInteger(b.col) && b.col >= 0 && b.col < COLS.length ? b.col : 0;
-    const left = COLS.map(function (x, i) { return i; }).filter(function (i) { return i !== col; });
-    const seats = [{ acc: me.id, tornId: me.torn_id, name: me.name, col: COLS[col], st: 'host' }].concat(ids.map(function (id, k) { return { acc: null, tornId: id, name: '[' + id + ']', col: COLS[left[k]], st: 'pending' }; }));
-    const row = (await db.q("INSERT INTO tt_games (status, host, size, seats) VALUES ('lobby', $1, $2, $3) RETURNING *", [me.id, GAME_TYPES.indexOf(b.size) >= 0 ? b.size : 'large', JSON.stringify(seats)])).rows[0];
-    const g = load(row);
-    return c.send(res, 200, { game: summary(g, me) });
+    const g = await newLobby(me, size, b.col, ids, pub);
+    return c.send(res, 200, { game: summary(g, me), matched: false });
   }
   if (path === '/v1/inbox' && method === 'GET') return c.send(res, 200, await inbox(me));
   if (!(m = /^\/v1\/tt\/games\/(\d+)(?:\/([a-z]+))?$/.exec(path))) return c.fail(res, 404, 'not_found', 'Not found.');
@@ -196,7 +228,7 @@ async function route(req, res, url, c) {
   const r = g.row, seat = seatOf(g, me.id), what = m[2] || '';
   const inv = r.seats.findIndex(function (s) { return s.tornId === me.torn_id && s.st === 'pending'; });
   if (method === 'GET' && !what) {
-    if (seat < 0 && inv < 0) return c.fail(res, 403, 'not_yours', 'You\'re not in this game.');
+    if (seat < 0 && inv < 0 && !(r.public && r.status === 'lobby')) return c.fail(res, 403, 'not_yours', 'You\'re not in this game.');
     const since = Number(url.searchParams.get('v')), hasBoard = url.searchParams.get('board') === '1';
     const reply = function () { if (!res.writableEnded) c.send(res, 200, { game: summary(g, me), state: g.G && seat >= 0 ? view(g, seat, hasBoard) : null }); };
     if (url.searchParams.get('wait') === '1' && since === r.ver) {
@@ -209,19 +241,20 @@ async function route(req, res, url, c) {
   }
   if (method !== 'POST') return c.fail(res, 404, 'not_found', 'Not found.');
   if (what === 'join' || what === 'decline') {
-    if (r.status !== 'lobby' || inv < 0) return c.fail(res, 400, 'not_now', 'That invite isn\'t open any more.');
+    let i = inv;
+    if (i < 0 && what === 'join' && r.public && seat < 0) i = r.seats.findIndex(function (s) { return s.st === 'open'; });   // a public seat
+    if (r.status !== 'lobby' || i < 0) return c.fail(res, 400, 'not_now', 'That game isn\'t open any more.');
     if (what === 'join' && /^fp/.test(r.size) && !atLeast(req, [2, 41, 0])) return c.fail(res, 426, 'update', 'This is a Flight Paths game. Update Torn Arcade to 2.41 or newer to join it.');
-    const s = r.seats[inv];
-    if (what === 'join') { s.acc = me.id; s.name = me.name; s.st = 'joined'; } else s.st = 'declined';
-    bump(g); await save(g);
+    const s = r.seats[i];
+    if (what === 'join') { s.acc = me.id; s.tornId = me.torn_id; s.name = me.name; s.st = 'joined'; } else s.st = 'declined';
+    if (r.public && !r.seats.some(function (x) { return x.st === 'open' || x.st === 'pending'; })) startGame(g);   // full: off we go
+    else bump(g);
+    await save(g);
     return c.send(res, 200, { game: summary(g, me) });
   }
   if (what === 'start') {
     if (r.status !== 'lobby' || seat !== 0) return c.fail(res, 400, 'not_now', 'Only the host can start, before the game begins.');
-    let k = 0;
-    r.seats.forEach(function (s) { if (s.st === 'pending' || s.st === 'declined') { s.st = 'ai'; s.acc = null; s.name = AI_NAMES[k++]; } });
-    g.G = g.E.newGame({ mode: /^fp/.test(r.size) ? 'fp' : 'classic', win: r.size === 'fp16' ? 16 : 12, diff: 'normal', speed: AI_MS, online: true, players: r.seats.map(function (s) { return { name: s.name, col: s.col, ai: s.st === 'ai', id: s.tornId || 0 }; }) });
-    r.status = 'active'; g.waitKey = ''; bump(g); await save(g);
+    startGame(g); await save(g);
     return c.send(res, 200, { game: summary(g, me) });
   }
   if (what === 'cancel') {

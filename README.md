@@ -4,8 +4,10 @@
 
 > ⚠️ **For use on Torn only.** Torn Arcade and its Art Packs are licensed solely for use on [torn.com](https://www.torn.com) through a userscript manager. Using, hosting or embedding any part of them anywhere else, or copying, modifying, redistributing or reusing them, is not allowed without written permission from the author. See [Licence](#-licence).
 
-Torn Arcade is a Tampermonkey userscript that adds a **Mobile Phone** link to Torn's sidebar. Click it and a phone opens on top of the page with eight games, leaderboards and settings. Everything runs inside the phone, and every image, sound and piece of music is built into the script or its two optional Art Packs.
+Torn Arcade is a Tampermonkey userscript that adds a **Mobile Phone** link to Torn's sidebar. Click it and a phone opens on top of the page with nine games, leaderboards and settings. Everything runs inside the phone, and every image, sound and piece of music is built into the script or its two optional Art Packs.
 
+> ♞ **2.42: Chess.** Play the computer on three levels or play online with a 30 second move clock. **Public games and ⚡ Quick match** for Chess and Territories, so it's easy to find an opponent (invites by Torn ID still work). Territories' police raid has new artwork to match the Air Marshal.
+>
 > ✈️ **2.41: Torn Territories Flight Paths.** A new expansion played by the rules of Catan: Seafarers: fly from Torn City to islands named after Torn's travel destinations, first to 12 or 16 Respect, online too, with its own leaderboards. Classic Territories now plays to 14 Respect on the large map (the small map was retired).
 
 > 🆕 **2.40: a fresh start.** With the new global leaderboards, every game except Tornies was reset to zero (Angry Bogies, Faction Defence, Anton's Egg Dash, Torn Territories, Dirty Bombs, Flappy Torn and Torn Invasion), so everyone starts on equal terms. **Tornies saves were not touched.** The global leaderboards were wiped the same way (Tornies boards kept). A one-time notice on the phone explains this and the new optional online service.
@@ -31,7 +33,7 @@ The illustrated Tornie and character artwork comes in two separate, optional scr
 | Script | What it adds | Size | Install |
 |---|---|---|---|
 | **Torn Arcade - Tornies Art** | Illustrated artwork for all 179 Tornies | about 1.4 MB | [Install](https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade-Tornies-Art.user.js) |
-| **Torn Arcade - Character Art** | Illustrated portraits of the gym leaders, story characters, trainers and your outfits, plus the six Faction Defence maps, the phone theme wallpapers and the Anton's Egg Dash and Torn Territories artwork (including the Flight Paths sky, Smuggler's Dens and Air Marshal) | about 1.4 MB | [Install](https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade-Character-Art.user.js) |
+| **Torn Arcade - Character Art** | Illustrated portraits of the gym leaders, story characters, trainers and your outfits, plus the six Faction Defence maps, the phone theme wallpapers and the Anton's Egg Dash and Torn Territories artwork (including the Flight Paths sky, Smuggler's Dens, Air Marshal and police raid) | about 1.4 MB | [Install](https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade-Character-Art.user.js) |
 
 Install them like the main script, then reload Torn. The **Tornies Art** and **Character Art** apps on the bottom row of the phone show whether each pack is installed, a before/after preview, a gallery of the art you've unlocked and an on/off switch. Each pack updates itself separately.
 
@@ -104,7 +106,7 @@ A district-building board game. Torn City is split into districts (Brickworks, T
 
 Two games in one app (pick on the new game screen):
 
-- **Play online** (optional, needs Online play and a verified Torn ID): invite up to 3 players by Torn ID. Your invite arrives as a notification on their phone; they tap it and join. The host starts when ready, and any empty seats are played by the computer. The Torn Arcade server runs the game, rolls the dice and deals the cards, so nobody can cheat, and you only ever see your own cards. Each move has a **30-second timer**: if a player doesn't act in time (their turn, handing over cards on a 7, or answering a trade offer), the computer makes that move for them and they're back in control on their next turn. You can trade cards with the other players. Games with 2 or more people change your online rating on the global leaderboard. Classic, Flight Paths to 12 and Flight Paths to 16 each have **their own rating board**, so wins in a shorter game never count against the longer one. Flight Paths games need Torn Arcade 2.41 or newer to join.
+- **Play online** (optional, needs Online play and a verified Torn ID): invite up to 3 players by Torn ID, make a **public game** anyone can join from the list, or tap **⚡ Quick match** to join a waiting game (or open one). Your invite arrives as a notification on their phone; they tap it and join. A public game starts by itself when every seat is taken. The host starts when ready, and any empty seats are played by the computer. The Torn Arcade server runs the game, rolls the dice and deals the cards, so nobody can cheat, and you only ever see your own cards. Each move has a **30-second timer**: if a player doesn't act in time (their turn, handing over cards on a 7, or answering a trade offer), the computer makes that move for them and they're back in control on their next turn. You can trade cards with the other players. Games with 2 or more people change your online rating on the global leaderboard. Classic, Flight Paths to 12 and Flight Paths to 16 each have **their own rating board**, so wins in a shorter game never count against the longer one. Flight Paths games need Torn Arcade 2.41 or newer to join.
 - Play against up to three computer factions (Easy, Normal or Hard), pass-and-play with friends on one device, or watch the computer play. Rivals trade with each other, make counter-offers, and keep track of what you've collected so they won't hand you the last card for an HQ (on Hard they're strict about it).
 - **Classic**: Torn City as one big 37-district map, a new random board every game, first to **14 Respect**. 20 roads, 6 safehouses and 5 HQs per faction, and 7 secret Councillor's Favours in the deck. (The small 19-district map was retired in 2.41; a small-map game you already started still finishes with its old rules.)
 - **✈️ Flight Paths** (an expansion played by the rules of Catan: Seafarers, based on its large "Heading for New Shores" board): Torn City (30 districts, two Racket HQs) sits in open sky, with four islands of 5, 5, 5 and 4 districts named after Torn's travel destinations (Mexico, Cayman Islands, Canada, Hawaii, United Kingdom, Argentina, Switzerland, Japan, China, UAE or South Africa): 49 districts in all, more than Classic's 37. Your first two safehouses go on Torn City, each with a road or a flight route.
@@ -118,7 +120,13 @@ Two games in one app (pick on the new game screen):
 - Plays by the classic Catan rules: a bank of 24 of each card with the bank-shortage rule, discard half on a 7 when holding more than 7, one favour card per turn and never on the turn you bought it. The build buttons show how many pieces you have left, and the bank trade shows how many of each card the bank holds.
 - Zoom buttons and a **full screen** button for the big map. Games save as you go, so you can leave and carry on later.
 - Soft background music and sound effects for building, upgrading, trading, favours and police raids, all generated live in your browser (no audio files). Music can be switched off in the game or on the new game screen.
-- Your wins and fastest win for each game show in the Leaderboards app. The illustrated districts, open sky, Smuggler's Dens and Air Marshal come with the Character Art pack; without it, they're drawn by the script.
+- Your wins and fastest win for each game show in the Leaderboards app. The illustrated districts, open sky, Smuggler's Dens, Air Marshal and police raid come with the Character Art pack; without it, they're drawn by the script.
+
+### ♞ Chess
+Classic chess with a clean board, real Staunton-style pieces drawn by the script, smooth move animations, tap-or-drag moves, legal-move dots, check and last-move highlights, captured pieces and a move list.
+- **Play the computer** on Easy, Normal or Hard, with Undo, Flip and your record for each level.
+- **Play online** (optional): invite a player by Torn ID, make a public game anyone can join, or tap **⚡ Quick match**. Each move has a **30 second clock**; if you run out, the computer plays a move for you, up to 3 times, and after that you lose the game.
+- Full rules: castling, en passant, promotion, checkmate, stalemate, threefold repetition, the 50-move rule and insufficient material. Online wins count towards a Chess rating on the global leaderboards.
 
 ### 💣 Dirty Bombs
 A minesweeper-style puzzle. Clear the city block by block without setting off a dirty bomb. Numbers show how many bombs are hidden next to each block.
@@ -159,10 +167,10 @@ You can verify for Online play with the key you saved for notifications (**Use m
 If you add an API key in Settings (a **Custom** key with `user → basic, events`, or a Limited key), the phone checks the official Torn API (`api.torn.com`, `/v2/user/events`) for new events **every 5 seconds while the phone is open**. That's 12 calls a minute, well under Torn's limit of 100. Nothing is requested while the phone is closed. The key is only ever sent to `api.torn.com`. See the Torn API terms on Torn's API page (on [Torn](https://www.torn.com), under the API section).
 
 ### 🌐 Optional online play
-**Online play is completely optional and off until you turn it on** (Settings → Online). **Every game works fully without it**: Tornies, Torn Invasion, Angry Bogies, Faction Defence, Egg Dash, Torn Territories against the computer or pass-and-play, Dirty Bombs and Flappy Torn all play on your own device, with no API key, no account and no server. Online play only *adds* three things:
+**Online play is completely optional and off until you turn it on** (Settings → Online). **Every game works fully without it**: Tornies, Torn Invasion, Angry Bogies, Faction Defence, Egg Dash, Torn Territories against the computer or pass-and-play, Chess against the computer, Dirty Bombs and Flappy Torn all play on your own device, with no API key, no account and no server. Online play only *adds* four things:
 
 1. **Global leaderboards** in the Leaderboards app (your best scores against every verified player).
-2. **Online Torn Territories**: games against other players, invited by Torn ID.
+2. **Online Torn Territories and Chess**: games against other players. Invite by Torn ID, make a public game anyone can join, or use **Quick match**.
 3. **Safe online Tornie trades** at any Clinic Tornie Locker.
 4. **Cloud saves** (a separate switch): the same progress on your phone and PC.
 
@@ -176,7 +184,7 @@ If you add an API key in Settings (a **Custom** key with `user → basic, events
 - **When you tap something:** verifying, playing as a guest, signing out, deleting your online account, opening the Global tab of Leaderboards, creating, joining, starting or leaving an online game, your moves in an online game, and every step of an online trade.
 - **Your best scores** (verified players only): right after you verify, when you open the Global tab, and when you set a new best.
 - **Notifications:** while the phone is open, it asks the server **every 20 seconds** for game invites, online games waiting on you and trades waiting on you, and shows new ones as a notification on the phone.
-- **Live online games:** while an online game is on screen, the phone asks the server for news and the server answers as soon as something changes (long polling, at most one request every 20 seconds while nothing happens). While your online-game lobby is waiting to start, the game list is checked every 5 seconds.
+- **Live online games:** while an online game is on screen, the phone asks the server for news and the server answers as soon as something changes (long polling, at most one request every 20 seconds while nothing happens). While an online lobby screen is open (Territories or Chess), the game lists are checked every 5 seconds.
 
 With Online play off, **nothing** is ever sent, and nothing is requested while the phone is closed.
 
@@ -187,7 +195,7 @@ With Online play off, **nothing** is ever sent, and nothing is requested while t
 
 **What the server keeps** (until you delete your online account): your Torn ID and name, your best scores and online rating, records of online games you play (moves, results), Tornie trades you take part in (each Tornie as a trade code) until both sides have collected, and your cloud saves if you turn them on. Open trades nobody finishes are cancelled after 3 days. **Settings → Online → Delete my online account** deletes your account, sign-ins, scores, ratings and cloud saves, and hands your seats in any running online games to the computer.
 
-**Fair play.** Online Territories games are run on the server with the same rules engine as the phone, so dice, cards and moves can't be faked, and you only ever see your own cards. Best scores for the other games come from players' own devices, so the server can't watch you play them; it rejects impossible values (for example wave 41 in Faction Defence, or more than 179 Tornies).
+**Fair play.** Online Territories and Chess games are run on the server with the same rules engines as the phone, so dice, cards and moves can't be faked, and you only ever see your own cards. Best scores for the other games come from players' own devices, so the server can't watch you play them; it rejects impossible values (for example wave 41 in Faction Defence, or more than 179 Tornies).
 
 ---
 
@@ -206,7 +214,7 @@ With Online play off, **nothing** is ever sent, and nothing is requested while t
 
 | Data Storage | Data Sharing | Purpose of Use | Key Storage & Sharing | Key Access Level |
 |---|---|---|---|---|
-| Persistent - until account deletion (on the Torn Arcade server: your Torn ID, name, best scores, online rating, online game records, Tornie trades and, if you turn them on, cloud saves of your game progress; on your device: a sign-in token) | General public (your name, Torn ID, rating and best scores on the global leaderboards); the players in your online games and trades see your name, Torn ID, your moves, and the Tornie you offer | Public community tools (global leaderboards, online Torn Territories games and Tornie trades) | Not stored / Not shared (sent once to the Torn Arcade server to confirm your Torn ID with `api.torn.com`, then forgotten) | Public (user → basic). The custom key (user → basic, events) or a Limited key also works; only your name and Torn ID are read |
+| Persistent - until account deletion (on the Torn Arcade server: your Torn ID, name, best scores, online rating, online game records, Tornie trades and, if you turn them on, cloud saves of your game progress; on your device: a sign-in token) | General public (your name, Torn ID, rating and best scores on the global leaderboards); the players in your online games and trades see your name, Torn ID, your moves, and the Tornie you offer | Public community tools (global leaderboards, online Torn Territories and Chess games and Tornie trades) | Not stored / Not shared (sent once to the Torn Arcade server to confirm your Torn ID with `api.torn.com`, then forgotten) | Public (user → basic). The custom key (user → basic, events) or a Limited key also works; only your name and Torn ID are read |
 
 The same table is shown in Settings → Online wherever you can enter a key, and at the top of the script. The server is hosted on Railway ([Railway privacy policy](https://railway.com/legal/privacy)); see also the Torn API terms on Torn's API page.
 

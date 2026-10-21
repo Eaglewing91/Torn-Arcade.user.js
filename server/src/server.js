@@ -6,16 +6,17 @@ const crypto = require('crypto');
 const db = require('./db');
 const torn = require('./torn');
 const tt = require('./territories');
+const chess = require('./chess');
 const trades = require('./trades');
 const saves = require('./saves');
 
 const PORT = Number(process.env.PORT) || 8080;
-const VERSION = '1.5.0';
+const VERSION = '1.6.0';
 // The 2.40 fresh start: scores and cloud saves for every game except Tornies must come from Torn Arcade 2.40.0 or later
 // (older copies still hold the scores from before the reset).
 const MIN_SCRIPT = [2, 40, 0];
 function newEnough(req) { const v = String(req.headers['x-arcade-version'] || '').split('.').map(Number); for (let i = 0; i < 3; i++) { if ((v[i] || 0) !== MIN_SCRIPT[i]) return (v[i] || 0) > MIN_SCRIPT[i]; } return true; }
-const GAMES = ['territories', 'territories:fp12', 'territories:fp16'];   // rated games, played on the server (Classic, Flight Paths to 12, to 16)
+const GAMES = ['territories', 'territories:fp12', 'territories:fp16', 'chess'];   // rated games, played on the server (Classic, Flight Paths to 12, to 16)
 // Best-score leaderboards. These scores come from players' own devices, so each has limits that throw out
 // impossible values. dir: 'desc' = higher is better, 'asc' = lower is better (times).
 const BOARDS = {};
@@ -169,6 +170,7 @@ async function route(req, res, url) {
   // Online Territories, Tornie trades and the phone's notifications.
   const ctx = { whoAsks: whoAsks, send: send, fail: fail, readBody: readBody, limited: limited, ip: ip };
   if (path.indexOf('/v1/tt/') === 0) return tt.route(req, res, url, ctx);
+  if (path.indexOf('/v1/chess/') === 0) return chess.route(req, res, url, ctx);
   if (path === '/v1/trades' || path.indexOf('/v1/trades/') === 0) return trades.route(req, res, url, ctx);
   if (method === 'PUT' && path.indexOf('/v1/saves/') === 0 && path !== '/v1/saves/tornies' && !newEnough(req)) return fail(res, 426, 'update', 'Update Torn Arcade to keep using cloud saves.');
   if (path === '/v1/saves' || path.indexOf('/v1/saves/') === 0) return saves.route(req, res, url, ctx);
@@ -176,7 +178,8 @@ async function route(req, res, url) {
     const who = await whoAsks(req);
     if (!who) return fail(res, 401, 'signed_out', 'Sign in to play online.');
     if (!who.verified || who.banned) return send(res, 200, { invites: [], turns: [], trades: [] });
-    const box = await tt.inbox(who);
+    const box = await tt.inbox(who), cb = chess.inbox(who);
+    box.invites = box.invites.concat(cb.invites); box.turns = box.turns.concat(cb.turns);   // Territories and Chess (game: 'chess')
     box.trades = await trades.waiting(who);
     return send(res, 200, box);
   }
@@ -191,7 +194,7 @@ async function route(req, res, url) {
     return send(res, 200, { ok: true });
   }
   if (path === '/v1/me' && method === 'DELETE') {   // wipes the account, its sign-ins and its ratings
-    tt.forget(me.id);
+    tt.forget(me.id); chess.forget(me.id);
     await db.q('DELETE FROM accounts WHERE id = $1', [me.id]);
     return send(res, 200, { ok: true, deleted: true });
   }
@@ -233,8 +236,8 @@ const server = http.createServer(function (req, res) {
 server.requestTimeout = 15000;
 server.headersTimeout = 10000;
 
-db.migrate().then(function () { return tt.migrate(); }).then(freshStart).then(function () { return trades.migrate(); }).then(function () { return saves.migrate(); }).then(function () {
-  tt.start();
+db.migrate().then(function () { return tt.migrate(); }).then(function () { return chess.migrate(); }).then(freshStart).then(function () { return trades.migrate(); }).then(function () { return saves.migrate(); }).then(function () {
+  tt.start(); chess.start();
   server.listen(PORT, function () { console.log('Torn Arcade server ' + VERSION + ' on port ' + PORT); });
 }).catch(function (e) { console.error('database setup failed', e.message); process.exit(1); });
 
