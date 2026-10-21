@@ -7,9 +7,10 @@ const db = require('./db');
 const torn = require('./torn');
 const tt = require('./territories');
 const trades = require('./trades');
+const saves = require('./saves');
 
 const PORT = Number(process.env.PORT) || 8080;
-const VERSION = '1.2.1';
+const VERSION = '1.3.0';
 const GAMES = ['territories'];   // rated games, played on the server
 // Best-score leaderboards. These scores come from players' own devices, so each has limits that throw out
 // impossible values. dir: 'desc' = higher is better, 'asc' = lower is better (times).
@@ -44,11 +45,13 @@ function send(res, code, body) {
   res.end(JSON.stringify(body));
 }
 function fail(res, code, error, message) { send(res, code, { error: error, message: message }); }
-function readBody(req) {
+function readBody(req, max) {
   return new Promise(function (resolve, reject) {
     let size = 0; const parts = [];
-    req.on('data', function (c) { size += c.length; if (size > 8192) { reject(new Error('too_big')); req.destroy(); } else parts.push(c); });
+    const lim = max || 8192;   // a body a little too big is read and refused politely; a far bigger one is cut off
+    req.on('data', function (c) { size += c.length; if (size > lim * 4) { reject(new Error('too_big')); req.destroy(); } else if (size <= lim) parts.push(c); });
     req.on('end', function () {
+      if (size > lim) return reject(new Error('too_big'));
       if (!parts.length) return resolve({});
       try { resolve(JSON.parse(Buffer.concat(parts).toString('utf8'))); } catch (e) { reject(new Error('bad_json')); }
     });
@@ -162,6 +165,7 @@ async function route(req, res, url) {
   const ctx = { whoAsks: whoAsks, send: send, fail: fail, readBody: readBody, limited: limited, ip: ip };
   if (path.indexOf('/v1/tt/') === 0) return tt.route(req, res, url, ctx);
   if (path === '/v1/trades' || path.indexOf('/v1/trades/') === 0) return trades.route(req, res, url, ctx);
+  if (path === '/v1/saves' || path.indexOf('/v1/saves/') === 0) return saves.route(req, res, url, ctx);
   if (path === '/v1/inbox' && method === 'GET') {
     const who = await whoAsks(req);
     if (!who) return fail(res, 401, 'signed_out', 'Sign in to play online.');
@@ -194,7 +198,7 @@ const server = http.createServer(function (req, res) {
     res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Vary', 'Origin');
     res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
     res.setHeader('Access-Control-Max-Age', '86400');
   }
   if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
@@ -210,7 +214,7 @@ const server = http.createServer(function (req, res) {
 server.requestTimeout = 15000;
 server.headersTimeout = 10000;
 
-db.migrate().then(function () { return tt.migrate(); }).then(function () { return trades.migrate(); }).then(function () {
+db.migrate().then(function () { return tt.migrate(); }).then(function () { return trades.migrate(); }).then(function () { return saves.migrate(); }).then(function () {
   tt.start();
   server.listen(PORT, function () { console.log('Torn Arcade server ' + VERSION + ' on port ' + PORT); });
 }).catch(function (e) { console.error('database setup failed', e.message); process.exit(1); });
