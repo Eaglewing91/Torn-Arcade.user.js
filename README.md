@@ -148,6 +148,7 @@ If you add a **Limited** access API key in Settings, the phone checks the offici
 1. **Global leaderboards** in the Leaderboards app (your best scores against every verified player).
 2. **Online Torn Territories**: games against other players, invited by Torn ID.
 3. **Safe online Tornie trades** at any Clinic Tornie Locker.
+4. **Cloud saves** (a separate switch): the same progress on your phone and PC.
 
 **Who and where.** While Online play is on, the phone talks to the **Torn Arcade server** (`arcade-server-production-8ebd.up.railway.app`), run by Eaglewing [571041] and hosted on Railway. The address is declared in the script header with `@connect`, and it is the only website Online play talks to. Requests are plain HTTPS through Tampermonkey (`GM_xmlhttpRequest`); **no websockets**. The server's code is public in the [`server`](server) folder.
 
@@ -163,7 +164,12 @@ If you add a **Limited** access API key in Settings, the phone checks the offici
 
 With Online play off, **nothing** is ever sent, and nothing is requested while the phone is closed.
 
-**What the server keeps** (until you delete your online account): your Torn ID and name, your best scores and online rating, records of online games you play (moves, results), and Tornie trades you take part in (each Tornie as a trade code) until both sides have collected. Open trades nobody finishes are cancelled after 3 days. **Settings → Online → Delete my online account** deletes your account, sign-ins, scores and ratings, and hands your seats in any running online games to the computer.
+**Cloud saves** (Settings → Online → Cloud saves; off until you turn it on; verified players only). Your game progress is kept on the server so it's the same on every device you play on: **Tornies** (with the trade and gift codes you've used, so they can't be used twice), **Faction Defence**, **Egg Dash**, **Angry Bogies**, your **best scores** and a **Torn Territories game in progress**. Settings, theme and saved maps stay on each device, and Torn Invasion (a separate script) isn't included yet.
+- About 15 seconds after a game saves, and when you lock the phone, the change is sent. When you open the phone, newer saves from your other devices are fetched first.
+- If two devices both made progress on the same game before syncing, the phone shows both (for Tornies: name, medals, Tornies caught and play time) and asks which to keep. Nothing is overwritten silently, and an older save can never replace a newer one by accident.
+- Up to 512 KB per game and 2 MB in total per player. **Delete my cloud saves** removes them from the server without touching the saves on your device.
+
+**What the server keeps** (until you delete your online account): your Torn ID and name, your best scores and online rating, records of online games you play (moves, results), Tornie trades you take part in (each Tornie as a trade code) until both sides have collected, and your cloud saves if you turn them on. Open trades nobody finishes are cancelled after 3 days. **Settings → Online → Delete my online account** deletes your account, sign-ins, scores, ratings and cloud saves, and hands your seats in any running online games to the computer.
 
 **Fair play.** Online Territories games are run on the server with the same rules engine as the phone, so dice, cards and moves can't be faked, and you only ever see your own cards. Best scores for the other games come from players' own devices, so the server can't watch you play them; it rejects impossible values (for example wave 41 in Faction Defence, or more than 179 Tornies).
 
@@ -184,7 +190,7 @@ With Online play off, **nothing** is ever sent, and nothing is requested while t
 
 | Data Storage | Data Sharing | Purpose of Use | Key Storage & Sharing | Key Access Level |
 |---|---|---|---|---|
-| Persistent - until account deletion (on the Torn Arcade server: your Torn ID, name, best scores, online rating, online game records and Tornie trades; on your device: a sign-in token) | General public (your name, Torn ID, rating and best scores on the global leaderboards); the players in your online games and trades see your name, Torn ID, your moves, and the Tornie you offer | Public community tools (global leaderboards, online Torn Territories games and Tornie trades) | Not stored / Not shared (sent once to the Torn Arcade server to confirm your Torn ID with `api.torn.com`, then forgotten) | Public (user → basic). A Limited key also works; only your name and Torn ID are read |
+| Persistent - until account deletion (on the Torn Arcade server: your Torn ID, name, best scores, online rating, online game records, Tornie trades and, if you turn them on, cloud saves of your game progress; on your device: a sign-in token) | General public (your name, Torn ID, rating and best scores on the global leaderboards); the players in your online games and trades see your name, Torn ID, your moves, and the Tornie you offer | Public community tools (global leaderboards, online Torn Territories games and Tornie trades) | Not stored / Not shared (sent once to the Torn Arcade server to confirm your Torn ID with `api.torn.com`, then forgotten) | Public (user → basic). A Limited key also works; only your name and Torn ID are read |
 
 The same table is shown in Settings → Online wherever you can enter a key, and at the top of the script. The server is hosted on Railway ([Railway privacy policy](https://railway.com/legal/privacy)); see also the Torn API terms on Torn's API page.
 

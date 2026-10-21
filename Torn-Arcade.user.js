@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.38.1
+// @version      2.39.0
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with eight game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -148,9 +148,16 @@
  *     notifications). While an online game is on screen: long polling for
  *     news (at most one request every 20 seconds when nothing happens);
  *     while your lobby waits to start, the game list every 5 seconds.
+ *   - CLOUD SAVES (a separate switch, off until you turn it on; verified
+ *     players only): your game progress (Tornies, Faction Defence, Egg Dash,
+ *     Angry Bogies, best scores and a Territories game in progress) is sent
+ *     about 15 seconds after a game saves and when you lock the phone, and
+ *     newer saves from your other devices are fetched when you open it.
+ *     Settings, theme and saved maps stay on each device. Up to 2 MB.
  *   The server keeps your Torn ID, name, best scores, online rating, online
- *   game records and trades until you delete your online account (Settings >
- *   Online). With Online play off, nothing is ever sent.
+ *   game records, trades and (if you turn them on) cloud saves until you
+ *   delete them (Settings > Online). With Online play off, nothing is ever
+ *   sent.
  * - WHICH API KEY FOR WHAT: no game needs a key. Event notifications need a
  *   Limited key (user > events; sent only to api.torn.com). Online play
  *   needs only a Public key (user > basic; sent once to the Torn Arcade
@@ -184,8 +191,10 @@
  * TERMS OF SERVICE: ONLINE PLAY (optional, off by default; no game needs it)
  * - Data Storage:          Persistent - until account deletion (on the Torn
  *                          Arcade server: your Torn ID, name, best scores,
- *                          online rating, online game records and Tornie
- *                          trades; on this device: a sign-in token)
+ *                          online rating, online game records, Tornie
+ *                          trades and, if you turn them on, cloud saves of
+ *                          your game progress; on this device: a sign-in
+ *                          token)
  * - Data Sharing:          General public (your name, Torn ID, rating and
  *                          best scores on the global leaderboards); players
  *                          in your online games and trades see your name,
@@ -306,10 +315,11 @@
     }
     return {
       get: function (k, d) { return data[k] === undefined ? d : data[k]; },
-      set: function (k, v) { data[k] = v; try { GM_setValue('arcade', data); } catch (e) {} }
+      set: function (k, v) { data[k] = v; try { GM_setValue('arcade', data); } catch (e) {} if (storeHook) storeHook(k); }
     };
   })();
-  function getBest(key) { return (store.get('best', {}) || {})[key]; }
+  let storeHook = null;   // set by Cloud saves: notes which game's save just changed
+    function getBest(key) { return (store.get('best', {}) || {})[key]; }
   // Saves a score if it beats the best. lower=true when fewer is better. Returns true for a new best.
   let bestHook = null;   // set by Online play: sends a new best to the global leaderboards (verified players only)
   function record(key, value, lower) {
@@ -597,7 +607,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gift codes', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.38.1';
+  const VERSION = '2.39.0';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -798,6 +808,10 @@
     /* Event notifications */
     '.ta-push{position:absolute;z-index:60;top:46px;left:10px;right:10px;display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:18px;background:rgba(24,30,42,.94);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.14);box-shadow:0 8px 26px rgba(0,0,0,.5);color:#fff;text-decoration:none;font:13px system-ui,Arial,sans-serif;animation:ta-pushin .35s cubic-bezier(.2,.9,.3,1.2)}',
     '.ta-push[hidden]{display:none}',
+    '.ta-clash{position:absolute;inset:0;z-index:70;display:grid;place-items:center;padding:16px;background:rgba(5,8,13,.72);backdrop-filter:blur(4px)}', '.ta-clash[hidden]{display:none}',
+    '.ta-clashbox{display:grid;gap:10px;width:min(330px,100%);padding:16px;border-radius:18px;background:var(--panel,#0f1823);border:1px solid var(--line2,#2c4466);color:var(--text,#dfe8f3);font:500 13px/1.35 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}',
+    '.ta-clashbox b{font-size:15px}', '.ta-clashbox>small{color:var(--muted,#8a9bb0)}',
+    '.ta-clashbox .ta-btn{display:grid;gap:2px;text-align:left;padding:10px 12px}', '.ta-clashbox .ta-btn small{font-weight:500;opacity:.85}',
     '.ta-onpush{cursor:pointer;z-index:61}', '.ta-onpush .ta-pushicon{background:linear-gradient(160deg,#ffcf4a,#c8902a)}',
     '.ta-push.ta-out{animation:ta-pushout .3s ease-in forwards}',
     '@keyframes ta-pushin{from{transform:translateY(-130%);opacity:0}to{transform:none;opacity:1}}',
@@ -1514,7 +1528,7 @@
         '<div class="ta-cheat"><input type="password" class="ta-cheatin ta-onlkey" autocomplete="off" spellcheck="false" maxlength="16" placeholder="' + (saved ? 'Or paste a Public API key' : 'Paste a Public API key') + '"><button type="button" class="ta-btn" data-set="onlVerify"' + (onlBusy ? ' disabled' : '') + '>Verify</button></div>' +
         (!a ? '<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="ta-btn" data-set="onlGuest"' + (onlBusy ? ' disabled' : '') + '>Play as a guest instead</button></div>' : '') +
         '<table class="ta-tos"><tbody>' +
-          '<tr><td>Data storage</td><td>Persistent - until account deletion (on the Torn Arcade server: your Torn ID, name, best scores, online rating, online game records and Tornie trades)</td></tr>' +
+          '<tr><td>Data storage</td><td>Persistent - until account deletion (on the Torn Arcade server: your Torn ID, name, best scores, online rating, online game records, Tornie trades and, if you turn them on, cloud saves of your game progress)</td></tr>' +
           '<tr><td>Data sharing</td><td>General public (your name, Torn ID, rating and best scores on the global leaderboards); players in your online games and trades see your name, Torn ID, moves and the Tornie you offer</td></tr>' +
           '<tr><td>Purpose of use</td><td>Public community tools (global leaderboards, online Torn Territories games and Tornie trades)</td></tr>' +
           '<tr><td>Key storage &amp; sharing</td><td>Not stored / Not shared (sent once to the Torn Arcade server to confirm your Torn ID with api.torn.com, then forgotten)</td></tr>' +
@@ -1523,7 +1537,8 @@
         '<small>The Torn Arcade server is run by Eaglewing [571041] and hosted on Railway. Guests need no key, but can\'t join the leaderboards, online games or trades. Delete your online account at any time below. <a class="ta-evlink" href="https://www.torn.com/api.html" target="_blank" rel="noopener">Torn API terms</a> · <a class="ta-evlink" href="https://railway.com/legal/privacy" target="_blank" rel="noopener noreferrer">Railway privacy policy</a></small>' +
         '</div></div>';
     }
-    if (a) h += '<div class="ta-row"><span class="ta-ricon" style="background:#c0392b">🗑️</span><div class="ta-rtext"><b>Delete my online account</b><small>Removes your Torn ID, name, best scores, rating and trades from the Torn Arcade server. Your seats in running online games go to the computer.</small></div><button type="button" class="ta-danger" data-set="onlDel"' + (onlBusy ? ' disabled' : '') + '>Delete</button></div>';
+    if (a && a.verified) h += cloudHTML();
+    if (a) h += '<div class="ta-row"><span class="ta-ricon" style="background:#c0392b">🗑️</span><div class="ta-rtext"><b>Delete my online account</b><small>Removes your Torn ID, name, best scores, rating, trades and cloud saves from the Torn Arcade server. Your seats in running online games go to the computer.</small></div><button type="button" class="ta-danger" data-set="onlDel"' + (onlBusy ? ' disabled' : '') + '>Delete</button></div>';
     return h + '</div></div>';
   }
   async function onlVerify(key) {
@@ -1531,7 +1546,7 @@
     onlBusy = true; onlMsg = { text: 'Checking with Torn…' }; renderSettings();
     const r = await onlReq('POST', '/v1/auth/torn', { key: key });
     onlBusy = false;
-    if (r.status === 200 && r.body.token) { const o = onl(); o.token = r.body.token; o.account = r.body.account; store.set('online', o); onlMsg = { ok: true, text: 'Verified as ' + r.body.account.name + '. Welcome!' }; sfx.win(); lbSynced = Date.now(); onlSync(); inboxSeen = null; inboxStop(); inboxStart(); }
+    if (r.status === 200 && r.body.token) { const o = onl(); o.token = r.body.token; o.account = r.body.account; store.set('online', o); onlMsg = { ok: true, text: 'Verified as ' + r.body.account.name + '. Welcome!' }; sfx.win(); lbSynced = Date.now(); onlSync(); inboxSeen = null; inboxStop(); inboxStart(); if (cloud().on) cloudPull(true); }
     else { onlMsg = { ok: false, text: r.body.message || 'Couldn\'t verify. Try again.' }; sfx.miss(); }
     renderSettings();
   }
@@ -1546,6 +1561,14 @@
       sfx.click(); renderSettings(); return;
     }
     if (k === 'onlSaved') { onlVerify(store.get('apiKey', '')); return; }
+    if (k === 'onlCloud') { const c = cloud(); c.on = !c.on; store.set('cloud', c); cloudMsg = c.on ? { text: 'Cloud saves on. Syncing…' } : { text: 'Cloud saves off. Your saves stay on this device; your cloud copy stays until you delete it.' }; sfx.click(); renderSettings(); if (c.on) cloudPull(true); return; }
+    if (k === 'onlCloudSync') { cloudMsg = { text: 'Syncing…' }; renderSettings(); await cloudPush(); await cloudPull(true); return; }
+    if (k === 'onlCloudDel') {
+      if (!t.classList.contains('ta-sure')) { t.classList.add('ta-sure'); t.textContent = 'Tap again'; setTimeout(function () { if (t.isConnected) { t.classList.remove('ta-sure'); t.textContent = 'Delete'; } }, 3000); return; }
+      const r = await onlReq('DELETE', '/v1/saves');
+      if (r.status === 200) { const c = cloud(); c.on = false; c.slots = {}; store.set('cloud', c); cloudMsg = { ok: true, text: 'Your cloud saves were deleted. The saves on this device are untouched.' }; } else cloudMsg = { ok: false, text: r.body.message || 'Couldn\'t delete them. Try again.' };
+      renderSettings(); return;
+    }
     if (k === 'onlVerify') { const i = $(settingsBox, '.ta-onlkey'); const key = i ? i.value.trim() : ''; if (i) i.value = ''; onlVerify(key); return; }
     if (k === 'onlGuest') {
       onlBusy = true; onlMsg = { text: 'Setting up a guest account…' }; renderSettings();
@@ -1562,11 +1585,156 @@
       if (!t.classList.contains('ta-sure')) { t.classList.add('ta-sure'); t.textContent = 'Tap again'; setTimeout(function () { if (t.isConnected) { t.classList.remove('ta-sure'); t.textContent = 'Delete'; } }, 3000); return; }
       onlBusy = true; t.disabled = true;
       const r = await onlReq('DELETE', '/v1/me'); onlBusy = false;
-      if (r.status === 200 || r.status === 401) { const n = onl(); delete n.token; delete n.account; store.set('online', n); onlMsg = { ok: true, text: 'Your online account was deleted from the server.' }; sfx.click(); }
+      if (r.status === 200 || r.status === 401) { const n = onl(); delete n.token; delete n.account; store.set('online', n); store.set('cloud', { on: false, slots: {} }); onlMsg = { ok: true, text: 'Your online account was deleted from the server.' }; sfx.click(); }
       else { onlMsg = { ok: false, text: r.body.message || 'Couldn\'t delete it. Try again.' }; sfx.miss(); }
       renderSettings(); return;
     }
   }
+
+  /* ---------- Cloud saves (optional: Settings → Online → Cloud saves; verified players only) ----------
+     Each game's save is also kept on the Torn Arcade server, so your progress is the same on every device.
+     - When a game saves, the change is sent about 15 seconds later (and straight away when you lock the phone).
+     - When you open the phone, it first fetches any newer saves made on another device.
+     - Every upload says which version it was based on. If another device saved the same game since, and this
+       device has changes too, the phone asks which save to keep. Nothing is ever overwritten silently.
+     Settings, theme and saved maps stay per device. Limits: 512 KB per game, 2 MB in total. */
+  const CLOUD = { tornies: ['pocket', 'tradesUsed', 'giftsUsed', 'welcomeGift'], defence: ['fdefence'], eggdash: ['eggdash'], bogies: ['bogies'], scores: ['best', 'territoriesStats'], territories: ['territories'] };
+  const CLOUD_GAME = { tornies: 'pocket', defence: 'defence', eggdash: 'eggdash', bogies: 'bogies', scores: 'territories', territories: 'territories' };
+  const CLOUD_NAME = { tornies: 'Tornies', defence: 'Faction Defence', eggdash: 'Anton\'s Egg Dash', bogies: 'Angry Bogies', scores: 'Best scores', territories: 'Torn Territories (game in progress)' };
+  const keySlot = {}; Object.keys(CLOUD).forEach(function (sl) { CLOUD[sl].forEach(function (k) { keySlot[k] = sl; }); });
+  let cloudQuiet = false, cloudDirty = {}, cloudT = 0, cloudMsg = null, cloudClash = [], cloudPulling = null;
+  function cloud() { return store.get('cloud', null) || { on: false, slots: {} }; }
+  function cloudReady() { const o = onl(), c = cloud(); return !!(c.on && o.on && o.token && o.account && o.account.verified); }
+  function slotData(sl) { const o = {}; CLOUD[sl].forEach(function (k) { const v = store.get(k); if (v !== undefined && v !== null) o[k] = v; }); return o; }
+  // A save that has never been played (some games write a starter save when they first load) counts as empty.
+  function blank(sl, d) {
+    const n = function (o) { return !o || !Object.keys(o).length; }, sum = function (o) { return Object.keys(o || {}).reduce(function (a, k) { return a + (+o[k] || 0); }, 0); };
+    if (sl === 'tornies') return !d.pocket;
+    if (sl === 'defence') { const f = d.fdefence; return !f || (!f.open && n(f.stars) && n(f.best) && !f.chest && n(f.own) && n(f.lv)); }
+    if (sl === 'eggdash') { const e = d.eggdash; return !e || (!e.eggs && !e.runs && n(e.ach)); }
+    if (sl === 'bogies') { const b = d.bogies; return !b || (!b.open && !sum(b.stars)); }
+    if (sl === 'scores') return n(d.best) && !(d.territoriesStats && d.territoriesStats.games);
+    if (sl === 'territories') return !d.territories;
+    return n(d);
+  }
+  function strHash(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(16) + ':' + str.length; }
+  function known(sl) { return (cloud().slots || {})[sl] || {}; }
+  function setKnown(sl, ver, hash) { const c = cloud(); c.slots = c.slots || {}; c.slots[sl] = { ver: ver, hash: hash, at: Date.now() }; store.set('cloud', c); }
+  storeHook = function (k) {
+    if (cloudQuiet || !keySlot[k] || !cloudReady()) return;
+    cloudDirty[keySlot[k]] = 1;
+    clearTimeout(cloudT); cloudT = setTimeout(cloudPush, 15000);
+  };
+  async function cloudUpload(sl, force) {
+    const str = JSON.stringify(slotData(sl)), h = strHash(str), kn = known(sl);
+    if (!force && kn.hash === h) return true;
+    if (!kn.ver && blank(sl, JSON.parse(str))) return true;   // nothing played yet: nothing to save
+    const r = await onlReq('PUT', '/v1/saves/' + sl, { data: str, base: kn.ver || 0, force: !!force }, 30000);
+    if (r.status === 200) { setKnown(sl, r.body.ver, h); return true; }
+    if (r.status === 409) { cloudAskAbout(sl); return false; }
+    if (r.status === 413) cloudMsg = { ok: false, text: r.body.message };
+    return false;
+  }
+  async function cloudPush() {
+    clearTimeout(cloudT); cloudT = 0;
+    if (!cloudReady()) { cloudDirty = {}; return; }
+    const list = Object.keys(cloudDirty); cloudDirty = {};
+    for (const sl of list) if (!(await cloudUpload(sl))) cloudDirty[sl] = 1;
+  }
+  // Put a downloaded save in place. The game is paused first (so it can't save its old copy over it), then reloads.
+  function cloudApply(sl, data, ver) {
+    const id = CLOUD_GAME[sl], g = games[id], live = isOpen && current === id && g;
+    if (live) g.leave();
+    cloudQuiet = true;
+    CLOUD[sl].forEach(function (k) { store.set(k, data[k] === undefined ? null : data[k]); });
+    cloudQuiet = false;
+    setKnown(sl, ver, strHash(JSON.stringify(slotData(sl))));
+    if (g && g.reload) g.reload();
+    if (live) g.enter();
+    refreshNav();
+  }
+  async function cloudDownload(sl) {
+    const r = await onlReq('GET', '/v1/saves/' + sl, null, 30000);
+    if (r.status !== 200) return false;
+    let data; try { data = JSON.parse(r.body.data); } catch (e) { return false; }
+    cloudApply(sl, data, r.body.ver);
+    return true;
+  }
+  // Compare every game with the cloud: download what's newer there, upload what's newer here, ask on a clash.
+  async function cloudPull(loud) {
+    if (!cloudReady()) return;
+    if (cloudPulling) return cloudPulling;
+    cloudPulling = (async function () {
+      const m = await onlReq('GET', '/v1/saves');
+      if (m.status !== 200) { if (loud) { cloudMsg = { ok: false, text: m.body.message || 'Couldn\'t reach the cloud. Try again later.' }; if (current === 'settings') renderSettings(); } return; }
+      let got = 0, sent = 0;
+      for (const sl of Object.keys(CLOUD)) {
+        const srv = m.body.slots[sl], kn = known(sl), local = slotData(sl), h = strHash(JSON.stringify(local)), empty = blank(sl, local);
+        if (!srv) { if (!empty && await cloudUpload(sl)) sent++; continue; }
+        if (srv.ver === kn.ver) { if (h !== kn.hash && await cloudUpload(sl)) sent++; continue; }
+        const changedHere = kn.hash ? h !== kn.hash : !empty;
+        if (!changedHere) { if (await cloudDownload(sl)) got++; } else cloudAskAbout(sl);
+      }
+      const c = cloud(); c.last = Date.now(); c.used = m.body.used; store.set('cloud', c);
+      if (loud || got || sent) cloudMsg = { ok: true, text: 'Synced. ' + (got ? got + ' save' + (got > 1 ? 's' : '') + ' fetched from the cloud. ' : '') + (sent ? sent + ' sent to the cloud.' : got ? '' : 'Everything is up to date.') };
+      if (current === 'settings') renderSettings();
+    })();
+    try { await cloudPulling; } finally { cloudPulling = null; }
+  }
+  // Opening the phone: fetch newer saves before the open game wakes up (gives up waiting after 5 seconds).
+  function cloudBeforeOpen(then) {
+    if (!cloudReady()) { requestAnimationFrame(then); return; }
+    let done = false; const go = function () { if (!done) { done = true; then(); } };
+    setTimeout(go, 5000); cloudPull().then(go, go);
+  }
+  window.addEventListener('pagehide', function () { if (Object.keys(cloudDirty).length) cloudPush(); });
+  // Short descriptions of a save for the "which one to keep?" question.
+  function cloudSum(sl, d) {
+    try {
+      if (sl === 'tornies') { const p = d.pocket; return p ? esc(p.name || 'Your save') + ' · ' + (p.badges || []).length + ' medals · ' + Object.keys(p.caught || {}).length + ' caught · played ' + Math.floor((p.time || 0) / 3600) + 'h ' + Math.floor((p.time || 0) % 3600 / 60) + 'm' : 'No save'; }
+      if (sl === 'defence') { const f = d.fdefence || {}; return 'Maps open: ' + ((f.open || 0) + 1) + ' · stars: ' + Object.keys(f.stars || {}).reduce(function (a, k) { return a + f.stars[k]; }, 0) + ' · War Chest $' + (f.chest || 0); }
+      if (sl === 'eggdash') { const e = d.eggdash || {}; return (e.eggs || 0) + ' eggs in total · ' + (e.runs || 0) + ' runs'; }
+      if (sl === 'bogies') { const b = d.bogies || {}; return Object.keys(b.stars || {}).reduce(function (a, k) { return a + b.stars[k]; }, 0) + ' stars'; }
+      if (sl === 'scores') return Object.keys(d.best || {}).length + ' best scores';
+      if (sl === 'territories') return d.territories ? 'Game in progress, turn ' + ((d.territories.turn || 0) + 1) : 'No game in progress';
+    } catch (e) {}
+    return 'Saved progress';
+  }
+  const clashEl = document.createElement('div');
+  clashEl.className = 'ta-clash'; clashEl.hidden = true;
+  $(root, '.ta-screen').appendChild(clashEl);
+  function cloudAskAbout(sl) { if (cloudClash.indexOf(sl) < 0) cloudClash.push(sl); if (clashEl.hidden) cloudNextClash(); }
+  async function cloudNextClash() {
+    const sl = cloudClash[0];
+    if (!sl) { clashEl.hidden = true; return; }
+    const r = await onlReq('GET', '/v1/saves/' + sl, null, 30000);
+    let theirs = null; try { theirs = r.status === 200 ? JSON.parse(r.body.data) : null; } catch (e) {}
+    clashEl._cloud = theirs ? { data: theirs, ver: r.body.ver } : null;
+    const when = r.status === 200 ? new Date(r.body.at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
+    clashEl.innerHTML = '<div class="ta-clashbox"><b>Which ' + esc(CLOUD_NAME[sl]) + ' save do you want?</b><small>This device and another device both have newer progress. Pick one; the other is replaced.</small>' +
+      '<button type="button" class="ta-btn" data-clash="here"><span>Keep this device</span><small>' + cloudSum(sl, slotData(sl)) + '</small></button>' +
+      (theirs ? '<button type="button" class="ta-btn" data-clash="cloud"><span>Keep the cloud save</span><small>' + cloudSum(sl, theirs) + ' · saved ' + esc(when) + '</small></button>' : '') + '</div>';
+    clashEl.hidden = false;
+  }
+  clashEl.addEventListener('click', async function (e) {
+    const b = e.target.closest('[data-clash]'); if (!b) return;
+    const sl = cloudClash[0]; sfx.click();
+    clashEl.querySelectorAll('button').forEach(function (x) { x.disabled = true; });
+    if (b.dataset.clash === 'here') await cloudUpload(sl, true);
+    else if (clashEl._cloud) cloudApply(sl, clashEl._cloud.data, clashEl._cloud.ver);
+    cloudClash.shift(); cloudNextClash();
+  });
+  function cloudHTML() {
+    const c = cloud();
+    const msg = cloudMsg ? '<small class="ta-evmsg ' + (cloudMsg.ok ? 'ta-good' : cloudMsg.ok === false ? 'ta-bad' : '') + '">' + esc(cloudMsg.text) + '</small>' : '';
+    let h = '<div class="ta-row"><span class="ta-ricon" style="background:#3a7ad8">☁️</span><div class="ta-rtext"><b>Cloud saves</b><small>Keeps your game progress (Tornies, Faction Defence, Egg Dash, Angry Bogies, best scores and a Territories game in progress) on the Torn Arcade server, so it\'s the same on your phone and PC. Settings and theme stay per device. Uses up to 2 MB.</small>' +
+      (c.on ? '<small>' + (c.last ? 'Last synced ' + new Date(c.last).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) + (c.used ? ' · ' + Math.max(1, Math.round(c.used / 1024)) + ' KB used' : '') : 'Not synced yet.') + '</small>' : '') + msg +
+      (c.on ? '<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="ta-btn" data-set="onlCloudSync">Sync now</button></div>' : '') +
+      '</div><button type="button" class="ta-switch' + (c.on ? ' ta-on' : '') + '" data-set="onlCloud" aria-label="Cloud saves"></button></div>';
+    if (c.on || (c.slots && Object.keys(c.slots).length)) h += '<div class="ta-row"><span class="ta-ricon" style="background:#7a7f8a">🗑️</span><div class="ta-rtext"><b>Delete my cloud saves</b><small>Removes your saves from the server and turns Cloud saves off. The saves on this device are not touched.</small></div><button type="button" class="ta-danger" data-set="onlCloudDel">Delete</button></div>';
+    return h;
+  }
+
   /* ---------- Online notifications ----------
      While the phone is open and you're verified, it checks the Torn Arcade server every 20 seconds for game invites,
      online games waiting on you and Tornie trades waiting on you, and shows each new one as a notification. */
@@ -1760,14 +1928,14 @@
     win.classList.remove('ta-turn-l', 'ta-turn-p');
     refreshNav();
     try { win.focus({ preventScroll: true }); } catch (e) {}
-    if (current && games[current]) { const id = current; requestAnimationFrame(function () { if (current === id && isOpen) games[id].enter(); }); }
+    if (current && games[current]) { const id = current; cloudBeforeOpen(function () { if (current === id && isOpen) games[id].enter(); }); } else cloudBeforeOpen(function () {});
     if (current === 'scores') renderScores();
   }
   function closeArcade() {
     if (!isOpen) return;
     devLockNow();   // the Dev app locks whenever the phone is closed
     if (current && games[current]) games[current].leave();
-    isOpen = false; root.hidden = true; clearInterval(clockTimer); inboxStop();
+    isOpen = false; root.hidden = true; clearInterval(clockTimer); inboxStop(); cloudPush();
     evStop();
     document.documentElement.style.overflow = savedOverflow;
   }
@@ -15679,6 +15847,10 @@
       const m = MAPS[d.map];
       return { name: d.name, where: m ? m.name.replace(/\{R\}/g, d.rival).replace(/\{P\}/g, d.name) : '', badges: d.badges.length, caught: countKeys(d.caught), seen: countKeys(d.seen), ranked: countKeys(d.ranked), total: DEX_SIZE, money: d.money || 0, time: fmtTime(d.time || 0) };
     },
+    reload: function () {   // a cloud save arrived: back to the title screen, where Continue loads it
+      G = null; B = null; modals.length = 0; tweens.length = 0; W.busy = 0; W.map = null; fade = 0; scene = titleScene;
+      nameBox.hidden = true; nameBox.innerHTML = '';
+    },
     wipe: function () {
       store.set('pocket', null);
       G = null; B = null; modals.length = 0; tweens.length = 0; W.busy = 0; W.map = null; fade = 0; scene = titleScene;
@@ -17019,6 +17191,7 @@
     showStats(); render();
 
         games.bogies = {
+      reload: function () { Object.keys(save).forEach(function (k) { delete save[k]; }); Object.assign(save, store.get('bogies', null) || {}); save.stars = save.stars || {}; save.open = save.open || 0; st = 'select'; },   // a cloud save arrived
       enter: function () { active = true; showStats(); run(); },
       leave: function () { active = false; drag = null; stop(); },
       relayout: function () {},
@@ -17746,6 +17919,7 @@
     showStats();
 
         games.defence = {
+      reload: function () { Object.keys(save).forEach(function (k) { delete save[k]; }); Object.assign(save, { open: 0, stars: {}, best: {}, chest: 0, own: {}, lv: {}, strikes: 0 }, store.get('fdefence', null) || {}); st = 'select'; showStats(); },   // a cloud save arrived
       wipe: function () { Object.keys(save).forEach(function (k) { delete save[k]; }); Object.assign(save, { v: 2, open: 0, stars: {}, best: {}, chest: 0, own: {}, lv: {}, strikes: 0 }); persist(); st = 'select'; showStats(); },
       enter: function () { active = true; showStats(); run(); },
       leave: function () { active = false; paused = st === 'play' && wave > 0; stop(); },
@@ -18571,6 +18745,7 @@
         return false;
       },
       wipe: function () { Object.assign(save, { eggs: 0, gold: 0, runs: 0, drones: 0, carrots: 0, ach: {}, far: 0 }); persist(); },
+      reload: function () { Object.keys(save).forEach(function (k) { delete save[k]; }); Object.assign(save, { eggs: 0, gold: 0, runs: 0, drones: 0, carrots: 0, ach: {}, far: 0 }, store.get('eggdash', null) || {}); },   // a cloud save arrived
       summary: function () { return { eggs: save.eggs, far: save.far || 0, ach: achCount(), all: ACH.length }; }
     };
   })();
@@ -19984,6 +20159,10 @@
       leave: function () { UI.live = false; clearTimeout(UI.timer); clearInterval(onListT); onListT = 0; musicStop(); setFull(false); },
       openOnline: function (id) { if (id) onOpen(id); else { ON = null; showTitle(); } },
       viewing: function () { return ON ? ON.id : 0; },
+      reload: function () {   // a cloud save arrived
+        Object.keys(stats).forEach(function (k) { delete stats[k]; }); Object.assign(stats, { games: 0, wins: 0, fastest: 0 }, store.get('territoriesStats', null) || {});
+        if (!ON) { clearTimeout(UI.timer); G = null; }
+      },
       mute: function (m) { if (m) musicStop(); else musicStart(); },
       onEscape: function () { if (box.classList.contains('ta-tt-full')) { setFull(false); return true; } return false; },
       relayout: function () { if (G && !Q('game').hidden) render(); },
