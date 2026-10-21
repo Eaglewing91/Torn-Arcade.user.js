@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.42.1
+// @version      2.43.0
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with nine game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -159,6 +159,12 @@
  *   game records, trades and (if you turn them on) cloud saves until you
  *   delete them (Settings > Online). With Online play off, nothing is ever
  *   sent.
+ * - TRADE ANTI-CHEAT: each Tornie you put into an online trade is recorded
+ *   on the server with its ID, species, level, stats and owner's Torn ID,
+ *   so a copied Tornie (from an old save) can't be traded twice. Refused
+ *   attempts are logged, and the developer (Eaglewing) can see the trade
+ *   log, ban a Torn ID from trading or stop a Tornie being traded. These
+ *   anti-cheat records stay after an account is deleted.
  * - WHICH API KEY FOR WHAT: no game needs a key. Event notifications need a
  *   Custom key with only user > basic, events (the Settings button opens
  *   Torn's own new-key page with those ticked; a Limited key also works;
@@ -198,14 +204,17 @@
  *                          online rating, online game records, Tornie
  *                          trades and, if you turn them on, cloud saves of
  *                          your game progress; on this device: a sign-in
- *                          token)
+ *                          token). Persistent - forever for trade
+ *                          anti-cheat records (Tornie IDs and owners' Torn
+ *                          IDs, refused trade attempts and trade bans)
  * - Data Sharing:          General public (your name, Torn ID, rating and
  *                          best scores on the global leaderboards); players
  *                          in your online games and trades see your name,
- *                          Torn ID, moves and the Tornie you offer
+ *                          Torn ID, moves and the Tornie you offer; the
+ *                          service owner sees trade records for anti-cheat
  * - Purpose of Use:        Public community tools (global leaderboards,
  *                          online Torn Territories and Chess games and
- *                          Tornie trades)
+ *                          Tornie trades, with trade anti-cheat)
  * - Key Storage & Sharing: Not stored / Not shared (sent once to the Torn
  *                          Arcade server to confirm your Torn ID with
  *                          api.torn.com, then forgotten)
@@ -627,9 +636,9 @@
     { id: 'artT', pack: 'tornies', name: 'Tornies Art', title: 'Tornies Art Pack', icon: '🎨', bg: ['#7ad8a8', '#1f7a5a'], size: '1.4 MB', what: 'the illustrated artwork for all 179 Tornies' },
     { id: 'artC', pack: 'chars', name: 'Character Art', title: 'Character Art Pack', icon: '🖌️', bg: ['#c39bff', '#5a3ab8'], size: '1.4 MB', what: 'illustrated portraits for the gym leaders, story characters, trainers and your outfits, plus the Faction Defence maps and the Egg Dash and Torn Territories artwork' }
   ];
-  const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gift codes', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
+  const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gifts and trades', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.42.1';
+  const VERSION = '2.43.0';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -1262,7 +1271,71 @@
   function devRid() { const al = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', r = crypto.getRandomValues(new Uint8Array(10)); return Array.from(r, function (x) { return al[x % al.length]; }).join(''); }
   function devData() { return games.pocket && games.pocket.devData ? games.pocket.devData() : { sp: [], items: [] }; }
   function devProfileId() { const m = /[?&]XID=(\d+)/.exec(location.search); return m && /profiles\.php/.test(location.pathname) ? m[1] : ''; }
-  function renderDev() {
+  // Trade watch: the online Tornie trade log, anti-cheat flags, trade bans and revoked Tornies (developer only;
+  // the server checks it's you). Every button sends one request to the Torn Arcade server; nothing loads by itself.
+  DEV.tw = { view: '', tid: '', why: '', data: null, msg: '' };
+  function devSp(n) { const s = devData().sp.find(function (x) { return x[0] === n; }); return s ? s[1] : '#' + n; }
+  function devWhen(t) { return t ? String(t).slice(0, 16).replace('T', ' ') : ''; }
+  function devTornie(t) {
+    if (!t) return 'nothing yet';
+    if (!t.sp) return 'unreadable Tornie' + (t.uid ? ' · ' + t.uid : '');
+    return (t.golden ? '★ golden ' : '') + devSp(t.sp) + ' Lv ' + t.lv + (t.nick ? ' "' + t.nick + '"' : '') + (t.uid ? ' · ' + t.uid : '');
+  }
+  function devTwBtn(act, label, attrs, danger) { return '<button type="button" class="' + (danger ? 'ta-danger' : 'ta-btn ta-btn-alt ta-mapbtn') + '" data-dev="' + act + '" ' + attrs + '>' + label + '</button>'; }
+  function devTradesHtml() {
+    const T = DEV.tw, d = T.data, row = function (b, sm, btns) { return '<div class="ta-row"><div class="ta-rtext"><b>' + b + '</b><small>' + sm + '</small>' + (btns ? '<div class="ta-devbtns" style="margin-top:6px">' + btns + '</div>' : '') + '</div></div>'; };
+    const who = function (p) { return esc(p.name || '?') + ' [' + p.tornId + ']'; };
+    let list = '';
+    if (T.view === 'trades' && d) list = d.trades.length ? d.trades.map(function (t) {
+      return row('#' + t.id + ' · ' + esc(t.status) + ' · ' + esc(devWhen(t.at)),
+        who(t.a) + ' gave: ' + esc(devTornie(t.a.tornie)) + '<br>' + who(t.b) + ' gave: ' + esc(devTornie(t.b.tornie)),
+        devTwBtn('twban', 'Ban ' + esc(t.a.name || t.a.tornId), 'data-t="' + t.a.tornId + '"', true) + devTwBtn('twban', 'Ban ' + esc(t.b.name || t.b.tornId), 'data-t="' + t.b.tornId + '"', true) +
+        (t.a.tornie && t.a.tornie.uid ? devTwBtn('twrevoke', 'Revoke 1st', 'data-u="' + esc(t.a.tornie.uid) + '"', true) : '') + (t.b.tornie && t.b.tornie.uid ? devTwBtn('twrevoke', 'Revoke 2nd', 'data-u="' + esc(t.b.tornie.uid) + '"', true) : ''));
+    }).join('') : row('No trades', 'Nothing matches.');
+    if (T.view === 'flags' && d) list = d.flags.length ? d.flags.map(function (f) {
+      const why = { not_owner: 'Offered a Tornie already traded to someone else', in_trade: 'Offered a Tornie already in another trade', changed: 'Tornie stats changed since its last trade', revoked: 'Offered a revoked Tornie' }[f.reason] || f.reason;
+      return row(esc(f.name || '?') + ' [' + f.tornId + '] · ' + esc(devWhen(f.at)), esc(why) + (f.detail ? ' (' + esc(f.detail) + ')' : '') + (f.uid ? '<br>Tornie ' + esc(f.uid) : ''),
+        devTwBtn('twban', 'Ban player', 'data-t="' + f.tornId + '"', true) + (f.uid ? devTwBtn('twrevoke', 'Revoke Tornie', 'data-u="' + esc(f.uid) + '"', true) : '') + devTwBtn('twshow', 'Their trades', 'data-t="' + f.tornId + '"'));
+    }).join('') : row('No flags', 'Nobody has tried to trade a copied or changed Tornie.');
+    if (T.view === 'bans' && d) list = '<div class="ta-devsub" style="padding:8px 12px 0">Banned from trading</div>' + (d.bans.length ? d.bans.map(function (b) {
+      return row('[' + b.tornId + '] · ' + esc(devWhen(b.at)), esc(b.reason || 'No reason given'), devTwBtn('twunban', 'Unban', 'data-t="' + b.tornId + '"'));
+    }).join('') : row('Nobody', 'No trade bans.')) + '<div class="ta-devsub" style="padding:8px 12px 0">Revoked Tornies</div>' + (d.revoked.length ? d.revoked.map(function (t) {
+      return row(esc(devTornie(t)), 'Owner [' + t.owner + '] · ' + esc(t.reason || '') + ' · ' + esc(devWhen(t.at)), devTwBtn('twunrevoke', 'Unrevoke', 'data-u="' + esc(t.uid) + '"'));
+    }).join('') : row('None', 'No revoked Tornies.'));
+    if (T.view === 'tornies' && d) list = d.tornies.length ? d.tornies.map(function (t) {
+      return row(esc(devTornie(t)), 'Owner [' + t.owner + '] · traded ' + t.trades + '× · first seen ' + esc(devWhen(t.firstSeen)) + (t.inTrade ? ' · in trade #' + t.inTrade : '') + (t.revoked ? ' · REVOKED: ' + esc(t.revoked) : ''),
+        t.revoked ? devTwBtn('twunrevoke', 'Unrevoke', 'data-u="' + esc(t.uid) + '"') : devTwBtn('twrevoke', 'Revoke', 'data-u="' + esc(t.uid) + '"', true));
+    }).join('') : row('No Tornies', 'This player has no traded Tornies on record.');
+    const msg = T.msg ? '<p class="ta-devmsg">' + esc(T.msg) + '</p>' : ''; T.msg = '';
+    return '<div class="ta-group ta-devtw"><h3>Trade watch</h3><div class="ta-list"><div class="ta-devform">' + msg +
+      '<p class="ta-devnote">Online Tornie trades, anti-cheat flags and bans. Needs Online play, verified as you.</p>' +
+      '<label>Torn ID (optional: one player only)<input class="ta-devin" data-f="twtid" inputmode="numeric" value="' + esc(T.tid || devProfileId()) + '"></label>' +
+      '<label>Reason (for bans and revokes)<input class="ta-devin" data-f="twwhy" maxlength="200" value="' + esc(T.why) + '"></label>' +
+      '<div class="ta-devbtns">' + devTwBtn('twload', 'Trades', 'data-v="trades"') + devTwBtn('twload', 'Flags', 'data-v="flags"') + devTwBtn('twload', 'Bans &amp; revoked', 'data-v="bans"') + devTwBtn('twload', 'Their Tornies', 'data-v="tornies"') + '</div>' +
+      '</div>' + list + '</div></div>';
+  }
+  async function devTwLoad(view) {
+    const T = DEV.tw, tid = Number(T.tid) || 0;
+    if (view === 'tornies' && !tid) { T.msg = 'Enter a Torn ID to see their Tornies.'; return; }
+    const path = view === 'trades' ? '/v1/admin/trades?limit=60' + (tid ? '&tid=' + tid : '') : view === 'flags' ? '/v1/admin/flags?limit=60' + (tid ? '&tid=' + tid : '') : view === 'bans' ? '/v1/admin/bans' : '/v1/admin/tornies?tid=' + tid;
+    const r = await onlReq('GET', path);
+    if (r.status !== 200) { T.msg = (r.body && r.body.message) || 'Couldn\'t reach the Torn Arcade server.'; return; }
+    T.view = view; T.data = r.body;
+  }
+  async function devTwAction(t) {
+    const a = t.dataset.dev, T = DEV.tw;
+    T.tid = devVal('twtid'); T.why = devVal('twwhy');
+    if (a === 'twload') { await devTwLoad(t.dataset.v); return; }
+    if (a === 'twshow') { T.tid = t.dataset.t; await devTwLoad('trades'); return; }
+    if ((a === 'twban' || a === 'twrevoke') && !t.classList.contains('ta-sure')) { t.classList.add('ta-sure'); t.textContent = 'Tap again'; return 'wait'; }
+    const body = a === 'twban' || a === 'twunban' ? { tornId: Number(t.dataset.t), reason: T.why } : { uid: t.dataset.u, reason: T.why };
+    const r = await onlReq('POST', '/v1/admin/' + a.slice(2), body);
+    T.msg = r.status === 200 ? { twban: 'Banned [' + body.tornId + '] from trading.', twunban: 'Unbanned [' + body.tornId + '].', twrevoke: 'Tornie ' + body.uid + ' revoked: it can\'t be traded again.', twunrevoke: 'Tornie ' + body.uid + ' can be traded again.' }[a]
+      : (r.body && r.body.message) || 'Couldn\'t reach the Torn Arcade server.';
+    if (r.status === 200 && T.view) { const m = T.msg; await devTwLoad(T.view); T.msg = T.msg || m; }
+  }
+  function renderDev() { renderDevMain(); if (devIsMe()) devBox.insertAdjacentHTML('beforeend', devTradesHtml()); }
+  function renderDevMain() {
     const box = devBox, saved = store.get('devKey', null), msg = DEV.msg ? '<p class="ta-devmsg">' + esc(DEV.msg) + '</p>' : '';
     DEV.msg = '';
     if (!devIsMe()) { box.innerHTML = '<div class="ta-group"><div class="ta-list"><div class="ta-row"><div class="ta-rtext"><b>Developer only</b><small>This app is only for the Torn Arcade developer.</small></div></div></div></div>'; return; }
@@ -1320,6 +1393,7 @@
   }
   async function devAction(t) {
     const a = t.dataset.dev, saved = store.get('devKey', null);
+    if (a.indexOf('tw') === 0) { if (await devTwAction(t) !== 'wait') renderDev(); return; }
     try {
       if (a === 'create') {
         const p1 = devVal('p1'), p2 = devVal('p2');
@@ -1571,9 +1645,9 @@
         '<div class="ta-cheat"><input type="password" class="ta-cheatin ta-onlkey" autocomplete="off" spellcheck="false" maxlength="16" placeholder="' + (saved ? 'Or paste a Public API key' : 'Paste a Public API key') + '"><button type="button" class="ta-btn" data-set="onlVerify"' + (onlBusy ? ' disabled' : '') + '>Verify</button></div>' +
         (!a ? '<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="ta-btn" data-set="onlGuest"' + (onlBusy ? ' disabled' : '') + '>Play as a guest instead</button></div>' : '') +
         '<table class="ta-tos"><tbody>' +
-          '<tr><td>Data storage</td><td>Persistent - until account deletion (on the Torn Arcade server: your Torn ID, name, best scores, online rating, online game records, Tornie trades and, if you turn them on, cloud saves of your game progress)</td></tr>' +
-          '<tr><td>Data sharing</td><td>General public (your name, Torn ID, rating and best scores on the global leaderboards); players in your online games and trades see your name, Torn ID, moves and the Tornie you offer</td></tr>' +
-          '<tr><td>Purpose of use</td><td>Public community tools (global leaderboards, online Torn Territories and Chess games and Tornie trades)</td></tr>' +
+          '<tr><td>Data storage</td><td>Persistent - until account deletion (on the Torn Arcade server: your Torn ID, name, best scores, online rating, online game records, Tornie trades and, if you turn them on, cloud saves of your game progress). Persistent - forever for trade anti-cheat records (Tornie IDs and owners\' Torn IDs, refused trade attempts and trade bans)</td></tr>' +
+          '<tr><td>Data sharing</td><td>General public (your name, Torn ID, rating and best scores on the global leaderboards); players in your online games and trades see your name, Torn ID, moves and the Tornie you offer; the service owner sees trade records for anti-cheat</td></tr>' +
+          '<tr><td>Purpose of use</td><td>Public community tools (global leaderboards, online Torn Territories and Chess games and Tornie trades, with trade anti-cheat)</td></tr>' +
           '<tr><td>Key storage &amp; sharing</td><td>Not stored / Not shared (sent once to the Torn Arcade server to confirm your Torn ID with api.torn.com, then forgotten)</td></tr>' +
           '<tr><td>Key access level</td><td>Public (user → basic). Your custom key (user → basic, events) or a Limited key also works; only your name and Torn ID are read.</td></tr>' +
         '</tbody></table>' +
@@ -12555,7 +12629,9 @@
     if (SP[mon.sp].event) { await say(SP[mon.sp].name + ' won\'t go in the trade capsule.|Some Tornies can\'t be traded.'); return null; }
     if (!mon.ot) { mon.ot = me.tornId; mon.otn = G.name; }
     const id = Math.floor(Math.random() * 4294967295) >>> 0;
-    return { pick: pick, mon: mon, code: encodeTrade(mon, me.tornId, G.name, to, id) };
+    if (!mon.uid || !/^[a-z0-9-]{6,40}$/.test(mon.uid)) mon.uid = Date.now().toString(36) + '-' + Math.floor(Math.random() * 1e9).toString(36);
+    // The Tornie's permanent ID goes with it: the server records who owns it, so a copy can't be traded twice.
+    return { pick: pick, mon: mon, uid: mon.uid, code: encodeTrade(mon, me.tornId, G.name, to, id) };
   }
   // The Tornie leaves the save once the server has it (a copy of its code is kept until the trade ends).
   function sentToTrade(p, tradeId) {
@@ -12587,7 +12663,7 @@
     if (to === me.tornId) { await say('You can\'t trade with yourself!'); return; }
     const p = await packForTrade(me, to); if (!p) return;
     if (!(await yesno('Offer ' + (p.mon.rk ? 'GOLDEN ' : '') + monName(p.mon) + ' (Lv' + p.mon.lv + ') to player [' + to + ']?|It waits safely with the trade server until you both confirm, or comes back if the trade is cancelled.'))) return;
-    const d = await tradeNet('POST', '/v1/trades', { to: to, offer: p.code }); if (!d) return;
+    const d = await tradeNet('POST', '/v1/trades', { to: to, offer: p.code, uid: p.uid }); if (!d) return;
     sentToTrade(p, d.trade.id); jingle('item');
     await say(monName(p.mon) + ' is in the trade. Player [' + to + '] gets a notification on their phone.|When they add a Tornie, come back here to see it and confirm.');
   }
@@ -12605,7 +12681,7 @@
     if (c === 'add') {
       const p = await packForTrade(me, t.with.tornId); if (!p) return;
       if (!(await yesno('Add ' + monName(p.mon) + ' (Lv' + p.mon.lv + ') to the trade?|You still need to confirm before anything changes hands.'))) return;
-      const d = await tradeNet('POST', '/v1/trades/' + t.id + '/offer', { offer: p.code }); if (!d) return;
+      const d = await tradeNet('POST', '/v1/trades/' + t.id + '/offer', { offer: p.code, uid: p.uid }); if (!d) return;
       sentToTrade(p, t.id); jingle('item');
       await say(monName(p.mon) + ' is in the trade. Now you can both confirm.');
     } else if (c === 'ok') {
@@ -12631,6 +12707,7 @@
       markTradeUsed(me.tornId, r.id);
       G.trades.inIds = (G.trades.inIds || []).concat([r.id]).slice(-200);
       G.trades.held = (G.trades.held || []).filter(function (h) { return h.id !== t.id; });
+      if (t.collectUid) r.mon.uid = t.collectUid;   // it keeps its ID, so its owner record follows it
       const where = addMon(r.mon); if (!back) { gstat('tradesIn'); checkMerits(); }
       saveGame(); jingle('get');
       await say(back ? monName(r.mon) + ' came back to you.' : 'Trade complete! {P} received ' + (r.mon.rk ? 'a GOLDEN ' : '') + SP[r.mon.sp].name + ' (Lv' + r.mon.lv + ') from ' + t.with.name + '!');

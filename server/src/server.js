@@ -11,7 +11,7 @@ const trades = require('./trades');
 const saves = require('./saves');
 
 const PORT = Number(process.env.PORT) || 8080;
-const VERSION = '1.6.0';
+const VERSION = '1.7.0';
 // The 2.40 fresh start: scores and cloud saves for every game except Tornies must come from Torn Arcade 2.40.0 or later
 // (older copies still hold the scores from before the reset).
 const MIN_SCRIPT = [2, 40, 0];
@@ -171,7 +171,7 @@ async function route(req, res, url) {
   const ctx = { whoAsks: whoAsks, send: send, fail: fail, readBody: readBody, limited: limited, ip: ip };
   if (path.indexOf('/v1/tt/') === 0) return tt.route(req, res, url, ctx);
   if (path.indexOf('/v1/chess/') === 0) return chess.route(req, res, url, ctx);
-  if (path === '/v1/trades' || path.indexOf('/v1/trades/') === 0) return trades.route(req, res, url, ctx);
+  if (path === '/v1/trades' || path.indexOf('/v1/trades/') === 0 || path.indexOf('/v1/admin/') === 0) return trades.route(req, res, url, ctx);
   if (method === 'PUT' && path.indexOf('/v1/saves/') === 0 && path !== '/v1/saves/tornies' && !newEnough(req)) return fail(res, 426, 'update', 'Update Torn Arcade to keep using cloud saves.');
   if (path === '/v1/saves' || path.indexOf('/v1/saves/') === 0) return saves.route(req, res, url, ctx);
   if (path === '/v1/inbox' && method === 'GET') {
