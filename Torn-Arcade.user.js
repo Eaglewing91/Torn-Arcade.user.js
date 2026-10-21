@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.43.2
+// @version      2.44.0
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with nine game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -127,6 +127,16 @@
  *   requested while the phone is closed. Your key is only ever sent to
  *   api.torn.com. The clock shows Torn City Time (UTC) from your
  *   device's own clock.
+ * - TIMED REMINDERS (optional; need key 2 below; each type can be switched
+ *   off in Settings > Notifications): while the phone is open, once a
+ *   minute, one request to api.torn.com (/v2/user?selections=basic,travel,
+ *   cooldowns,bars,refills,organizedcrime) reads your status, flight,
+ *   cooldowns, bars, refills and organised crime. The phone counts down by
+ *   itself and warns you 2 (or 5) minutes before: your flight lands,
+ *   you leave hospital or jail, your drug, booster or medical cooldown
+ *   ends, your energy or nerve is full, your faction chain runs out, the
+ *   new Torn day starts (and if a refill is still unused), and your
+ *   organised crime is ready. The answers are only shown, never saved.
  * - ONLINE PLAY (optional, off until you turn it on in Settings > Online).
  *   EVERY GAME WORKS FULLY WITHOUT IT, and without any API key. Online play
  *   only adds global leaderboards, online Torn Territories and Chess games
@@ -165,10 +175,14 @@
  *   attempts are logged, and the developer (Eaglewing) can see the trade
  *   log, ban a Torn ID from trading or stop a Tornie being traded. These
  *   anti-cheat records stay after an account is deleted.
- * - WHICH API KEY FOR WHAT: no game needs a key. Event notifications need a
- *   Custom key with only user > basic, events (the Settings button opens
- *   Torn's own new-key page with those ticked; a Limited key also works;
- *   sent only to api.torn.com). Online play needs only a Public key
+ * - WHICH API KEY FOR WHAT: no game needs a key. Settings offers two Custom
+ *   keys; each button opens Torn's own new-key page with exactly these
+ *   selections ticked, and the key is only sent to api.torn.com:
+ *     KEY 1 (events only):        user > basic, events
+ *     KEY 2 (events + reminders): user > basic, events, travel, cooldowns,
+ *                                 bars, refills, organizedcrime
+ *   (basic is a Public selection; travel, cooldowns, bars, refills and
+ *   organizedcrime are Minimal; events is Limited.) Online play needs only a Public key
  *   (user > basic; sent once to the Torn Arcade server to confirm your Torn
  *   ID). The saved custom key can be used to verify too, but only your
  *   name and ID are read.
@@ -190,13 +204,15 @@
  *                          loading. They contain no personal data, are never
  *                          uploaded, and "Clear saved maps" deletes them.
  * - Data Sharing:          Nobody
- * - Purpose of Use:        Public amusement (games) and event notifications
- *                          on the phone
+ * - Purpose of Use:        Public amusement (games), event notifications
+ *                          and timed reminders on the phone
  * - Key Storage & Sharing: Stored locally / Used only for automation (event
- *                          checks while the phone is open). Never shared.
- * - Key Access Level:      Custom (user > basic, events). A Limited key also
- *                          works. Optional: only needed for event
- *                          notifications.
+ *                          and reminder checks while the phone is open).
+ *                          Never shared.
+ * - Key Access Level:      Custom, one of two (optional; no game needs it):
+ *                          Key 1: user > basic, events
+ *                          Key 2: user > basic, events, travel, cooldowns,
+ *                          bars, refills, organizedcrime
  *
  * TERMS OF SERVICE: ONLINE PLAY (optional, off by default; no game needs it)
  * - Data Storage:          Persistent - until account deletion (on the Torn
@@ -218,9 +234,9 @@
  * - Key Storage & Sharing: Not stored / Not shared (sent once to the Torn
  *                          Arcade server to confirm your Torn ID with
  *                          api.torn.com, then forgotten)
- * - Key Access Level:      Public (user > basic). The custom key (user >
- *                          basic, events) or a Limited key also works; only
- *                          your name and Torn ID are read.
+ * - Key Access Level:      Public (user > basic). Your saved custom key
+ *                          (key 1 or key 2) also works; only your name and
+ *                          Torn ID are read.
  * - Where it may be used:  Torn (www.torn.com) only. See the LICENCE above.
  */
 
@@ -638,7 +654,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gifts and trades', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.43.2';
+  const VERSION = '2.44.0';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -857,6 +873,9 @@
     '.ta-pushtext small{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;font-size:12.5px;line-height:1.3;color:#f2f5f9}',
     '.ta-pushn{flex:none;font-style:normal;font-weight:800;font-size:11px;background:#e0453a;border-radius:9px;padding:2px 7px}',
     '.ta-pushn:empty{display:none}',
+    '.ta-keyopt{margin:8px 0 2px;padding:9px 10px;border:1px solid var(--line2);border-radius:10px;background:rgba(255,255,255,.03)}', '.ta-keyopt b{display:block;font-size:13px}', '.ta-keyopt small{display:block;margin:3px 0 7px}', '.ta-keyopt code{font:600 11.5px ui-monospace,Consolas,monospace;color:#ffd27a;word-break:break-word}',
+    '.ta-rmopts{margin-top:7px}', '.ta-rmopts label{font-size:12.5px}', '.ta-rmlead{margin:0 4px;font:600 12px system-ui,Arial,sans-serif;color:#fff;background:#0b1622;border:1px solid var(--line2);border-radius:7px;padding:3px 5px}',
+    '.ta-rmchips{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}', '.ta-rmchip{font:600 11.5px system-ui,Arial,sans-serif;color:#9fb0c3;background:#0b1622;border:1px solid var(--line2);border-radius:14px;padding:4px 9px;cursor:pointer;opacity:.6}', '.ta-rmchip.ta-on{color:#fff;border-color:var(--accent);opacity:1}',
     '.ta-land .ta-push{top:12px;left:56px;right:auto;width:360px}',
     '.ta-full .ta-push{top:calc(env(safe-area-inset-top,0px) + 40px)}',
     '.ta-rtext small.ta-evmsg.ta-good{color:#5fd38a}',
@@ -1475,15 +1494,22 @@
       '</div></div>' +
       '<div class="ta-group"><h3>Notifications</h3><div class="ta-list">' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#d0453a">🔔</span><div class="ta-rtext"><b>Torn event notifications</b><small>Shows your new Torn events on the phone while it is open</small></div><button type="button" class="ta-switch' + (store.get('evNotify', true) ? ' ta-on' : '') + '" data-set="evNotify"></button></div>' +
-        '<div class="ta-row"><span class="ta-ricon" style="background:#2f7bd1">🗝️</span><div class="ta-rtext"><b>Torn API key for event notifications</b><small>Best: a <strong style="display:inline;color:#ffd27a">Custom</strong> key that can only read your events and basic profile (user → basic, events). Tap “Generate custom API key”: Torn opens its own new-key page with those two selections ticked, you confirm there and paste the key here. A Limited key also works. Optional: no game needs it.</small><small class="ta-evmsg' + (evState.ok === true ? ' ta-good' : evState.ok === false ? ' ta-bad' : '') + '">' + esc(evState.msg || (store.get('apiKey', '') ? 'Key saved.' : 'No key saved. Make a Limited key in Torn under Settings → API Keys.')) + '</small>' +
-          '<div style="margin:6px 0 2px"><a class="ta-btn ta-keygen" href="https://www.torn.com/preferences.php#tab=api?step=addNewKey&title=Torn%20Arcade&user=basic,events" target="_blank" rel="noopener">🗝️ Generate custom API key</a></div>' +
+        '<div class="ta-row"><span class="ta-ricon" style="background:#e08a1a">⏰</span><div class="ta-rtext"><b>Timed reminders</b><small>Warnings shortly before things end, while the phone is open. Needs key 2 below.</small>' +
+          (rmOpts().on ? '<div class="ta-rmopts"><label>Warn me <select class="ta-rmlead"><option value="120"' + (rmOpts().lead === 120 ? ' selected' : '') + '>2 minutes</option><option value="300"' + (rmOpts().lead === 300 ? ' selected' : '') + '>5 minutes</option></select> before</label><div class="ta-rmchips">' +
+            RM_TYPES.map(function (t) { return '<button type="button" class="ta-rmchip' + (rmOpts().off[t[0]] ? '' : ' ta-on') + '" data-set="rmT" data-t="' + t[0] + '">' + t[1] + ' ' + t[2] + '</button>'; }).join('') +
+            '</div>' + (store.get('apiKey', '') && rmMsg ? '<small class="ta-evmsg">' + esc(rmMsg) + '</small>' : '') + '</div>' : '') +
+          '</div><button type="button" class="ta-switch' + (rmOpts().on ? ' ta-on' : '') + '" data-set="rmOn"></button></div>' +
+        '<div class="ta-row"><span class="ta-ricon" style="background:#2f7bd1">🗝️</span><div class="ta-rtext"><b>Torn API key (optional)</b><small>No game needs a key. A key only adds notifications on the phone, and only while it is open. Pick <strong style="display:inline;color:#ffd27a">one</strong> of the two Custom keys below: tap its button, Torn opens its own new-key page with exactly those selections ticked, you confirm there and paste the key here.</small>' +
+          '<div class="ta-keyopt"><b>Key 1 · Events only</b><small>Your new Torn events on the phone.<br>Custom key: <code>user → basic, events</code></small><a class="ta-btn ta-keygen" href="' + KEY_URL_EVENTS + '" target="_blank" rel="noopener">🗝️ Generate key 1</a></div>' +
+          '<div class="ta-keyopt"><b>Key 2 · Events + reminders</b><small>Everything in key 1, plus 2-minute warnings: flight landing, leaving hospital or jail, drug, booster and medical cooldowns, energy and nerve full, faction chain running out, unused refills before the new day and your organised crime being ready.<br>Custom key: <code>user → basic, events, travel, cooldowns, bars, refills, organizedcrime</code></small><a class="ta-btn ta-keygen" href="' + KEY_URL_REMIND + '" target="_blank" rel="noopener">🗝️ Generate key 2</a></div>' +
+          '<small class="ta-evmsg' + (evState.ok === true ? ' ta-good' : evState.ok === false ? ' ta-bad' : '') + '">' + esc(evState.msg || (store.get('apiKey', '') ? 'Key saved.' : 'No key saved. Generate key 1 or key 2 above, then paste it here.')) + '</small>' +
           '<div class="ta-cheat"><input type="password" class="ta-cheatin ta-keyin" autocomplete="off" spellcheck="false" maxlength="16" placeholder="' + (store.get('apiKey', '') ? '••••••••••••••••' : 'Paste your API key') + '"><button type="button" class="ta-btn" data-set="keySave">Save</button>' + (store.get('apiKey', '') ? '<button type="button" class="ta-danger" data-set="keyDel">Remove</button>' : '') + '</div>' +
           '<table class="ta-tos"><tbody>' +
             '<tr><td>Data storage</td><td>Only locally (events are shown, never saved; Tornies map images can be saved in this browser\'s storage)</td></tr>' +
             '<tr><td>Data sharing</td><td>Nobody</td></tr>' +
-            '<tr><td>Purpose of use</td><td>Public amusement (games) and event notifications on the phone</td></tr>' +
-            '<tr><td>Key storage &amp; sharing</td><td>Stored locally / Used only for automation (event checks while the phone is open). Never shared.</td></tr>' +
-            '<tr><td>Key access level</td><td>Custom (user → basic, events). A Limited key also works.</td></tr>' +
+            '<tr><td>Purpose of use</td><td>Public amusement (games), event notifications and timed reminders on the phone</td></tr>' +
+            '<tr><td>Key storage &amp; sharing</td><td>Stored locally / Used only for automation (event and reminder checks while the phone is open). Never shared.</td></tr>' +
+            '<tr><td>Key access level</td><td>Custom, one of two. Key 1: user → basic, events. Key 2: user → basic, events, travel, cooldowns, bars, refills, organizedcrime.</td></tr>' +
           '</tbody></table>' +
           '<small>Your key stays on this device and is only sent to api.torn.com, unless you choose to use it to verify for Online play below. Nothing is shared. See the top of the script for the full Terms of Service. Licensed for use on Torn only. <a class="ta-evlink" href="https://www.torn.com/api.html" target="_blank" rel="noopener">Torn API terms</a></small>' +
         '</div></div>' +
@@ -1551,6 +1577,7 @@
     const n = $(settingsBox, '.ta-volnum'); if (n) n.textContent = volume + '%';
   });
   settingsBox.addEventListener('change', function (e) {
+    if (e.target.classList && e.target.classList.contains('ta-rmlead')) { const o = rmOpts(); o.lead = Number(e.target.value) === 300 ? 300 : 120; store.set('rmOpts', o); rmFired = {}; return; }
     if (!e.target.classList || !e.target.classList.contains('ta-vol')) return;
     setVolume(e.target.value, true); sfx.click();
   });
@@ -1567,9 +1594,11 @@
     if (t.dataset.wall) { store.set('wallpaper', t.dataset.wall); applyWallpaper(); sfx.click(); renderSettings(); return; }
     const k = t.dataset.set;
     if (k === 'cheat') { tryCheat(); return; }
+    if (k === 'rmOn') { const o = rmOpts(); o.on = !o.on; store.set('rmOpts', o); sfx.click(); if (o.on) rmStart(); else rmStop(); renderSettings(); return; }
+    if (k === 'rmT') { const o = rmOpts(); o.off[t.dataset.t] = !o.off[t.dataset.t]; store.set('rmOpts', o); t.classList.toggle('ta-on', !o.off[t.dataset.t]); sfx.click(); return; }
     if (k === 'keySave') { saveKey(); return; }
     if (k && k.indexOf('onl') === 0) { onlAction(k, t); return; }
-    if (k === 'keyDel') { store.set('apiKey', ''); evState = { msg: 'Key removed. Event notifications are off.' }; evStop(); sfx.click(); renderSettings(); return; }
+    if (k === 'keyDel') { store.set('apiKey', ''); evState = { msg: 'Key removed. Event notifications are off.' }; evStop(); rmStop(); rmAllowed = null; sfx.click(); renderSettings(); return; }
     if (k === 'saveMaps') { const on = !store.get('saveMaps', true); store.set('saveMaps', on); t.classList.toggle('ta-on', on); sfx.click(); if (on && games.pocket && games.pocket.maps) games.pocket.maps.open(); else if (games.pocket && games.pocket.maps) games.pocket.maps.stop(); mapProgress(); return; }
     if (k === 'mapPrep') {
       const mp = games.pocket && games.pocket.maps; if (!mp) return;
@@ -1651,7 +1680,7 @@
     if (a) h += '<div class="ta-row"><span class="ta-ricon" style="background:' + (a.verified ? '#1c9a5a' : '#7a7f8a') + '">' + (a.verified ? '✔️' : '👤') + '</span><div class="ta-rtext"><b>' + onlWho(a) + '</b><small>' +
       (a.verified ? 'Verified Torn ID · on the global leaderboards' : 'Guest · not on the global leaderboards until you verify') + '</small>' + (a.verified ? msg : '') + '</div><button type="button" class="ta-btn" data-set="onlOut">Sign out</button></div>';
     if (!a || !a.verified) {
-      h += '<div class="ta-row"><span class="ta-ricon" style="background:#2f7bd1">🗝️</span><div class="ta-rtext"><b>Verify your Torn ID</b><small>Proves who you are, so nobody can play as you and your results count on the global leaderboards.</small><small>Needs only a <strong style="display:inline;color:#ffd27a">Public</strong> access key (it reads user → basic: your name and Torn ID). ' + (saved ? 'Your saved event key is a Limited key: it works too, and still only your name and ID are read. If you\'d rather not send it, make a separate Public key in Torn under Settings → API Keys and paste it here.' : 'Make one in Torn under Settings → API Keys.') + '</small>' + msg +
+      h += '<div class="ta-row"><span class="ta-ricon" style="background:#2f7bd1">🗝️</span><div class="ta-rtext"><b>Verify your Torn ID</b><small>Proves who you are, so nobody can play as you and your results count on the global leaderboards.</small><small>Needs only a <strong style="display:inline;color:#ffd27a">Public</strong> access key (it reads user → basic: your name and Torn ID). ' + (saved ? 'Your saved custom key (key 1 or key 2) works too, and still only your name and ID are read. If you\'d rather not send it, make a separate Public key in Torn under Settings → API Keys and paste it here.' : 'Make one in Torn under Settings → API Keys.') + '</small>' + msg +
         (saved ? '<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="ta-btn" data-set="onlSaved"' + (onlBusy ? ' disabled' : '') + '>Use my saved key</button></div>' : '') +
         '<div class="ta-cheat"><input type="password" class="ta-cheatin ta-onlkey" autocomplete="off" spellcheck="false" maxlength="16" placeholder="' + (saved ? 'Or paste a Public API key' : 'Paste a Public API key') + '"><button type="button" class="ta-btn" data-set="onlVerify"' + (onlBusy ? ' disabled' : '') + '>Verify</button></div>' +
         (!a ? '<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="ta-btn" data-set="onlGuest"' + (onlBusy ? ' disabled' : '') + '>Play as a guest instead</button></div>' : '') +
@@ -1660,7 +1689,7 @@
           '<tr><td>Data sharing</td><td>General public (your name, Torn ID, rating and best scores on the global leaderboards); players in your online games and trades see your name, Torn ID, moves and the Tornie you offer; the service owner sees trade records for anti-cheat</td></tr>' +
           '<tr><td>Purpose of use</td><td>Public community tools (global leaderboards, online Torn Territories and Chess games and Tornie trades, with trade anti-cheat)</td></tr>' +
           '<tr><td>Key storage &amp; sharing</td><td>Not stored / Not shared (sent once to the Torn Arcade server to confirm your Torn ID with api.torn.com, then forgotten)</td></tr>' +
-          '<tr><td>Key access level</td><td>Public (user → basic). Your custom key (user → basic, events) or a Limited key also works; only your name and Torn ID are read.</td></tr>' +
+          '<tr><td>Key access level</td><td>Public (user → basic). Your saved custom key (key 1 or key 2) also works; only your name and Torn ID are read.</td></tr>' +
         '</tbody></table>' +
         '<small>The Torn Arcade server is run by Eaglewing [571041] and hosted on Railway. Guests need no key, but can\'t join the leaderboards, online games or trades. Delete your online account at any time below. <a class="ta-evlink" href="https://www.torn.com/api.html" target="_blank" rel="noopener">Torn API terms</a> · <a class="ta-evlink" href="https://railway.com/legal/privacy" target="_blank" rel="noopener noreferrer">Railway privacy policy</a></small>' +
         '</div></div>';
@@ -2058,7 +2087,7 @@
       try { document.activeElement.blur(); } catch (e) {}
     }
     applyWallpaper(); tickClock(); clockTimer = setInterval(tickClock, 5000);
-    evStart(); inboxStart(); showNews();
+    evStart(); rmStart(); inboxStart(); showNews();
     setOrientation(wantsLand(current), false);
     win.classList.remove('ta-turn-l', 'ta-turn-p');
     refreshNav();
@@ -2071,7 +2100,7 @@
     devLockNow();   // the Dev app locks whenever the phone is closed
     if (current && games[current]) games[current].leave();
     isOpen = false; root.hidden = true; clearInterval(clockTimer); inboxStop(); cloudPush();
-    evStop();
+    evStop(); rmStop();
     document.documentElement.style.overflow = savedOverflow;
   }
   function toggleArcade() { if (isOpen) closeArcade(); else openArcade(); }
@@ -2115,7 +2144,7 @@
   function evErrorText(err) {
     const c = err && err.code;
     if (c === 2) return 'That key is not valid.';
-    if (c === 16) return 'That key can\'t read your events. Use Generate custom API key (or a Limited key).';
+    if (c === 16) return 'That key can\'t read your events. Make key 1 or key 2 with the Generate buttons in Settings.';
     if (c === 5) return 'Too many API requests right now. Trying again shortly.';
     if (c === 13 || c === 18) return 'That key is paused or inactive in Torn.';
     if (c === 9 || c === 17) return 'The Torn API is unavailable right now.';
@@ -2157,6 +2186,8 @@
     if (!e || !isOpen) { evShowing = false; pushEl.hidden = true; return; }
     evShowing = true;
     $(pushEl, 'small').textContent = e.text || 'You have a new event.';
+    $(pushEl, 'b').textContent = e.title || 'Torn · New event'; $(pushEl, '.ta-pushicon').textContent = e.icon || '📩';
+    pushEl.href = e.href || 'https://www.torn.com/page.php?sid=events'; pushEl.title = e.href ? 'Open Torn' : 'Open your Torn events';
     $(pushEl, '.ta-pushn').textContent = evQueue.length ? '+' + evQueue.length : '';
     pushEl.classList.remove('ta-out'); pushEl.hidden = true; void pushEl.offsetWidth; pushEl.hidden = false;
     if (!muted) seq([[0, 988, 0.07, 'sine', 0.06], [110, 1319, 0.12, 'sine', 0.06]]);
@@ -2176,6 +2207,130 @@
   function evStop() {
     clearInterval(evTimer); evTimer = 0; evQueue = []; clearTimeout(evHideT); evShowing = false; pushEl.hidden = true;
   }
+  /* ================= Timed reminders ("Landing in 2 minutes") =================
+     While the phone is open, once a minute, one request to api.torn.com reads your status, flight, cooldowns, bars
+     and refills (and, if switched on, your organised crime). The phone then counts down itself and shows a reminder
+     shortly before each one ends. Nothing is saved or sent anywhere else. A key without some of these selections
+     simply skips those reminders. */
+  const KEY_URL_EVENTS = 'https://www.torn.com/preferences.php#tab=api?step=addNewKey&title=Torn%20Arcade&user=basic,events';
+  const KEY_URL_REMIND = 'https://www.torn.com/preferences.php#tab=api?step=addNewKey&title=Torn%20Arcade%20Reminders&user=basic,events,travel,cooldowns,bars,refills,organizedcrime';
+  const RM_SELS = ['basic', 'travel', 'cooldowns', 'bars', 'refills', 'organizedcrime'];   // basic: Public; the rest: Minimal
+  const RM_TYPES = [
+    ['travel', '✈️', 'Flight landing', 'travel'], ['hosp', '🏥', 'Leaving hospital', 'basic'], ['jail', '🚔', 'Leaving jail', 'basic'],
+    ['drug', '💊', 'Drug cooldown', 'cooldowns'], ['booster', '🍬', 'Booster cooldown', 'cooldowns'], ['medical', '🩹', 'Medical cooldown', 'cooldowns'],
+    ['energy', '⚡', 'Energy full', 'bars'], ['nerve', '💪', 'Nerve full', 'bars'], ['chain', '⛓️', 'Faction chain running out', 'bars'],
+    ['refills', '🔁', 'Unused refills before the new day', 'refills'], ['oc', '🕵️', 'Organised crime ready', 'organizedcrime'], ['newday', '🌙', 'New Torn day', '']
+  ];
+  const RM_EVERY = 60000;
+  let rmTimer = 0, rmTick = 0, rmBusy = false, rmAt = [], rmFired = {}, rmAllowed = null, rmLastFetch = 0, rmMsg = '';
+  function rmOpts() { return Object.assign({ on: true, lead: 120, off: {} }, store.get('rmOpts', null) || {}); }
+  function rmOn(type) { const o = rmOpts(); return o.on && !o.off[type]; }
+  async function rmGet(key, url) {
+    const res = await fetch(url, { method: 'GET', credentials: 'omit', cache: 'no-store', referrerPolicy: 'no-referrer' });
+    const j = await res.json();
+    if (j && j.error) { const err = new Error(j.error.error || 'API error'); err.code = j.error.code; throw err; }
+    return j || {};
+  }
+  // One request for every selection (API v2; falls back to v1, which has no organised crimes, if v2 can't answer).
+  async function rmSels(key, sels) {
+    const q = '?selections=' + sels.join(',') + '&comment=TornArcade&key=' + encodeURIComponent(key);
+    try { return await rmGet(key, 'https://api.torn.com/v2/user' + q); }
+    catch (err) {
+      if (err.code === 2 || err.code === 16 || err.code === 13 || err.code === 18 || err.code === 5 || err.code === 8 || err.code === 9) throw err;
+      const v1 = sels.filter(function (x) { return x !== 'organizedcrime'; });
+      if (!v1.length) throw err;
+      return await rmGet(key, 'https://api.torn.com/user/?selections=' + v1.join(',') + '&comment=TornArcade&key=' + encodeURIComponent(key));
+    }
+  }
+  // Which selections this key may read (asked once per key; a key without a selection gets error 16 for the whole request).
+  async function rmProbe(key) {
+    if (rmAllowed && rmAllowed.key === key) return rmAllowed.sels;
+    const ok = [];
+    try { await rmSels(key, RM_SELS); ok.push.apply(ok, RM_SELS); }
+    catch (err) {
+      if (err.code !== 16) throw err;
+      for (const sel of RM_SELS) { try { await rmSels(key, [sel]); ok.push(sel); } catch (e) { if (e.code !== 16) throw e; } }
+    }
+    rmAllowed = { key: key, sels: ok };
+    return ok;
+  }
+  const num = function (v) { v = Number(v); return isFinite(v) ? v : 0; };
+  // Turns the API answer into a list of moments to remind about. Accepts the v1 and v2 shapes.
+  function rmParse(d, now) {
+    const out = [], add = function (type, at, warn, done, href) { if (at > now) out.push({ type: type, at: at, warn: warn, done: done, href: href }); };
+    const st = d.status || (d.profile && d.profile.status) || {};
+    const until = num(st.until) * 1000;
+    if (/hospital/i.test(st.state || '') && until) add('hosp', until, 'Out of hospital in {t}', 'You\'re out of hospital', 'https://www.torn.com/hospitalview.php');
+    if (/jail/i.test(st.state || '') && until) add('jail', until, 'Out of jail in {t}', 'You\'re out of jail', 'https://www.torn.com/jailview.php');
+    const tr = d.travel || {};
+    const left = num(tr.time_left), arr = num(tr.arrival_at || tr.timestamp) * 1000 || (left ? now + left * 1000 : 0);
+    if (arr && (left > 0 || arr > now)) {
+      const dest = tr.destination && !/^torn/i.test(tr.destination) ? tr.destination : 'Torn City';
+      add('travel', arr, 'Landing in ' + dest + ' in {t}', 'You\'ve landed in ' + dest, 'https://www.torn.com/index.php');
+    }
+    const cd = d.cooldowns || {};
+    [['drug', 'Drug'], ['booster', 'Booster'], ['medical', 'Medical']].forEach(function (c) { const v = num(cd[c[0]]); if (v > 0) add(c[0], now + v * 1000, c[1] + ' cooldown ends in {t}', c[1] + ' cooldown is over', 'https://www.torn.com/item.php'); });
+    const bars = d.bars || d;
+    [['energy', 'Energy', 'https://www.torn.com/gym.php'], ['nerve', 'Nerve', 'https://www.torn.com/crimes.php']].forEach(function (b) {
+      const x = bars[b[0]]; if (!x) return;
+      const full = num(x.fulltime !== undefined ? x.fulltime : x.full_time);
+      if (num(x.current) < num(x.maximum) && full > 0) add(b[0], now + full * 1000, b[1] + ' will be full in {t}', b[1] + ' is full', b[2]);
+    });
+    const ch = bars.chain;
+    if (ch && num(ch.current) >= 10 && num(ch.timeout) > 0) add('chain', now + num(ch.timeout) * 1000, 'Faction chain (' + num(ch.current) + ' hits) runs out in {t}. Hit to keep it alive!', '', 'https://www.torn.com/factions.php?step=your#/war/chain');
+    const day = Math.ceil((now + 1) / 86400000) * 86400000;   // next 00:00 TCT (UTC)
+    const rf = d.refills || null;
+    if (rf) {
+      const eUsed = rf.energy_refill_used !== undefined ? rf.energy_refill_used : rf.energy, nUsed = rf.nerve_refill_used !== undefined ? rf.nerve_refill_used : rf.nerve;
+      const miss = [eUsed === false ? 'energy' : '', nUsed === false ? 'nerve' : ''].filter(Boolean);
+      if (miss.length) out.push({ type: 'refills', at: day, lead: 600000, warn: 'Your ' + miss.join(' and ') + ' refill' + (miss.length > 1 ? 's are' : ' is') + ' unused. New Torn day in {t}', done: '', href: 'https://www.torn.com/page.php?sid=points', key: 'refills:' + day });
+    }
+    out.push({ type: 'newday', at: day, warn: 'New Torn day in {t}', done: '', href: '', key: 'newday:' + day });
+    const oc = d.organizedCrime || d.organizedcrime;
+    if (oc && num(oc.ready_at) * 1000 > now) add('oc', num(oc.ready_at) * 1000, 'Your organised crime' + (oc.name ? ' (' + oc.name + ')' : '') + ' is ready in {t}', 'Your organised crime is ready', 'https://www.torn.com/factions.php?step=your#/tab=crimes');
+    return out;
+  }
+  async function rmFetch() {
+    const key = store.get('apiKey', '');
+    if (rmBusy || !key || !isOpen || document.hidden || !rmOpts().on) return;
+    rmBusy = true;
+    try {
+      const ok = await rmProbe(key), now = Date.now();
+      const sels = RM_SELS.filter(function (x) { return ok.indexOf(x) >= 0 && (x !== 'organizedcrime' || rmOn('oc')); });
+      const d = sels.length ? await rmSels(key, sels) : {};
+      rmAt = rmParse(d, now); rmLastFetch = now;
+      const miss = RM_TYPES.filter(function (t) { return t[3] && ok.indexOf(t[3]) < 0 && rmOn(t[0]); });
+      rmMsg = miss.length ? 'Your key can\'t read: ' + miss.map(function (t) { return t[2].toLowerCase(); }).join(', ') + '. Make key 2 with the Generate key 2 button below and paste it in.' : 'All reminders are working.';
+    } catch (err) { rmMsg = 'Reminders paused: ' + evErrorText(err); }
+    rmBusy = false;
+  }
+  function rmCheck() {
+    if (!isOpen) return;
+    const now = Date.now(), o = rmOpts(), lead = o.lead * 1000;
+    let refetch = false;
+    rmAt.forEach(function (r) {
+      if (!rmOn(r.type)) return;
+      // Countdowns from the API drift by a few seconds between checks: within 90 seconds it's the same moment, not a new one.
+      const prev = rmFired[r.type], same = prev && Math.abs(prev.at - r.at) < 90000;
+      if (!same) rmFired[r.type] = { at: r.at, id: r.key || (r.type + ':' + r.at) };
+      const id = rmFired[r.type].id, L = r.lead || lead, T = RM_TYPES.find(function (t) { return t[0] === r.type; });
+      if (!rmFired[id + 'w'] && now >= r.at - L && r.at - now > 15000) {
+        rmFired[id + 'w'] = 1;
+        const mins = Math.max(1, Math.round((r.at - now) / 60000));
+        evNotify([{ id: id + 'w', title: 'Torn · Reminder', icon: T[1], href: r.href, text: r.warn.replace('{t}', mins + ' minute' + (mins > 1 ? 's' : '')) }]);
+      }
+      if (r.done && !rmFired[id + 'd'] && now >= r.at && now - r.at < 60000) {
+        rmFired[id + 'd'] = 1; refetch = true;
+        evNotify([{ id: id + 'd', title: 'Torn · Reminder', icon: T[1], href: r.href, text: r.done }]);
+      }
+    });
+    if (refetch || now - rmLastFetch >= RM_EVERY) rmFetch();
+  }
+  function rmStart() {
+    if (rmTimer || !store.get('apiKey', '') || !rmOpts().on) return;
+    rmFetch(); rmTimer = setInterval(rmCheck, 5000);
+  }
+  function rmStop() { clearInterval(rmTimer); rmTimer = 0; }
   async function saveKey() {
     const input = $(settingsBox, '.ta-keyin');
     if (!input) return;
@@ -2187,7 +2342,7 @@
       await evFetch(key, { limit: 1 });
       store.set('apiKey', key); evState = { ok: true, msg: 'Key works. Notifications are on.' }; sfx.win();
       if (!store.get('evNotify', true)) store.set('evNotify', true);
-      evStop(); evStart();
+      evStop(); evStart(); rmStop(); rmAllowed = null; rmStart();
     } catch (err) { evState = { ok: false, msg: evErrorText(err) }; sfx.miss(); }
     if (current === 'settings') renderSettings();
   }

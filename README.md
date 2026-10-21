@@ -6,6 +6,8 @@
 
 Torn Arcade is a Tampermonkey userscript that adds a **Mobile Phone** link to Torn's sidebar. Click it and a phone opens on top of the page with nine games, leaderboards and settings. Everything runs inside the phone, and every image, sound and piece of music is built into the script or its two optional Art Packs.
 
+> ⏰ **2.44: Timed reminders.** 2-minute warnings on the phone before your flight lands, you leave hospital or jail, your cooldowns end, your energy or nerve is full, your chain runs out and more, with a new **Key 2** (Custom) in Settings. Key 1 (events only) stays as it was.
+>
 > ⏱️ **2.43.2:** More time online: Chess gives 45 seconds a move, and in Territories every move you make (a road, a build, a trade) gives you a fresh 45 seconds.
 >
 > ♞ **2.43.1:** Faster online moves in Chess and Territories: on some browsers a move could wait up to 20 seconds before it was sent. It now goes out straight away.
@@ -149,7 +151,7 @@ Torn Arcade is built to follow Torn's scripting rules:
 
 - Apart from adding the **Mobile Phone** link to the sidebar, it never reads, clicks or changes anything on Torn's page.
 - It **never loads Torn pages** and makes **no non-API requests** to Torn.
-- It doesn't talk to any website other than the official Torn API (only if you turn on event notifications) and, only if you turn on the optional **Online play**, the Torn Arcade server (see below). The Art Pack install buttons are plain links to this GitHub page that only open when you tap them.
+- It doesn't talk to any website other than the official Torn API (only if you add a key for event notifications or reminders) and, only if you turn on the optional **Online play**, the Torn Arcade server (see below). The Art Pack install buttons are plain links to this GitHub page that only open when you tap them.
 - It uses **no websockets**.
 - The optional Art Packs make no requests at all. They only pass pictures to Torn Arcade on the page.
 - The optional **Torn Arcade - Invasion** script makes no requests at all. It only draws the game inside the phone and talks to Torn Arcade through events on the page.
@@ -157,18 +159,43 @@ Torn Arcade is built to follow Torn's scripting rules:
 - **No game needs an API key or Online play.** Both are optional extras.
 
 ### 🗝️ Which API key for what
-| Feature | Key needed | What it reads | Where the key goes |
+No game needs a key. A key only adds notifications on the phone, and only while the phone is open. Settings → Notifications offers **two Custom keys**; pick one. Each **Generate** button opens Torn's own new-key page in a new tab with exactly these selections ticked; you confirm it on Torn and paste the key back. A custom key can't read anything outside its selections (no money, messages, items or battle stats).
+
+| Key | Selections (Custom key) | Torn access level of each | What you get |
 |---|---|---|---|
-| All games | **None** | Nothing | Nowhere |
-| Event notifications (optional) | **Custom** (`user → basic, events`), made with the **Generate custom API key** button; a Limited key also works | `user → events` | Only `api.torn.com`, every 5 seconds while the phone is open |
-| Online play (optional) | **Public** | `user → basic` (your name and Torn ID) | Once to the Torn Arcade server, which asks `api.torn.com` who owns it and forgets it |
+| **Key 1 · Events only** | `user → basic, events` | basic: Public · events: Limited | Your new Torn events on the phone |
+| **Key 2 · Events + reminders** | `user → basic, events, travel, cooldowns, bars, refills, organizedcrime` | basic: Public · events: Limited · travel, cooldowns, bars, refills, organizedcrime: Minimal | Everything in key 1, plus the timed reminders below |
+| Online play (optional) | **Public** `user → basic` (or your saved key 1 or 2) | Public | Your name and Torn ID, sent once to the Torn Arcade server, which asks `api.torn.com` who owns it and forgets it |
 
-You can verify for Online play with the key you saved for notifications (**Use my saved key**); only your name and Torn ID are read. If you'd rather not send it, make a separate Public key and paste that instead.
+You can verify for Online play with your saved key (**Use my saved key**); only your name and Torn ID are read. If you'd rather not send it, make a separate Public key and paste that instead.
 
-**Generate custom API key** (Settings → Notifications) opens Torn's own new-key page in a new tab, with the name *Torn Arcade* and only the two selections it needs (**basic** and **events**) already ticked. You confirm it on Torn and paste the key back. A custom key like this can't read anything else on your account. If Torn's newer API ever refuses a custom key for events, Torn Arcade asks the older API path for the same events instead (still only `api.torn.com`).
+**What each selection is used for (key 2):**
+
+| Selection | Used for |
+|---|---|
+| `basic` | Your status: the time you leave **hospital** or **jail** |
+| `events` | Your new Torn **events** |
+| `travel` | Your **flight**: destination and landing time |
+| `cooldowns` | When your **drug**, **booster** and **medical** cooldowns end |
+| `bars` | When your **energy** and **nerve** will be full, and your **faction chain** timeout |
+| `refills` | Whether your energy and nerve **refills** are still unused today |
+| `organizedcrime` | When your **organised crime** is ready |
 
 ### Optional event notifications
-If you add an API key in Settings (a **Custom** key with `user → basic, events`, or a Limited key), the phone checks the official Torn API (`api.torn.com`, `/v2/user/events`) for new events **every 5 seconds while the phone is open**. That's 12 calls a minute, well under Torn's limit of 100. Nothing is requested while the phone is closed. The key is only ever sent to `api.torn.com`. See the Torn API terms on Torn's API page (on [Torn](https://www.torn.com), under the API section).
+With key 1 or key 2 saved, the phone checks the official Torn API (`api.torn.com`, `/v2/user/events`) for new events **every 5 seconds while the phone is open**. That's 12 calls a minute, well under Torn's limit of 100. Nothing is requested while the phone is closed. The key is only ever sent to `api.torn.com`. If Torn's newer API ever refuses a custom key for events, Torn Arcade asks the older API path for the same events instead (still only `api.torn.com`). See the Torn API terms on Torn's API page (on [Torn](https://www.torn.com), under the API section).
+
+### ⏰ Optional timed reminders (key 2)
+While the phone is open, the phone shows a warning **2 minutes** (or 5, your choice) before:
+- ✈️ your flight lands (there and back), and again when you've landed
+- 🏥 you leave hospital, 🚔 you leave jail
+- 💊 your drug, 🍬 booster or 🩹 medical cooldown ends
+- ⚡ your energy or 💪 nerve will be full
+- ⛓️ your faction chain runs out (when a chain of 10+ is running)
+- 🔁 the new Torn day starts while your energy or nerve refill is unused (10 minutes before)
+- 🕵️ your organised crime is ready
+- 🌙 the new Torn day starts
+
+How it works: **once a minute while the phone is open**, one request to `api.torn.com` (`/v2/user?selections=basic,travel,cooldowns,bars,refills,organizedcrime`) reads the times; the phone counts down by itself in between. The answers are only shown, never saved or sent anywhere. Each reminder can be switched off (Settings → Notifications → Timed reminders), or all of them at once. With key 1, only the hospital, jail and new-day reminders work, and Settings tells you which ones your key can't read.
 
 ### 🌐 Optional online play
 **Online play is completely optional and off until you turn it on** (Settings → Online). **Every game works fully without it**: Tornies, Torn Invasion, Angry Bogies, Faction Defence, Egg Dash, Torn Territories against the computer or pass-and-play, Chess against the computer, Dirty Bombs and Flappy Torn all play on your own device, with no API key, no account and no server. Online play only *adds* four things:
@@ -207,7 +234,7 @@ With Online play off, **nothing** is ever sent, and nothing is requested while t
 
 | Data Storage | Data Sharing | Purpose of Use | Key Storage & Sharing | Key Access Level |
 |---|---|---|---|---|
-| Only locally | Nobody | Public amusement (games) and event notifications on the phone | Stored locally / Used only for automation (event checks while the phone is open). Never shared. | Custom (user → basic, events). A Limited key also works. Optional: only needed for event notifications |
+| Only locally | Nobody | Public amusement (games), event notifications and timed reminders on the phone | Stored locally / Used only for automation (event and reminder checks while the phone is open). Never shared. | Custom, one of two (optional): **Key 1** user → basic, events · **Key 2** user → basic, events, travel, cooldowns, bars, refills, organizedcrime Optional: only needed for event notifications |
 
 - **Data Storage:** settings, theme, wallpaper, best scores, your Tornies save, Torn Invasion progress, Angry Bogies stars, Faction Defence progress (stars, War Chest and Armoury), Egg Dash eggs and achievements, a Torn Territories game in progress and your API key are kept in Tampermonkey storage on your device. Events are shown on the phone but never saved. With **Save maps on this device** on (Settings → Tornies), pictures of the Tornies maps the game has drawn are also kept in your browser's own storage for torn.com (IndexedDB, `torn-arcade-maps`). They are drawn by the script on your device, contain no personal data, are never uploaded or shared, and **Clear saved maps** deletes them.
 - **Data Sharing:** nothing is sent anywhere except event requests to `api.torn.com` and, only if you turn on Online play, requests to the Torn Arcade server (see below).
