@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.45.0
+// @version      2.45.1
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with nine game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -661,7 +661,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gifts and trades', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.45.0';
+  const VERSION = '2.45.1';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -880,7 +880,7 @@
     '.ta-pushtext small{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;font-size:12.5px;line-height:1.3;color:#f2f5f9}',
     '.ta-pushn{flex:none;font-style:normal;font-weight:800;font-size:11px;background:#e0453a;border-radius:9px;padding:2px 7px}',
     '.ta-pushn:empty{display:none}',
-    '.ta-keycmp{width:100%;border-collapse:collapse;margin:8px 0 4px;font-size:12px;table-layout:fixed}', '.ta-keycmp th,.ta-keycmp td{padding:5px 4px;border-bottom:1px solid var(--line2);text-align:center;vertical-align:middle}', '.ta-keycmp th:first-child,.ta-keycmp td:first-child{text-align:left;width:46%}', '.ta-keycmp th{font-size:12.5px;color:#fff}', '.ta-keycmp th small{display:block;font-weight:500;font-size:10.5px;color:#9fb0c3;margin:1px 0 0}', '.ta-keycmp td.ta-y{color:#4cd38a;font-weight:800;font-size:14px}', '.ta-keycmp td.ta-n{color:#5a6676}', '.ta-keycmp th:last-child,.ta-keycmp td:last-child{background:rgba(255,210,122,.06)}', '.ta-keysels small{display:block;margin:3px 0 0}', '.ta-keysels b{display:inline;color:#fff}', '.ta-keysels code{font:600 11px ui-monospace,Consolas,monospace;color:#ffd27a}', '.ta-keycmp .ta-keybtn td{border-bottom:0;padding-top:8px}', '.ta-keycmp .ta-keygen{display:inline-block;padding:6px 10px;font-size:12px;white-space:nowrap}',
+    '.ta-keycmp{width:100%;border-collapse:collapse;margin:8px 0 4px;font-size:12px;table-layout:fixed}', '.ta-keycmp th,.ta-keycmp td{color:var(--text)!important;background:transparent;padding:5px 4px;border-bottom:1px solid var(--line2);text-align:center;vertical-align:middle}', '.ta-keycmp th:first-child,.ta-keycmp td:first-child{text-align:left;width:46%}', '.ta-keycmp th{font-size:12.5px;color:#fff}', '.ta-keycmp th small{display:block;font-weight:500;font-size:10.5px;color:#9fb0c3!important;margin:1px 0 0}', '.ta-keycmp td.ta-y{color:#4cd38a!important;font-weight:800;font-size:14px}', '.ta-keycmp td.ta-n{color:#6f7d8e!important}', '.ta-keycmp th:last-child,.ta-keycmp td:last-child{background:rgba(255,210,122,.06)}', '.ta-keysels small{display:block;margin:3px 0 0}', '.ta-keysels b{display:inline;color:#fff}', '.ta-keysels code{font:600 11px ui-monospace,Consolas,monospace;color:#ffd27a}', '.ta-keycmp .ta-keybtn td{border-bottom:0;padding-top:8px}', '.ta-keycmp .ta-keygen{display:inline-block;padding:6px 10px;font-size:12px;white-space:nowrap}',
     '.ta-keyopt{margin:8px 0 2px;padding:9px 10px;border:1px solid var(--line2);border-radius:10px;background:rgba(255,255,255,.03)}', '.ta-keyopt b{display:block;font-size:13px}', '.ta-keyopt small{display:block;margin:3px 0 7px}', '.ta-keyopt code{font:600 11.5px ui-monospace,Consolas,monospace;color:#ffd27a;word-break:break-word}',
     '.ta-rmopts{margin-top:7px}', '.ta-rmopts label{font-size:12.5px}', '.ta-rmlead{margin:0 4px;font:600 12px system-ui,Arial,sans-serif;color:#fff;background:#0b1622;border:1px solid var(--line2);border-radius:7px;padding:3px 5px}',
     '.ta-rmchips{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}', '.ta-rmchip{font:600 11.5px system-ui,Arial,sans-serif;color:#9fb0c3;background:#0b1622;border:1px solid var(--line2);border-radius:14px;padding:4px 9px;cursor:pointer;opacity:.6}', '.ta-rmchip.ta-on{color:#fff;border-color:var(--accent);opacity:1}',
@@ -2321,8 +2321,7 @@
       const sels = RM_SELS.filter(function (x) { return ok.indexOf(x) >= 0 && (x !== 'organizedcrime' || rmOn('oc')); });
       const d = sels.length ? await rmSels(key, sels) : {};
       rmAt = rmParse(d, now); rmLastFetch = now;
-      const miss = RM_TYPES.filter(function (t) { return t[3] && ok.indexOf(t[3]) < 0 && rmOn(t[0]); });
-      rmMsg = miss.length ? 'Your key can\'t read: ' + miss.map(function (t) { return t[2].toLowerCase(); }).join(', ') + '. Make key 2 with the Generate key 2 button below and paste it in.' : 'All reminders are working.';
+      rmMsg = '';   // which reminders each key gives is shown in the key table below
     } catch (err) { rmMsg = 'Reminders paused: ' + evErrorText(err); }
     rmBusy = false;
   }
