@@ -159,7 +159,7 @@ Torn Arcade is built to follow Torn's scripting rules:
 - **No game needs an API key or Online play.** Both are optional extras.
 
 ### 🗝️ Which API key for what
-No game needs a key. A key only adds notifications on the phone, and only while the phone is open. Settings → Notifications offers **two Custom keys**; pick one. Each **Generate** button opens Torn's own new-key page in a new tab with exactly these selections ticked; you confirm it on Torn and paste the key back. A custom key can't read anything outside its selections (no money, messages, items or battle stats).
+No game needs a key. A key only adds notifications on the phone, and only while the phone is open. Settings → Notifications offers **two Custom keys**, compared side by side in a table (what each one gives you, its exact selections and its own Generate button); pick one. Each **Generate** button opens Torn's own new-key page in a new tab with exactly these selections ticked; you confirm it on Torn and paste the key back. A custom key can't read anything outside its selections (no money, messages, items or battle stats).
 
 | Key | Selections (Custom key) | Torn access level of each | What you get |
 |---|---|---|---|
