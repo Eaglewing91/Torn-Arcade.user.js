@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.45.1
+// @version      2.45.2
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with nine game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -131,12 +131,12 @@
  *   requested while the phone is closed. Your key is only ever sent to
  *   api.torn.com. The clock shows Torn City Time (UTC) from your
  *   device's own clock.
- * - TIMED REMINDERS (optional; need key 2 below; each type can be switched
- *   off in Settings > Notifications): while the phone is open, once a
+ * - TIMED REMINDERS (optional; need key 2 below; one on/off switch in
+ *   Settings > Notifications): while the phone is open, once a
  *   minute, one request to api.torn.com (/v2/user?selections=basic,travel,
  *   cooldowns,bars,refills,organizedcrime) reads your status, flight,
  *   cooldowns, bars, refills and organised crime. The phone counts down by
- *   itself and warns you 2 (or 5) minutes before: your flight lands,
+ *   itself and warns you 2 minutes before: your flight lands,
  *   you leave hospital or jail, your drug, booster or medical cooldown
  *   ends, your energy or nerve is full, your faction chain runs out, the
  *   new Torn day starts (and if a refill is still unused), and your
@@ -661,7 +661,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gifts and trades', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.45.1';
+  const VERSION = '2.45.2';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -882,8 +882,6 @@
     '.ta-pushn:empty{display:none}',
     '.ta-keycmp{width:100%;border-collapse:collapse;margin:8px 0 4px;font-size:12px;table-layout:fixed}', '.ta-keycmp th,.ta-keycmp td{color:var(--text)!important;background:transparent;padding:5px 4px;border-bottom:1px solid var(--line2);text-align:center;vertical-align:middle}', '.ta-keycmp th:first-child,.ta-keycmp td:first-child{text-align:left;width:46%}', '.ta-keycmp th{font-size:12.5px;color:#fff}', '.ta-keycmp th small{display:block;font-weight:500;font-size:10.5px;color:#9fb0c3!important;margin:1px 0 0}', '.ta-keycmp td.ta-y{color:#4cd38a!important;font-weight:800;font-size:14px}', '.ta-keycmp td.ta-n{color:#6f7d8e!important}', '.ta-keycmp th:last-child,.ta-keycmp td:last-child{background:rgba(255,210,122,.06)}', '.ta-keysels small{display:block;margin:3px 0 0}', '.ta-keysels b{display:inline;color:#fff}', '.ta-keysels code{font:600 11px ui-monospace,Consolas,monospace;color:#ffd27a}', '.ta-keycmp .ta-keybtn td{border-bottom:0;padding-top:8px}', '.ta-keycmp .ta-keygen{display:inline-block;padding:6px 10px;font-size:12px;white-space:nowrap}',
     '.ta-keyopt{margin:8px 0 2px;padding:9px 10px;border:1px solid var(--line2);border-radius:10px;background:rgba(255,255,255,.03)}', '.ta-keyopt b{display:block;font-size:13px}', '.ta-keyopt small{display:block;margin:3px 0 7px}', '.ta-keyopt code{font:600 11.5px ui-monospace,Consolas,monospace;color:#ffd27a;word-break:break-word}',
-    '.ta-rmopts{margin-top:7px}', '.ta-rmopts label{font-size:12.5px}', '.ta-rmlead{margin:0 4px;font:600 12px system-ui,Arial,sans-serif;color:#fff;background:#0b1622;border:1px solid var(--line2);border-radius:7px;padding:3px 5px}',
-    '.ta-rmchips{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}', '.ta-rmchip{font:600 11.5px system-ui,Arial,sans-serif;color:#9fb0c3;background:#0b1622;border:1px solid var(--line2);border-radius:14px;padding:4px 9px;cursor:pointer;opacity:.6}', '.ta-rmchip.ta-on{color:#fff;border-color:var(--accent);opacity:1}',
     '.ta-land .ta-push{top:12px;left:56px;right:auto;width:360px}',
     '.ta-full .ta-push{top:calc(env(safe-area-inset-top,0px) + 40px)}',
     '.ta-rtext small.ta-evmsg.ta-good{color:#5fd38a}',
@@ -1503,10 +1501,8 @@
       '</div></div>' +
       '<div class="ta-group"><h3>Notifications</h3><div class="ta-list">' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#d0453a">🔔</span><div class="ta-rtext"><b>Torn event notifications</b><small>Shows your new Torn events on the phone while it is open</small></div><button type="button" class="ta-switch' + (store.get('evNotify', true) ? ' ta-on' : '') + '" data-set="evNotify"></button></div>' +
-        '<div class="ta-row"><span class="ta-ricon" style="background:#e08a1a">⏰</span><div class="ta-rtext"><b>Timed reminders</b><small>Warnings shortly before things end, while the phone is open. Needs key 2 below.</small>' +
-          (rmOpts().on ? '<div class="ta-rmopts"><label>Warn me <select class="ta-rmlead"><option value="120"' + (rmOpts().lead === 120 ? ' selected' : '') + '>2 minutes</option><option value="300"' + (rmOpts().lead === 300 ? ' selected' : '') + '>5 minutes</option></select> before</label><div class="ta-rmchips">' +
-            RM_TYPES.map(function (t) { return '<button type="button" class="ta-rmchip' + (rmOpts().off[t[0]] ? '' : ' ta-on') + '" data-set="rmT" data-t="' + t[0] + '">' + t[1] + ' ' + t[2] + '</button>'; }).join('') +
-            '</div>' + (store.get('apiKey', '') && rmMsg ? '<small class="ta-evmsg">' + esc(rmMsg) + '</small>' : '') + '</div>' : '') +
+        '<div class="ta-row"><span class="ta-ricon" style="background:#e08a1a">⏰</span><div class="ta-rtext"><b>Timed reminders</b><small>2-minute warnings shortly before things end, while the phone is open. What each key covers is in the table below.</small>' +
+          (rmOpts().on && store.get('apiKey', '') && rmMsg ? '<small class="ta-evmsg">' + esc(rmMsg) + '</small>' : '') +
           '</div><button type="button" class="ta-switch' + (rmOpts().on ? ' ta-on' : '') + '" data-set="rmOn"></button></div>' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#2f7bd1">🗝️</span><div class="ta-rtext"><b>Torn API key (optional)</b><small>No game needs a key. A key only adds notifications on the phone, and only while it is open. Pick <strong style="display:inline;color:#ffd27a">one</strong> of the two Custom keys compared below: tap its button, Torn opens its own new-key page with exactly those selections ticked, you confirm there and paste the key here.</small>' +
           '<table class="ta-keycmp"><thead><tr><th></th><th>Key 1<small>Events only</small></th><th>Key 2<small>Events + reminders</small></th></tr></thead><tbody>' +
@@ -1597,7 +1593,6 @@
     const n = $(settingsBox, '.ta-volnum'); if (n) n.textContent = volume + '%';
   });
   settingsBox.addEventListener('change', function (e) {
-    if (e.target.classList && e.target.classList.contains('ta-rmlead')) { const o = rmOpts(); o.lead = Number(e.target.value) === 300 ? 300 : 120; store.set('rmOpts', o); rmFired = {}; return; }
     if (!e.target.classList || !e.target.classList.contains('ta-vol')) return;
     setVolume(e.target.value, true); sfx.click();
   });
@@ -1616,7 +1611,6 @@
     if (k === 'cheat') { tryCheat(); return; }
     if (k === 'chatOver') { const on = !store.get('chatOver', true); store.set('chatOver', on); t.classList.toggle('ta-on', on); applyChatOver(); sfx.click(); return; }
     if (k === 'rmOn') { const o = rmOpts(); o.on = !o.on; store.set('rmOpts', o); sfx.click(); if (o.on) rmStart(); else rmStop(); renderSettings(); return; }
-    if (k === 'rmT') { const o = rmOpts(); o.off[t.dataset.t] = !o.off[t.dataset.t]; store.set('rmOpts', o); t.classList.toggle('ta-on', !o.off[t.dataset.t]); sfx.click(); return; }
     if (k === 'keySave') { saveKey(); return; }
     if (k && k.indexOf('onl') === 0) { onlAction(k, t); return; }
     if (k === 'keyDel') { store.set('apiKey', ''); evState = { msg: 'Key removed. Event notifications are off.' }; evStop(); rmStop(); rmAllowed = null; sfx.click(); renderSettings(); return; }
@@ -2246,7 +2240,7 @@
   const RM_EVERY = 60000;
   let rmTimer = 0, rmTick = 0, rmBusy = false, rmAt = [], rmFired = {}, rmAllowed = null, rmLastFetch = 0, rmMsg = '';
   function rmOpts() { return Object.assign({ on: true, lead: 120, off: {} }, store.get('rmOpts', null) || {}); }
-  function rmOn(type) { const o = rmOpts(); return o.on && !o.off[type]; }
+  function rmOn() { return rmOpts().on; }
   async function rmGet(key, url) {
     const res = await fetch(url, { method: 'GET', credentials: 'omit', cache: 'no-store', referrerPolicy: 'no-referrer' });
     const j = await res.json();
@@ -2327,7 +2321,7 @@
   }
   function rmCheck() {
     if (!isOpen) return;
-    const now = Date.now(), o = rmOpts(), lead = o.lead * 1000;
+    const now = Date.now(), lead = 120000;
     let refetch = false;
     rmAt.forEach(function (r) {
       if (!rmOn(r.type)) return;

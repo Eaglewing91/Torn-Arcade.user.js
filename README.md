@@ -188,7 +188,7 @@ You can verify for Online play with your saved key (**Use my saved key**); only 
 With key 1 or key 2 saved, the phone checks the official Torn API (`api.torn.com`, `/v2/user/events`) for new events **every 5 seconds while the phone is open**. That's 12 calls a minute, well under Torn's limit of 100. Nothing is requested while the phone is closed. The key is only ever sent to `api.torn.com`. If Torn's newer API ever refuses a custom key for events, Torn Arcade asks the older API path for the same events instead (still only `api.torn.com`). See the Torn API terms on Torn's API page (on [Torn](https://www.torn.com), under the API section).
 
 ### ⏰ Optional timed reminders (key 2)
-While the phone is open, the phone shows a warning **2 minutes** (or 5, your choice) before:
+While the phone is open, the phone shows a warning **2 minutes** before:
 - ✈️ your flight lands (there and back), and again when you've landed
 - 🏥 you leave hospital, 🚔 you leave jail
 - 💊 your drug, 🍬 booster or 🩹 medical cooldown ends
@@ -198,7 +198,7 @@ While the phone is open, the phone shows a warning **2 minutes** (or 5, your cho
 - 🕵️ your organised crime is ready
 - 🌙 the new Torn day starts
 
-How it works: **once a minute while the phone is open**, one request to `api.torn.com` (`/v2/user?selections=basic,travel,cooldowns,bars,refills,organizedcrime`) reads the times; the phone counts down by itself in between. The answers are only shown, never saved or sent anywhere. Each reminder can be switched off (Settings → Notifications → Timed reminders), or all of them at once. With key 1, only the hospital, jail and new-day reminders work, and Settings tells you which ones your key can't read.
+How it works: **once a minute while the phone is open**, one request to `api.torn.com` (`/v2/user?selections=basic,travel,cooldowns,bars,refills,organizedcrime`) reads the times; the phone counts down by itself in between. The answers are only shown, never saved or sent anywhere. Turn them all on or off with one switch (Settings → Notifications → Timed reminders). With key 1, only the hospital, jail and new-day reminders work; the key table in Settings shows what each key covers.
 
 ### 🌐 Optional online play
 **Online play is completely optional and off until you turn it on** (Settings → Online). **Every game works fully without it**: Tornies, Torn Invasion, Angry Bogies, Faction Defence, Egg Dash, Torn Territories against the computer or pass-and-play, Chess against the computer, Dirty Bombs and Flappy Torn all play on your own device, with no API key, no account and no server. Online play only *adds* four things:
