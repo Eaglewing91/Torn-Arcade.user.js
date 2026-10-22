@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.46.1
+// @version      2.46.2
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with nine game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -664,10 +664,11 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gifts and trades', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.46.1';
+  const VERSION = '2.46.2';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
+  const CHANGELOG_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/blob/main/CHANGELOG.md';
 
   GM_addStyle([
     /* The phone */
@@ -1554,6 +1555,7 @@
       '</div></div>' +
       '<div class="ta-group"><h3>About</h3><div class="ta-list">' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#2f7bd1">⬇️</span><div class="ta-rtext"><b>Check for updates</b><small>You have version ' + VERSION + '. Tampermonkey shows if a newer one is ready.</small></div><a class="ta-upd" href="' + UPDATE_URL + '" target="_blank" rel="noopener noreferrer">Check</a></div>' +
+        '<div class="ta-row"><span class="ta-ricon" style="background:#6a4fc4">📝</span><div class="ta-rtext"><b>What\'s new</b><small>Every update since 2.2, newest first.</small></div><a class="ta-upd" href="' + CHANGELOG_URL + '" target="_blank" rel="noopener noreferrer">Open</a></div>' +
         '<div class="ta-about"><b>Torn Arcade · Mobile Phone</b><br>Version ' + VERSION + ' by Eaglewing [571041]<br>' +
         'Everything runs on your device. The phone never loads Torn pages. If you add an API key, it only asks the official Torn API for your new events while the phone is open. It talks to no other websites unless you turn on Online play, which uses the Torn Arcade server.<br><br>&copy; 2026 Eaglewing [571041]. All rights reserved. This script may not be copied, modified or redistributed without permission.</div></div></div>';
   }
@@ -14430,6 +14432,9 @@
     G.map = id; G.x = x; G.y = y;
     G.surf = G.surf && tileAt(m, x, y) === '~' ? 1 : 0;
     if (m.outdoor) G.lastOut = id;
+    // Walking into a Tornie Clinic makes it your wake-up point, so a full team faint sends you to the last Clinic
+    // you passed rather than all the way home. Talking to the nurse is no longer needed for this.
+    if (id.indexOf('centre_') === 0) G.respawn = { map: id, x: 4, y: 4, dir: 'up' };
     if (m.town) { G.visited = G.visited || {}; G.visited[m.town] = 1; }
     if (m.outdoor || m.banner) { const wn = weatherNow(m); W.banner = { name: fillNames(m.name) + (wn !== 'clear' ? ' \u00b7 ' + WEATHER[wn].name : ''), t: 0 }; }
     saveGame();

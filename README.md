@@ -6,6 +6,10 @@
 
 Torn Arcade is a Tampermonkey userscript that adds a **Mobile Phone** link to Torn's sidebar. Click it and a phone opens on top of the page with nine games, leaderboards and settings. Everything runs inside the phone, and every image, sound and piece of music is built into the script or its two optional Art Packs.
 
+> 📝 **What's new:** the full update history from 2.2.0 onwards is in the [changelog](CHANGELOG.md).
+
+> 🩹 **2.46.2:** In Tornies, a full team faint now wakes you at the last Clinic you walked into instead of back at home.
+>
 > 🏆 **2.46:** Leaderboards update live: Tornies sends its numbers as you play, and an open Global board refreshes itself every 30 seconds. Four new Tornies boards on the global leaderboards: **Total playtime**, **Merit points**, **Golden Tornies** and **Fish caught**. Mirabit now faces its opponent in battle.
 >
 > 💬 **2.45:** Torn chat stays usable while the phone is open (Settings → Torn chat over the phone). In Territories a coin toss now decides who goes first. Online Chess only rates games where both players made a move. The phone feels quicker on busy Torn pages.
