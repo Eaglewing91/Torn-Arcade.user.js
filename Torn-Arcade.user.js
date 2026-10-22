@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.45.2
+// @version      2.45.3
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with nine game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -661,7 +661,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gifts and trades', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.45.2';
+  const VERSION = '2.45.3';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -15668,8 +15668,12 @@
   }
 
   /* Drawing */
+  // Battle art is drawn facing left (the opponent as-is, yours mirrored). These pictures were drawn facing right,
+  // so they're mirrored the other way round to face their opponent.
+  const ART_FACES_RIGHT = { 179: 1 };   // Mirabit
   function drawMonB(n, flip, cx, gy, s, dy, blink, rk) {
     if (blink || s <= 0) return;
+    if (ART_FACES_RIGHT[n] && PIXIMG[n]) flip = !flip;
     const im = monSprite(n, flip, rk), w = 64 * s;
     ctx.save(); ctx.beginPath(); ctx.rect(0, 0, VW, gy + 1); ctx.clip();
     ctx.drawImage(im, Math.round(cx - w / 2), Math.round(gy - 62 * s + dy), w, w);
