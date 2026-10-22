@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.46.0
+// @version      2.46.1
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with nine game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -156,7 +156,10 @@
  *     api.torn.com who owns it (user > basic) and then forgets it. The key
  *     is never stored or logged there.
  *   - Once you're verified: your best scores, right after verifying, when
- *     you open the Global tab and when you set a new best.
+ *     you open the Global tab and when you set a new best; your Tornies
+ *     numbers as they change while you play (playtime at most every 5
+ *     minutes, and when you leave Tornies). While a Global leaderboard is
+ *     on screen: that board, every 30 seconds.
  *   - While the phone is open: a check every 20 seconds for game invites,
  *     games waiting on you and trades waiting on you (shown as
  *     notifications). While an online game is on screen: long polling for
@@ -661,7 +664,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gifts and trades', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.46.0';
+  const VERSION = '2.46.1';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -1993,12 +1996,16 @@
     return out;
   }
   // Send the bests that changed since last time (verified players only).
-  async function onlSync() {
+  let syncForce = false;   // the next send includes playtime even if it changed by less than 5 minutes
+  async function onlSync(force) {
+    force = force || syncForce; syncForce = false;
     const o = onl();
     if (!o.on || !o.token || !o.account || !o.account.verified) return;
     const now = localBests(), sent = store.get('onlSent', {}) || {}, diff = {};
     if (sent._who !== o.account.tornId) { Object.keys(sent).forEach(function (k) { delete sent[k]; }); }
     Object.keys(now).forEach(function (k) { if (sent[k] !== now[k]) diff[k] = now[k]; });
+    // Tornies playtime ticks every second: send it at most every 5 minutes, or when you leave Tornies or open Global
+    if (!force && diff['tornies:time'] && sent['tornies:time'] && diff['tornies:time'] - sent['tornies:time'] < 300) delete diff['tornies:time'];
     if (!Object.keys(diff).length) return;
     const r = await onlReq('POST', '/v1/scores', { scores: diff });
     if (r.status === 200) { Object.keys(diff).forEach(function (k) { sent[k] = diff[k]; Object.keys(lbCache).forEach(function (c) { if (c === k) delete lbCache[c]; }); }); sent._who = o.account.tornId; store.set('onlSent', sent); }
@@ -2009,11 +2016,25 @@
     const c = lbCache[board];
     if (!force && c && (c.loading || c.at > Date.now() - 30000)) return;
     lbCache[board] = { loading: true, at: Date.now() };
-    if (Date.now() - lbSynced > 60000) { lbSynced = Date.now(); await onlSync(); }
+    if (Date.now() - lbSynced > 60000) { lbSynced = Date.now(); await onlSync(true); }
     const r = await onlReq('GET', '/v1/leaderboard/' + board + '?limit=50');
     lbCache[board] = r.status === 200 ? { at: Date.now(), data: r.body } : { at: Date.now() - 25000, error: r.body.message || 'Couldn\'t load this leaderboard.' };
     if (current === 'scores' && lbTab === 'global' && lbBoard === board) renderScores();
   }
+  // While a Global board is on screen it refreshes itself every 30 seconds (one request to the Torn Arcade server),
+  // keeping the old list on screen until the new one arrives.
+  async function lbRefresh() {
+    if (!isOpen || current !== 'scores' || lbTab !== 'global' || document.hidden || !onl().on) return;
+    const b = lbBoard, c = lbCache[b];
+    if (!c || c.loading || c.at > Date.now() - 25000) return;
+    const r = await onlReq('GET', '/v1/leaderboard/' + b + '?limit=50');
+    if (r.status !== 200) return;
+    lbCache[b] = { at: Date.now(), data: r.body };
+    if (isOpen && current === 'scores' && lbTab === 'global' && lbBoard === b) { const y = main.scrollTop; renderScores(); main.scrollTop = y; }
+  }
+  setInterval(lbRefresh, 5000);
+  // Leaving Tornies (or locking the phone in it) sends its latest numbers, playtime included
+  function tornLeft() { if (current === 'pocket') { syncForce = true; clearTimeout(syncT); syncT = setTimeout(onlSync, 300); } }
   function lbGlobalHTML() {
     const o = onl();
     if (!o.on) return '<div class="ta-group"><div class="ta-list"><div class="ta-row"><span class="ta-ricon" style="background:#1c7ad0">🌐</span><div class="ta-rtext"><b>See how you rank against all of Torn</b><small>Global leaderboards need Online play. Turn it on and verify your Torn ID in Settings → Online. Your scores on this device are under My scores, and work without it.</small></div><button type="button" class="ta-btn" data-lb="settings">Settings</button></div></div></div>';
@@ -2076,6 +2097,7 @@
   function openApp(id) {
     const a = appInfo(id);
     if (!a) return;
+    tornLeft();
     if (current && games[current]) games[current].leave();
     current = id; root.dataset.app = id;
     if (id === 'scores') { renderScores(); if (lbTab === 'global') lbLoad(lbBoard); }
@@ -2090,6 +2112,7 @@
     if (games[id]) requestAnimationFrame(function () { if (current === id && isOpen) games[id].enter(); });
   }
   function goHome() {
+    tornLeft();
     if (current && games[current]) games[current].leave();
     current = null; root.dataset.app = ''; appEl.hidden = true;
     setOrientation(false, true);
@@ -2116,6 +2139,7 @@
   function closeArcade() {
     if (!isOpen) return;
     devLockNow();   // the Dev app locks whenever the phone is closed
+    tornLeft();
     if (current && games[current]) games[current].leave();
     isOpen = false; root.hidden = true; clearInterval(clockTimer); inboxStop(); cloudPush();
     evStop(); rmStop(); applyChatOver();
@@ -13785,6 +13809,7 @@
     // While in the Battle Tower the team is level-50 copies; the save always keeps the real team.
     try { const snap = JSON.parse(JSON.stringify(G)); if (snap.towerReal) { snap.party = snap.towerReal; delete snap.towerReal; } store.set('pocket', snap); } catch (e) {}
     refreshNav();
+    try { if (bestHook) bestHook(); } catch (e) {}   // Online play: changed Tornies numbers go to the global leaderboards
   }
   function loadSave() { const d = store.get('pocket', null); return d && d.v ? repairSave(d) : null; }
   function fmtTime(s) { const h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60; return h + ':' + (m < 10 ? '0' : '') + m; }

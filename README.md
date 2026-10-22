@@ -6,7 +6,7 @@
 
 Torn Arcade is a Tampermonkey userscript that adds a **Mobile Phone** link to Torn's sidebar. Click it and a phone opens on top of the page with nine games, leaderboards and settings. Everything runs inside the phone, and every image, sound and piece of music is built into the script or its two optional Art Packs.
 
-> 🏆 **2.46:** Four new Tornies boards on the global leaderboards: **Total playtime**, **Merit points**, **Golden Tornies** and **Fish caught**. Mirabit now faces its opponent in battle.
+> 🏆 **2.46:** Leaderboards update live: Tornies sends its numbers as you play, and an open Global board refreshes itself every 30 seconds. Four new Tornies boards on the global leaderboards: **Total playtime**, **Merit points**, **Golden Tornies** and **Fish caught**. Mirabit now faces its opponent in battle.
 >
 > 💬 **2.45:** Torn chat stays usable while the phone is open (Settings → Torn chat over the phone). In Territories a coin toss now decides who goes first. Online Chess only rates games where both players made a move. The phone feels quicker on busy Torn pages.
 >
@@ -218,7 +218,8 @@ How it works: **once a minute while the phone is open**, one request to `api.tor
 
 **What is sent, and when.** Only while Online play is on:
 - **When you tap something:** verifying, playing as a guest, signing out, deleting your online account, opening the Global tab of Leaderboards, creating, joining, starting or leaving an online game, your moves in an online game, and every step of an online trade.
-- **Your best scores** (verified players only): right after you verify, when you open the Global tab, and when you set a new best.
+- **Your best scores** (verified players only): right after you verify, when you open the Global tab, and when you set a new best. Your Tornies numbers (caught, medals, merits, golden Tornies, fish and playtime) go as they change while you play; playtime at most every 5 minutes, and when you leave Tornies.
+- **Live leaderboards:** while a Global leaderboard is on screen, that board is refreshed **every 30 seconds**.
 - **Notifications:** while the phone is open, it asks the server **every 20 seconds** for game invites, online games waiting on you and trades waiting on you, and shows new ones as a notification on the phone.
 - **Live online games:** while an online game is on screen, the phone asks the server for news and the server answers as soon as something changes (long polling, at most one request every 20 seconds while nothing happens). While an online lobby screen is open (Territories or Chess), the game lists are checked every 5 seconds.
 
