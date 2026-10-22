@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.44.0
+// @version      2.44.1
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with nine game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -654,7 +654,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gifts and trades', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.44.0';
+  const VERSION = '2.44.1';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -19251,7 +19251,7 @@
       }
       G.players.forEach(function (p, i) { if (p.crew >= 3 && G.bigCrew !== i && (G.bigCrew < 0 || p.crew > P(G.bigCrew).crew)) { G.bigCrew = i; say(name(i) + ' now ' + (you(i) ? 'have' : 'has') + ' the Biggest Crew. +2 Respect.'); } });
     }
-    // Respect needed to win: Classic 14 since 2.41 (with 20 roads, 6 safehouses, 5 HQs and 7 Councillor's Favours);
+    // Respect needed to win: Classic 14 since 2.41 (with 20 roads, 6 safehouses, 5 HQs and 5 Councillor's Favours since 2.44.1, as in Catan; 7 before);
     // Flight Paths 12 or 16, chosen at the start. Games started before 2.41 keep their old target of 10.
     function WIN() { return (G && G.win) || 10; }
     function respect(pi, all) {
@@ -19675,7 +19675,7 @@
       const win = mode === 'fp' ? (Number(o.win) === 16 ? 16 : 12) : 14;
       const players = o.players.map(function (s) { return { name: s.name, col: s.col, ai: !!s.ai, id: s.id || 0, hand: { brick: 0, wood: 0, wheat: 0, ore: 0, cotton: 0 }, favs: [], crew: 0,
         routes: mode === 'fp' ? 15 : 20, flights: mode === 'fp' ? 15 : 0, safes: mode === 'fp' ? 5 : 6, hqs: mode === 'fp' ? 4 : 5 }; });
-      const deck = shuffle(Array(20).fill('crew').concat(Array(mode === 'fp' ? 5 : 7).fill('respect'), Array(3).fill('supply'), Array(3).fill('deal'), Array(3).fill('roads')));
+      const deck = shuffle(Array(20).fill('crew').concat(Array(5).fill('respect'), Array(3).fill('supply'), Array(3).fill('deal'), Array(3).fill('roads')));
       const n = players.length, order = [];
       for (let i = 0; i < n; i++) order.push(i);
       for (let i = n - 1; i >= 0; i--) order.push(i);
