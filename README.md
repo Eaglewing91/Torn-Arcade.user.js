@@ -6,6 +6,8 @@
 
 Torn Arcade is a Tampermonkey userscript that adds a **Mobile Phone** link to Torn's sidebar. Click it and a phone opens on top of the page with nine games, leaderboards and settings. Everything runs inside the phone, and every image, sound and piece of music is built into the script or its two optional Art Packs.
 
+> 🏆 **2.46:** Four new Tornies boards on the global leaderboards: **Total playtime**, **Merit points**, **Golden Tornies** and **Fish caught**. Mirabit now faces its opponent in battle.
+>
 > 💬 **2.45:** Torn chat stays usable while the phone is open (Settings → Torn chat over the phone). In Territories a coin toss now decides who goes first. Online Chess only rates games where both players made a move. The phone feels quicker on busy Torn pages.
 >
 > ⏰ **2.44: Timed reminders.** 2-minute warnings on the phone before your flight lands, you leave hospital or jail, your cooldowns end, your energy or nerve is full, your chain runs out and more, with a new **Key 2** (Custom) in Settings. Key 1 (events only) stays as it was.
@@ -144,7 +146,7 @@ A minesweeper-style puzzle. Clear the city block by block without setting off a 
 Tap to fly through the gaps in the pipes over the Torn City skyline. Every pipe you pass is a point. One difficulty for everyone (Hard), so every score counts on the same leaderboard.
 
 ### 🏆 Leaderboards and ⚙️ Settings
-**Leaderboards** has two tabs. **My scores** keeps your best result for every game on this device and works offline. **🌐 Global** (optional, needs Online play) ranks you against every verified player: pick a game, then a mode or map (Dirty Bombs by difficulty, Faction Defence by map, Tornies by Tornies caught or Arena medals, Torn Territories by online rating: Classic, Flight Paths 12 and Flight Paths 16), and see the top 50 as a table of rank, name, Torn ID (tap it to open their Torn profile) and score, plus your own rank. Settings has sound and volume, **phone themes** (Classic, Neon Night, Crimson Syndicate, Casino Royale, Emerald Jungle and the light Riviera, each with its own colours, clock and icon style; the illustrated theme wallpapers come with the Character Art pack, and without it a matching gradient is used), wallpapers for the Classic theme, optional Torn event notifications, a Tornies cheat-code box and options to reset each game's data.
+**Leaderboards** has two tabs. **My scores** keeps your best result for every game on this device and works offline. **🌐 Global** (optional, needs Online play) ranks you against every verified player: pick a game, then a mode or map (Dirty Bombs by difficulty, Faction Defence by map, Tornies by Tornies caught, Arena medals, Total playtime, Merit points, Golden Tornies or Fish caught, Torn Territories by online rating: Classic, Flight Paths 12 and Flight Paths 16), and see the top 50 as a table of rank, name, Torn ID (tap it to open their Torn profile) and score, plus your own rank. Settings has sound and volume, **phone themes** (Classic, Neon Night, Crimson Syndicate, Casino Royale, Emerald Jungle and the light Riviera, each with its own colours, clock and icon style; the illustrated theme wallpapers come with the Character Art pack, and without it a matching gradient is used), wallpapers for the Classic theme, optional Torn event notifications, a Tornies cheat-code box and options to reset each game's data.
 
 ---
 

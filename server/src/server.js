@@ -29,6 +29,10 @@ BOARDS['bogies:total'] = { dir: 'desc', min: 1, max: 100000000 };
 for (let i = 1; i <= 6; i++) BOARDS['defence:' + i] = { dir: 'desc', min: 1, max: 30 };   // 30 waves since 2.40
 BOARDS['tornies:caught'] = { dir: 'desc', min: 1, max: 179 };
 BOARDS['tornies:medals'] = { dir: 'desc', min: 1, max: 8 };
+BOARDS['tornies:time'] = { dir: 'desc', min: 60, max: 10 * 365 * 86400 };   // play time in seconds
+BOARDS['tornies:merits'] = { dir: 'desc', min: 1, max: 5000 };
+BOARDS['tornies:golden'] = { dir: 'desc', min: 1, max: 2000 };
+BOARDS['tornies:fish'] = { dir: 'desc', min: 1, max: 1000000 };
 BOARDS['invasion:standard'] = { dir: 'desc', min: 1, max: 100000000 };
 const ORIGINS = ['https://www.torn.com', 'https://torn.com'];
 

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.45.3
+// @version      2.46.0
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with nine game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -661,7 +661,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gifts and trades', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.45.3';
+  const VERSION = '2.46.0';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -1956,7 +1956,7 @@
   const LB_GAMES = [
     { id: 'territories', boards: [['territories', 'Classic rating'], ['territories:fp12', 'Flight Paths 12'], ['territories:fp16', 'Flight Paths 16']] },
     { id: 'chess', boards: [['chess', 'Online rating']] },   // separate ratings, so wins to 12 and to 16 never mix
-    { id: 'pocket', boards: [['tornies:caught', 'Tornies caught'], ['tornies:medals', 'Arena medals']] },
+    { id: 'pocket', boards: [['tornies:caught', 'Tornies caught'], ['tornies:medals', 'Arena medals'], ['tornies:time', 'Total playtime'], ['tornies:merits', 'Merit points'], ['tornies:golden', 'Golden Tornies'], ['tornies:fish', 'Fish caught']] },
     { id: 'invasion', boards: [['invasion:standard', 'Best score']] },
     { id: 'bogies', boards: [['bogies:total', 'Total score']] },
     { id: 'defence', boards: [1, 2, 3, 4, 5, 6].map(function (n) { return ['defence:' + n, ['Westgate', 'The Docks', 'Midtown', 'Casino Strip', 'Industrial Zone', 'Racket HQ'][n - 1]]; }) },
@@ -1972,6 +1972,7 @@
     if (board.indexOf('defence:') === 0) return 'Wave ' + v;
     if (board === 'tornies:caught') return v + '/179';
     if (board === 'tornies:medals') return v + '/8';
+    if (board === 'tornies:time') { const h = Math.floor(v / 3600), m = Math.floor(v / 60) % 60; return h + 'h ' + (m < 10 ? '0' : '') + m + 'm'; }
     return Number(v).toLocaleString('en-GB');
   }
   // Your bests on this device, in the server's board names.
@@ -1985,7 +1986,9 @@
       else if (g[0] === 'bogies') bog += v;
     });
     if (bog) out['bogies:total'] = bog;
-    try { const t = games.pocket && games.pocket.summary && games.pocket.summary(); if (t) { if (t.caught) out['tornies:caught'] = t.caught; if (t.badges) out['tornies:medals'] = t.badges; } } catch (e) {}
+    try { const t = games.pocket && games.pocket.summary && games.pocket.summary(); if (t) { if (t.caught) out['tornies:caught'] = t.caught; if (t.badges) out['tornies:medals'] = t.badges;
+      const lb = t.lb || {};
+      if (lb.secs >= 60) out['tornies:time'] = lb.secs; if (lb.merits > 0) out['tornies:merits'] = lb.merits; if (lb.golden > 0) out['tornies:golden'] = lb.golden; if (lb.fish > 0) out['tornies:fish'] = lb.fish; } } catch (e) {}
     try { const iv = games.invasion && games.invasion.summary && games.invasion.summary(); const d = iv && iv.season === 2 && iv.diffs && iv.diffs.find(function (x) { return x.name === 'Standard'; }); if (d && d.best > 0) out['invasion:standard'] = Math.floor(d.best); } catch (e) {}
     return out;
   }
@@ -16099,7 +16102,10 @@
       const d = loadSave();
       if (!d) return null;
       const m = MAPS[d.map];
-      return { name: d.name, where: m ? m.name.replace(/\{R\}/g, d.rival).replace(/\{P\}/g, d.name) : '', badges: d.badges.length, caught: countKeys(d.caught), seen: countKeys(d.seen), ranked: countKeys(d.ranked), total: DEX_SIZE, money: d.money || 0, time: fmtTime(d.time || 0) };
+      // for the global leaderboards: play time (seconds), merit points, golden Tornies owned, fish caught
+      const lb = { secs: Math.floor(Number(d.time) || 0), merits: MERITS.reduce(function (a, q) { return a + (d.merits && d.merits[q[0]] ? q[7] : 0); }, 0),
+        golden: (d.party || []).concat(d.box || []).filter(function (x) { return x && x.rk; }).length, fish: Math.floor(Number(d.stats && d.stats.fishCaught) || 0) };
+      return { lb: lb, name: d.name, where: m ? m.name.replace(/\{R\}/g, d.rival).replace(/\{P\}/g, d.name) : '', badges: d.badges.length, caught: countKeys(d.caught), seen: countKeys(d.seen), ranked: countKeys(d.ranked), total: DEX_SIZE, money: d.money || 0, time: fmtTime(d.time || 0) };
     },
     reload: function () {   // a cloud save arrived: back to the title screen, where Continue loads it
       G = null; B = null; modals.length = 0; tweens.length = 0; W.busy = 0; W.map = null; fade = 0; scene = titleScene;
