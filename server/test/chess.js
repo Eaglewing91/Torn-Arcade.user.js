@@ -50,12 +50,16 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
     r = await call('GET', '/v1/chess/games/' + g2.id, null, whiteTok);
     check('3 computer moves, then lost on time', r.body.game.status === 'over' && r.body.state.result === 'b' && r.body.state.reason === 'ran out of time' && r.body.game.seats[0].auto === 3, r.body.game);
     // Quick match chess
+    const rateA0 = (await call('GET', '/v1/leaderboard/chess', null, A)).body.me;
     r = await call('POST', '/v1/chess/quick', {}, A); check('quick match opens a public game when nobody waits', r.body.matched === false && r.body.game.public);
     const q1 = r.body.game.id;
     r = await call('POST', '/v1/chess/quick', {}, A); check('asking again keeps the same game', r.body.game.id === q1);
     r = await call('POST', '/v1/chess/quick', {}, B); check('quick match pairs the next player', r.body.matched === true && r.body.game.id === q1 && r.body.game.status === 'active', r.body);
     r = await call('POST', '/v1/chess/games/' + q1 + '/resign', null, A); check('resign', r.status === 200);
     r = await call('GET', '/v1/chess/games/' + q1, null, B); check('...opponent wins', r.body.state.reason === 'resignation' && r.body.game.status === 'over');
+    await wait(300);
+    const rateA1 = (await call('GET', '/v1/leaderboard/chess', null, A)).body.me;
+    check('resigning before anyone moved doesn\'t change ratings', rateA1.rating === rateA0.rating && rateA1.games === rateA0.games, [rateA0, rateA1]);
     // Territories: public lobby + quick match
     r = await call('POST', '/v1/tt/quick', { size: 'large', col: 0 }, A); const t1 = r.body.game;
     check('territories quick match opens a public lobby (3 open seats)', t1.public && t1.open === 3, t1);

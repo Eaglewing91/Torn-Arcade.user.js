@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.44.2
+// @version      2.45.0
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with nine game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -91,7 +91,11 @@
  *   the link runs. The phone and its games are set up the first time you
  *   open it on a page, so the script adds almost no load time to Torn.
  * - Apart from adding that one link, the script never reads, clicks or
- *   changes anything on Torn's page. It never loads Torn pages and never
+ *   changes anything on Torn's page, with one exception: while the phone
+ *   is open, "Torn chat over the phone" (Settings, on by default) raises
+ *   Torn's own chat bar and windows above the phone so chat stays usable
+ *   (a display change only; nothing is clicked or sent). It never loads Torn
+ *   pages and never
  *   talks to any other website. Every image and sound is built into the
  *   script or comes from the optional Art Packs below.
  * - GIFT CODES: the developer can send players signed gift codes (Tornies,
@@ -428,8 +432,11 @@
     '.ta-root{--bg:#0a1018;--panel:#0f1823;--panel2:#132031;--line:#22344d;--line2:#2c4466;--text:#dfe8f3;--muted:#8ea3bb;--accent:#2f7bd1;--good:#3fbf6a;--gold:#ffd65a;',
     '  position:fixed;inset:0;z-index:2147483000;font:14px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:var(--text);text-align:left}',
     '.ta-root[hidden]{display:none!important}',
+    // "Torn chat over the phone" (Settings): Torn's own chat bar and chat windows stay above the phone, so chat can be
+    // read and typed in while the phone is open. Only the stacking order of Torn's chat is changed; nothing is sent.
+    'html.ta-chatover #chatRoot,html.ta-chatover #chatRoot>div,html.ta-chatover #chatRoot>div>div{z-index:2147483600!important}',
     '.ta-root *,.ta-root *::before,.ta-root *::after{box-sizing:border-box}',
-    '.ta-backdrop{position:absolute;inset:0;background:rgba(3,7,12,.68);backdrop-filter:blur(3px);animation:ta-fade .15s ease}',
+    '.ta-backdrop{position:absolute;inset:0;background:rgba(3,7,12,.78);animation:ta-fade .15s ease}'   /* no blur of the Torn page behind: re-blurring a busy page every frame slowed taps */,
     '.ta-window{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(1120px,96vw);height:min(780px,92vh);display:flex;flex-direction:column;background:var(--bg);border:1px solid var(--line2);border-radius:16px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.6);animation:ta-pop .18s ease;outline:none}',
     '@keyframes ta-fade{from{opacity:0}}',
     '@keyframes ta-pop{from{opacity:0;transform:translate(-50%,-48%) scale(.98)}}',
@@ -654,7 +661,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gifts and trades', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.44.2';
+  const VERSION = '2.45.0';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -1485,6 +1492,7 @@
     settingsBox.innerHTML =
       '<div class="ta-group"><h3>General</h3><div class="ta-list">' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#2f7bd1">🔊</span><div class="ta-rtext"><b>Sound</b><small>Game sounds and effects</small></div><button type="button" class="ta-switch' + (muted ? '' : ' ta-on') + '" data-set="sound"></button></div>' +
+        '<div class="ta-row"><span class="ta-ricon" style="background:#3a8f6a">💬</span><div class="ta-rtext"><b>Torn chat over the phone</b><small>Keeps Torn\'s chat bar and chat windows on top, so you can chat while the phone is open</small></div><button type="button" class="ta-switch' + (store.get('chatOver', true) ? ' ta-on' : '') + '" data-set="chatOver"></button></div>' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#1c9a5a">🎚️</span><div class="ta-rtext"><b>Volume</b><input type="range" class="ta-vol" min="0" max="100" step="1" value="' + volume + '" aria-label="Volume"></div><span class="ta-volnum">' + volume + '%</span></div>' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#d0457a">🎨</span><div class="ta-rtext"><b>Theme</b><small>' + (artThemesReady() ? 'Colours, clock and icon style for the phone' : 'Install the Character Art pack for the illustrated theme wallpapers') + '</small><div class="ta-themes">' +
           Object.keys(THEMES).map(function (id) { const bg = id === 'classic' ? 'url(&quot;' + wallpaper(wall) + '&quot;)' : themeWall(id).replace(/"/g, '&quot;'); return '<button type="button" class="ta-theme' + (id === theme ? ' ta-on' : '') + '" data-theme="' + id + '"><i style="background-image:' + bg + '"></i><span>' + THEMES[id].name + '</span></button>'; }).join('') +
@@ -1606,6 +1614,7 @@
     if (t.dataset.wall) { store.set('wallpaper', t.dataset.wall); applyWallpaper(); sfx.click(); renderSettings(); return; }
     const k = t.dataset.set;
     if (k === 'cheat') { tryCheat(); return; }
+    if (k === 'chatOver') { const on = !store.get('chatOver', true); store.set('chatOver', on); t.classList.toggle('ta-on', on); applyChatOver(); sfx.click(); return; }
     if (k === 'rmOn') { const o = rmOpts(); o.on = !o.on; store.set('rmOpts', o); sfx.click(); if (o.on) rmStart(); else rmStop(); renderSettings(); return; }
     if (k === 'rmT') { const o = rmOpts(); o.off[t.dataset.t] = !o.off[t.dataset.t]; store.set('rmOpts', o); t.classList.toggle('ta-on', !o.off[t.dataset.t]); sfx.click(); return; }
     if (k === 'keySave') { saveKey(); return; }
@@ -2099,7 +2108,7 @@
       try { document.activeElement.blur(); } catch (e) {}
     }
     applyWallpaper(); tickClock(); clockTimer = setInterval(tickClock, 5000);
-    evStart(); rmStart(); inboxStart(); showNews();
+    evStart(); rmStart(); inboxStart(); showNews(); applyChatOver();
     setOrientation(wantsLand(current), false);
     win.classList.remove('ta-turn-l', 'ta-turn-p');
     refreshNav();
@@ -2112,9 +2121,10 @@
     devLockNow();   // the Dev app locks whenever the phone is closed
     if (current && games[current]) games[current].leave();
     isOpen = false; root.hidden = true; clearInterval(clockTimer); inboxStop(); cloudPush();
-    evStop(); rmStop();
+    evStop(); rmStop(); applyChatOver();
     document.documentElement.style.overflow = savedOverflow;
   }
+  function applyChatOver() { document.documentElement.classList.toggle('ta-chatover', isOpen && store.get('chatOver', true)); }
   function toggleArcade() { if (isOpen) closeArcade(); else openArcade(); }
   function arcadeShows(id) { return isOpen && current === id; }
   function setMuted(m) {
@@ -19398,7 +19408,7 @@
       env.snd(fly ? 'fly' : 'road');
       if (G.phase === 'setup') {
         G.setup.i++; G.setup.step = 'safe'; G.setup.last = -1;
-        if (G.setup.i >= G.setup.order.length) { G.phase = 'roll'; G.cur = 0; say('The city is carved up. ' + name(0) + ' ' + verb(0, 'roll') + ' first.'); }
+        if (G.setup.i >= G.setup.order.length) { const f = G.first || 0; G.phase = 'roll'; G.cur = f; say('The city is carved up. ' + name(f) + ' ' + verb(f, 'roll') + ' first.'); }
         else G.cur = G.setup.order[G.setup.i];
         return;
       }
@@ -19688,16 +19698,18 @@
       const players = o.players.map(function (s) { return { name: s.name, col: s.col, ai: !!s.ai, id: s.id || 0, hand: { brick: 0, wood: 0, wheat: 0, ore: 0, cotton: 0 }, favs: [], crew: 0,
         routes: mode === 'fp' ? 15 : 20, flights: mode === 'fp' ? 15 : 0, safes: mode === 'fp' ? 5 : 6, hqs: mode === 'fp' ? 4 : 5 }; });
       const deck = shuffle(Array(20).fill('crew').concat(Array(5).fill('respect'), Array(3).fill('supply'), Array(3).fill('deal'), Array(3).fill('roads')));
-      const n = players.length, order = [];
-      for (let i = 0; i < n; i++) order.push(i);
-      for (let i = n - 1; i >= 0; i--) order.push(i);
+      // A random faction goes first (2.44.2): it places first in setup, places last on the way back, and rolls first.
+      const n = players.length, order = [], first = Math.floor(rnd() * n);
+      for (let i = 0; i < n; i++) order.push((first + i) % n);
+      for (let i = n - 1; i >= 0; i--) order.push((first + i) % n);
       const xs = B.hexes.map(function (h) { return h.cx; }).concat(B.ports.map(function (p) { return p.x; })), ys = B.hexes.map(function (h) { return h.cy; }).concat(B.ports.map(function (p) { return p.y; }));
       const x0 = Math.min.apply(null, xs) - R - 14, x1 = Math.max.apply(null, xs) + R + 14, y0 = Math.min.apply(null, ys) - R - 34, y1 = Math.max.apply(null, ys) + R + 12;
       G = { v: 1, mode: mode, size: size, islands: B.islands || null, marshal: B.marshal !== undefined ? B.marshal : -1, bonus: [], goldQ: [], vb: [x0, y0, x1 - x0, y1 - y0].map(Math.round).join(' '), hexes: B.hexes, verts: B.verts, edges: B.edges, ports: B.ports, players: players, deck: deck, diff: o.diff || 'normal', speed: o.speed || 750, online: !!o.online,
         raid: B.hexes.findIndex(function (h) { return h.res === 'none'; }), cur: order[0], phase: 'setup', setup: { order: order, i: 0, step: 'safe', last: -1 },
-        win: win, dice: null, turn: 0, playedFav: false, free: 0, discardQ: [], afterRaid: 'main', longest: -1, bigCrew: -1, winner: -1, log: [], offer: null, ask: null, auto: null, counted: false };
+        win: win, first: first, dice: null, turn: 0, playedFav: false, free: 0, discardQ: [], afterRaid: 'main', longest: -1, bigCrew: -1, winner: -1, log: [], offer: null, ask: null, auto: null, counted: false };
       say(mode === 'fp' ? 'A new Flight Paths game begins. Each faction opens two safehouses in Torn City, each with a road or a flight route. Fly out to ' + B.islands.slice(1).join(', ') + ' for +2 Respect each. First to ' + win + ' Respect wins.'
         : 'A new game begins. Each faction opens two safehouses, each with a road. The second safehouse pays its starting cards. First to ' + win + ' Respect wins.');
+      say('A coin toss decides who goes first: ' + name(first) + ' ' + verb(first, 'place') + ' first and ' + verb(first, 'roll') + ' first.');
       return G;
     }
     // Who the game is waiting for, and whether that seat is played by the computer right now

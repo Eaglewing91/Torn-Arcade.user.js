@@ -6,6 +6,8 @@
 
 Torn Arcade is a Tampermonkey userscript that adds a **Mobile Phone** link to Torn's sidebar. Click it and a phone opens on top of the page with nine games, leaderboards and settings. Everything runs inside the phone, and every image, sound and piece of music is built into the script or its two optional Art Packs.
 
+> 💬 **2.45:** Torn chat stays usable while the phone is open (Settings → Torn chat over the phone). In Territories a coin toss now decides who goes first. Online Chess only rates games where both players made a move. The phone feels quicker on busy Torn pages.
+>
 > ⏰ **2.44: Timed reminders.** 2-minute warnings on the phone before your flight lands, you leave hospital or jail, your cooldowns end, your energy or nerve is full, your chain runs out and more, with a new **Key 2** (Custom) in Settings. Key 1 (events only) stays as it was.
 >
 > ⏱️ **2.43.2:** More time online: Chess gives 45 seconds a move, and in Territories every move you make (a road, a build, a trade) gives you a fresh 45 seconds.
@@ -114,6 +116,7 @@ Two games in one app (pick on the new game screen):
 
 - **Play online** (optional, needs Online play and a verified Torn ID): invite up to 3 players by Torn ID, make a **public game** anyone can join from the list, or tap **⚡ Quick match** to join a waiting game (or open one). Your invite arrives as a notification on their phone; they tap it and join. A public game starts by itself when every seat is taken. The host starts when ready, and any empty seats are played by the computer. The Torn Arcade server runs the game, rolls the dice and deals the cards, so nobody can cheat, and you only ever see your own cards. Each move has a **45-second timer**, and every move you make (a road, a build, a trade) starts it again: if a player doesn't act in time (their turn, handing over cards on a 7, or answering a trade offer), the computer makes that move for them and they're back in control on their next turn. You can trade cards with the other players. Games with 2 or more people change your online rating on the global leaderboard. Classic, Flight Paths to 12 and Flight Paths to 16 each have **their own rating board**, so wins in a shorter game never count against the longer one. Flight Paths games need Torn Arcade 2.41 or newer to join.
 - Play against up to three computer factions (Easy, Normal or Hard), pass-and-play with friends on one device, or watch the computer play. Rivals trade with each other, make counter-offers, and keep track of what you've collected so they won't hand you the last card for an HQ (on Hard they're strict about it).
+- **Who goes first:** a coin toss at the start of every game picks the faction that places first and rolls first.
 - **Classic**: Torn City as one big 37-district map, a new random board every game, first to **14 Respect**. 20 roads, 6 safehouses and 5 HQs per faction, and 5 secret Councillor's Favours in the deck (as in Catan). (The small 19-district map was retired in 2.41; a small-map game you already started still finishes with its old rules.)
 - **✈️ Flight Paths** (an expansion played by the rules of Catan: Seafarers, based on its large "Heading for New Shores" board): Torn City (30 districts, two Racket HQs) sits in open sky, with four islands of 5, 5, 5 and 4 districts named after Torn's travel destinations (Mexico, Cayman Islands, Canada, Hawaii, United Kingdom, Argentina, Switzerland, Japan, China, UAE or South Africa): 49 districts in all, more than Classic's 37. Your first two safehouses go on Torn City, each with a road or a flight route.
   - **Flight routes** (Wood + Cotton) go on the sky, starting from one of your safehouses or HQs on the coast or from the end of your own flight routes. Roads and flight routes only join at your own buildings. Once a turn you can **move** the flight route at the open end of a chain (not one built that turn).
@@ -132,7 +135,7 @@ Two games in one app (pick on the new game screen):
 Classic chess with a clean board, real Staunton-style pieces drawn by the script, smooth move animations, tap-or-drag moves, legal-move dots, check and last-move highlights, captured pieces and a move list.
 - **Play the computer** on Easy, Normal or Hard, with Undo, Flip and your record for each level.
 - **Play online** (optional): invite a player by Torn ID, make a public game anyone can join, or tap **⚡ Quick match**. Each move has a **45 second clock**; if you run out, the computer plays a move for you, up to 3 times, and after that you lose the game.
-- Full rules: castling, en passant, promotion, checkmate, stalemate, threefold repetition, the 50-move rule and insufficient material. Online wins count towards a Chess rating on the global leaderboards.
+- Full rules: castling, en passant, promotion, checkmate, stalemate, threefold repetition, the 50-move rule and insufficient material. Online games between two players count towards a Chess rating on the global leaderboards (a game only counts once both players have made a move; games against the computer stay on your device).
 
 ### 💣 Dirty Bombs
 A minesweeper-style puzzle. Clear the city block by block without setting off a dirty bomb. Numbers show how many bombs are hidden next to each block.
@@ -149,7 +152,7 @@ Tap to fly through the gaps in the pipes over the Torn City skyline. Every pipe 
 
 Torn Arcade is built to follow Torn's scripting rules:
 
-- Apart from adding the **Mobile Phone** link to the sidebar, it never reads, clicks or changes anything on Torn's page.
+- Apart from adding the **Mobile Phone** link to the sidebar, it never reads, clicks or changes anything on Torn's page. The one exception is optional: while the phone is open, **Torn chat over the phone** (Settings, on by default) lifts Torn's own chat bar and chat windows above the phone so you can keep chatting. That's a display change only; nothing is clicked or sent.
 - It **never loads Torn pages** and makes **no non-API requests** to Torn.
 - It doesn't talk to any website other than the official Torn API (only if you add a key for event notifications or reminders) and, only if you turn on the optional **Online play**, the Torn Arcade server (see below). The Art Pack install buttons are plain links to this GitHub page that only open when you tap them.
 - It uses **no websockets**.

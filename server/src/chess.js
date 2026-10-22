@@ -97,7 +97,12 @@ async function finish(g) {
   if (r.status !== 'active') return;
   r.status = 'over'; g.seen = Date.now(); bump(g);
   const a = r.seats[0], b = r.seats[1];
-  if (!a.acc || !b.acc) return;
+  // Only real games between two different players change ratings: both seats are people (games against the computer
+  // are only ever played on the phone and never sent here), and both players made at least one move themselves
+  // (a game resigned or abandoned before that doesn't count).
+  if (!a.acc || !b.acc || a.acc === b.acc) return;
+  const own = [0, 1].map(function (i) { return (S.moves || []).filter(function (m, k) { return k % 2 === i; }).length - (r.seats[i].auto || 0); });
+  if (own[0] < 1 || own[1] < 1) { S.note = 'This game ended before both players had moved, so it doesn\'t change ratings.'; bump(g); return; }
   try {
     const cur = {};
     for (const x of [a, b]) {

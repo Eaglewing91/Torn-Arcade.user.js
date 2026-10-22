@@ -392,7 +392,7 @@
       env.snd(fly ? 'fly' : 'road');
       if (G.phase === 'setup') {
         G.setup.i++; G.setup.step = 'safe'; G.setup.last = -1;
-        if (G.setup.i >= G.setup.order.length) { G.phase = 'roll'; G.cur = 0; say('The city is carved up. ' + name(0) + ' ' + verb(0, 'roll') + ' first.'); }
+        if (G.setup.i >= G.setup.order.length) { const f = G.first || 0; G.phase = 'roll'; G.cur = f; say('The city is carved up. ' + name(f) + ' ' + verb(f, 'roll') + ' first.'); }
         else G.cur = G.setup.order[G.setup.i];
         return;
       }
@@ -682,16 +682,18 @@
       const players = o.players.map(function (s) { return { name: s.name, col: s.col, ai: !!s.ai, id: s.id || 0, hand: { brick: 0, wood: 0, wheat: 0, ore: 0, cotton: 0 }, favs: [], crew: 0,
         routes: mode === 'fp' ? 15 : 20, flights: mode === 'fp' ? 15 : 0, safes: mode === 'fp' ? 5 : 6, hqs: mode === 'fp' ? 4 : 5 }; });
       const deck = shuffle(Array(20).fill('crew').concat(Array(5).fill('respect'), Array(3).fill('supply'), Array(3).fill('deal'), Array(3).fill('roads')));
-      const n = players.length, order = [];
-      for (let i = 0; i < n; i++) order.push(i);
-      for (let i = n - 1; i >= 0; i--) order.push(i);
+      // A random faction goes first (2.44.2): it places first in setup, places last on the way back, and rolls first.
+      const n = players.length, order = [], first = Math.floor(rnd() * n);
+      for (let i = 0; i < n; i++) order.push((first + i) % n);
+      for (let i = n - 1; i >= 0; i--) order.push((first + i) % n);
       const xs = B.hexes.map(function (h) { return h.cx; }).concat(B.ports.map(function (p) { return p.x; })), ys = B.hexes.map(function (h) { return h.cy; }).concat(B.ports.map(function (p) { return p.y; }));
       const x0 = Math.min.apply(null, xs) - R - 14, x1 = Math.max.apply(null, xs) + R + 14, y0 = Math.min.apply(null, ys) - R - 34, y1 = Math.max.apply(null, ys) + R + 12;
       G = { v: 1, mode: mode, size: size, islands: B.islands || null, marshal: B.marshal !== undefined ? B.marshal : -1, bonus: [], goldQ: [], vb: [x0, y0, x1 - x0, y1 - y0].map(Math.round).join(' '), hexes: B.hexes, verts: B.verts, edges: B.edges, ports: B.ports, players: players, deck: deck, diff: o.diff || 'normal', speed: o.speed || 750, online: !!o.online,
         raid: B.hexes.findIndex(function (h) { return h.res === 'none'; }), cur: order[0], phase: 'setup', setup: { order: order, i: 0, step: 'safe', last: -1 },
-        win: win, dice: null, turn: 0, playedFav: false, free: 0, discardQ: [], afterRaid: 'main', longest: -1, bigCrew: -1, winner: -1, log: [], offer: null, ask: null, auto: null, counted: false };
+        win: win, first: first, dice: null, turn: 0, playedFav: false, free: 0, discardQ: [], afterRaid: 'main', longest: -1, bigCrew: -1, winner: -1, log: [], offer: null, ask: null, auto: null, counted: false };
       say(mode === 'fp' ? 'A new Flight Paths game begins. Each faction opens two safehouses in Torn City, each with a road or a flight route. Fly out to ' + B.islands.slice(1).join(', ') + ' for +2 Respect each. First to ' + win + ' Respect wins.'
         : 'A new game begins. Each faction opens two safehouses, each with a road. The second safehouse pays its starting cards. First to ' + win + ' Respect wins.');
+      say('A coin toss decides who goes first: ' + name(first) + ' ' + verb(first, 'place') + ' first and ' + verb(first, 'roll') + ' first.');
       return G;
     }
     // Who the game is waiting for, and whether that seat is played by the computer right now
