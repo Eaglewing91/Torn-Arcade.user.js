@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.46.5
+// @version      2.46.6
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with nine game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -664,7 +664,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gifts and trades', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.46.5';
+  const VERSION = '2.46.6';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -10433,7 +10433,9 @@
         createImageBitmap(blob).then(function (bmp) {
           delete IWDB.reading[k];
           if (IWC.chunks[k]) { bmp.close(); return; }
-          iwStore(k, { base: bmp, tall: iwTallList(iwOps(iwGrid(m, cx, cy))), used: T });
+          // Indoor maps use the indoor objects: the outdoor rules would turn floor letters into palms, signs and lamps.
+          const G2 = iwGrid(m, cx, cy);
+          iwStore(k, { base: bmp, tall: iwTallList(m.indoor ? iwOpsIn(G2) : iwOps(G2)), used: T });
         }, fail);
       };
     } catch (e) { fail(); }

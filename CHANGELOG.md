@@ -8,6 +8,10 @@ Every Torn Arcade update since 2.2.0, newest first. Dates are in TCT (Torn City 
 
 ---
 
+## 2.46.6 — 2026-10-23
+### Fixed
+- Tornies: palm trees no longer appear around people standing inside the Golden Torn Casino. Indoor maps loaded from the copy saved on your device were redrawing their front layer with outdoor objects (this could also put stray signs, lamps or crates in other buildings).
+
 ## 2.46.5 — 2026-10-23
 ### Changed
 - Tornies now has its own game clock with morning, day and night, like the classic handheld games. One full cycle is 30 minutes of play: Morning 4 minutes, Day 10 minutes, Night 16 minutes.
