@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.46.4
+// @version      2.46.5
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with nine game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -664,7 +664,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gifts and trades', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.46.4';
+  const VERSION = '2.46.5';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -4397,11 +4397,32 @@
   let forceNight = null;   // tests can force day or night
   // The Ranked Charm (a post-game reward) triples the odds of meeting a Ranked Tornie.
   function rankedOdds() { return RANKED_ODDS * (G.bag && G.bag.rankcharm ? 3 : 1); }
-  function isNight() {
-    if (forceNight !== null) return forceNight;
-    const h = new Date().getUTCHours();   // Torn City Time
-    return h >= 20 || h < 6;
+  // Tornies keeps its own game clock, run by Tornies play time (it pauses whenever Tornies isn't being played).
+  // One full cycle is 30 minutes: Morning 4 min, Day 10 min, Night 16 min. Morning counts as day for day/night
+  // encounters. A new game starts at dawn.
+  const DAY_CYCLE = [['morning', 240], ['day', 600], ['night', 960]], DAY_LEN = 1800;
+  function dayPhase() {
+    let t = ((G && G.time) || 0) % DAY_LEN;
+    for (let k = 0; k < DAY_CYCLE.length; k++) {
+      if (t < DAY_CYCLE[k][1]) return { name: DAY_CYCLE[k][0], left: DAY_CYCLE[k][1] - t, next: DAY_CYCLE[(k + 1) % DAY_CYCLE.length][0] };
+      t -= DAY_CYCLE[k][1];
+    }
+    return { name: 'morning', left: 240, next: 'day' };
   }
+  function timeOfDay() {
+    if (forceNight !== null) return forceNight ? 'night' : 'day';
+    return dayPhase().name;
+  }
+  // Shown beside the start menu: "Morning · 3 min to Day".
+  function drawDayClock() {
+    const ph = dayPhase(), cap = function (s) { return s.charAt(0).toUpperCase() + s.slice(1); };
+    const mins = Math.max(1, Math.ceil(ph.left / 60));
+    const t = (ph.name === 'night' ? '\u263e ' : '\u2600 ') + cap(ph.name) + ' \u00b7 ' + mins + ' min to ' + cap(ph.next);
+    const w = Math.ceil(tw(t, 8) + 14);
+    box(4, 4, w, 18);
+    text(t, 11, 9, '#303846', { sz: 8 });
+  }
+  function isNight() { return timeOfDay() === 'night'; }
   function drawLighting(m, camX, camY) {
     const pp = lerpPos(W.p), px0 = pp[0] - camX + 8, py0 = pp[1] - camY + 6;
     if (m.dark && !(G.lit && G.lit[m.id])) {
@@ -4409,6 +4430,7 @@
       gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, 'rgba(0,0,0,0.88)');
       ctx.fillStyle = gr; ctx.fillRect(0, 0, VW, VH);
     }
+    if (!m.indoor && timeOfDay() === 'morning') fr(0, 0, VW, VH, 'rgba(255,170,100,0.13)');   // soft morning light
     if (!m.indoor && isNight()) {
       fr(0, 0, VW, VH, 'rgba(12,16,58,0.55)');
       if (iwOn && store.get('detailMaps', true) !== false) iwNightWindows(m, camX, camY);
@@ -5097,7 +5119,7 @@
         await say('EDITOR: Welcome to the Torn Times! Biggest story in town right now is the Racket.|They\'re a crime gang led by someone called Don Varro. They steal Tornies and sell them on the black market.');
         await say('EDITOR: And there\'s more. They keep asking about something called Project Genesis. Ever heard of it? Me neither.|Chedburn, the founder of the Torn Council, says the League won\'t back down. Good for him.');
       } },
-      { id: 'tt_reporter', x: 6, y: 5, dir: 'left', pal: 'lady', move: 'wander', text: 'I\'m writing a piece on the best places to find Tornies. Did you know some only come out at night?|Check your TornPhone clock. Torn City Time after 8pm is when the night owls come out.' }
+      { id: 'tt_reporter', x: 6, y: 5, dir: 'left', pal: 'lady', move: 'wander', text: 'I\'m writing a piece on the best places to find Tornies. Did you know some only come out at night?|Keep an eye on the time in your menu. Once night falls, the night owls come out.' }
     ]
   });
   defMap('bank', {
@@ -5211,7 +5233,7 @@
     npcs: [
       { id: 'voltwarden', x: 4, y: 3, kind: 'mon', sp: 112, lv: 50, flag: 'caught112', size: 30, cond: function () { return !G.flags.caught112 && isNight() && hasMedals(8); },
         text: 'The machines spark to life. A huge shape crackles in the dark...' },
-      { id: 'pw_sign', x: 7, y: 5, pal: 'scientist', move: 'look', cond: function () { return !hasMedals(8) || !isNight(); }, text: 'A dusty note on the wall:|"Readings spike every night after 8pm. Something lives in the generators. Only the strongest trainers should stay."' }
+      { id: 'pw_sign', x: 7, y: 5, pal: 'scientist', move: 'look', cond: function () { return !hasMedals(8) || !isNight(); }, text: 'A dusty note on the wall:|"Readings spike every night once it gets dark. Something lives in the generators. Only the strongest trainers should stay."' }
     ]
   });
 
@@ -14807,7 +14829,7 @@
       items.push('SAVE'); acts.push(saveMenu);
       items.push('OPTIONS'); acts.push(optionsMenu);
       items.push('CLOSE'); acts.push(null);
-      i = await menu(items, { x: VW - 86, y: 4, w: 82, i: i, start: true });
+      i = await menu(items, { x: VW - 86, y: 4, w: 82, i: i, start: true, drawBehind: drawDayClock });
       if (i < 0 || !acts[i]) return;
       await acts[i]();
     }

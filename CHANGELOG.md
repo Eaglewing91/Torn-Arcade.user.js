@@ -8,6 +8,14 @@ Every Torn Arcade update since 2.2.0, newest first. Dates are in TCT (Torn City 
 
 ---
 
+## 2.46.5 — 2026-10-23
+### Changed
+- Tornies now has its own game clock with morning, day and night, like the classic handheld games. One full cycle is 30 minutes of play: Morning 4 minutes, Day 10 minutes, Night 16 minutes.
+- The clock only runs while you're playing Tornies, so everyone sees every time of day. It's saved with your game, and a new game starts at dawn.
+- The start menu shows the time of day and how long until it changes (for example "Morning · 3 min to Day").
+- Morning has a soft warm light outdoors. Night-only Tornies, legendaries and events follow the game clock; morning counts as day.
+- Weather is unchanged and still shared by everyone on Torn City Time.
+
 ## 2.46.4 — 2026-10-23
 ### Changed
 - Tornies: when you use a Training Disc or Field Disc, the team list shows ABLE, NOT ABLE or LEARNED beside each Tornie, so you can see who can learn the move before picking. Old Betty's Whiteout lesson shows the same.
