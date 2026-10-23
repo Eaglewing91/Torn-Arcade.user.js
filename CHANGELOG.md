@@ -8,6 +8,10 @@ Every Torn Arcade update since 2.2.0, newest first. Dates are in TCT (Torn City 
 
 ---
 
+## 2.46.4 — 2026-10-23
+### Changed
+- Tornies: when you use a Training Disc or Field Disc, the team list shows ABLE, NOT ABLE or LEARNED beside each Tornie, so you can see who can learn the move before picking. Old Betty's Whiteout lesson shows the same.
+
 ## 2.46.3 — 2026-10-23
 ### New
 - Tornies: daily trainer rematches. After each Torn City Time midnight, trainers you've beaten are ready to battle again. They won't ambush you; talk to them and they'll offer a rematch.

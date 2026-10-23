@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.46.3
+// @version      2.46.4
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with nine game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -664,7 +664,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gifts and trades', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.46.3';
+  const VERSION = '2.46.4';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -7005,7 +7005,9 @@
   });
   async function bettyTutor() {
     await say('OLD BETTY: Brrr! Come in, come in. I used to be the best Ice trainer in Torn City, you know.|I can teach one of your Ice Tornies my secret move: WHITEOUT. A blizzard so thick you can\'t see your own feet.');
-    const t = await partyScreen({ pick: true, prompt: 'Teach Whiteout to which Tornie?' });
+    const t = await partyScreen({ pick: true, prompt: 'Teach Whiteout to which Tornie?', able: function (mon) {
+      return mon.moves.some(function (m) { return m.id === 'whiteout'; }) ? 'known' : SP[mon.sp].types.indexOf('Ice') >= 0 ? 'able' : 'no';
+    } });
     if (t === null) return;
     const mon = G.party[t];
     if (SP[mon.sp].types.indexOf('Ice') < 0) { await say('OLD BETTY: That one? Ha! It\'d catch a cold. Bring me an Ice type.'); return; }
@@ -13890,9 +13892,14 @@
           if (mon.rk) star(33 + tw(monName(mon), 8.5) + 5, y + 6.5);
           text('Lv' + mon.lv, 33, y + 11, '#5a6474', { sz: 6.5 });
           stChip(mon.st, 58, y + 11);
-          text('HP', 118, y + 3.5, '#d8a030', { sz: 6.5 });
-          hpBar(131, y + 5, 64, mon.hp, mx);
-          text(mon.hp + '/' + mx, 229, y + 10, '#303846', { sz: 7, al: 'right' });
+          // When teaching a move, each row shows ABLE / LEARNED / NOT ABLE in place of the HP bar.
+          const ab = o.able && o.able(mon);
+          if (ab) text(ab === 'able' ? 'ABLE' : ab === 'known' ? 'LEARNED' : 'NOT ABLE', 229, y + 6, ab === 'able' ? '#2a9a4a' : ab === 'known' ? '#3a7ab8' : '#9aa0aa', { sz: 8.5, al: 'right' });
+          else {
+            text('HP', 118, y + 3.5, '#d8a030', { sz: 6.5 });
+            hpBar(131, y + 5, 64, mon.hp, mx);
+            text(mon.hp + '/' + mx, 229, y + 10, '#303846', { sz: 7, al: 'right' });
+          }
         });
         box(4, VH - 26, VW - 8, 22);
         text(m.swap >= 0 ? 'Move to where?' : (o.prompt || 'Choose a Tornie.'), 12, VH - 20, '#303846', { sz: 9 });
@@ -13992,7 +13999,10 @@
     }
     if (it.kind === 'disc' || it.kind === 'field') {
       const mv = it.move;
-      const t = await partyScreen({ pick: true, prompt: 'Teach ' + MOVES[mv].name + ' to which Tornie?' });
+      const t = await partyScreen({ pick: true, prompt: 'Teach ' + MOVES[mv].name + ' to which Tornie?', able: function (mon) {
+        if (mon.moves.some(function (x) { return x.id === mv; })) return 'known';
+        return (it.kind === 'field' ? fieldCanLearn(mon, id) : canLearnDisc(mon, mv)) ? 'able' : 'no';
+      } });
       if (t === null) return;
       const mon = G.party[t];
       if (it.kind === 'field' ? !fieldCanLearn(mon, id) : !canLearnDisc(mon, mv)) { await say(monName(mon) + ' can\'t get the hang of ' + MOVES[mv].name + '.'); return; }
