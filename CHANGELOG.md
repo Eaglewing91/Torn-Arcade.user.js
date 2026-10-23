@@ -8,6 +8,25 @@ Every Torn Arcade update since 2.2.0, newest first. Dates are in TCT (Torn City 
 
 ---
 
+## 2.47.0 — 2026-10-23
+### New
+- Tornies: every Arena except Westgate has its own layout and a puzzle, after the classic games' Gyms:
+  - **Midtown (Volt):** find the live fuse boxes to switch off the electric barriers. Some boxes are duds.
+  - **Docks (Reef):** valves raise one bridge and sink another; work out the right order.
+  - **Park Greenhouse (Ivy):** a hedge maze with trainers hiding in the dead ends.
+  - **Industrial (Forge):** push crates on trolleys to clear the way.
+  - **Casino (Ace):** quiz machines open the gates. A wrong answer means a battle first.
+  - **Hospital (Graves):** a dark ward of teleport pads. Not every pad leads forward.
+  - **Northridge (Rhea):** slide across the ice and use the rocks to stop.
+- Tornies: the Docks Warehouse has a second floor. Push crates in the Loading Bay to reach the ladder, then cross the icy Cold Store to Slick and Captain Reef.
+- Tornies: the Old TornTech Factory has a Generator Room. Switch on both generators, each guarded by a Racket Thug, to power the security door to Knuckles.
+- New trainers in several Arenas and both buildings.
+### Changed
+- Crates and switches reset when you leave a room, so a puzzle can never leave you stuck.
+- Leaders, teams, medals, rewards and the story are unchanged. Medals you've already won are kept, and you can walk in and explore.
+### Fixed
+- If a save was made somewhere that's now solid in a redrawn room, the game starts you at that room's entrance.
+
 ## 2.46.9 — 2026-10-23
 ### Fixed
 - Tornies: you can get into the Old TornTech Factory again. Racket Thug Rio was standing on the doorstep and never moved; the two thugs now stand either side of the door and battle you as you go in.

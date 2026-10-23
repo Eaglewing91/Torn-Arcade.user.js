@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.46.9
+// @version      2.47.0
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with nine game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -664,7 +664,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gifts and trades', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.46.9';
+  const VERSION = '2.47.0';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -8150,8 +8150,8 @@
     const key = set + floor + ch + (anim ? f : 0) + ('.#f=vSrcK*_%RCW'.indexOf(ch) >= 0 ? v : 0);
     return TILE[key] || (TILE[key] = drawTile(ch, set, floor, anim ? f : 0, v));
   }
-  const SOLID_OUT = '#~SXZLPhnbQFR%YING';
-  const SOLID_IN = 'wRkBTtDPHgxK~SLQZEAF';
+  const SOLID_OUT = '#~SXZLPhnbQFR%YING|';
+  const SOLID_IN = 'wRkBTtDPHgxK~SLQZEAF|';
 
   /* ---------- Buildings ---------- */
   const BLD = {};
@@ -10078,7 +10078,7 @@
       } else if (c === 'F' && !m.indoor) {
         const f = function (dx, dy) { return iwLiveTile(m, tx + dx, ty + dy)[0] === 'F' ? 1 : 0; };
         iwPut(iwFence(f(0, -1), f(0, 1), f(-1, 0), f(1, 0)), tx, ty, camX, camY);
-      } else if (c === 'R') iwPut(iwBoulder(Math.floor(h * 4), snow), tx, ty, camX, camY);
+      } else if (c === 'R' && !m.crates) iwPut(iwBoulder(Math.floor(h * 4), snow), tx, ty, camX, camY);
       else if (c === 'N') iwPut(iwNeon(Math.floor(T * 1.5 + h * 3) % 3 ? 1 : 0, Math.floor(h * 2)), tx, ty, camX, camY);
     }
     ctx.restore();
@@ -10412,7 +10412,7 @@
   function iwDbOn() { return store.get('saveMaps', true) !== false && typeof indexedDB !== 'undefined'; }
   // A single map whose layout changed gets its own version here, so only that map is redrawn (not every saved map).
   // Saved chunks of that map without the matching version are deleted when the store opens.
-  const IW_MAPV = { pawn: 2, gate: 2 };   // 2.46.7: shelves beside the pawn shop ladder; 2.46.8: plants beside the Gauntlet stairs
+  const IW_MAPV = { pawn: 2, gate: 2, warehouse: 2, factory: 2, gym_volt: 2, gym_reef: 2, gym_ivy: 2, gym_forge: 2, gym_ace: 2, gym_graves: 2, gym_rhea: 2 };   // 2.46.7 pawn shop shelves; 2.46.8 Gauntlet plants; 2.47.0 puzzle rooms
   function iwDbKey(k) { const id = k.split(':')[0], v = IW_MAPV[id]; return IW_ART + '|' + (v ? id + '@' + v + k.slice(id.length) : k); }
   function iwDbCurrent(dk) {
     dk = String(dk); if (dk.indexOf(IW_ART + '|') !== 0) return false;
@@ -12313,7 +12313,7 @@
   function fieldCheck(t, x, y) {
     const m = W.map;
     if (t === '~' && !G.surf && fieldUser('field_surf')) { runScript(function () { return surfStart(x, y); }); return true; }
-    if (t === 'R' && !/^gym_|^council|^champion/.test(m.id) && (fieldUser('field_smash') || fieldUser('field_lift'))) { runScript(function () { return boulderAct(x, y); }); return true; }
+    if (t === 'R' && !m.crates && !/^gym_|^council|^champion/.test(m.id) && (fieldUser('field_smash') || fieldUser('field_lift'))) { runScript(function () { return boulderAct(x, y); }); return true; }
     return false;
   }
   async function surfStart(x, y) {
@@ -13757,6 +13757,284 @@
     return { ok: true, msg: note + 'You received: ' + got.join(', ') + '.' + ((p.m || []).length ? ' Tornies are in your team, or in the Tornie Locker if your team is full.' : '') };
   }
 
+  /* ---------- Puzzle rooms (2.47): the Arenas, the Docks Warehouse and the TornTech Factory ----------
+     Each Arena gets its own layout and a signature puzzle, after the classic games' Gyms; the two Racket buildings get a
+     second floor each. Mechanics live in 6p-puzzles.js. Leaders, teams, medals, rewards and the story are unchanged. */
+
+  // Redefine a room, keeping its people (by id) and its way back outside. Outdoor doors into it land on o.arrive.
+  function pzRoom(id, build, o) {
+    const old = MAPS[id], oldNpc = {}, oldOut = {};
+    if (old) { old.npcs.forEach(function (n) { oldNpc[n.id] = n; }); old.warps.forEach(function (w) { if (MAPS[w.to] && MAPS[w.to].outdoor) oldOut[w.to] = [w.tx, w.ty]; }); }
+    const keep = function (nid, x, y, dir, extra) { const n = oldNpc[nid]; if (!n) throw new Error('pzRoom ' + id + ': no ' + nid); return Object.assign({}, n, { x: x, y: y, dir: dir || n.dir }, extra || {}); };
+    const spec = build(keep, old || {});
+    defMap(id, spec);
+    const m = MAPS[id];
+    m.warps.forEach(function (w) { const b = oldOut[w.to]; if (b) { w.tx = b[0]; w.ty = b[1]; } });
+    if (o && o.arrive) Object.keys(MAPS).forEach(function (k) {
+      const mm = MAPS[k]; if (k === id || !mm.outdoor) return;
+      (mm.warps || []).forEach(function (w) { if (w.to === id) { w.tx = o.arrive[0]; w.ty = o.arrive[1]; } });
+      (mm.buildings || []).forEach(function (b) { if (b.to === id) { b.tx = o.arrive[0]; b.ty = o.arrive[1]; } });
+      Object.keys(mm.doors || {}).forEach(function (dk) { const d = mm.doors[dk]; if (d && d.to === id) { d.tx = o.arrive[0]; d.ty = o.arrive[1]; } });
+    });
+    pzWire(m);
+    return m;
+  }
+  // Switches and quiz machines become things you can use (A button) on the map.
+  function pzWire(m) {
+    const P = m.pz; if (!P) return;
+    m.acts = m.acts || [];
+    P.lights = P.lights || [];
+    (P.switches || []).forEach(function (s) {
+      P.lights.push([s.x, s.y, s.decoy ? function () { return false; } : s.lit || function () { return (s.flip || []).some(function (g) { return W.pz[g]; }) || (s.open || []).every(function (g) { return W.pz[g]; }) && (s.open || []).length > 0; }]);
+      m.acts.push([s.x, s.y, async function () {
+        if (s.run) { await s.run(); return; }
+        if (s.decoy) { await say(s.decoy); return; }
+        if (!pzSafeFlip(s.flip)) { await say('The gate can\'t close while you\'re standing in it!'); return; }
+        await say(s.text || 'Click! Somewhere, a gate moves.');
+      }]);
+    });
+    (P.quiz || []).forEach(function (q) {
+      P.lights.push([q.x, q.y, function () { return !!W.pz[q.gate]; }]);
+      m.acts.push([q.x, q.y, function () { return pzQuiz(q); }]);
+    });
+  }
+  // New trainers, built from an existing one's team (same strength, new name).
+  function pzTrainer(id, from, cls, name, pal, lose) {
+    if (!TRAINERS[id]) TRAINERS[id] = Object.assign({}, TRAINERS[from], { cls: cls, name: name, pal: pal, lose: lose });
+  }
+  const PZ_MATS = function (h, out) { return mats([5, 6], h - 1, out, 0, 0); };
+
+  /* ===== Westgate Arena (Brick): unchanged, the simple first Arena, like Pewter. ===== */
+
+  /* ===== Midtown Arena (Volt): fuse boxes switch off the electric barriers (Vermilion). ===== */
+  pzRoom('gym_volt', function (keep) { return {
+    name: 'Midtown Arena', bg: 'industrial', border: 'w', indoor: true, tiles: 'M',
+    rows: ['wwwwwwwwwwww', 'wwwwwwwwwwww', 'MMMMMMMMMMMM', 'MMMMMMMMMMMM', 'EEEEEMMEEEEE', 'MMMMMMMMMMMM', 'EMMMMMMMMMME', 'MMMMMMMMMMMM',
+      'EEEEEMMEEEEE', 'MMMMMMMMMMMM', 'EMMMMMMMMMME', 'MMMMMMMMMMMM', 'MMMMMMMMMMMM', 'EMMMMMMMMMME', 'MMMMMMMMMMMM', 'MMMMMmmMMMMM'],
+    warps: PZ_MATS(16, 'midtown'),
+    things: { E: 'A humming fuse box. The label says DO NOT TOUCH. Volt wrote "unless you\'re a challenger" under it.' },
+    statue: function () { return 'MIDTOWN ARENA|Medal winners: ' + (medal('volt') ? '{P}' : '?????'); },
+    pz: { style: 'laser', gates: { A: [[5, 8], [6, 8]], B: [[5, 4], [6, 4]] },
+      switches: [
+        { x: 11, y: 13, flip: ['A'], text: 'You flip the breaker. ZZT! The first barrier powers down.' },
+        { x: 0, y: 13, decoy: 'Just old fuses. Nothing happens.' }, { x: 0, y: 10, decoy: 'This fuse box is empty. Someone took the fuses home.' }, { x: 11, y: 10, decoy: 'A note inside: "Not this one, challenger!"' },
+        { x: 0, y: 6, flip: ['B'], text: 'You flip the breaker. ZZT! The last barrier powers down.' },
+        { x: 11, y: 6, decoy: 'The switch is stuck. Better try another box.' }] },
+    npcs: [keep('leader_volt', 5, 2, 'down'), keep('gv_al', 8, 6, 'left', { sight: 3 }), keep('gv_ty', 3, 11, 'right', { sight: 3 }), keep('guide_volt', 9, 14, 'left')]
+  }; }, { arrive: [5, 14] });
+
+  /* ===== Docks Arena (Reef): valves raise one bridge and lower another (Cerulean / Driftveil). ===== */
+  pzTrainer('gr_marlo', 'gr_kay', 'Swimmer', 'Marlo', TRAINERS.gr_kay.pal, 'Washed out. Again.');
+  pzRoom('gym_reef', function (keep) { return {
+    name: 'Docks Arena', bg: 'docks', border: 'w', indoor: true, tiles: 'O',
+    rows: ['wwwwwwwwwwww', 'wwwwwwwwwwww', 'OOOOOOOOOOOO', 'OOOOOOOOOOOO', '~~~~~~~~O~~~', 'OOOOO~~OOOOO', 'EOOOO~~OOOOO', 'OOOOO~~OOOOO',
+      '~~O~~~~~~O~~', 'OOOOOOOOOOOO', 'OOOOOOOOOOOO', 'OOOOOOOOOOOE', 'OOOOOOOOOOOO', 'OOOOOOOOOOOO', 'OOOOOOOOOOOO', 'OOOOOmmOOOOO'],
+    warps: PZ_MATS(16, 'docks'),
+    things: { E: 'A bridge control panel. Arrows show which bridge it works.' },
+    statue: function () { return 'DOCKS ARENA|Medal winners: ' + (medal('reef') ? '{P}' : '?????'); },
+    pz: { style: 'water', gates: { A: [[2, 8]], B: [[9, 8]], C: [[8, 4]] }, init: { A: true },
+      switches: [
+        { x: 11, y: 11, flip: ['A', 'B'], text: 'You spin the valve. One bridge sinks as the other rises!' },
+        { x: 0, y: 6, flip: ['C'], text: 'You spin the valve. Far across the pool, a bridge rises... or sinks.' }] },
+    npcs: [keep('leader_reef', 5, 2, 'down'), keep('gr_bo', 3, 5, 'down', { sight: 2 }), keep('gr_kay', 10, 6, 'left', { sight: 3 }),
+      { id: 'gr_marlo', x: 2, y: 12, dir: 'right', pal: TRAINERS.gr_kay.pal, trainer: 'gr_marlo', sight: 3, before: 'Splash! You\'ll need more than a bucket to win here!', after: 'Spin the valves in the right order. That\'s all I\'ll say.' },
+      keep('guide_reef', 9, 14, 'left')]
+  }; }, { arrive: [5, 14] });
+
+  /* ===== Park Greenhouse (Ivy): a hedge maze, trainers hidden in the dead ends (Celadon). ===== */
+  pzRoom('gym_ivy', function (keep) { return {
+    name: 'Park Greenhouse', bg: 'grass', border: 'w', indoor: true, tiles: 'O',
+    rows: ['wwwwwwwwwwww', 'wwwwwwwwwwww', 'gggggOOOOOOO', 'gggggggggOgg', 'gOOOOOOOOOgg', 'gOgggggggOgg', 'gOgOOOOOgOgg', 'gOgOgggOgOgg',
+      'gOOOgOOOgOgg', 'gOgggOgggOgg', 'gOgOOOgOOOgg', 'gOgOgggOgggg', 'gOgOOOgOOOgg', 'gggggOgggggg', 'OOOOOOOOOOOO', 'OOOOOmmOOOOO'],
+    warps: PZ_MATS(16, 'park'),
+    things: { g: 'A thick hedge of flowering plants. It smells wonderful, and it\'s far too thick to push through.' },
+    statue: function () { return 'PARK GREENHOUSE|Medal winners: ' + (medal('ivy') ? '{P}' : '?????'); },
+    npcs: [keep('leader_ivy', 5, 2, 'down'), keep('gi_moss', 1, 12, 'up', { sight: 4 }), keep('gi_fern', 9, 12, 'left', { sight: 3 }), keep('guide_ivy', 9, 14, 'left')]
+  }; }, { arrive: [5, 14] });
+
+  /* ===== Industrial Arena (Forge): push the crates to clear the way (Strength puzzles). ===== */
+  pzRoom('gym_forge', function (keep) { return {
+    name: 'Industrial Arena', bg: 'industrial', border: 'w', indoor: true, tiles: 'M', crates: true,
+    rows: ['wwwwwwwwwwww', 'wwwwwwwwwwww', 'MMMMMMMMMMMM', 'MMMMMMMMMMMM', 'EEEEEMEEEEEE', 'EEEMMRMMEEEE', 'EEEMERRMEEEE', 'EEEMMMRMEEEE',
+      'EEEEEMMMEEEE', 'MMMMMMMMMMMM', 'MMMMMMMMMMMM', 'MMMMMMMMMMMM', 'MMMMMMMMMMMM', 'MMMMMmmMMMMM'],
+    warps: PZ_MATS(14, 'industrial'),
+    things: { E: 'A furnace-hot press. Don\'t touch.', R: 'A crate of steel bolts on rollers. Walk into it to push it.' },
+    statue: function () { return 'INDUSTRIAL ARENA|Medal winners: ' + (medal('forge') ? '{P}' : '?????'); },
+    npcs: [keep('leader_forge', 5, 2, 'down'), keep('gf_rod', 9, 10, 'left', { sight: 3 }), keep('gf_ina', 2, 9, 'right', { sight: 3 }), keep('guide_forge', 9, 12, 'left')]
+  }; }, { arrive: [5, 12] });
+
+  /* ===== Casino Arena (Ace): quiz machines open the gates; a wrong answer means a battle (Cinnabar). ===== */
+  pzTrainer('gc_max', 'gc_bob', 'Gambler', 'Max', TRAINERS.gc_bob.pal, 'Should\'ve folded.');
+  pzRoom('gym_ace', function (keep) { return {
+    name: 'Casino Arena', bg: 'neon', border: 'w', indoor: true, tiles: 'Y',
+    rows: ['wwwwwwwwwwww', 'wwwwwwwwwwww', 'YYYYYYYYYYYY', 'YYYYYYYYYYYY', 'SSSSSYYSSSSS', 'YYYYYYYYYYYY', 'YYYYYYYYYYYY', 'YYYYYYYYYYYY',
+      'SSSSSYYSSSSS', 'YYYYYYYYYYYY', 'YYYYYYYYYYYY', 'YYYYYYYYYYYY', 'SSSSSYYSSSSS', 'YYYYYYYYYYYY', 'YYYYYYYYYYYY', 'YYYYYmmYYYYY'],
+    warps: PZ_MATS(16, 'casino'),
+    things: { S: 'A slot machine with a sign: OUT OF ORDER. Try the quiz machine instead!' },
+    statue: function () { return 'CASINO ARENA|Medal winners: ' + (medal('ace') ? '{P}' : '?????'); },
+    pz: { style: 'bars', gates: { A: [[5, 12], [6, 12]], B: [[5, 8], [6, 8]], C: [[5, 4], [6, 4]] },
+      quiz: [
+        { x: 4, y: 12, gate: 'A', trainer: 'gc_lia', q: 'QUESTION 1: In Torn, Torn City Time (TCT) is the same as...', choices: ['UTC (GMT)', 'New York time', 'Tokyo time'], answer: 0 },
+        { x: 7, y: 8, gate: 'B', trainer: 'gc_bob', q: 'QUESTION 2: Which type of move is super effective against Plant Tornies?', choices: ['Water', 'Fire', 'Earth'], answer: 1 },
+        { x: 4, y: 4, gate: 'C', trainer: 'gc_max', q: 'QUESTION 3: How many Arena medals does the Gauntlet Pass guard ask for?', choices: ['Six', 'Eight', 'Ten'], answer: 1 }] },
+    npcs: [keep('leader_ace', 5, 2, 'down'), keep('gc_lia', 9, 13, 'left', { sight: -1 }), keep('gc_bob', 2, 10, 'right', { sight: -1 }),
+      { id: 'gc_max', x: 9, y: 6, dir: 'left', pal: TRAINERS.gc_bob.pal, trainer: 'gc_max', sight: -1, before: 'Wrong! House rules: wrong answers pay up in battle!', after: 'The quiz is easier than the slots. Trust me.' },
+      keep('guide_ace', 9, 14, 'left')]
+  }; }, { arrive: [5, 14] });
+
+  /* ===== Hospital Arena (Graves): a dark ward of teleport pads (Saffron, with Lavender's gloom). ===== */
+  pzTrainer('gg_wren', 'gg_eve', 'Medium', 'Wren', TRAINERS.gg_eve.pal, 'The spirits... are disappointed in me.');
+  (function () {
+    // Rooms: A (entrance, bottom left), B (bottom right), C (middle left), D (middle right), L (the leader, top).
+    const pads = { a1: [1, 12], a2: [4, 13], b1: [11, 12], b2: [14, 13], c1: [1, 7], c2: [4, 8], d1: [11, 7], d2: [14, 8], d3: [12, 9], l1: [6, 3] };
+    const pairs = [['a1', 'b1'], ['a2', 'c1'], ['b2', 'd1'], ['d2', 'l1'], ['c2', 'd3']];
+    const warps = [];
+    pairs.forEach(function (pr) { const a = pads[pr[0]], b = pads[pr[1]];
+      warps.push({ x: a[0], y: a[1], to: 'gym_graves', tx: b[0], ty: b[1], dir: 'down' }, { x: b[0], y: b[1], to: 'gym_graves', tx: a[0], ty: a[1], dir: 'down' }); });
+    pzRoom('gym_graves', function (keep) { return {
+      name: 'Hospital Arena', bg: 'spooky', border: 'w', indoor: true, tiles: 'W', dark: true,
+      rows: ['wwwwwwwwwwwwwwww', 'wwwwwwwwwwwwwwww', 'wwwwwWWWWWWwwwww', 'wwwwwWWWWWWwwwww', 'wwwwwWWWWWWwwwww', 'wwwwwwwwwwwwwwww', 'WWWWWWwwwwWWWWWW', 'WWWWWWwwwwWWWWWW',
+        'WWWWWWwwwwWWWWWW', 'WWWWWWwwwwWWWWWW', 'wwwwwwwwwwwwwwww', 'WWWWWWwwwwWWWWWW', 'WWWWWWwwwwWWWWWW', 'WWWWWWwwwwWWWWWW', 'WWWWWWwwwwWWWWWW', 'wwmmwwwwwwwwwwww'],
+      warps: mats([2, 3], 15, 'hospdist', 0, 0).concat(warps),
+      statue: function () { return 'HOSPITAL ARENA|Medal winners: ' + (medal('graves') ? '{P}' : '?????'); },
+      pz: { pads: Object.keys(pads).map(function (k) { return pads[k]; }) },
+      npcs: [keep('leader_graves', 8, 2, 'down'), keep('gg_vic', 13, 11, 'down', { sight: 2 }), keep('gg_eve', 15, 6, 'left', { sight: 3 }),
+        { id: 'gg_wren', x: 2, y: 9, dir: 'up', pal: TRAINERS.gg_eve.pal, trainer: 'gg_wren', sight: 2, before: 'The doorways whisper... and they told me you\'d come this way.', after: 'Not every doorway leads forward. Some lead back.' },
+        keep('guide_graves', 4, 11, 'down')]
+    }; }, { arrive: [2, 14] });
+  })();
+
+  /* ===== Northridge Arena (Rhea): slide across the ice; the rocks are your brakes (Mahogany / Ice Path). ===== */
+  pzRoom('gym_rhea', function (keep) { return {
+    name: 'Northridge Arena', bg: 'snow', border: 'w', indoor: true, tiles: 'J', ice: true,
+    rows: ['wwwwwwwwwwww', 'wwwwwwwwwwww', 'GGGGGGGGGGGG', 'GGGGGGGGGGGG', 'RRJRRRRRRRRR', 'RJJJJJJJJJJJ', 'RJJJJRJJJJJJ', 'JJJRJJJJJJRJ',
+      'JJJJJJJJJJRJ', 'RJRJJJJJJJJJ', 'JJJJJJJJJJJJ', 'JJJJJJJJJJJJ', 'JRJRJJJJJJJJ', 'JJRJJJJJJJJJ', 'GGGGGGGGGGGG', 'GGGGGmmGGGGG'],
+    warps: PZ_MATS(16, 'northridge'),
+    things: { R: 'A boulder frozen into the ice. Handy for stopping.' },
+    statue: function () { return 'NORTHRIDGE ARENA|Medal winners: ' + (medal('rhea') ? '{P}' : '?????'); },
+    npcs: [keep('leader_rhea', 5, 2, 'down'), keep('gr_sno', 0, 14, 'right', { sight: 3 }), keep('gr_kai', 11, 3, 'left', { sight: 3 }), keep('guide_rhea', 9, 14, 'left')]
+  }; }, { arrive: [5, 14] });
+
+  /* ===== Docks Warehouse: Loading Bay (crates) and the Cold Store below (ice). ===== */
+  const PZ_OLD = {}; MAPS.warehouse.npcs.forEach(function (n) { PZ_OLD[n.id] = n; });   // Slick and Captain Reef move down to the Cold Store
+  pzRoom('warehouse', function (keep) { return {
+    name: 'Docks Warehouse', bg: 'industrial', border: 'w', indoor: true, tiles: 'M', banner: 1, crates: true,
+    rows: [
+      'wwwwwwwwwwwwwwwwwwww',
+      'wwwwwwwwwwwwwwwwwwww',
+      'QQMMMMMMMMMMMMQMMUMQ',
+      'QMMMQQQMMMMMMMQMMMMQ',
+      'MMMMQQQMMMMMMMQQRQQQ',
+      'MMMMMMMMMMMMMMMMRMMM',
+      'MQQMMMMMQQQQMMMMMMMM',
+      'MQQMMMMMQQQQMMMMQQMM',
+      'MMMMMMMMMMMMMMMMQQMM',
+      'MMMQQMMMMMMMMMMMMMMM',
+      'MMMQQMMMMMMMMMMQQMMM',
+      'MMMMMMMMMMMMMMMQQMMM',
+      'QQMMMMMMMMMMMMMMMMQQ',
+      'QMMMMMMMMMMMMMMMMMMQ',
+      'MMMMMMMMMMMMMMMMMMMM',
+      'MMMMMMMMMmmMMMMMMMMM'
+    ],
+    warps: mats([9, 10], 15, 'docks', 0, 0).concat([{ x: 17, y: 2, to: 'warehouse_b1', tx: 2, ty: 11, dir: 'down' }]),
+    things: { Q: 'A crate stamped FRAGILE: LIVE CARGO. Something inside is scratching to get out.', R: 'A loose crate on a trolley. Walk into it to push it.' },
+    npcs: [keep('thug3', 5, 12, 'right'), keep('thug4', 12, 8, 'left'), keep('thug5', 3, 5, 'down')]
+  }; }, { arrive: [9, 14] });
+  pzTrainer('thug6', 'thug4', 'Racket Thug', 'Gino', TRAINERS.thug4.pal, 'Brr. I\'m going back upstairs.');
+  pzRoom('warehouse_b1', function (keep, old) { return {
+    name: 'Warehouse Cold Store', bg: 'industrial', border: 'w', indoor: true, tiles: 'M', banner: 1, ice: true,
+    rows: [
+      'wwwwwwwwwwwwwwwwwwww',
+      'wwwwwwwwwwwwwwwwwwww',
+      'MMMMMMMMMMMMMMMMMMMM',
+      'MMMMMMMMMMMMMMMMMMMM',
+      'QQQQQQQQQJQQQQQQQQQQ',
+      'JJJJJJJQJJJJJJJJJQJQ',
+      'JJJJJJJJQJJJJJJJJJJQ',
+      'JJJJJJJJJJJJJJJJJJJQ',
+      'JJJJJJQJJJJQQJJJJJJQ',
+      'JJJJJJJJJQJJJQJJJJQQ',
+      'QJJJQJJJJJJJJJQJJJJQ',
+      'MMMMMMMMMMMMMMMMMMMQ',
+      'MUMMMMMMMMMMMMMMMMMQ',
+      'QQQQQQQQQQQQQQQQQQQQ'
+    ],
+    warps: [{ x: 1, y: 12, to: 'warehouse', tx: 17, ty: 3, dir: 'down' }],
+    things: { Q: 'A frosty crate of stolen Tornies, stamped with the Racket\'s mark. They\'ll be free soon.' },
+    npcs: [
+      Object.assign({}, PZ_OLD.reef_tied, { x: 14, y: 2, dir: 'down' }),
+      Object.assign({}, PZ_OLD.slick, { x: 9, y: 2, dir: 'down' }),
+      { id: 'thug6', x: 18, y: 11, dir: 'left', pal: TRAINERS.thug4.pal, trainer: 'thug6', sight: 4, before: 'Who let YOU down here? It\'s freezing enough already!', after: 'Slick\'s at the back. Mind the ice.' }]
+  }; });
+
+  /* ===== Old TornTech Factory: the security door needs power from the Generator Room below. ===== */
+  pzTrainer('fg_g1', 'ind_g1', 'Racket Thug', 'Vinnie', TRAINERS.ind_g1.pal, 'Ow. Fine, have the stupid generator.');
+  pzTrainer('fg_g2', 'ind_g2', 'Racket Thug', 'Rocco', TRAINERS.ind_g2.pal, 'Knuckles said nobody touches the power!');
+  function facDoorOpen() { return !!((G.flags.facGen1 && G.flags.facGen2) || G.flags.factory); }
+  pzRoom('factory', function (keep) { return {
+    name: 'Old TornTech Factory', bg: 'industrial', border: 'w', indoor: true, tiles: 'M', banner: 1,
+    rows: [
+      'wwwwwwwwwwwwwwwwwwwwww',
+      'wwwwwwwwwwwwwwwwwwwwww',
+      'EEEMMMMMMAMMMMMMMMMEEE',
+      'MMMMMMMMMMMMMMMMMMMMMM',
+      'MQQMMEEMMMMMMMMEEMMQQM',
+      'EEEEEEEEEEMMEEEEEEEEEE',
+      'MMMMMMMMQQMMQQMMMMMMMM',
+      'MEEMMMMMQQMMQQMMMMMEEM',
+      'MMMMMMMMMMMMMMMMMMMMMM',
+      'MMMMQQMMMMMMMMMMQQMMMM',
+      'MMMMQQMMMMEEMMMMQQMMMM',
+      'MMMMMMMMMMMMMMMMMMMMMM',
+      'MQQMMMMMMMMMMMMMMMMQQM',
+      'MMMMMMMMMMMMMMMMMMMMUM',
+      'MMMMMMMMMMMMMMMMMMMMMM',
+      'MMMMMMMMMMmmMMMMMMMMMM'
+    ],
+    warps: mats([10, 11], 15, 'industrial', 0, 0).concat([{ x: 20, y: 13, to: 'factory_b1', tx: 7, ty: 9, dir: 'up' }]),
+    things: { E: 'Old TornTech machinery, covered in dust. A label reads: GENESIS PROJECT - SHARD CONTAINMENT UNIT 3.', A: 'A wall chart titled "TORNIE EVOLUTION RATES". Someone has drawn a little Pickpockit in the corner.' },
+    hidden: [[0, 2, 'disc_steel_beam', 1, 'fac_disc']],
+    pz: { style: 'bars', gates: { D: [[10, 5], [11, 5]] }, saved: function (st) { st.D = facDoorOpen(); } },
+    signs: [[9, 6, 'SECURITY DOOR: NO POWER.|Power is supplied from the Generator Room (ladder, east side).']],
+    npcs: [keep('ind_g3', 6, 12, 'right'), keep('knuckles2', 10, 4, 'down')]
+  }; }, { arrive: [10, 14] });
+  async function facGenerator(n) {
+    const f = 'facGen' + n;
+    if (G.flags[f]) { await say('The generator is humming away nicely.'); return; }
+    seq([[0, 90, 0.4, 'sawtooth', 0.05, 160], [380, 160, 0.5, 'sawtooth', 0.04, 220]]);
+    G.flags[f] = 1;
+    await say('You pull the big red lever. The generator coughs, splutters... and roars into life!');
+    if (G.flags.facGen1 && G.flags.facGen2) { jingle('item'); await say('Lights flicker on all over the factory.|Upstairs, a heavy security door clunks open.'); }
+    else await say('One generator running. The security door needs both.');
+    saveGame();
+  }
+  pzRoom('factory_b1', function () { return {
+    name: 'Factory Generator Room', bg: 'industrial', border: 'w', indoor: true, tiles: 'M', banner: 1,
+    rows: [
+      'wwwwwwwwwwwwwwww',
+      'wwwwwwwwwwwwwwww',
+      'QQEQQQQQQQQQQEQQ',
+      'QQMQQQQQQQQQQMQQ',
+      'QMMMQQQQQQQQMMMQ',
+      'QMMMMMMMMMMMMMMQ',
+      'QMMMMQQMMQQMMMMQ',
+      'QMMMMQQMMQQMMMMQ',
+      'QMMMMMMMMMMMMMMQ',
+      'QMMMMMMMMMMMMMMQ',
+      'QMMMMMMUMMMMMMMQ',
+      'QQQQQQQQQQQQQQQQ'
+    ],
+    warps: [{ x: 7, y: 10, to: 'factory', tx: 20, ty: 14, dir: 'down' }],
+    things: { Q: 'Spare parts, stacked to the ceiling.', E: 'A huge generator. A big red lever sticks out of the side.' },
+    pz: { switches: [
+      { x: 2, y: 2, run: function () { return facGenerator(1); }, lit: function () { return !!G.flags.facGen1; } },
+      { x: 13, y: 2, run: function () { return facGenerator(2); }, lit: function () { return !!G.flags.facGen2; } }] },
+    npcs: [
+      { id: 'fg_g1', x: 1, y: 4, dir: 'right', pal: TRAINERS.ind_g1.pal, trainer: 'fg_g1', sight: 2, before: 'Hands off the generator! Knuckles wants the power OFF.', after: 'Go on then. Pull the lever.' },
+      { id: 'fg_g2', x: 14, y: 4, dir: 'left', pal: TRAINERS.ind_g2.pal, trainer: 'fg_g2', sight: 2, before: 'Oi! Nobody touches this generator!', after: 'Whatever. It\'s not my factory.' }]
+  }; });
+
   /* ---------- Tornie logic ---------- */
   let uidN = 1;
   function expFor(gr, n) {
@@ -14446,7 +14724,7 @@
     });
     m.grid = true;
   }
-  function tileAt(m, x, y) { if (x < 0 || y < 0 || x >= m.w || y >= m.h) return null; const o = G && G.ov && G.ov[m.id + ':' + x + ',' + y]; return o || m.rows[y][x]; }
+  function tileAt(m, x, y) { if (x < 0 || y < 0 || x >= m.w || y >= m.h) return null; const k = m.id + ':' + x + ',' + y, o = (pzTov && pzTov[k]) || (G && G.ov && G.ov[k]); return o || m.rows[y][x]; }
   function isCut(m, x, y) { return !!(G && G.cut && G.cut[m.id + ':' + x + ',' + y]); }
   function blockedStatic(m, x, y) {
     const t = tileAt(m, x, y);
@@ -14472,6 +14750,7 @@
     const m = MAPS[id];
     if (!m.grid) buildGrid(m);
     W.map = m; W.rustle = [];
+    const pzFresh = W.pzMap !== id; W.pzMap = id; pzReset(m, pzFresh);   // puzzle rooms: gates, crates (6p-puzzles.js)
     const p = W.p;
     p.x = x; p.y = y; p.dir = dir || p.dir; p.moving = false; p.jump = false;
     W.npcs = m.npcs.filter(function (n) { return !n.cond || n.cond(); }).map(function (n) {
@@ -14560,6 +14839,7 @@
     if (!m.indoor && tileAt(m, nx, ny) === 'v' && dir === 'down') {
       if (!blocked(m, nx, ny + 1)) { startMove(nx, ny + 1, true); tone(330, 0.16, 'triangle', 0.05, 660); return; }
     }
+    if (pzPush(m, nx, ny, dir)) return;
     if (blocked(m, nx, ny)) { doBump(); return; }
     startMove(nx, ny);
   }
@@ -14895,9 +15175,11 @@
       let ch = inside ? tileAt(m, tx, ty) : m.border, fl = floor;
       // Past the edge, show the connected map (like looking down the road into the next area) instead of the border.
       if (!inside) { const nb = neighbourTile(m, tx, ty); if (nb) { ch = nb[0]; fl = nb[1]; } }
+      if (inside && (ch === '|' || (ch === 'R' && m.crates))) ch = m.rows[ty][tx] === 'R' ? (m.tiles || 'o') : m.rows[ty][tx];   // gates and crates are drawn by drawPuzzles
       if (ch === 'F' && inside && isCut(m, tx, ty)) ch = m.indoor ? (m.tiles || 'o') : m.bg === 'city' || m.bg === 'docks' || m.bg === 'neon' ? 'p' : m.bg === 'snow' ? '*' : m.bg === 'sand' ? '_' : '.';
       ctx.drawImage(tileImg(ch, set, fl, fr2, Math.floor(hash(tx, ty, 1) * 4)), tx * 16 - camX, ty * 16 - camY);
     }
+    drawPuzzles(m, camX, camY, iw);
     const snowy = floor === 'snow';
     if (!iw) m.buildings.forEach(function (b) {
       if ((b.x + b.w) * 16 < camX || b.x * 16 > camX + VW || (b.y + b.h) * 16 < camY || b.y * 16 > camY + VH) return;
@@ -14971,6 +15253,164 @@
       else if (b === 'start') runScript(startMenu);
     }
   };
+
+  /* ---------- Puzzle rooms: crates, switch gates, teleport pads, quiz gates (2.47) ----------
+     Built for the Arenas, the Docks Warehouse and the TornTech Factory, after the classic games' Gym and hideout puzzles.
+
+     A map opts in with:
+       crates: true                 'R' tiles are crates you push by walking into them. They go back to where they
+                                    started whenever you come into the room, so a puzzle can never be left stuck.
+       pz: {
+         style: 'laser' | 'bars' | 'water',      how closed gates look (default 'bars')
+         gates: { A: [[x, y], ...], ... },        groups of gate tiles; the base row tile underneath is the open floor
+         init:  { A: false, ... },                open (true) or closed (false) when you come in; missing = closed
+         saved: function (st) { ... },            optional: set gate state from saved progress (G.flags) on entry
+         lights: [[x, y, function () { return on; }], ...],   little status lamps drawn on switch machines
+         pads: [[x, y], ...]                      teleport pads to draw (their warps live in the map's warps list)
+       }
+     Gate state lives in W.pz for the visit only; closed gate tiles show up as '|' through tileAt (pzTov). */
+
+  var pzTov = null;   // closed gate tiles for the room you're in ('|'); a var so tileAt can read it before the world starts
+  function pzReset(m, fresh) {
+    pzTov = {}; W.pz = {};
+    if (fresh && m.crates && G.ov) {   // put the crates back
+      const pre = m.id + ':';
+      Object.keys(G.ov).forEach(function (k) { if (k.indexOf(pre) === 0) delete G.ov[k]; });
+    }
+    const P = m.pz; if (!P) return;
+    Object.keys(P.gates || {}).forEach(function (g) { W.pz[g] = !!(P.init && P.init[g]); });
+    if (P.saved) P.saved(W.pz);
+    pzApply(m);
+  }
+  function pzApply(m) {
+    pzTov = {};
+    const P = m.pz; if (!P) return;
+    Object.keys(P.gates || {}).forEach(function (g) {
+      if (W.pz[g]) return;
+      P.gates[g].forEach(function (t) { pzTov[m.id + ':' + t[0] + ',' + t[1]] = '|'; });
+    });
+  }
+  // Open, close or flip gate groups, with a clunk. Used by switches, generators and quiz machines.
+  function pzSet(groups, open) {
+    const m = W.map;
+    [].concat(groups).forEach(function (g) { W.pz[g] = open === undefined ? !W.pz[g] : !!open; });
+    pzApply(m);
+    seq([[0, 220, 0.08, 'square', 0.04], [90, 330, 0.1, 'square', 0.04]]);
+  }
+  // A gate can't close on someone standing in it.
+  function pzSafeFlip(groups) {
+    const m = W.map, P = m.pz, p = W.p;
+    const blockedByYou = [].concat(groups).some(function (g) { return W.pz[g] && P.gates[g].some(function (t) { return t[0] === p.x && t[1] === p.y; }); });
+    if (blockedByYou) return false;
+    pzSet(groups);
+    return true;
+  }
+
+  // Walking into a crate pushes it one tile, if the tile beyond is clear floor.
+  function pzPush(m, nx, ny, dir) {
+    if (!m.crates || tileAt(m, nx, ny) !== 'R') return false;
+    const d = DV[dir], bx = nx + d[0], by = ny + d[1];
+    const ok = bx >= 0 && by >= 0 && bx < m.w && by < m.h && !blocked(m, bx, by) && !isSpecial(m, bx, by) && tileAt(m, bx, by) !== '~';
+    if (!ok) { doBump(); return true; }
+    setOv(m, nx, ny, floorOf(m)); setOv(m, bx, by, 'R');
+    tone(120, 0.18, 'sawtooth', 0.04, 80);
+    startMove(nx, ny);
+    return true;
+  }
+
+  // Quiz machine: a right answer opens the gate group; a wrong one sends the machine's trainer at you first
+  // (once), then the gate opens anyway, like the classic quiz gyms. After that trainer is beaten, a wrong answer
+  // just means trying again.
+  async function pzQuiz(q) {
+    if (W.pz[q.gate]) { await say('QUIZ MACHINE: Correct answer already logged. The gate is open!'); return; }
+    await say('QUIZ MACHINE: Ding-ding! Answer the question to open the gate.');
+    const order = q.choices.map(function (c, i) { return i; });
+    const i = await ask(q.q, order.map(function (k) { return q.choices[k]; }));
+    if (i === q.answer) { jingle('item'); await say('Ding-ding-ding! Correct!'); pzSet(q.gate, true); return; }
+    tone(160, 0.3, 'square', 0.05, 90);
+    await say('Bzzzt! Wrong answer!');
+    const n = q.trainer && npcById(q.trainer);
+    if (n && !G.defeated[n.def.id]) {
+      W.p.dir = n.x < W.p.x ? 'left' : n.x > W.p.x ? 'right' : n.y < W.p.y ? 'up' : 'down';
+      n.dir = OPP[W.p.dir];
+      await trainerTalk(n);
+      if (G.defeated[n.def.id]) { await say('The quiz machine whirs. The gate opens anyway.'); pzSet(q.gate, true); }
+      return;
+    }
+    await say('Have another think and try again!');
+  }
+
+  /* Drawing: gates, pads, lamps and crates, on top of the floor and under people. */
+  function drawPuzzles(m, camX, camY, iw) {
+    const P = m.pz;
+    if (!P && !m.crates) return;
+    const x0 = Math.floor(camX / 16) - 1, y0 = Math.floor(camY / 16) - 1;
+    const inView = function (x, y) { return x >= x0 && y >= y0 && x <= x0 + 17 && y <= y0 + 12; };
+    if (P && P.pads) P.pads.forEach(function (t) {
+      if (!inView(t[0], t[1])) return;
+      const sx = t[0] * 16 - camX, sy = t[1] * 16 - camY, a = 0.55 + 0.35 * Math.sin(T * 3 + t[0] + t[1]);
+      ctx.save();
+      ctx.fillStyle = '#2a2440'; ctx.beginPath(); ctx.ellipse(sx + 8, sy + 9, 7, 4.5, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = a; ctx.fillStyle = '#9a7cff'; ctx.beginPath(); ctx.ellipse(sx + 8, sy + 9, 5.5, 3.2, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = a * 0.5; ctx.fillStyle = '#e6dcff'; ctx.beginPath(); ctx.ellipse(sx + 8, sy + 8.5, 3, 1.6, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    });
+    if (P && P.gates) Object.keys(P.gates).forEach(function (g) {
+      const open = W.pz && W.pz[g];
+      P.gates[g].forEach(function (t) {
+        if (!inView(t[0], t[1])) return;
+        const sx = t[0] * 16 - camX, sy = t[1] * 16 - camY, st = P.style || 'bars';
+        if (st === 'water') {
+          if (open) {   // a raised plank bridge
+            fr(sx, sy + 1, 16, 14, '#8a5a32'); for (let k = 0; k < 4; k++) fr(sx + k * 4, sy + 1, 1, 14, '#6a4224');
+            fr(sx, sy + 1, 16, 1, '#b07a48'); fr(sx, sy + 14, 16, 1, '#5a3418');
+          } else {      // lowered: water over the walkway
+            fr(sx, sy, 16, 16, '#3a7ab8'); fr(sx, sy, 16, 2, '#2a5a90');
+            const ph = (T * 1.4 + t[0] * 0.7) % 1; ctx.save(); ctx.globalAlpha = 0.55; fr(sx + 2 + ph * 6, sy + 6, 5, 1, '#cfe8ff'); fr(sx + 8 - ph * 4, sy + 11, 4, 1, '#cfe8ff'); ctx.restore();
+          }
+          return;
+        }
+        if (open) {   // an open gate: just its floor rails
+          fr(sx + 1, sy + 13, 14, 2, 'rgba(40,40,50,0.35)');
+          return;
+        }
+        if (st === 'laser') {
+          fr(sx + 1, sy + 1, 3, 15, '#4a525e'); fr(sx + 12, sy + 1, 3, 15, '#4a525e'); fr(sx + 1, sy + 1, 3, 2, '#f0c030'); fr(sx + 12, sy + 1, 3, 2, '#f0c030');
+          const a = 0.6 + 0.4 * Math.sin(T * 9 + t[0]);
+          ctx.save(); ctx.globalAlpha = a;
+          for (let k = 0; k < 4; k++) fr(sx + 4, sy + 4 + k * 3, 8, 1, k % 2 ? '#ffe070' : '#ff7040');
+          ctx.restore();
+        } else {
+          fr(sx, sy + 1, 16, 15, 'rgba(20,24,30,0.25)');
+          for (let k = 0; k < 4; k++) { fr(sx + 1 + k * 4, sy + 1, 2, 15, '#6a7380'); fr(sx + 1 + k * 4, sy + 1, 1, 15, '#9aa4b2'); }
+          fr(sx, sy + 1, 16, 2, '#4a525e'); fr(sx, sy + 8, 16, 1, '#4a525e');
+        }
+      });
+    });
+    if (P && P.lights) P.lights.forEach(function (l) {
+      if (!inView(l[0], l[1])) return;
+      const on = l[2](), sx = l[0] * 16 - camX, sy = l[1] * 16 - camY;
+      ctx.save(); ctx.globalAlpha = 0.35 + (on ? 0.25 * Math.sin(T * 5) : 0);
+      ctx.fillStyle = on ? '#40ff70' : '#ff4040'; ctx.beginPath(); ctx.arc(sx + 8, sy + 3, 4, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+      fr(sx + 6, sy + 1, 4, 4, on ? '#40ff70' : '#ff4040'); fr(sx + 6, sy + 1, 2, 1, '#ffffff');
+    });
+    if (m.crates) for (let ty = y0; ty <= y0 + 12; ty++) for (let tx = x0; tx <= x0 + 17; tx++) {
+      if (tileAt(m, tx, ty) !== 'R') continue;
+      // Pushable crates ride on a little trolley with wheels and steel corners, so they stand out from fixed crate stacks.
+      const sx = tx * 16 - camX, sy = ty * 16 - camY;
+      ctx.save();
+      ctx.fillStyle = 'rgba(0,0,0,0.28)'; ctx.beginPath(); ctx.ellipse(sx + 8, sy + 15, 7.5, 2, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#3a414c'; ctx.fillRect(sx + 1, sy + 11.5, 14, 2);
+      ctx.fillStyle = '#1e2228'; [4, 12].forEach(function (wx) { ctx.beginPath(); ctx.arc(sx + wx, sy + 14, 1.8, 0, Math.PI * 2); ctx.fill(); });
+      ctx.fillStyle = '#f0c030'; [4, 12].forEach(function (wx) { ctx.beginPath(); ctx.arc(sx + wx, sy + 14, 0.7, 0, Math.PI * 2); ctx.fill(); });
+      ctx.fillStyle = '#c98a3e'; ctx.fillRect(sx + 2, sy + 0.5, 12, 11);
+      ctx.fillStyle = '#dca35a'; ctx.fillRect(sx + 2, sy + 0.5, 12, 1.5);
+      ctx.strokeStyle = '#7a4e26'; ctx.lineWidth = 0.9; ctx.strokeRect(sx + 2.4, sy + 0.9, 11.2, 10.2);
+      ctx.beginPath(); ctx.moveTo(sx + 2.6, sy + 1.1); ctx.lineTo(sx + 13.4, sy + 10.9); ctx.moveTo(sx + 13.4, sy + 1.1); ctx.lineTo(sx + 2.6, sy + 10.9); ctx.stroke();
+      ctx.fillStyle = '#9aa4b2'; [[2, 0.5], [12, 0.5], [2, 9.5], [12, 9.5]].forEach(function (c) { ctx.fillRect(sx + c[0], sy + c[1], 2, 2); });
+      ctx.restore();
+    }
+  }
 
   /* ---------- Battles ---------- */
   let B = null;
@@ -16055,6 +16495,10 @@
     G.opts = G.opts || { speed: 1 }; G.flags = G.flags || {}; G.defeated = G.defeated || {}; G.bag = G.bag || {}; G.box = G.box || [];
     if (!MAPS[G.map]) { G.map = G.respawn.map; G.x = G.respawn.x; G.y = G.respawn.y; }
     migrateWorld();
+    // A room may have been redrawn since this save (2.47 puzzle rooms): if you'd load inside something solid, start
+    // at the room's entrance instead.
+    { const m = MAPS[G.map]; if (!m.grid) buildGrid(m);
+      if (blockedStatic(m, G.x, G.y)) { const w = m.warps.find(function (q) { return MAPS[q.to] && MAPS[q.to].outdoor; }); if (w) { G.x = w.x; G.y = w.y - 1; } else { G.map = G.respawn.map; G.x = G.respawn.x; G.y = G.respawn.y; } } }
     fieldDiscCatchUp();
     await fadeOut(0.3);
     scene = worldScene; W.busy = 0;

@@ -6,6 +6,8 @@
 
 Torn Arcade is a Tampermonkey userscript that adds a **Mobile Phone** link to Torn's sidebar. Click it and a phone opens on top of the page with nine games, leaderboards and settings. Everything runs inside the phone, and every image, sound and piece of music is built into the script or its two optional Art Packs.
 
+> 🧩 **2.47: Puzzle Arenas.** Each Tornies Arena now has its own puzzle (fuse boxes, bridges, a hedge maze, crates, a quiz, teleport pads and ice), and the Docks Warehouse and TornTech Factory each gain a second floor.
+
 > 📝 **What's new:** the full update history from 2.2.0 onwards is in the [changelog](CHANGELOG.md).
 
 > ⚔️ **2.46.3: Daily trainer rematches** in Tornies. Beaten trainers are ready again after each TCT midnight (talk to them), with much stronger teams once you're Champion.
