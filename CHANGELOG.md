@@ -8,6 +8,10 @@ Every Torn Arcade update since 2.2.0, newest first. Dates are in TCT (Torn City 
 
 ---
 
+## 2.47.2 — 2026-10-23
+### Changed
+- Tornies: a certain someone gets out a bit more these days. Keep your wits about you on the road.
+
 ## 2.47.1 — 2026-10-23
 ### Fixed
 - Tornies: Racket Thug Rocco in the Racket HQ now repeats the password when you talk to him after the battle, so it's easy to find again if you missed it.
