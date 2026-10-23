@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.47.0
+// @version      2.47.1
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with nine game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -664,7 +664,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gifts and trades', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.47.0';
+  const VERSION = '2.47.1';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -6381,7 +6381,7 @@
     npcs: [
       { id: 'hq_g1', x: 5, y: 13, dir: 'up', pal: 'thug', trainer: 'hq_g1', sight: 3, before: 'Intruder! INTRUDER! Oh, it\'s just a rookie. INTRUDER!', after: 'The boss is going to be so angry.' },
       { id: 'hq_g2', x: 12, y: 10, dir: 'left', pal: 'thug', trainer: 'hq_g2', sight: 4, before: 'How did you get past the bouncer?!', after: 'He quit? Can I quit?' },
-      { id: 'hq_g3', x: 4, y: 8, dir: 'right', pal: 'thug', trainer: 'hq_g3', sight: 4, before: 'This floor is password protected! And so am I!', after: 'Please don\'t tell anyone I told you the password.' },
+      { id: 'hq_g3', x: 4, y: 8, dir: 'right', pal: 'thug', trainer: 'hq_g3', sight: 4, before: 'This floor is password protected! And so am I!', after: 'Please don\'t tell anyone I told you the password. It\'s BAZAAR, by the way. ...Oh no. I did it again.' },
       { id: 'hq_g4', x: 15, y: 3, dir: 'left', pal: 'thug', trainer: 'hq_g4', sight: 4, before: 'You won\'t make it to the lift!', after: 'The boss is in his office downstairs.' },
       { id: 'hq_local', x: 17, y: 13, dir: 'left', pal: 'casual', move: 'look', text: 'Shh! I snuck in to get my Tornie back. They took my Nutling last week!|...Oh, it\'s right here in this crate. Thanks for distracting them!' }
     ]
@@ -13970,7 +13970,7 @@
 
   /* ===== Old TornTech Factory: the security door needs power from the Generator Room below. ===== */
   pzTrainer('fg_g1', 'ind_g1', 'Racket Thug', 'Vinnie', TRAINERS.ind_g1.pal, 'Ow. Fine, have the stupid generator.');
-  pzTrainer('fg_g2', 'ind_g2', 'Racket Thug', 'Rocco', TRAINERS.ind_g2.pal, 'Knuckles said nobody touches the power!');
+  pzTrainer('fg_g2', 'ind_g2', 'Racket Thug', 'Bruno', TRAINERS.ind_g2.pal, 'Knuckles said nobody touches the power!');
   function facDoorOpen() { return !!((G.flags.facGen1 && G.flags.facGen2) || G.flags.factory); }
   pzRoom('factory', function (keep) { return {
     name: 'Old TornTech Factory', bg: 'industrial', border: 'w', indoor: true, tiles: 'M', banner: 1,
@@ -15010,7 +15010,7 @@
   async function rematchTalk(n) {
     const d = n.def, T0 = TRAINERS[d.trainer], who = T0.cls.toUpperCase() + ' ' + fillNames(T0.name).toUpperCase() + ': ';
     const c = await ask(who + (G.flags.champion ? 'Well, if it isn\'t the Champion! I\'ve trained hard since last time. Rematch?' : 'Back again? I\'ve been training since last time. Fancy a rematch?'), ['Battle!', 'Not now']);
-    if (c !== 0) { await say(who + 'Any time. I\'ll be right here.'); return; }
+    if (c !== 0) { await say(who + d.after); return; }   // their usual line (it may hold a hint, like Rocco's password)
     await trainerTalk(n, true);
   }
   async function trainerBattle(id, o) {

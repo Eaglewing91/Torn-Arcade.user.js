@@ -8,6 +8,13 @@ Every Torn Arcade update since 2.2.0, newest first. Dates are in TCT (Torn City 
 
 ---
 
+## 2.47.1 — 2026-10-23
+### Fixed
+- Tornies: Racket Thug Rocco in the Racket HQ now repeats the password when you talk to him after the battle, so it's easy to find again if you missed it.
+- Tornies: after the daily reset, saying "Not now" to a trainer's rematch gives their usual line instead of a generic one, so hints aren't lost.
+### Changed
+- Tornies: the Factory Generator Room thug who shared Rocco's name is now called Bruno.
+
 ## 2.47.0 — 2026-10-23
 ### New
 - Tornies: every Arena except Westgate has its own layout and a puzzle, after the classic games' Gyms:
