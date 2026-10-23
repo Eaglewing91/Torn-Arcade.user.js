@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.46.7
+// @version      2.46.8
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with nine game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -664,7 +664,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gifts and trades', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.46.7';
+  const VERSION = '2.46.8';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -7094,7 +7094,7 @@
     hidden: [[22, 12, 'energy_bar', 1, 'ic_bar'], [22, 9, 'disc_whiteout', 1, 'ic_disc'], [1, 2, 'hyper_potion', 2, 'ic_kit']],
     npcs: [
       { id: 'ic_tor', x: 2, y: 8, dir: 'right', pal: 'hiker', trainer: 'ic_tor', sight: 3, before: 'Whoa, whoa, WHOA! Okay, I\'m stopped. Battle?', after: 'Slide up from the bottom left. Then right, then up again. Probably.' },
-      { id: 'ic_may', x: 21, y: 6, dir: 'down', pal: 'camper', trainer: 'ic_may', sight: 3, before: 'You made it across the ice! Impressive!', after: 'The ladder down leads to the far side of the mountain.' }
+      { id: 'ic_may', x: 22, y: 6, dir: 'left', pal: 'camper', trainer: 'ic_may', sight: 3, before: 'You made it across the ice! Impressive!', after: 'The ladder down leads to the far side of the mountain.' }
     ]
   });
   if (!ITEMS.disc_whiteout) { ITEMS.disc_whiteout = { name: 'Disc: Whiteout', price: 0, kind: 'disc', move: 'whiteout', desc: 'A Training Disc that teaches Whiteout (Ice).' }; ITEM_ORDER.splice(ITEM_ORDER.indexOf('rod'), 0, 'disc_whiteout'); }
@@ -7140,7 +7140,7 @@
   })();
   defMap('gate', {
     name: 'Tornie League Gate', bg: 'indoor', border: 'w', indoor: true, tiles: 'O',
-    rows: ['wwwwwwwwww', 'wwwwwwwwww', 'OOOOUUOOOO', 'OOOOOOOOOO', 'OxOOOOOOxO', 'OOOOOOOOOO', 'OOOOOOOOOO', 'OOOOmmOOOO'],
+    rows: ['wwwwwwwwww', 'wwwwwwwwww', 'OOOgUUgOOO', 'OOOOOOOOOO', 'OxOOOOOOxO', 'OOOOOOOOOO', 'OOOOOOOOOO', 'OOOOmmOOOO'],
     warps: mats([4, 5], 7, 'route18', 9, 4).concat([{ x: 4, y: 2, to: 'gauntlet1', tx: 3, ty: 15, dir: 'up' }, { x: 5, y: 2, to: 'gauntlet1', tx: 3, ty: 15, dir: 'up' }]),
     statue: function () { return 'A statue of the first Tornie League Champion. The plaque has been polished so much the name has worn away.'; },
     npcs: [
@@ -10412,7 +10412,7 @@
   function iwDbOn() { return store.get('saveMaps', true) !== false && typeof indexedDB !== 'undefined'; }
   // A single map whose layout changed gets its own version here, so only that map is redrawn (not every saved map).
   // Saved chunks of that map without the matching version are deleted when the store opens.
-  const IW_MAPV = { pawn: 2 };   // 2.46.7: shelves beside the pawn shop ladder
+  const IW_MAPV = { pawn: 2, gate: 2 };   // 2.46.7: shelves beside the pawn shop ladder; 2.46.8: plants beside the Gauntlet stairs
   function iwDbKey(k) { const id = k.split(':')[0], v = IW_MAPV[id]; return IW_ART + '|' + (v ? id + '@' + v + k.slice(id.length) : k); }
   function iwDbCurrent(dk) {
     dk = String(dk); if (dk.indexOf(IW_ART + '|') !== 0) return false;
@@ -10850,7 +10850,7 @@
       ledgeRow(g, 27, 1, 18);
     },
     deco: { trees: 20, grass: 7, rocks: 4 },
-    triggers: [[9, 34], [10, 34]]
+    triggers: [1, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15, 18].map(function (x) { return [x, 34]; })   // the whole row, so the rival always catches you
   });
 
   rebuild('route4', {
@@ -11102,7 +11102,7 @@
       g.put([[50, 3], [53, 3], [56, 3], [50, 14], [53, 14], [56, 14], [48, 5], [55, 5]], 'G', true);
     },
     deco: { trees: 30, grass: 12, flowers: 3 },
-    triggers: [[2, 8], [2, 9]]
+    triggers: [1, 4, 5, 6, 7, 8, 9, 10, 11, 14, 15, 16].map(function (y) { return [2, y]; })   // the whole column, so the rival always catches you
   });
 
   (function () {
@@ -11215,7 +11215,7 @@
     buildings: [{ k: 'cavemouth', x: 22, y: 6, w: 6, h: 3, door: [24, 8], to: 'gauntlet3' }],
     draw: function (g) { g.road([[24, 9], [24, 12], [14, 12], [14, 8], [0, 8]], '='); },
     deco: { trees: 12, tree: '%', grass: 5 },
-    triggers: [[10, 8], [10, 9]]
+    triggers: [1, 2, 3, 6, 7, 8, 9, 10, 11, 12, 15, 16].map(function (y) { return [10, y]; })   // the whole column, so the rival always catches you
   });
 
   rebuild('plaza', {
@@ -11277,7 +11277,7 @@
     draw: function (g) { g.road([[9, 34], [9, 26], [14, 26], [14, 14], [5, 14], [5, 6], [9, 6], [9, 0]], '='); },
     deco: { trees: 4, rocks: 14, grass: 7, grassW: [3, 5] },
     after: function (g, rnd) { for (let t = 0, n = 0; t < 300 && n < 10; t++) { const x = 1 + Math.floor(rnd() * 18), y = 1 + Math.floor(rnd() * 34); if (!g.isProt(x, y) && g.get(x, y) === '_') { g.set(x, y, 'Y'); n++; } } },
-    pos: { ring_34_6: [9, 33, 'down'], ring_34_7: [10, 33, 'down'] }
+    pos: { ring_34_6: [9, 34, 'down'], ring_34_7: [10, 34, 'down'] }   // right in front of the gap, so nobody can step round them
   });
 
   rebuild('route21', {

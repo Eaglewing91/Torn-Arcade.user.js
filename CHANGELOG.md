@@ -8,6 +8,13 @@ Every Torn Arcade update since 2.2.0, newest first. Dates are in TCT (Torn City 
 
 ---
 
+## 2.46.8 — 2026-10-23
+### Fixed
+- Tornies: the Gauntlet Pass guards can no longer be walked round without all eight medals (plants now stand either side of the stairs).
+- Tornies: the Outer Ring officers on Route 20 now stand in the gap itself, so the Ring stays closed until you're Champion.
+- Tornies: Ranger May in the Ice Cave now stands beside the narrow gap instead of in it, so the hidden Whiteout Disc and Energy Bar behind her can be reached. She still battles you as you pass.
+- Tornies: your rival can no longer be walked past on Routes 3, 13 and 19; the ambush now covers the whole path.
+
 ## 2.46.7 — 2026-10-23
 ### Changed
 - Tornies: the Golden Torn Casino is more like a classic Game Corner. The dealer and the gambler now just chat instead of battling.
