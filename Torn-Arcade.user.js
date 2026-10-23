@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.47.2
+// @version      2.47.3
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with nine game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -664,7 +664,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gifts and trades', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.47.2';
+  const VERSION = '2.47.3';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -13855,6 +13855,7 @@
   /* ===== Industrial Arena (Forge): push the crates to clear the way (Strength puzzles). ===== */
   pzRoom('gym_forge', function (keep) { return {
     name: 'Industrial Arena', bg: 'industrial', border: 'w', indoor: true, tiles: 'M', crates: true,
+    crateSolved: [[3, 5], [7, 5], [3, 7], [7, 7]],   // pushed aside, for arriving any way but the front door
     rows: ['wwwwwwwwwwww', 'wwwwwwwwwwww', 'MMMMMMMMMMMM', 'MMMMMMMMMMMM', 'EEEEEMEEEEEE', 'EEEMMRMMEEEE', 'EEEMERRMEEEE', 'EEEMMMRMEEEE',
       'EEEEEMMMEEEE', 'MMMMMMMMMMMM', 'MMMMMMMMMMMM', 'MMMMMMMMMMMM', 'MMMMMMMMMMMM', 'MMMMMmmMMMMM'],
     warps: PZ_MATS(14, 'industrial'),
@@ -13919,6 +13920,7 @@
   const PZ_OLD = {}; MAPS.warehouse.npcs.forEach(function (n) { PZ_OLD[n.id] = n; });   // Slick and Captain Reef move down to the Cold Store
   pzRoom('warehouse', function (keep) { return {
     name: 'Docks Warehouse', bg: 'industrial', border: 'w', indoor: true, tiles: 'M', banner: 1, crates: true,
+    crateSolved: [[17, 5], [16, 2]], pzOpenFrom: ['warehouse_b1'],   // coming up from the Cold Store finds the cage open
     rows: [
       'wwwwwwwwwwwwwwwwwwww',
       'wwwwwwwwwwwwwwwwwwww',
@@ -14750,7 +14752,7 @@
     const m = MAPS[id];
     if (!m.grid) buildGrid(m);
     W.map = m; W.rustle = [];
-    const pzFresh = W.pzMap !== id; W.pzMap = id; pzReset(m, pzFresh);   // puzzle rooms: gates, crates (6p-puzzles.js)
+    const pzFrom = W.pzMap, pzFresh = pzFrom !== id; W.pzMap = id; pzReset(m, pzFresh, pzFrom);   // puzzle rooms: gates, crates (6p-puzzles.js)
     const p = W.p;
     p.x = x; p.y = y; p.dir = dir || p.dir; p.moving = false; p.jump = false;
     W.npcs = m.npcs.filter(function (n) { return !n.cond || n.cond(); }).map(function (n) {
@@ -15271,14 +15273,24 @@
      Gate state lives in W.pz for the visit only; closed gate tiles show up as '|' through tileAt (pzTov). */
 
   var pzTov = null;   // closed gate tiles for the room you're in ('|'); a var so tileAt can read it before the world starts
-  function pzReset(m, fresh) {
+  // The puzzle is set up only when you walk in through the room's way in (from: the map you came from). Arriving any
+  // other way (up a ladder from a lower floor, or loading a save made inside) finds it already solved, so you can never
+  // be shut on the wrong side of a crate or gate.
+  function pzReset(m, fresh, from) {
+    if (!fresh) { pzApply(m); return; }   // same room again (a teleport pad): keep everything as it is
     pzTov = {}; W.pz = {};
-    if (fresh && m.crates && G.ov) {   // put the crates back
+    const setUp = !!from && (m.pzOpenFrom || []).indexOf(from) < 0;
+    if (m.crates) {
+      G.ov = G.ov || {};
       const pre = m.id + ':';
-      Object.keys(G.ov).forEach(function (k) { if (k.indexOf(pre) === 0) delete G.ov[k]; });
+      Object.keys(G.ov).forEach(function (k) { if (k.indexOf(pre) === 0) delete G.ov[k]; });   // crates back to the start...
+      if (!setUp && m.crateSolved) {   // ...or already pushed aside
+        for (let y = 0; y < m.h; y++) for (let x = 0; x < m.w; x++) if (m.rows[y][x] === 'R') setOv(m, x, y, floorOf(m));
+        m.crateSolved.forEach(function (t) { setOv(m, t[0], t[1], 'R'); });
+      }
     }
     const P = m.pz; if (!P) return;
-    Object.keys(P.gates || {}).forEach(function (g) { W.pz[g] = !!(P.init && P.init[g]); });
+    Object.keys(P.gates || {}).forEach(function (g) { W.pz[g] = setUp ? !!(P.init && P.init[g]) : true; });
     if (P.saved) P.saved(W.pz);
     pzApply(m);
   }
