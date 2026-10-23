@@ -8,6 +8,12 @@ Every Torn Arcade update since 2.2.0, newest first. Dates are in TCT (Torn City 
 
 ---
 
+## 2.46.9 — 2026-10-23
+### Fixed
+- Tornies: you can get into the Old TornTech Factory again. Racket Thug Rio was standing on the doorstep and never moved; the two thugs now stand either side of the door and battle you as you go in.
+### Changed
+- Tornies: like the classic games, if a second trainer can also see you, they challenge you straight after the first battle.
+
 ## 2.46.8 — 2026-10-23
 ### Fixed
 - Tornies: the Gauntlet Pass guards can no longer be walked round without all eight medals (plants now stand either side of the stairs).

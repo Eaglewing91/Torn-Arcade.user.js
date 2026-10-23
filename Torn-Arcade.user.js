@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.46.8
+// @version      2.46.9
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with nine game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -664,7 +664,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gifts and trades', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.46.8';
+  const VERSION = '2.46.9';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -11020,7 +11020,7 @@
         g.put([[17, 4], [22, 11], [17, 23], [22, 23], [17, 31], [9, 16], [30, 16]], 'L', true);
       },
       signs: [[17, 15], [10, 27]],
-      pos: { ind_g1: [27, 9, 'down'], ind_g2: [28, 9, 'down'], ind_east: [36, 15, 'left'] }
+      pos: { ind_g1: [27, 9, 'right'], ind_g2: [29, 9, 'left'], ind_east: [36, 15, 'left'] }   // either side of the factory doorstep, facing it (not on it)
     });
   })();
 
@@ -14702,6 +14702,8 @@
     for (let k = 1; k < dist; k++) await npcStep(n, n.dir);
     W.p.dir = OPP[n.dir];
     await trainerTalk(n);
+    // Like the classic games: if another trainer can also see you, they challenge you straight after.
+    if (G.defeated[n.def.id] && G.party.some(alive)) checkTrainers();
   }
   async function trainerTalk(n, again) {
     const d = n.def;
