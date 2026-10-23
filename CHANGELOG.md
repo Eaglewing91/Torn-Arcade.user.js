@@ -8,6 +8,13 @@ Every Torn Arcade update since 2.2.0, newest first. Dates are in TCT (Torn City 
 
 ---
 
+## 2.46.3 — 2026-10-23
+### New
+- Tornies: daily trainer rematches. After each Torn City Time midnight, trainers you've beaten are ready to battle again. They won't ambush you; talk to them and they'll offer a rematch.
+- After you become Champion, rematch teams are much stronger: at least 12 levels higher, with their best Tornie at level 60 or more, evolved to match.
+### Changed
+- Training Discs from trainers are still given only for the first win; rematches pay normal prize money and count towards trainer merits.
+
 ## 2.46.2 — 2026-10-23
 ### Fixed
 - Tornies: when your whole team faints, you now wake up at the last Tornie Clinic you walked into, not back at home. You no longer need to talk to the nurse for a Clinic to count.

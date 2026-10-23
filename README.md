@@ -8,6 +8,8 @@ Torn Arcade is a Tampermonkey userscript that adds a **Mobile Phone** link to To
 
 > 📝 **What's new:** the full update history from 2.2.0 onwards is in the [changelog](CHANGELOG.md).
 
+> ⚔️ **2.46.3: Daily trainer rematches** in Tornies. Beaten trainers are ready again after each TCT midnight (talk to them), with much stronger teams once you're Champion.
+>
 > 🩹 **2.46.2:** In Tornies, a full team faint now wakes you at the last Clinic you walked into instead of back at home.
 >
 > 🏆 **2.46:** Leaderboards update live: Tornies sends its numbers as you play, and an open Global board refreshes itself every 30 seconds. Four new Tornies boards on the global leaderboards: **Total playtime**, **Merit points**, **Golden Tornies** and **Fish caught**. Mirabit now faces its opponent in battle.

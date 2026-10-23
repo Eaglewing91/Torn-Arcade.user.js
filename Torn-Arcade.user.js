@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.46.2
+// @version      2.46.3
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with nine game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -664,7 +664,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gifts and trades', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.46.2';
+  const VERSION = '2.46.3';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -14655,11 +14655,33 @@
     W.p.dir = OPP[n.dir];
     await trainerTalk(n);
   }
-  async function trainerTalk(n) {
+  async function trainerTalk(n, again) {
     const d = n.def;
-    await say(TRAINERS[d.trainer].cls.toUpperCase() + ' ' + fillNames(TRAINERS[d.trainer].name).toUpperCase() + ': ' + d.before);
-    const r = await trainerBattle(d.trainer, { npc: n });
+    if (!again) await say(TRAINERS[d.trainer].cls.toUpperCase() + ' ' + fillNames(TRAINERS[d.trainer].name).toUpperCase() + ': ' + d.before);
+    const r = await trainerBattle(d.trainer, { npc: n, party: again ? rematchTeam(d.trainer) : undefined });
     if (r === 'win') G.defeated[d.id] = 1;
+  }
+  /* Daily rematches: a trainer you've beaten is ready to battle again after each Torn City Time midnight (00:00 UTC).
+     They don't ambush you again; talk to them and they offer a rematch. Before you're Champion they bring the same
+     team; after it, their team is at least 12 levels higher with its strongest Tornie at level 60 or more, evolved to
+     fit. G.defeated stays the permanent record the story checks; G.beat holds the day of the last win. */
+  function tctDay() { return Math.floor(Date.now() / 86400000); }
+  function rematchReady(id) { return !!G.defeated[id] && ((G.beat && G.beat[id]) || 0) < tctDay(); }
+  function rematchTeam(tid) {
+    const p = TRAINERS[tid].party;
+    if (!G.flags.champion) return p;
+    const top = Math.max.apply(null, p.map(function (q) { return q[1]; })), up = Math.max(12, 60 - top);
+    return p.map(function (q) {
+      const lv = Math.min(100, q[1] + up); let sp = q[0];
+      for (let g = 0; g < 4 && SP[sp].evo && SP[sp].evo.lv && lv >= SP[sp].evo.lv; g++) sp = SP[sp].evo.to;
+      return [sp, lv];
+    });
+  }
+  async function rematchTalk(n) {
+    const d = n.def, T0 = TRAINERS[d.trainer], who = T0.cls.toUpperCase() + ' ' + fillNames(T0.name).toUpperCase() + ': ';
+    const c = await ask(who + (G.flags.champion ? 'Well, if it isn\'t the Champion! I\'ve trained hard since last time. Rematch?' : 'Back again? I\'ve been training since last time. Fancy a rematch?'), ['Battle!', 'Not now']);
+    if (c !== 0) { await say(who + 'Any time. I\'ll be right here.'); return; }
+    await trainerTalk(n, true);
   }
   async function trainerBattle(id, o) {
     o = o || {};
@@ -14670,7 +14692,7 @@
     party.forEach(function (m) { m.iv = [ivs, ivs, ivs, ivs, ivs, ivs]; m.hp = maxHp(m); });
     const r = await battle({ trainer: T0, tid: id, party: party, noBlackout: o.noBlackout });
     if (r === 'lose' && !o.noBlackout) await blackout();
-    if (r === 'win' && o.npc) G.defeated[o.npc.id] = 1;
+    if (r === 'win' && o.npc) { G.defeated[o.npc.id] = 1; (G.beat = G.beat || {})[o.npc.id] = tctDay(); }
     if (r === 'win') await discReward(id);
     return r;
   }
@@ -14732,7 +14754,8 @@
     if (d.kind !== 'capsule' && d.kind !== 'mon' && d.kind !== 'pet') n.dir = OPP[W.p.dir];
     if (d.kind === 'mon') await legendEncounter(n);
     else if (d.trainer) {
-      if (G.defeated[d.id]) await say(TRAINERS[d.trainer].cls.toUpperCase() + ' ' + TRAINERS[d.trainer].name.toUpperCase() + ': ' + d.after);
+      if (rematchReady(d.id) && G.party.some(alive)) await rematchTalk(n);
+      else if (G.defeated[d.id]) await say(TRAINERS[d.trainer].cls.toUpperCase() + ' ' + TRAINERS[d.trainer].name.toUpperCase() + ': ' + d.after);
       else await trainerTalk(n);
     } else if (d.run) await d.run(n);
     else if (d.text) { await say(d.text); await npcGift(d); }
