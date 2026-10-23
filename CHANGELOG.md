@@ -8,6 +8,13 @@ Every Torn Arcade update since 2.2.0, newest first. Dates are in TCT (Torn City 
 
 ---
 
+## 2.46.7 — 2026-10-23
+### Changed
+- Tornies: the Golden Torn Casino is more like a classic Game Corner. The dealer and the gambler now just chat instead of battling.
+- Two Racket Thugs, Nicky and Sal, now work the casino floor (the Racket takes a cut of the slots). They leave once Don Varro is beaten. High Roller Montgomery in the VIP Lounge still battles.
+### Fixed
+- Tornies: you can no longer slip past the bouncer in Lucky's Pawn and down the ladder without Knuckles's card key. Shelves now stand either side of the ladder.
+
 ## 2.46.6 — 2026-10-23
 ### Fixed
 - Tornies: palm trees no longer appear around people standing inside the Golden Torn Casino. Indoor maps loaded from the copy saved on your device were redrawing their front layer with outdoor objects (this could also put stray signs, lamps or crates in other buildings).

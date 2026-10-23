@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.46.6
+// @version      2.46.7
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with nine game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -664,7 +664,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gifts and trades', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.46.6';
+  const VERSION = '2.46.7';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -6157,6 +6157,8 @@
     cs_rox:   { cls: 'High Roller', name: 'Rox', pal: 'lady', base: 60, party: [[79, 36]], lose: 'Darling, I\'ll simply buy another.' },
     ci_dex:   { cls: 'Dealer', name: 'Dex', pal: 'dealer', base: 40, party: [[79, 34], [77, 35]], lose: 'House doesn\'t always win, I guess.' },
     ci_mo:    { cls: 'Gambler', name: 'Mo', pal: 'gent', base: 45, party: [[78, 36]], lose: 'All in... and all out.' },
+    ci_g1:    { cls: 'Racket Thug', name: 'Nicky', pal: 'thug', base: 32, party: [[31, 34], [30, 35]], lose: 'The house always wins. Except, apparently, today.' },
+    ci_g2:    { cls: 'Racket Thug', name: 'Sal', pal: 'thug', base: 32, party: [[34, 35], [23, 35]], lose: 'Don\'t tell Don Varro about this.' },
     hq_g1:    { cls: 'Racket Thug', name: 'Benny', pal: 'thug', base: 34, party: [[31, 36], [34, 36]], lose: 'Ow. Don\'t tell the boss.' },
     hq_g2:    { cls: 'Racket Thug', name: 'Tess', pal: 'thug', base: 34, party: [[23, 37], [44, 36]], lose: 'I\'m on my lunch break. Technically.' },
     hq_g3:    { cls: 'Racket Thug', name: 'Rocco', pal: 'thug', base: 34, party: [[46, 36], [66, 37]], lose: 'I keep forgetting the password. It\'s BAZAAR. Like where you flog your junk. Oops.' },
@@ -6282,9 +6284,13 @@
       things: { L: 'A card table. Someone has left a winning hand face up: five aces. That\'s... not how cards work.' },
       acts: slots.map(function (p) { return [p[0], p[1], function () { return slotMachine(p[0], p[1]); }]; }),
       npcs: [
-        { id: 'ci_dex', x: 4, y: 3, dir: 'down', pal: 'dealer', trainer: 'ci_dex', sight: 2, before: 'Care for a hand? A Tornie hand, that is.', after: 'Slots cost $100 a pull. Good luck. You\'ll need it.' },
-        { id: 'ci_mo', x: 12, y: 8, dir: 'left', pal: 'gent', trainer: 'ci_mo', sight: 3, before: 'You\'re standing in my lucky spot!', after: 'Russian roulette? The Council banned it years ago. Spoilsports.' },
-        { id: 'ci_lady', x: 2, y: 9, dir: 'right', pal: 'lady', move: 'look', text: 'I hear the machine nearest the bar is lucky. But it only pays out when it\'s late.|Late at night, I mean. Torn City Time.' },
+        // Casino regulars just chat, like a Game Corner. The only battles here are the Racket's men, who leave once
+        // Don Varro is beaten (the Racket takes a cut of the slots and runs the pawn shop next door).
+        { id: 'ci_dex', x: 4, y: 3, dir: 'down', pal: 'dealer', move: 'look', text: 'DEALER: Care for a hand of cards? No? Suit yourself.|Slots cost $100 a pull. Good luck. You\'ll need it.' },
+        { id: 'ci_mo', x: 12, y: 8, dir: 'left', pal: 'gent', move: 'look', text: 'GAMBLER: You\'re standing in my lucky spot! ...Fine, I\'ll share.|Russian roulette? The Council banned it years ago. Spoilsports.' },
+        { id: 'ci_g1', x: 6, y: 8, dir: 'down', pal: 'thug', trainer: 'ci_g1', sight: 3, cond: function () { return !G.flags.hq; }, before: 'Oi! Every pull on these slots, the Racket gets a cut. You got a problem with that?', after: 'Fine. But this place still pays the Racket. For now.' },
+        { id: 'ci_g2', x: 10, y: 6, dir: 'left', pal: 'thug', trainer: 'ci_g2', sight: 3, cond: function () { return !G.flags.hq; }, before: 'Keep walking. Nobody\'s counting the Racket\'s money over here. Definitely not me.', after: 'Whatever you do, don\'t go poking around the pawn shop next door.' },
+        { id: 'ci_lady', x: 2, y: 9, dir: 'right', pal: 'lady', move: 'look', text: 'I hear the machine nearest the bar is lucky. But it only pays out when it\'s late.|Late at night, I mean.' },
         { id: 'ci_bar', x: 14, y: 9, dir: 'left', pal: 'man', move: 'look', text: 'BARMAN: We don\'t serve Tornies at the bar. Last time a Sootling had one drink and set off every smoke alarm on the Strip.' },
         { id: 'ci_ball', x: 7, y: 6, kind: 'mon', sp: 97, lv: 34, flag: 'caught97', size: 22, cond: function () { return isNight() && !G.flags.caught97; }, text: 'The mirror ball over the dance floor is spinning on its own... and it\'s looking at you!' }
       ]
@@ -6328,7 +6334,7 @@
   /* ---------- The Pawn Shop and the Racket HQ ---------- */
   defMap('pawn', {
     name: 'Lucky\'s Pawn', bg: 'indoor', border: 'w', indoor: true, tiles: 'o',
-    rows: ['wwwwwwwwww', 'wwwwwwwwww', 'oBBooooUoB', 'kkkooooooo', 'oooooooooo', 'ooQQoooooo', 'oooooooooo', 'oooooooooo', 'oooommoooo'],
+    rows: ['wwwwwwwwww', 'wwwwwwwwww', 'oBBoooBUBB', 'kkkooooooo', 'oooooooooo', 'ooQQoooooo', 'oooooooooo', 'oooooooooo', 'oooommoooo'],
     warps: mats([4, 5], 8, 'casino', 21, 19).concat([{ x: 7, y: 2, to: 'hq1', tx: 2, ty: 14, dir: 'right' }]),
     things: { Q: 'Boxes of "second-hand" TornPhones. All with different owners\' names engraved on the back.' },
     npcs: [
@@ -10404,7 +10410,15 @@
   const IW_ART = 'a1';   // bump when map art changes, so old saved chunks are replaced
   const IWDB = { db: null, state: 0, keys: {}, reading: {}, queue: [] };
   function iwDbOn() { return store.get('saveMaps', true) !== false && typeof indexedDB !== 'undefined'; }
-  function iwDbKey(k) { return IW_ART + '|' + k; }
+  // A single map whose layout changed gets its own version here, so only that map is redrawn (not every saved map).
+  // Saved chunks of that map without the matching version are deleted when the store opens.
+  const IW_MAPV = { pawn: 2 };   // 2.46.7: shelves beside the pawn shop ladder
+  function iwDbKey(k) { const id = k.split(':')[0], v = IW_MAPV[id]; return IW_ART + '|' + (v ? id + '@' + v + k.slice(id.length) : k); }
+  function iwDbCurrent(dk) {
+    dk = String(dk); if (dk.indexOf(IW_ART + '|') !== 0) return false;
+    const rest = dk.slice(IW_ART.length + 1), id = rest.split(/[:@]/)[0], v = IW_MAPV[id], at = rest.match(/^[^:@]+@(\d+):/);
+    return v ? !!at && +at[1] === v : !at;
+  }
   function iwDbOpen() {
     if (IWDB.state || !iwDbOn()) return; IWDB.state = 1;
     try {
@@ -10414,7 +10428,7 @@
       r.onsuccess = function () {
         IWDB.db = r.result;
         const tx = IWDB.db.transaction('chunks', 'readwrite'), os = tx.objectStore('chunks'), q = os.getAllKeys();
-        q.onsuccess = function () { (q.result || []).forEach(function (k) { if (String(k).indexOf(IW_ART + '|') === 0) IWDB.keys[k] = 1; else os.delete(k); }); IWDB.state = 2; };
+        q.onsuccess = function () { (q.result || []).forEach(function (k) { if (iwDbCurrent(k)) IWDB.keys[k] = 1; else os.delete(k); }); IWDB.state = 2; };
         q.onerror = function () { IWDB.state = 2; };
       };
     } catch (e) { IWDB.state = 3; }
