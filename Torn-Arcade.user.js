@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.47.3
+// @version      2.47.4
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with nine game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -664,7 +664,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gifts and trades', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.47.3';
+  const VERSION = '2.47.4';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -3604,7 +3604,7 @@
   /* ---------- More items ---------- */
   Object.assign(ITEMS, {
     hyper_potion: { name: 'Trauma Kit', price: 1500, kind: 'heal', hp: 200, desc: 'Serious medical supplies. Restores 200 HP.' },
-    revive: { name: 'Defibrillator', price: 2000, kind: 'revive', desc: 'Brings a hospitalized Tornie back with half its HP.' },
+    revive: { name: 'Defibrillator', price: 2000, kind: 'revive', desc: 'Brings a fainted Tornie back with half its HP. Works in battle too.' },
     full_heal: { name: 'Cure-All Spray', price: 800, kind: 'cure', cure: 'all', desc: 'Cures any status problem.' },
     capsule2: { name: 'Reinforced Capsule', price: 600, kind: 'ball', rate: 1.5, desc: 'A sturdier capsule. Better at holding on to wriggly Tornies.' },
     capsule3: { name: 'Armoured Capsule', price: 1200, kind: 'ball', rate: 2, desc: 'A heavy-duty capsule plated in steel. Much better catch rate.' },
@@ -7277,7 +7277,7 @@
   });
   async function towerDesk() {
     await say('RECEPTIONIST: Welcome to the Council Tower.|Upstairs, the four members of the Torn Council are waiting. You must beat all four in a row, then the Champion.');
-    await say('RECEPTIONIST: Once you go up, there\'s no coming back down until you win or your team is hospitalized.|You can still use items between battles. Are you ready?');
+    await say('RECEPTIONIST: Once you go up, there\'s no coming back down until you win or your whole team faints.|You can still use items between battles. Are you ready?');
     if (!(await yesno('Climb the Council Tower?'))) { await say('RECEPTIONIST: Take your time. The Clinic outside will patch up your team.'); return; }
     G.cRun = 0; saveGame();
     await fadeOut(0.4); loadMap('council1', 4, 10, 'up'); await fadeIn(0.4);
@@ -10412,7 +10412,7 @@
   function iwDbOn() { return store.get('saveMaps', true) !== false && typeof indexedDB !== 'undefined'; }
   // A single map whose layout changed gets its own version here, so only that map is redrawn (not every saved map).
   // Saved chunks of that map without the matching version are deleted when the store opens.
-  const IW_MAPV = { pawn: 2, gate: 2, warehouse: 2, factory: 2, gym_volt: 2, gym_reef: 2, gym_ivy: 2, gym_forge: 2, gym_ace: 2, gym_graves: 2, gym_rhea: 2 };   // 2.46.7 pawn shop shelves; 2.46.8 Gauntlet plants; 2.47.0 puzzle rooms
+  const IW_MAPV = { pawn: 2, gate: 2, warehouse: 2, factory: 2, gym_volt: 2, gym_reef: 2, gym_ivy: 2, gym_forge: 2, gym_ace: 2, gym_graves: 2, gym_rhea: 3 };   // 2.46.7 pawn shop shelves; 2.46.8 Gauntlet plants; 2.47.0 puzzle rooms
   function iwDbKey(k) { const id = k.split(':')[0], v = IW_MAPV[id]; return IW_ART + '|' + (v ? id + '@' + v + k.slice(id.length) : k); }
   function iwDbCurrent(dk) {
     dk = String(dk); if (dk.indexOf(IW_ART + '|') !== 0) return false;
@@ -12429,7 +12429,7 @@
     if (it.restore) {
       const full = mon.hp >= maxHp(mon) && !mon.st && mon.moves.every(function (x) { return x.pp >= MOVES[x.id].pp; });
       if (full) { await say('It won\'t have any effect.'); return false; }
-      if (mon.hp <= 0) { await say(monName(mon) + ' is hospitalized. It needs a Defibrillator first.'); return false; }
+      if (mon.hp <= 0) { await say(monName(mon) + ' has fainted. It needs a Defibrillator first.'); return false; }
       takeItem(id); healMon(mon); jingle('heal'); gstat('boosters');
       await say(monName(mon) + ' is fully patched up and raring to go!');
       return true;
@@ -13908,12 +13908,12 @@
   /* ===== Northridge Arena (Rhea): slide across the ice; the rocks are your brakes (Mahogany / Ice Path). ===== */
   pzRoom('gym_rhea', function (keep) { return {
     name: 'Northridge Arena', bg: 'snow', border: 'w', indoor: true, tiles: 'J', ice: true,
-    rows: ['wwwwwwwwwwww', 'wwwwwwwwwwww', 'GGGGGGGGGGGG', 'GGGGGGGGGGGG', 'RRJRRRRRRRRR', 'RJJJJJJJJJJJ', 'RJJJJRJJJJJJ', 'JJJRJJJJJJRJ',
-      'JJJJJJJJJJRJ', 'RJRJJJJJJJJJ', 'JJJJJJJJJJJJ', 'JJJJJJJJJJJJ', 'JRJRJJJJJJJJ', 'JJRJJJJJJJJJ', 'GGGGGGGGGGGG', 'GGGGGmmGGGGG'],
+    rows: ['wwwwwwwwwwww', 'wwwwwwwwwwww', 'GGGGGGGGGGGG', 'GGGGGGGGGGGG', 'RRRRRRRRJRRR', 'JJJJJJJJJJJJ', 'JJJRJJJJJJJJ', 'JJJJRJJJJJJJ',
+      'JJJJJJJJJRJJ', 'RJJJJJJJRJJJ', 'JJJJJJJJJJJJ', 'JJJJJJJJJJJJ', 'JJJJJJJJJJJJ', 'JRJJRRJJJRJJ', 'GGGGGGGGGGGG', 'GGGGGmmGGGGG'],
     warps: PZ_MATS(16, 'northridge'),
     things: { R: 'A boulder frozen into the ice. Handy for stopping.' },
     statue: function () { return 'NORTHRIDGE ARENA|Medal winners: ' + (medal('rhea') ? '{P}' : '?????'); },
-    npcs: [keep('leader_rhea', 5, 2, 'down'), keep('gr_sno', 0, 14, 'right', { sight: 3 }), keep('gr_kai', 11, 3, 'left', { sight: 3 }), keep('guide_rhea', 9, 14, 'left')]
+    npcs: [keep('leader_rhea', 5, 2, 'down'), keep('gr_sno', 0, 14, 'right', { sight: 3 }), keep('gr_kai', 11, 3, 'left', { sight: 3 }), keep('guide_rhea', 1, 15, 'right')]
   }; }, { arrive: [5, 14] });
 
   /* ===== Docks Warehouse: Loading Bay (crates) and the Cold Store below (ice). ===== */
@@ -14190,7 +14190,7 @@
           const c = await menu(opts, { x: VW - 78, y: VH - 72, w: 74 });
           m.busy = false;
           if (o.battle && c === 0) {
-            if (mon.hp <= 0) { await say(monName(mon) + ' is in no state to fight!'); return; }
+            if (mon.hp <= 0) { await say(monName(mon) + ' has fainted and can\'t battle!'); return; }
             if (B && B.p && mon === B.p.mon) { await say(monName(mon) + ' is already out there!'); return; }
             pop(m); res(m.i); return;
           }
@@ -14346,7 +14346,7 @@
     if (!canUse(id, mon)) { await say('It won\'t have any effect.'); return; }
     takeItem(id);
     if (it.kind === 'heal') { const before = mon.hp; mon.hp = Math.min(maxHp(mon), mon.hp + it.hp); jingle('item'); await say(monName(mon) + ' recovered ' + (mon.hp - before) + ' HP!'); }
-    else if (it.kind === 'revive') { mon.hp = Math.max(1, Math.floor(maxHp(mon) / 2)); mon.st = null; mon.slp = 0; jingle('item'); await say('*Bzzt!* ' + monName(mon) + ' was discharged from hospital!'); }
+    else if (it.kind === 'revive') { mon.hp = Math.max(1, Math.floor(maxHp(mon) / 2)); mon.st = null; mon.slp = 0; jingle('item'); await say('*Bzzt!* ' + monName(mon) + ' is back on its feet!'); }
     else { mon.st = null; mon.slp = 0; jingle('item'); await say(monName(mon) + ' ' + CURE_MSG[it.cure] + '!'); }
   }
   // An Energy Bar levels a Tornie up outside battle: stats, new moves and evolution as normal.
@@ -14380,7 +14380,7 @@
     return new Promise(function (res) {
       const m = { i: 0, top: 0, busy: false }, VIS = 7;
       function allowed(id) {
-        if (o.battle) return ['ball', 'heal', 'cure'].indexOf(ITEMS[id].kind) >= 0;
+        if (o.battle) return ['ball', 'heal', 'cure', 'revive'].indexOf(ITEMS[id].kind) >= 0;
         if (o.sell) return ITEMS[id].price > 0 && ITEMS[id].kind !== 'key';
         return true;
       }
@@ -15953,7 +15953,7 @@
         tone(600, 0.5, 'sawtooth', 0.04, 120);
         await tween(0.4, function (k) { v[s + 'Y'] = k * 60; });
         v[s + 'Vis'] = false; v[s + 'Y'] = 0; v[s + 'Info'] = false;
-        await bsay(bname(b) + ' is knocked out!');
+        await bsay(bname(b) + ' fainted!');
         if (s === 'e') await giveExp();
         else B.part = B.part.filter(function (u) { return u !== b.mon.uid; });
       }
@@ -16006,8 +16006,8 @@
       await bsay('Anton The Bunnster rifles through {P}\'s pockets!|He mugged {P} for $' + mugged + '!');
     }
     const bill = Math.floor(G.money * 0.1); G.money -= bill;
-    await bsay('{P} was hospitalized!|The medical bill came to $' + bill + '.');
-    // Being hospitalised always patches the whole team up, wherever you wake up.
+    await bsay('{P} blacked out!|The medical bill came to $' + bill + '.');
+    // Blacking out always patches the whole team up, wherever you wake up.
     try { healParty(); } catch (e) { repairSave(G); }
     return 'lose';
   }

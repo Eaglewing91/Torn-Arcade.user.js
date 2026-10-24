@@ -8,6 +8,13 @@ Every Torn Arcade update since 2.2.0, newest first. Dates are in TCT (Torn City 
 
 ---
 
+## 2.47.4 — 2026-10-24
+### Fixed
+- Tornies: the Northridge Arena ice puzzle has a fairer layout (about five slides, several ways through).
+- Tornies: Defibrillators can now be used in battle on a fainted Tornie.
+### Changed
+- Tornies: Tornies now "faint" instead of being "hospitalised", and you "black out" when your whole team faints, like the classic games.
+
 ## 2.47.3 — 2026-10-23
 ### Fixed
 - Tornies: coming back up the ladder from the Warehouse Cold Store no longer traps you behind the crates. Crates and gates are only set up when you walk in through a room's way in; arriving any other way (up a ladder, or loading a save made inside) finds the way already clear.
