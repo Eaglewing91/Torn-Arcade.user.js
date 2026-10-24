@@ -8,6 +8,10 @@ Every Torn Arcade update since 2.2.0, newest first. Dates are in TCT (Torn City 
 
 ---
 
+## 2.47.5 — 2026-10-24
+### New
+- Developer codes can now include a teleport to any town or Arena entrance in Tornies (for helping players who are stuck). Like gift codes, they're signed, work for one player only and can be used once.
+
 ## 2.47.4 — 2026-10-24
 ### Fixed
 - Tornies: the Northridge Arena ice puzzle has a fairer layout (about five slides, several ways through).

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.47.4
+// @version      2.47.5
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with nine game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -664,7 +664,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gifts and trades', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.47.4';
+  const VERSION = '2.47.5';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -1395,6 +1395,7 @@
       '<div class="ta-devsub">Tornies</div><div class="ta-devmons"></div><button type="button" class="ta-btn ta-btn-alt" data-dev="addmon">+ Tornie</button>' +
       '<div class="ta-devsub">Items</div><div class="ta-devitems"></div><button type="button" class="ta-btn ta-btn-alt" data-dev="additem">+ Item</button>' +
       '<label>Money ($, optional)<input class="ta-devin" data-f="money" inputmode="numeric"></label>' +
+      '<label>Teleport to (optional)<select class="ta-devin" data-f="tp"><option value="">Nowhere</option>' + (D.tp || []).map(function (t) { return '<option value="' + esc(t[0]) + '">' + esc(t[1]) + '</option>'; }).join('') + '</select></label>' +
       '<div class="ta-devbtns"><button type="button" class="ta-btn" data-dev="make">Make code</button><button type="button" class="ta-btn ta-btn-alt" data-dev="lock">Lock</button></div>' +
       (DEV.code ? '<p class="ta-devnote">Gift code (players paste it into Settings → Redeem code):</p><div class="ta-devcode ta-devgift">' + esc(DEV.code) + '</div><div class="ta-devbtns"><button type="button" class="ta-btn" data-dev="copycode">Copy code</button></div>' : '') +
       '</div></div></div>' +
@@ -1418,6 +1419,7 @@
     (p.m || []).forEach(function (e) { const s = D.sp.find(function (x) { return x[0] === e[0]; }); out.push((e[2] ? 'golden ' : '') + 'Lv ' + e[1] + ' ' + (s ? s[1] : '#' + e[0]) + (e[3] ? ' (perfect)' : '') + (e[4] ? ' "' + e[4] + '"' : '')); });
     Object.keys(p.it || {}).forEach(function (k) { const it = D.items.find(function (x) { return x[0] === k; }); out.push(p.it[k] + ' × ' + (it ? it[1] : k)); });
     if (p.mo) out.push('$' + p.mo.toLocaleString('en-GB'));
+    if (p.tp) { const t = (D.tp || []).find(function (x) { return x[0] === p.tp.join(':'); }); out.push('teleport to ' + (t ? t[1] : p.tp.join(','))); }
     return out.join(', ');
   }
   async function devAction(t) {
@@ -1467,7 +1469,8 @@
         const it = {}; Array.from(devBox.querySelectorAll('.ta-devitems .ta-devline')).forEach(function (r) { const q = parseInt(devVal('q', r), 10); if (!(q >= 1 && q <= 99)) throw 'Quantities must be 1 to 99.'; const k = devVal('it', r); it[k] = Math.min(99, (it[k] || 0) + q); });
         if (Object.keys(it).length) p.it = it;
         const mo = parseInt(devVal('money') || '0', 10); if (mo) { if (!(mo > 0 && mo <= 10000000)) throw 'Money must be up to $10,000,000.'; p.mo = mo; }
-        if (!p.m && !p.it && !p.mo) throw 'Add at least one Tornie, item or some money.';
+        const tp = devVal('tp'); if (tp) { const t = tp.split(':'); p.tp = [t[0], parseInt(t[1], 10), parseInt(t[2], 10)]; }
+        if (!p.m && !p.it && !p.mo && !p.tp) throw 'Add at least one Tornie, item, some money or a teleport.';
         const data = new TextEncoder().encode(JSON.stringify(p)), sig = await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, DEV.priv, data);
         DEV.code = 'GIFT-' + devB64(data) + '.' + devB64(sig);
         const what = devDescribe(p), log = store.get('devLog', []) || [];
@@ -13700,6 +13703,30 @@
   }
   function isGiftCode(code) { return /^GIFT-[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(String(code || '').trim()); }
   // Checks a code. Resolves to { p: payload } or { err: 'reason the player can understand' }.
+  // Teleport destinations a developer code may send a player to: every town (Clinic door) and every Arena entrance.
+  function giftTpList() {
+    const out = [];
+    Object.keys(TOWNS).forEach(function (k) {
+      const t = TOWNS[k], m = MAPS[t[1]]; if (!m) return;
+      if (!m.grid) buildGrid(m);
+      // Land on the nearest open tile to the town's arrival point.
+      for (let r = 0; r < 4; r++) for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {
+        const x = t[2] + dx, y = t[3] + dy;
+        if (Math.max(Math.abs(dx), Math.abs(dy)) !== r || x < 0 || y < 0 || x >= m.w || y >= m.h || blockedStatic(m, x, y)) continue;
+        if (!out.some(function (o) { return o[1] === t[0]; })) out.push([t[1] + ':' + x + ':' + y, t[0]]);
+      }
+    });
+    Object.keys(MAPS).filter(function (id) { return /^gym_/.test(id); }).forEach(function (id) {
+      const m = MAPS[id], w = m.warps.find(function (q) { return MAPS[q.to] && MAPS[q.to].outdoor; });
+      if (w) out.push([id + ':' + w.x + ':' + (w.y - 1), m.name + ' (inside)']);
+    });
+    return out;
+  }
+  function giftTpOk(tp) {
+    if (!Array.isArray(tp) || tp.length !== 3 || !MAPS[tp[0]]) return false;
+    const m = MAPS[tp[0]]; if (!m.grid) buildGrid(m);
+    return tp[1] >= 0 && tp[2] >= 0 && tp[1] < m.w && tp[2] < m.h && !blockedStatic(m, tp[1], tp[2]);
+  }
   async function giftCheck(code) {
     code = String(code || '').trim();
     if (!isGiftCode(code)) return { err: 'That isn\'t a gift code.' };
@@ -13719,6 +13746,7 @@
     for (const e of mons) if (!Array.isArray(e) || !SP[e[0]] || !(e[1] >= 1 && e[1] <= GIFT_MAX.lv)) return { err: 'This gift needs a newer version of Torn Arcade.' };
     for (const k of Object.keys(items)) if (!ITEMS[k] || !(items[k] >= 1 && items[k] <= GIFT_MAX.qty)) return { err: 'This gift needs a newer version of Torn Arcade.' };
     if (p.mo && !(p.mo > 0 && p.mo <= GIFT_MAX.money)) return { err: 'That gift code isn\'t valid.' };
+    if (p.tp && !giftTpOk(p.tp)) return { err: 'This code needs a newer version of Torn Arcade.' };
     if (p.x) { const d = new Date(), today = d.getUTCFullYear() * 10000 + (d.getUTCMonth() + 1) * 100 + d.getUTCDate(); if (today > p.x) return { err: 'That gift code has expired.' }; }
     if (!(p.t > 0)) return { err: 'That gift code isn\'t valid.' };   // every code is for one player
     { const me = tornId(); if (!me) return { err: 'Open this on a Torn page where you are logged in, then try again.' }; if (me !== p.t) return { err: 'That gift code is for another player.' }; }
@@ -13749,6 +13777,11 @@
       });
       Object.keys(p.it || {}).forEach(function (k) { addItem(k, p.it[k]); got.push(p.it[k] + ' × ' + ITEMS[k].name); });
       if (p.mo) { G.money = (G.money || 0) + p.mo; got.push('$' + p.mo.toLocaleString('en-GB')); }
+      if (p.tp) {   // a developer teleport: you'll be standing there next time you're in Tornies
+        G.map = p.tp[0]; G.x = p.tp[1]; G.y = p.tp[2]; G.surf = 0;
+        if (live && W.map) { try { loadMap(p.tp[0], p.tp[1], p.tp[2], 'down'); } catch (e) {} }
+        got.push('a trip to ' + fillNames(MAPS[p.tp[0]].name));
+      }
       G.flags['gift_' + p.i] = 1;
       if (live) saveGame(); else store.set('pocket', G);
     } finally { if (!live) G = keep; }
@@ -16633,7 +16666,7 @@
     relayout: fit,
     gift: giftRedeem, isGift: isGiftCode, myId: tornId,
     // For the developer's Dev app: Tornies and the items a gift code may contain (not key or story items).
-    devData: function () { const sp = []; for (let n = 1; n <= DEX_SIZE; n++) if (SP[n]) sp.push([n, SP[n].name]); return { sp: sp, items: Object.keys(ITEMS).filter(function (k) { return ['key', 'field', 'shoes'].indexOf(ITEMS[k].kind) < 0; }).map(function (k) { return [k, ITEMS[k].name]; }) }; },   // developer gift codes (2zd-gifts.js)
+    devData: function () { const sp = []; for (let n = 1; n <= DEX_SIZE; n++) if (SP[n]) sp.push([n, SP[n].name]); return { tp: giftTpList(), sp: sp, items: Object.keys(ITEMS).filter(function (k) { return ['key', 'field', 'shoes'].indexOf(ITEMS[k].kind) < 0; }).map(function (k) { return [k, ITEMS[k].name]; }) }; },   // developer gift codes (2zd-gifts.js)
     art: artApi,   // the optional Art Pack scripts (3h-artpacks.js)
     // Saved maps on this device (Settings → Tornies). All local: nothing is uploaded.
     maps: {
