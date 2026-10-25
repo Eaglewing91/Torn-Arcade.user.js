@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.49.3
+// @version      2.49.4
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with nine game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -665,7 +665,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gifts and trades', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.49.3';
+  const VERSION = '2.49.4';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -14462,7 +14462,12 @@
       if (!Array.isArray(st)) continue;
       const op = st[0], a = st[1];
       let r;
-      if (op === 'say' && typeof a === 'string') await say(a);
+      if (op === 'say' && typeof a === 'string') {
+        // Narration on a black screen (after ['fade', 'out']): the fade is drawn over everything, so show the text on a
+        // black backdrop instead, then go back to black.
+        if (fade >= 0.99) { const bg = { draw: function () { fr(0, 0, VW, VH, '#000'); } }; fade = 0; push(bg); await say(a); pop(bg); fade = 1; }
+        else await say(a);
+      }
       else if (op === 'phone' && typeof a === 'string' && typeof st[2] === 'string') await phoneMsg(a, st[2]);
       else if (op === 'ask' && typeof a === 'string' && Array.isArray(st[2])) { const i = await ask(a, st[2].map(String)); r = await addonSteps(pack, (st[3] || [])[i], depth + 1); }
       else if (op === 'yesno' && typeof a === 'string') r = await addonSteps(pack, (await yesno(a)) ? st[2] : st[3], depth + 1);

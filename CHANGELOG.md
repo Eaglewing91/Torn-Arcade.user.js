@@ -8,6 +8,10 @@ Every Torn Arcade update since 2.2.0, newest first. Dates are in TCT (Torn City 
 
 ---
 
+## 2.49.4 — 2026-10-25
+### Fixed
+- Tornies: the screen stayed black during the SS Bogie voyage and a few other Ravenport scenes. The text now shows on the black screen as it should.
+
 ## 2.49.3 — 2026-10-25
 ### Fixed
 - Tornies: after beating the Champion, the Hall of Fame and credits were hidden behind a black screen. They show properly now.
