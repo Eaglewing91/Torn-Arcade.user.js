@@ -8,6 +8,10 @@ Every Torn Arcade update since 2.2.0, newest first. Dates are in TCT (Torn City 
 
 ---
 
+## 2.49.3 — 2026-10-25
+### Fixed
+- Tornies: after beating the Champion, the Hall of Fame and credits were hidden behind a black screen. They show properly now.
+
 ## 2.49.2 — 2026-10-25
 ### Changed
 - Developer gift codes can now include Ravenport Tornies, the new Training Discs and teleports to Ravenport's towns and Arenas. Redeeming one without the Ravenport add-on explains what's needed instead of failing.
