@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.47.6
+// @version      2.47.7
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with nine game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -664,7 +664,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gifts and trades', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.47.6';
+  const VERSION = '2.47.7';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -6559,7 +6559,7 @@
     const L = rivalLine();
     await say('{R}: {P}! I heard what happened at the bank! You and Chedburn and a giant vault monster?!|Everyone\'s talking about it. Nobody\'s talking about ME.');
     await say('{R}: So I\'m going to beat you, right here, and then they\'ll talk about me. That\'s how fame works.');
-    const r = await trainerBattle('rival4', { party: [[12, 42], [19, 42], [57, 41], [44, 42], [L[2], 45]] });
+    const r = await trainerBattle('rival4', { party: [[12, 38], [19, 37], [57, 38], [44, 39], [L[2], 42]] });
     G.flags.rival4 = 1;
     if (r === 'win') {
       await say('{R}: ...Okay. Fine. Maybe you ARE the best trainer in Torn City.|For now! I\'m going to Northridge to train in the snow. Real trainers train in the snow.');
@@ -7370,7 +7370,7 @@
     G.cRun = 0;
     if (r !== 'win') { await say('CHEDBURN: Ha! The old man\'s still got it. Come back any time.'); await blackout(); return; }
     await say('CHEDBURN: Magnificent. You\'re the Champion through and through.');
-    G.money += 20000; jingle('item'); await say('{P} got a $20,000 Champion\'s purse!');
+    G.money += 10000; jingle('item'); await say('{P} got a $10,000 Champion\'s purse!');
     if (G.flags.caught121) { saveGame(); return; }
     await say('CHEDBURN: ...There\'s someone here who wants to meet you. Someone very old.|Before there was a Torn City, before there was a Tornie League, there was this little fellow.');
     cry(121);
@@ -14146,6 +14146,31 @@
     }; }
   }
 
+  /* ---------- Battle and money balance (2.47.7) ----------
+     Bosses: their strongest Tornie keeps its level, the rest sit 3-5 levels below (like the classic games' leaders), and
+     the mid-game spike (Racket HQ to Dr. Graves) is lowered. Prize bases follow the classic games: Arena Leaders and the
+     Council 100, the Champion 200. Training spots near the spike get a few higher-level wild Tornies. */
+  (function () {
+    const ACE = { hq_slick: 36, hq_vin: 37, varro1: 40, ace: 42, varro2: 44, graves: 45 };   // lowered strongest Tornie
+    const BOSS = /^(Arena Leader|Lieutenant|Racket Boss|Torn Council|Champion)$/;
+    Object.keys(TRAINERS).forEach(function (id) {
+      const T = TRAINERS[id]; if (!BOSS.test(T.cls) || !T.party || T.party.length < 2) return;
+      let top = 0; T.party.forEach(function (q, i) { if (q[1] >= T.party[top][1]) top = i; });
+      const ace = ACE[id] || T.party[top][1];
+      let k = 0;
+      T.party = T.party.map(function (q, i) { if (i === top) return [q[0], ace]; const lv = Math.min(q[1], ace - 3 - (k++ % 3)); return [q[0], Math.max(2, lv)]; });
+    });
+    const BASE = { 'Arena Leader': 100, 'Torn Council': 100, 'Champion': 200, 'Racket Boss': 100, 'Crime Lord': 200, 'Creator': 250 };
+    Object.keys(TRAINERS).forEach(function (id) { const T = TRAINERS[id]; if (BASE[T.cls]) T.base = BASE[T.cls]; });
+    if (TRAINERS.pawl2) TRAINERS.pawl2.base = 150;
+    // A few stronger wild Tornies where you train for Madame Ace, Don Varro and Dr. Graves.
+    ['route13', 'hospdist', 'oldhosp', 'route14'].forEach(function (id) {
+      const m = MAPS[id]; if (!m) return;
+      const lift = function (list) { (list || []).forEach(function (e) { if (typeof e[2] === 'number') e[2] = Math.min(40, e[2] + 3); }); };
+      lift(m.wild); (m.zones || []).forEach(function (z) { lift(z.wild); });
+    });
+  })();
+
   /* ---------- Tornie logic ---------- */
   let uidN = 1;
   function expFor(gr, n) {
@@ -15130,7 +15155,8 @@
     const T0 = TRAINERS[id];
     const party = (o.party || T0.party).map(function (q) { return makeMon(q[0], q[1]); });
     // Trainer Tornies get set IVs that grow with your medals: middling at the start, perfect by the end of the game.
-    const ivs = Math.min(31, 10 + 3 * ((G.badges && G.badges.length) || 0));
+    // Trainer stats grow with your medals, gently (2.47.7); the Council, the Champion and post-game bosses are perfect.
+    const ivs = /^(Torn Council|Champion|Crime Lord|Creator)$/.test(T0.cls) || id === 'pawl2' ? 31 : Math.min(24, 8 + 2 * ((G.badges && G.badges.length) || 0));
     party.forEach(function (m) { m.iv = [ivs, ivs, ivs, ivs, ivs, ivs]; m.hp = maxHp(m); });
     const r = await battle({ trainer: T0, tid: id, party: party, noBlackout: o.noBlackout });
     if (r === 'lose' && !o.noBlackout) await blackout();
@@ -15956,7 +15982,7 @@
     if (B.wild) return opts[Math.floor(Math.random() * opts.length)].id;
     // Before Brick's medal, ordinary trainers (and the first rival fight) pick a random move half the time.
     if (!B.tr.leader && G.badges.indexOf('brick') < 0 && Math.random() < 0.5) return opts[Math.floor(Math.random() * opts.length)].id;
-    let best = opts[0].id, bs = -1;
+    let best = opts[0].id, bs = -1; const scored = [];
     opts.forEach(function (o) {
       const M = MOVES[o.id];
       let s;
@@ -15967,9 +15993,12 @@
         if (M.fx.stat && M.fx.self && E.st[M.fx.stat[0][0]] >= 2) s = 3;
         if (M.fx.stat && !M.fx.self && P.st[M.fx.stat[0][0]] <= -2) s = 3;
       } else s = M.pow * effOf(M.type, typesOf(P)) * (typesOf(E).indexOf(M.type) >= 0 ? 1.5 : 1) * (M.acc ? M.acc / 100 : 1);
-      s *= B.tr.leader ? 0.85 + Math.random() * 0.3 : 0.6 + Math.random() * 0.8;
+      s *= B.tr.leader ? 0.75 + Math.random() * 0.5 : 0.6 + Math.random() * 0.8;
+      scored.push([s, o.id]);
       if (s > bs) { bs = s; best = o.id; }
     });
+    // Bosses are sharp but not perfect: about one turn in five they go with their second choice (2.47.7).
+    if (B.tr.leader && scored.length > 1 && Math.random() < 0.2) { scored.sort(function (a, b) { return b[0] - a[0]; }); if (scored[1][0] > 0) return scored[1][1]; }
     return best;
   }
   function moveMenu(pm) {
@@ -16099,9 +16128,8 @@
     v.tVis = true; await tween(0.5, function (k) { v.tX = (1 - k) * 140; });
     await bsay('{P} beat ' + trainerTitle() + '!');
     await bsay(fillNames(B.tr.name).toUpperCase() + ': ' + B.tr.lose);
-    // Prize money: +25% for every trainer, +50% in the Arenas (leaders and their trainers).
-    const inArena = B.tr.cls === 'Arena Leader' || (W.map && /^gym_/.test(W.map.id));
-    const prize = Math.round(B.tr.base * B.eParty[B.eParty.length - 1].lv * (inArena ? 1.5 : 1.25));
+    // Prize money, as in the classic games: the trainer's base pay x the level of their last Tornie (2.47.7).
+    const prize = Math.round(B.tr.base * B.eParty[B.eParty.length - 1].lv);
     if (B.o.tower) return 'win';
     G.money += prize; sfx.point(); gstat('trainerWins');
     await bsay('{P} pockets $' + prize + ' in prize money.');

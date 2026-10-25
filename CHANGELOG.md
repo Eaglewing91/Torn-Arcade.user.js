@@ -8,6 +8,13 @@ Every Torn Arcade update since 2.2.0, newest first. Dates are in TCT (Torn City 
 
 ---
 
+## 2.47.7 — 2026-10-25
+### Changed
+- Tornies: battle balance. Boss teams now have one strong Tornie with the rest a few levels lower, like the classic games, and the jump in difficulty from the Racket HQ to Dr. Graves is smoother. Arena Leaders and other bosses occasionally make a less-than-perfect move.
+- Tornies: trainer Tornies' hidden stats grow more gently with your medals; only the final challenges are at full strength.
+- Tornies: a few stronger wild Tornies around Route 13 and the Old Hospital District for training.
+- Tornies: prize money now follows the classic games (base pay × level of the last Tornie, without the old bonuses), and repeat Champion purses are $10,000.
+
 ## 2.47.6 — 2026-10-25
 ### Changed
 - Tornies: the Trainer Card shows each medal's name under it.
