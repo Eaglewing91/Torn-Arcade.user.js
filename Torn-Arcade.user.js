@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.49.0
+// @version      2.49.1
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with nine game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -665,7 +665,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gifts and trades', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.49.0';
+  const VERSION = '2.49.1';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -14137,8 +14137,12 @@
   async function templeAltar() {
     if (G.flags.templeAltar) { await say('An empty stone altar. The monkeys have nothing left to hide.'); return; }
     G.flags.templeAltar = 1;
-    addItem('pete_chart', 1); addItem('energy_bar', 2); G.money += 8000; jingle('get');
-    await say('A rolled-up chart lies on the altar, surrounded by shiny things the monkeys collected.|{P} got the REEF CHART, 2 Energy Bars and $8,000!');
+    // Players who reached the Private Island before 2.47.6 don't need the chart: they get the treasure only.
+    const needChart = !G.flags.clans;
+    if (needChart) addItem('pete_chart', 1);
+    addItem('energy_bar', 2); G.money += 8000; jingle('get');
+    await say(needChart ? 'A rolled-up chart lies on the altar, surrounded by shiny things the monkeys collected.|{P} got the REEF CHART, 2 Energy Bars and $8,000!'
+      : 'A pile of shiny things the monkeys collected lies on the altar, next to a chewed-up old chart you don\'t need any more.|{P} got 2 Energy Bars and $8,000!');
     saveGame();
   }
   pzRoom('jungle_temple', function () { return {
@@ -14166,7 +14170,11 @@
     const cw = MAPS.jungle.npcs.find(function (n) { return n.id === 'castaway'; });
     if (cw) { const first = cw.run; cw.run = async function (n) {
       await first(n);
-      if (G.flags.peteChart && !G.bag.pete_chart && !G.flags.clans) {
+      if (G.flags.clans && !G.flags.castawayTemple) {   // been to the Private Island already (before 2.47.6): the temple still opens
+        G.flags.castawayTemple = 1;
+        await say('CASTAWAY: You\'ve been out to that Private Island, haven\'t you? Then you won\'t need Pete\'s old chart.|But the monkeys that pinched it have a whole temple full of shiny things, behind the waterfall up north. Ride across the pool and look behind the vines.');
+        saveGame();
+      } else if (G.flags.peteChart && !G.bag.pete_chart && !G.flags.clans) {
         G.flags.castawayTemple = 1;
         await say('CASTAWAY: Pete\'s chart? Ha! I had it, till the monkeys pinched it.|They took it into their temple, behind the waterfall up north. Ride across the pool and look behind the vines.|It\'s full of stone monkeys. I\'ve never been brave enough to go in.');
         saveGame();

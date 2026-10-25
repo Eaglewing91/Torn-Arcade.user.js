@@ -8,6 +8,10 @@ Every Torn Arcade update since 2.2.0, newest first. Dates are in TCT (Torn City 
 
 ---
 
+## 2.49.1 — 2026-10-25
+### Fixed
+- Tornies: players who had already been to the Private Island before 2.47.6 can now find the jungle secret too. Ask the castaway.
+
 ## 2.49.0 — 2026-10-25
 ### New
 - **Tornies: the Ravenport expansion.** A new optional add-on script, **Torn Arcade - Ravenport** ([install](https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade-Ravenport.user.js)), opens a whole new region across the sea for Champions. Sail there on the SS Bogie from the Docks.
