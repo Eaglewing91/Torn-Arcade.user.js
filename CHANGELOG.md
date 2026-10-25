@@ -8,6 +8,10 @@ Every Torn Arcade update since 2.2.0, newest first. Dates are in TCT (Torn City 
 
 ---
 
+## 2.49.2 — 2026-10-25
+### Changed
+- Developer gift codes can now include Ravenport Tornies, the new Training Discs and teleports to Ravenport's towns and Arenas. Redeeming one without the Ravenport add-on explains what's needed instead of failing.
+
 ## 2.49.1 — 2026-10-25
 ### Fixed
 - Tornies: players who had already been to the Private Island before 2.47.6 can now find the jungle secret too. Ask the castaway.

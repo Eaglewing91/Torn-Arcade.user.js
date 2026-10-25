@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.49.1
+// @version      2.49.2
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with nine game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -665,7 +665,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gifts and trades', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.49.1';
+  const VERSION = '2.49.2';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -1393,7 +1393,7 @@
       '<label>For Torn ID (required: each code works once, for this player only)<input class="ta-devin" data-f="to" inputmode="numeric" value="' + esc(devProfileId()) + '"></label>' +
       '<label>Works until (optional)<input class="ta-devin" data-f="exp" type="date"></label>' +
       '<label>Message shown when redeemed (optional)<input class="ta-devin" data-f="note" maxlength="120"></label>' +
-      '<div class="ta-devsub">Tornies</div><div class="ta-devmons"></div><button type="button" class="ta-btn ta-btn-alt" data-dev="addmon">+ Tornie</button>' +
+      '<div class="ta-devsub">Tornies</div>' + (D.sp.some(function (x) { return x[0] > 179; }) ? '' : '<p class="ta-devnote">Install the Ravenport add-on to gift its Tornies, Discs and places.</p>') + '<div class="ta-devmons"></div><button type="button" class="ta-btn ta-btn-alt" data-dev="addmon">+ Tornie</button>' +
       '<div class="ta-devsub">Items</div><div class="ta-devitems"></div><button type="button" class="ta-btn ta-btn-alt" data-dev="additem">+ Item</button>' +
       '<label>Money ($, optional)<input class="ta-devin" data-f="money" inputmode="numeric"></label>' +
       '<label>Teleport to (optional)<select class="ta-devin" data-f="tp"><option value="">Nowhere</option>' + (D.tp || []).map(function (t) { return '<option value="' + esc(t[0]) + '">' + esc(t[1]) + '</option>'; }).join('') + '</select></label>' +
@@ -13759,6 +13759,17 @@
       const m = MAPS[id], w = m.warps.find(function (q) { return MAPS[q.to] && MAPS[q.to].outdoor; });
       if (w) out.push([id + ':' + w.x + ':' + (w.y - 1), m.name + ' (inside)']);
     });
+    // Ravenport (when the add-on is installed): its towns, at the street in front of each Clinic, and its Arenas.
+    Object.keys(MAPS).filter(function (id) { return MAPS[id].addon && MAPS[id].town; }).forEach(function (id) {
+      const m = MAPS[id], c = (m.buildings || []).find(function (b) { return b.k === 'centre'; }) || (m.buildings || [])[0];
+      if (!m.grid) buildGrid(m);
+      const sp = c && c.door ? [c.door[0], c.door[1] + 1] : m.spawn;
+      if (sp && !blockedStatic(m, sp[0], sp[1])) out.push([id + ':' + sp[0] + ':' + sp[1], m.name + ' (Ravenport add-on)']);
+    });
+    Object.keys(MAPS).filter(function (id) { return /^rv_gym_/.test(id); }).forEach(function (id) {
+      const m = MAPS[id], w = m.warps.find(function (q) { return MAPS[q.to] && MAPS[q.to].outdoor; });
+      if (w) out.push([id + ':' + w.x + ':' + (w.y - 1), m.name + ' (inside, Ravenport add-on)']);
+    });
     return out;
   }
   function giftTpOk(tp) {
@@ -13782,6 +13793,8 @@
     // The signature proves the developer made it; these checks only guard against mistakes in the code itself.
     const mons = Array.isArray(p.m) ? p.m : [], items = p.it && typeof p.it === 'object' ? p.it : {};
     if (mons.length > GIFT_MAX.mons) return { err: 'That gift code isn\'t valid.' };
+    if (mons.some(function (e) { return Array.isArray(e) && e[0] > DEX_SIZE && !SP[e[0]]; }) || Object.keys(items).some(function (k) { return /^disc_/.test(k) && !ITEMS[k] && !addonHas('ravenport'); }) || (Array.isArray(p.tp) && /^rv_/.test(p.tp[0]) && !MAPS[p.tp[0]]))
+      return { err: 'This gift needs the Ravenport add-on. Install it from the Ravenport app on your phone, reload the page and try again.' };
     for (const e of mons) if (!Array.isArray(e) || !SP[e[0]] || !(e[1] >= 1 && e[1] <= GIFT_MAX.lv)) return { err: 'This gift needs a newer version of Torn Arcade.' };
     for (const k of Object.keys(items)) if (!ITEMS[k] || !(items[k] >= 1 && items[k] <= GIFT_MAX.qty)) return { err: 'This gift needs a newer version of Torn Arcade.' };
     if (p.mo && !(p.mo > 0 && p.mo <= GIFT_MAX.money)) return { err: 'That gift code isn\'t valid.' };
@@ -17278,7 +17291,7 @@
     relayout: fit,
     gift: giftRedeem, isGift: isGiftCode, myId: tornId,
     // For the developer's Dev app: Tornies and the items a gift code may contain (not key or story items).
-    devData: function () { const sp = []; for (let n = 1; n <= DEX_SIZE; n++) if (SP[n]) sp.push([n, SP[n].name]); return { tp: giftTpList(), sp: sp, items: Object.keys(ITEMS).filter(function (k) { return ['key', 'field', 'shoes'].indexOf(ITEMS[k].kind) < 0; }).map(function (k) { return [k, ITEMS[k].name]; }) }; },   // developer gift codes (2zd-gifts.js)
+    devData: function () { const sp = []; for (let n = 1; n <= DEX_MAX; n++) if (SP[n]) sp.push([n, SP[n].name + (n > DEX_SIZE ? ' (Ravenport)' : '')]); return { tp: giftTpList(), sp: sp, items: Object.keys(ITEMS).filter(function (k) { return ['key', 'field', 'shoes'].indexOf(ITEMS[k].kind) < 0; }).map(function (k) { return [k, ITEMS[k].name]; }) }; },   // developer gift codes (2zd-gifts.js)
     art: artApi,   // the optional Art Pack scripts (3h-artpacks.js)
     // Saved maps on this device (Settings → Tornies). All local: nothing is uploaded.
     maps: {
