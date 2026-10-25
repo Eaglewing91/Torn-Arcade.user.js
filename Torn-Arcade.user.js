@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.48.0
+// @version      2.49.0
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with nine game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -660,11 +660,12 @@
   // The optional Art Pack scripts, as apps on the bottom row of the home screen (see renderArt).
   const ART_APPS = [
     { id: 'artT', pack: 'tornies', name: 'Tornies Art', title: 'Tornies Art Pack', icon: '🎨', bg: ['#7ad8a8', '#1f7a5a'], size: '1.4 MB', what: 'the illustrated artwork for all 179 Tornies' },
-    { id: 'artC', pack: 'chars', name: 'Character Art', title: 'Character Art Pack', icon: '🖌️', bg: ['#c39bff', '#5a3ab8'], size: '1.4 MB', what: 'illustrated portraits for the gym leaders, story characters, trainers and your outfits, plus the Faction Defence maps and the Egg Dash and Torn Territories artwork' }
+    { id: 'artC', pack: 'chars', name: 'Character Art', title: 'Character Art Pack', icon: '🖌️', bg: ['#c39bff', '#5a3ab8'], size: '1.4 MB', what: 'illustrated portraits for the gym leaders, story characters, trainers and your outfits, plus the Faction Defence maps and the Egg Dash and Torn Territories artwork' },
+    { id: 'artR', pack: 'ravenport', addon: 1, name: 'Ravenport', title: 'Ravenport Expansion', icon: '⚓', bg: ['#5ac8e0', '#2a3a8a'], size: '0.8 MB', what: 'the Ravenport expansion for Tornies: a new region across the sea for Champions, with 78 new Tornies, the Dragon and Fairy types, three new Arenas and a new story' }
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gifts and trades', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.48.0';
+  const VERSION = '2.49.0';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -1162,7 +1163,7 @@
     return $(p, '.ta-sys');
   }
   const scoresBox = sysPanel('scores'), settingsBox = sysPanel('settings');
-  const artBox = { artT: sysPanel('artT'), artC: sysPanel('artC') };
+  const artBox = { artT: sysPanel('artT'), artC: sysPanel('artC'), artR: sysPanel('artR') };
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
   const SCORE_FMT = {
@@ -1230,27 +1231,27 @@
       if (badge && !dl) { dl = document.createElement('span'); dl.className = 'ta-dl'; b.appendChild(dl); }
       if (dl) { if (!badge) dl.remove(); else { dl.textContent = badge; dl.classList.toggle('ta-upd', badge === '↻'); } }
     });
-    if (current === 'artT' || current === 'artC') renderArt(current);
+    if (current === 'artT' || current === 'artC' || current === 'artR') renderArt(current);
   }
   function renderArt(id) {
     const a = appInfo(id), box = artBox[id], i = artInfo(a), api = games.pocket && games.pocket.art;
     const url = api ? api.url[a.pack] : '#';
     let html = '<div class="ta-group"><div class="ta-list"><div class="ta-row">' + iconSmall(a) + '<div class="ta-rtext"><b>' + a.title + '</b><small>' +
-      (i.installed ? 'Installed · version ' + i.ver + ' · ' + i.n + ' pictures' + (i.on ? '' : ' · switched off') : 'Not installed · free · ' + a.size) + '</small></div></div>';
-    if (i.installed) html += '<div class="ta-row"><span class="ta-ricon" style="background:#3a9a5a">🖼️</span><div class="ta-rtext"><b>Use illustrated art</b><small>Off: the game uses its pixel-art versions instead.</small></div><button type="button" class="ta-switch' + (i.on ? ' ta-on' : '') + '" data-art="toggle"></button></div>';
+      (i.installed ? 'Installed · version ' + i.ver + ' · ' + i.n + (a.addon ? ' new Tornies' : ' pictures') + (i.on ? '' : ' · switched off') : 'Not installed · free · ' + a.size) + '</small></div></div>';
+    if (i.installed && !a.addon) html += '<div class="ta-row"><span class="ta-ricon" style="background:#3a9a5a">🖼️</span><div class="ta-rtext"><b>Use illustrated art</b><small>Off: the game uses its pixel-art versions instead.</small></div><button type="button" class="ta-switch' + (i.on ? ' ta-on' : '') + '" data-art="toggle"></button></div>';
     if (i.old) html += '<div class="ta-row"><span class="ta-ricon" style="background:#e08a1e">↻</span><div class="ta-rtext"><b>Update available</b><small>A newer version of this pack is out.</small></div><a class="ta-btn ta-mapbtn" href="' + url + '" target="_blank" rel="noopener">Update</a></div>';
     html += '</div></div>';
     if (!i.installed) {
       const pv = api ? api.preview(a.pack) : null;
-      html += '<div class="ta-group"><h3>Preview</h3><div class="ta-list">' +
+      html += '<div class="ta-group"><h3>' + (pv ? 'Preview' : 'About') + '</h3><div class="ta-list">' +
         (pv ? '<div class="ta-artcmp"><figure><img class="ta-px" src="' + pv.pixel + '" alt="">Now (pixel art)</figure><figure><img src="' + pv.art + '" alt="">With the pack</figure></div>' : '') +
-        '<div class="ta-artinst"><small>Adds ' + a.what + ' (custom illustrated artwork made specifically for Torn Arcade). It is a separate, optional script so Torn Arcade stays small enough for phones and apps that only accept scripts up to 2 MB.</small>' +
+        '<div class="ta-artinst"><small>Adds ' + a.what + (a.addon ? ', with custom illustrated artwork made specifically for Torn Arcade. Sail there on the SS Bogie from the Docks once you are Champion.' : ' (custom illustrated artwork made specifically for Torn Arcade).') + ' It is a separate, optional script so Torn Arcade stays small enough for phones and apps that only accept scripts up to 2 MB.</small>' +
         '<a class="ta-btn" href="' + url + '" target="_blank" rel="noopener">Install ' + a.name + '</a>' +
-        '<small>Opens the pack on GitHub, where Tampermonkey shows its install screen. Once installed, reload the page. The pack makes no requests and stores nothing: it only hands its pictures to Torn Arcade.</small></div>' +
+        '<small>Opens ' + (a.addon ? 'the add-on' : 'the pack') + ' on GitHub, where Tampermonkey shows its install screen. Once installed, reload the page. ' + (a.addon ? 'The add-on makes no requests and stores nothing: it only hands its data to Torn Arcade.' : 'The pack makes no requests and stores nothing: it only hands its pictures to Torn Arcade.') + '</small></div>' +
         '</div></div>';
     } else if (i.on && api) {
       const g = api.gallery(a.pack), known = g.filter(function (x) { return x.known; }).length;
-      html += '<div class="ta-group"><h3>' + (a.pack === 'tornies' ? 'Caught ' : 'Met ') + known + ' of ' + g.length + '</h3><div class="ta-list"><div class="ta-artgal">' +
+      html += '<div class="ta-group"><h3>' + (a.pack !== 'chars' ? 'Caught ' : 'Met ') + known + ' of ' + g.length + '</h3><div class="ta-list"><div class="ta-artgal">' +
         g.map(function (x) { return '<figure' + (x.known ? '' : ' class="ta-unk"') + '><img loading="lazy" src="' + x.src + '" alt="">' + esc(x.name) + '</figure>'; }).join('') +
         '</div></div></div>';
     }
@@ -2107,7 +2108,7 @@
     current = id; root.dataset.app = id;
     if (id === 'scores') { renderScores(); if (lbTab === 'global') lbLoad(lbBoard); }
     if (id === 'settings') renderSettings();
-    if (id === 'artT' || id === 'artC') renderArt(id);
+    if (id === 'artT' || id === 'artC' || id === 'artR') renderArt(id);
     if (id === 'dev') renderDev();
     appTitle.textContent = a.title || a.name;
     main.querySelectorAll('.ta-panel').forEach(function (p) { p.classList.toggle('ta-on', p.dataset.game === id); });
@@ -3161,8 +3162,8 @@
   }
 
   /* ---------- Types ---------- */
-  const TYPES = ['Street', 'Fire', 'Water', 'Plant', 'Electric', 'Ice', 'Brawl', 'Toxic', 'Earth', 'Air', 'Mind', 'Bug', 'Stone', 'Spirit', 'Mythic', 'Shadow', 'Metal'];
-  const TYPE_COL = { Street: '#a8a878', Fire: '#f08030', Water: '#6890f0', Plant: '#78c850', Electric: '#e8c020', Ice: '#78c8c8', Brawl: '#c03028', Toxic: '#a040a0', Earth: '#d0a850', Air: '#a890f0', Mind: '#f85888', Bug: '#a8b820', Stone: '#b8a038', Spirit: '#705898', Mythic: '#7038f8', Shadow: '#705848', Metal: '#a8a8c0', '???': '#68a090' };
+  const TYPES = ['Street', 'Fire', 'Water', 'Plant', 'Electric', 'Ice', 'Brawl', 'Toxic', 'Earth', 'Air', 'Mind', 'Bug', 'Stone', 'Spirit', 'Mythic', 'Shadow', 'Metal', 'Dragon', 'Fairy'];
+  const TYPE_COL = { Street: '#a8a878', Fire: '#f08030', Water: '#6890f0', Plant: '#78c850', Electric: '#e8c020', Ice: '#78c8c8', Brawl: '#c03028', Toxic: '#a040a0', Earth: '#d0a850', Air: '#a890f0', Mind: '#f85888', Bug: '#a8b820', Stone: '#b8a038', Spirit: '#705898', Mythic: '#7038f8', Shadow: '#705848', Metal: '#a8a8c0', Dragon: '#4a6ad8', Fairy: '#ee99c8', '???': '#68a090' };
   const CHART = {};
   (function () {
     function s(a, two, half, zero) {
@@ -3172,22 +3173,25 @@
       (zero || '').split(' ').forEach(function (t) { if (t) c[t] = 0; });
     }
     s('Street', '', 'Stone Metal', 'Spirit');
-    s('Fire', 'Plant Ice Bug Metal', 'Fire Water Stone Mythic');
-    s('Water', 'Fire Earth Stone', 'Water Plant Mythic');
-    s('Electric', 'Water Air', 'Electric Plant Mythic', 'Earth');
-    s('Plant', 'Water Earth Stone', 'Fire Plant Toxic Air Bug Mythic Metal');
-    s('Ice', 'Plant Earth Air Mythic', 'Fire Water Ice Metal');
-    s('Brawl', 'Street Ice Stone Shadow Metal', 'Toxic Air Mind Bug', 'Spirit');
-    s('Toxic', 'Plant', 'Toxic Earth Stone Spirit', 'Metal');
+    s('Fire', 'Plant Ice Bug Metal', 'Fire Water Stone Mythic Dragon');
+    s('Water', 'Fire Earth Stone', 'Water Plant Mythic Dragon');
+    s('Electric', 'Water Air', 'Electric Plant Mythic Dragon', 'Earth');
+    s('Plant', 'Water Earth Stone', 'Fire Plant Toxic Air Bug Mythic Metal Dragon');
+    s('Ice', 'Plant Earth Air Mythic Dragon', 'Fire Water Ice Metal');
+    s('Brawl', 'Street Ice Stone Shadow Metal', 'Toxic Air Mind Bug Fairy', 'Spirit');
+    s('Toxic', 'Plant Fairy', 'Toxic Earth Stone Spirit', 'Metal');
     s('Earth', 'Fire Electric Toxic Stone Metal', 'Plant Bug', 'Air');
     s('Air', 'Plant Brawl Bug', 'Electric Stone Metal');
     s('Mind', 'Brawl Toxic', 'Mind Metal', 'Shadow');
-    s('Bug', 'Plant Mind Shadow', 'Fire Brawl Toxic Air Spirit Metal');
+    s('Bug', 'Plant Mind Shadow', 'Fire Brawl Toxic Air Spirit Metal Fairy');
     s('Stone', 'Fire Ice Air Bug', 'Brawl Earth Metal');
     s('Spirit', 'Mind Spirit', 'Shadow Metal', 'Street');
     s('Mythic', 'Mythic', 'Metal');
-    s('Shadow', 'Mind Spirit', 'Brawl Shadow Metal');
-    s('Metal', 'Ice Stone', 'Fire Water Electric Metal');
+    s('Shadow', 'Mind Spirit', 'Brawl Shadow Metal Fairy');
+    // Dragon and Fairy (Ravenport expansion), matchups as in the Pokémon chart.
+    s('Dragon', 'Dragon', 'Metal', 'Fairy');
+    s('Fairy', 'Brawl Dragon Shadow', 'Fire Toxic Metal');
+    s('Metal', 'Ice Stone Fairy', 'Fire Water Electric Metal');
   })();
   function effOf(atk, defTypes) {
     const c = CHART[atk]; if (!c) return 1;
@@ -3611,7 +3615,7 @@
     full_heal: { name: 'Cure-All Spray', price: 800, kind: 'cure', cure: 'all', desc: 'Cures any status problem.' },
     capsule2: { name: 'Reinforced Capsule', price: 600, kind: 'ball', rate: 1.5, desc: 'A sturdier capsule. Better at holding on to wriggly Tornies.' },
     capsule3: { name: 'Armoured Capsule', price: 1200, kind: 'ball', rate: 2, desc: 'A heavy-duty capsule plated in steel. Much better catch rate.' },
-    federal: { name: 'Federal Capsule', price: 0, kind: 'ball', rate: 1000, desc: 'The only one in existence. Once a Tornie is inside, there is no escape.' },
+    federal: { name: 'Federal Capsule', price: 50000, kind: 'ball', rate: 1000, desc: 'Never fails. Once a Tornie is inside, there is no escape. Tornie Supplies only get one in now and then.' },
     rod: { name: 'Old Rod', price: 0, kind: 'key', desc: 'A battered fishing rod. Face water and press A to fish.' },
     cutters: { name: 'Bolt Cutters', price: 0, kind: 'key', desc: 'Heavy bolt cutters. They snip straight through chain-link fences.' },
     cardkey: { name: 'Racket Card Key', price: 0, kind: 'key', desc: 'A black key card with a red R. It opens Racket doors.' },
@@ -4160,7 +4164,7 @@
   SP[179].event = 1; SP[179].allDiscs = 1;
   // The Tornie Log goal leaves out event-only Tornies (like the one you can only get from a gift code).
   const DEX_GOAL = DEX_SIZE - 1;
-  function dexCount() { return Object.keys(G.caught || {}).filter(function (n) { return SP[n] && !SP[n].event; }).length; }
+  function dexCount() { return Object.keys(G.caught || {}).filter(function (n) { return SP[n] && !SP[n].event && +n <= DEX_SIZE; }).length; }
 
   /* ---------- Move descriptions ----------
      A short flavour line per move. The rules text (category, power, accuracy, effects) is built from the move's
@@ -5438,7 +5442,12 @@
       signs: [[15, 11, 'THE DOCKS|Where Torn City meets the sea. And the smugglers.'], [3, 9, 'FERRY TERMINAL|South along Route 6.|Ferry service suspended until further notice.']],
       fish: [[43, 15, 22, 60], [45, 18, 22, 25], [47, 18, 22, 15]],
       npcs: [
-        { id: 'dk_sailor', x: 12, y: 10, dir: 'down', pal: 'sailor', move: 'wander', text: 'See that big ship? The SS Bogie. Best ship in the harbour. Named after someone important, apparently.' },
+        { id: 'dk_sailor', x: 12, y: 10, dir: 'down', pal: 'sailor', move: 'wander', run: async function (n) {
+          // The SS Bogie sails to Ravenport once you're Champion, if the Ravenport add-on is installed.
+          if (G.flags.champion && addonHas('ravenport') && addonScene('ravenport', 'voyage')) return addonRun('ravenport', 'voyage');
+          if (G.flags.champion) return say('SAILOR: The SS Bogie\'s being made ready for a long voyage across the sea. Not yet, though.|The captain says she\'ll sail when the time is right.');
+          return say('SAILOR: See that big ship? The SS Bogie. Best ship in the harbour. Named after someone important, apparently.');
+        } },
         { id: 'dk_worker', x: 19, y: 10, dir: 'left', pal: 'worker', move: 'look', cond: function () { return !G.flags.warehouse; }, text: 'Racket goons took over the warehouse. They\'re packing stolen Tornies into crates!|Captain Reef went in there an hour ago and hasn\'t come out.' },
         { id: 'dk_worker2', x: 19, y: 10, dir: 'left', pal: 'worker', move: 'look', cond: function () { return !!G.flags.warehouse; }, text: 'Thanks for clearing out the warehouse! The Tornies are all back with their owners.' },
         { id: 'dk_local', x: 9, y: 12, dir: 'right', pal: 'sporty', move: 'wander', text: 'My grandad lives in the little house by the water. He\'s got about a hundred fishing rods!' },
@@ -7346,9 +7355,9 @@
     if (r !== 'win') { G.cRun = 0; await say('CHEDBURN: A fine battle. Come back stronger. I\'ll be right here.'); await blackout(); return; }
     await say('CHEDBURN: ...');
     await say('CHEDBURN: Ha! Ha ha ha! I lost! I actually lost!|Do you know how long I\'ve waited to say that? Congratulations, {P}. You are the new Champion of Torn City!');
-    await say('CHEDBURN: There\'s one more thing. When we founded the Tornie League, TornTech made a single capsule. Just one, ever.|A capsule so strong that nothing can escape it. I\'ve kept it for years, waiting for a worthy Champion.');
+    await say('CHEDBURN: There\'s one more thing. When we founded the Tornie League, TornTech made a very special capsule. They still make the odd one, but they\'re rarer than an honest casino.|A capsule so strong that nothing can escape it. I\'ve kept this one for years, waiting for a worthy Champion.');
     addItem('federal', 1); jingle('badge');
-    await say('{P} received the FEDERAL CAPSULE!|It never fails. There will only ever be one. Use it wisely!');
+    await say('{P} received the FEDERAL CAPSULE!|It never fails. Use it wisely!');
     await say('CHEDBURN: Now, come with me. Every Champion\'s team goes into the Hall of Fame.');
     G.flags.champion = 1; G.cRun = 0;
     G.hof = (G.hof || []).concat([{ name: G.name, team: G.party.map(function (m) { return [m.sp, m.lv, m.nick || '', m.rk ? 1 : 0]; }) }]);
@@ -7364,6 +7373,7 @@
   // After the first win, the Council and Chedburn rebuild their teams 12 levels stronger.
   function rematchParty(id) { return G.flags.champion ? TRAINERS[id].party.map(function (q) { return [q[0], Math.min(100, q[1] + 12)]; }) : undefined; }
   async function chedburnAfter(n) {
+    if (addonHas('ravenport') && !G.flags.chedRaven) { G.flags.chedRaven = 1; await say('CHEDBURN: Ah, Champion! Have you heard the news from across the sea?|They say something stirs in Ravenport. A gang calling themselves the 39th Route Dwellers has the whole city on edge.|If I were twenty years younger I\'d be on the next boat. Ask at the Docks. The SS Bogie is sailing again.'); }
     if ((G.cRun || 0) < 4) { await say('CHEDBURN: Champion! Back for a visit?|My door\'s always open. Well, after you\'ve beaten the Council again, of course. Rules are rules.'); return; }
     await say('CHEDBURN: Back again, and through the whole Council! I\'ve been training too, you know.|Let\'s see who the real Champion is. No mercy this time!');
     const r = await trainerBattle('chedburn', { noBlackout: true, party: rematchParty('chedburn') });
@@ -8989,9 +8999,9 @@
   function artTable(pack) { return pack === 'tornies' ? PIX : PORTRAIT; }
   function artClear(pack) {
     const t = artTable(pack);
-    Object.keys(t).forEach(function (k) { delete t[k]; });
-    if (pack === 'tornies') { Object.keys(PIXIMG).forEach(function (k) { delete PIXIMG[k]; }); artForget(); }
-    else Object.keys(PORTIMG).forEach(function (k) { delete PORTIMG[k]; });
+    Object.keys(t).forEach(function (k) { if (pack === 'tornies' ? +k <= DEX_SIZE : !/^rv/.test(k)) delete t[k]; });   // expansion art stays
+    if (pack === 'tornies') { Object.keys(PIXIMG).forEach(function (k) { if (+k <= DEX_SIZE) delete PIXIMG[k]; }); artForget(); }
+    else Object.keys(PORTIMG).forEach(function (k) { if (!/^rv/.test(k)) delete PORTIMG[k]; });
   }
   let artNotify = null;   // the phone shell's callback, to refresh the Art Pack app icons
   function artReceive(e) {
@@ -9023,12 +9033,15 @@
   const ART_LABEL = { prof: 'Professor', mom: 'Mom', thug2: 'Thug', oldman: 'Old man', seadog: 'Sea dog', clansdancer: 'Clan dancer', exec: 'Executive', office: 'Office worker', bug: 'Bug catcher' };
   const ART_URL = {
     tornies: 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade-Tornies-Art.user.js',
-    chars: 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade-Character-Art.user.js'
+    chars: 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade-Character-Art.user.js',
+    ravenport: 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade-Ravenport.user.js'
   };
   const artApi = {
     url: ART_URL, want: ART_WANT,
     get: function (k) { return artOn('chars') && /^(fd|wp|ed|tt)/.test(k) ? PORTRAIT[k] || null : null; },   // Faction Defence maps, theme wallpapers, Egg Dash and Torn Territories art
-    info: function (pack) { const p = ARTP[pack]; return { installed: !!p, ver: p ? p.ver : 0, n: p ? p.n : 0, on: artOn(pack), old: !!p && p.ver < ART_WANT[pack] }; },
+    info: function (pack) {
+      if (pack === 'ravenport') { const q = ADDON.ravenport; return { installed: !!q, ver: q ? q.ver : 0, n: q ? q.mons : 0, on: true, old: !!q && q.ver < ADDON_WANT.ravenport }; }
+      const p = ARTP[pack]; return { installed: !!p, ver: p ? p.ver : 0, n: p ? p.n : 0, on: artOn(pack), old: !!p && p.ver < ART_WANT[pack] }; },
     setOn: function (pack, on) {
       store.set('art_' + pack, !!on);
       if (!on) { artClear(pack); if (ARTP[pack]) ARTP[pack].on = false; if (artNotify) artNotify(); }
@@ -9038,6 +9051,11 @@
     // Gallery: every picture in the pack, and whether the player has met it yet.
     gallery: function (pack) {
       const d = G || loadSave();
+      if (pack === 'ravenport') {   // the expansion's Tornies
+        const out = [];
+        for (let n = DEX_SIZE + 1; n <= DEX_MAX; n++) if (PIX[n] && SP[n]) out.push({ src: 'data:image/webp;base64,' + PIX[n], name: d && d.caught && d.caught[n] ? SP[n].name : '???', known: !!(d && d.caught && d.caught[n]) });
+        return out;
+      }
       if (pack === 'tornies') {
         const out = [];
         for (let n = 1; n <= DEX_SIZE; n++) if (PIX[n]) out.push({ src: 'data:image/webp;base64,' + PIX[n], name: d && d.caught && d.caught[n] && SP[n] ? SP[n].name : '???', known: !!(d && d.caught && d.caught[n]) });
@@ -9051,6 +9069,7 @@
     },
     // Before/after preview for the install page: the pixel version now, and a sample of the pack's art.
     preview: function (pack) {
+      if (pack === 'ravenport') return null;
       try {
         let px;
         if (pack === 'tornies') { const keep = PIX[1]; delete PIX[1]; const keepI = PIXIMG[1]; delete PIXIMG[1]; delete SPR['1']; px = monSprite(1).toDataURL(); delete SPR['1']; if (keep) PIX[1] = keep; if (keepI) PIXIMG[1] = keepI; }
@@ -10118,7 +10137,7 @@
     if (ch === 'w') return 'wall';
     if (ch === 'K') return 'rock';
     if (ch === '~') return 'water';
-    if ('GCMJWY'.indexOf(ch) >= 0) return 'f' + ch;
+    if ('GCMJWY2468'.indexOf(ch) >= 0) return 'f' + ch;
     if ((ch === 'R' || ch === 'x') && fl === 'o') return 'fG';
     return 'f' + fl;
   }
@@ -10164,6 +10183,14 @@
       const gr = g.createLinearGradient(X, Y, X + IW_TP, Y + IW_TP); gr.addColorStop(0, '#dff0fb'); gr.addColorStop(1, '#c4e2f4'); g.fillStyle = gr; g.fillRect(X, Y, IW_TP, IW_TP);
       g.strokeStyle = 'rgba(255,255,255,0.7)'; g.lineWidth = 1.2; g.beginPath(); g.moveTo(X + r() * 20, Y + 6 + r() * 10); g.lineTo(X + 20 + r() * 26, Y + r() * 14); g.stroke();
       g.strokeStyle = 'rgba(140,190,220,0.4)'; g.lineWidth = 0.8; g.beginPath(); g.moveTo(X + r() * 48, Y + 30 + r() * 16); g.lineTo(X + r() * 48, Y + 24 + r() * 20); g.stroke();
+    } else if ('2468'.indexOf(f) >= 0) {   // conveyor belt (Ravenport Metal Arena): rubber belt with arrows
+      const ang = { 6: 0, 2: Math.PI / 2, 4: Math.PI, 8: -Math.PI / 2 }[f];
+      g.fillStyle = '#3a3e46'; g.fillRect(X, Y, IW_TP, IW_TP);
+      g.fillStyle = 'rgba(255,255,255,0.06)'; for (let k = 0; k < IW_TP; k += 8) { if (f === '6' || f === '4') g.fillRect(X + k, Y + 4, 3, IW_TP - 8); else g.fillRect(X + 4, Y + k, IW_TP - 8, 3); }
+      g.fillStyle = '#7c8490'; if (f === '6' || f === '4') { g.fillRect(X, Y, IW_TP, 3); g.fillRect(X, Y + IW_TP - 3, IW_TP, 3); } else { g.fillRect(X, Y, 3, IW_TP); g.fillRect(X + IW_TP - 3, Y, 3, IW_TP); }
+      g.save(); g.translate(X + 24, Y + 24); g.rotate(ang); g.fillStyle = '#f0c030';
+      [-10, 6].forEach(function (o) { g.beginPath(); g.moveTo(o, -8); g.lineTo(o + 8, 0); g.lineTo(o, 8); g.lineTo(o + 3, 0); g.closePath(); g.fill(); });
+      g.restore();
     } else if (f === 'C') {
       // cave floor is drawn as a soft layer elsewhere
     }
@@ -12798,7 +12825,7 @@
       const from = get(b, at, 4), to = get(b, at, 4), id = get(b, at, 4);
       const dose = b[0] >= 2 ? [0, 1, 2, 3, 4, 5].map(function () { return Math.min(10, get(b, at, 1)); }) : null;
       const strs = [0, 1].map(function () { const L = get(b, at, 1); let s = ''; for (let k = 0; k < L; k++) s += String.fromCharCode(b[at.i++]); return s; });
-      if (!SP[sp] || sp < 1 || sp > DEX_SIZE || lv < 1 || lv > 100 || at.i !== b.length - 4) return { err: 'bad' };
+      if (!SP[sp] || sp < 1 || sp > DEX_MAX || lv < 1 || lv > 100 || at.i !== b.length - 4) return { err: 'bad' };
       const mon = makeMon(sp, lv);
       mon.exp = Math.max(expFor(SP[sp].growth, lv), exp);
       mon.iv = [0, 1, 2, 3, 4, 5].map(function (k) { return Math.floor(ivr / Math.pow(32, k)) & 31; });
@@ -14281,6 +14308,271 @@
     return MOVES[mv.id].name + ' got ' + (mv.pp - before) + ' uses back!';
   }
 
+  /* ---------- Expansion add-ons (optional companion scripts) ----------
+     The Ravenport expansion lives in its own optional userscript, "Torn Arcade - Ravenport", so the main script stays
+     small. It links the same way the Art Packs do: this script fires 'ta-addon-request', and the add-on answers (and
+     announces itself when it loads) with a 'ta-addon' event whose detail is a JSON string. The add-on only ever sends
+     DATA (Tornies, moves, artwork, maps and scripted scenes written as plain lists of steps); it never sends code, and
+     everything is checked before it is used. Nothing is downloaded and no request is made.
+     Without the add-on the game is unchanged: the SS Bogie simply isn't sailing yet. */
+  const ADDON_WANT = { ravenport: 2 };   // newest add-on versions this script knows about
+  const ADDON = {};                      // add-ons received: { ver }
+  const ADDON_FACES = {};                // expansion Tornies whose artwork faces right (mirrored in battle)
+  let DEX_MAX = DEX_SIZE;                // highest Tornie Log number known (grows with the add-on)
+  const ADDON_FIRST = 180, ADDON_LAST = 300;
+  const ADDON_NAME = /^[A-Za-z][A-Za-z' .-]{1,23}$/, ADDON_ID = /^[a-z][a-z0-9_]{1,23}$/;
+  function addonNum(v, lo, hi) { return typeof v === 'number' && isFinite(v) && v >= lo && v <= hi; }
+  function addonFx(fx) {   // only the effect keys the battle engine knows, with sane values
+    if (fx === null || fx === undefined) return {};
+    if (typeof fx !== 'object') return null;
+    const out = {}, ok = { st: 1, c: 1, stat: 1, self: 1, flinch: 1, crit: 1, hits: 1, conf: 1, selfStat: 1, recoil: 1, drain: 1, prio: 1, heal: 1 };
+    for (const k in fx) {
+      if (!ok[k]) return null;
+      const v = fx[k];
+      if (k === 'st') { if (['psn', 'brn', 'par', 'slp', 'frz'].indexOf(v) < 0) return null; }
+      else if (k === 'stat' || k === 'selfStat') { if (!Array.isArray(v) || !v.every(function (q) { return Array.isArray(q) && ['atk', 'def', 'spa', 'spd', 'spe', 'acc', 'eva'].indexOf(q[0]) >= 0 && addonNum(q[1], -3, 3); })) return null; }
+      else if (k === 'hits') { if (!Array.isArray(v) || !v.every(function (q) { return addonNum(q, 1, 5); })) return null; }
+      else if (!addonNum(v, -1, 100)) return null;
+      out[k] = v;
+    }
+    return out;
+  }
+  function addonDesign(q) {   // the colours used for the pixel fallback and Golden recolouring
+    const hex = /^#[0-9a-f]{6}$/i, d = { body: 'quad', c1: '#888888', c2: '#cccccc', c3: '#555555', s: 1 };
+    if (q && typeof q === 'object') { ['c1', 'c2', 'c3'].forEach(function (k) { if (hex.test(q[k])) d[k] = q[k]; }); if (['quad', 'biped', 'bird', 'fish', 'serpent', 'blob', 'ghost'].indexOf(q.body) >= 0) d.body = q.body; if (addonNum(q.s, 0.5, 1.4)) d.s = q.s; }
+    return d;
+  }
+  function addonReceive(e) {
+    let d;
+    try { d = typeof e.detail === 'string' && e.detail.length < 8e6 ? JSON.parse(e.detail) : null; } catch (err) { return; }
+    if (!d || !ADDON_WANT[d.pack] || !addonNum(d.ver, 1, 999)) return;
+    if (ADDON[d.pack] && ADDON[d.pack].ver === d.ver) return;   // already have it
+    const moves = Array.isArray(d.moves) ? d.moves : [], mons = Array.isArray(d.mons) ? d.mons : [];
+    // Moves first, so the Tornies' learnsets can use them. A move never replaces one this script already has.
+    moves.forEach(function (q) {
+      if (!q || !ADDON_ID.test(q.id) || MOVES[q.id] && !MOVES[q.id].addon || !ADDON_NAME.test(q.name) || TYPES.indexOf(q.type) < 0 || ['P', 'S', 'X'].indexOf(q.cat) < 0) return;
+      if (!addonNum(q.pow, 0, 150) || !addonNum(q.acc, 0, 100) || !addonNum(q.pp, 1, 40)) return;
+      const fx = addonFx(q.fx); if (!fx) return;
+      mv(q.id, q.name, q.type, q.cat, q.pow, q.acc, q.pp, fx); MOVES[q.id].addon = 1;
+      if (typeof q.desc === 'string' && q.desc.length < 160) MOVE_FLAVOUR[q.id] = q.desc;
+    });
+    // Training Discs for the expansion's moves (sold in Ravenport).
+    (Array.isArray(d.discs) ? d.discs : []).forEach(function (m) {
+      if (!MOVES[m] || !MOVES[m].addon || ITEMS['disc_' + m] && !ITEMS['disc_' + m].addon) return;
+      if (!ITEMS['disc_' + m]) ITEM_ORDER.push('disc_' + m);
+      ITEMS['disc_' + m] = { name: 'Disc: ' + MOVES[m].name, price: 1500 + MOVES[m].pow * 20, kind: 'disc', move: m, addon: 1, desc: 'A Training Disc that teaches ' + MOVES[m].name + ' (' + MOVES[m].type + ').' };
+    });
+    let top = DEX_SIZE;
+    mons.forEach(function (q) {
+      if (!q || !addonNum(q.n, ADDON_FIRST, ADDON_LAST) || q.n !== Math.floor(q.n) || !ADDON_NAME.test(q.name)) return;
+      if (!Array.isArray(q.types) || q.types.length < 1 || q.types.length > 2 || !q.types.every(function (t) { return TYPES.indexOf(t) >= 0; })) return;
+      if (!Array.isArray(q.base) || q.base.length !== 6 || !q.base.every(function (v) { return addonNum(v, 1, 255); })) return;
+      if (!addonNum(q.rate, 1, 255) || !addonNum(q.exp, 1, 400) || ['fast', 'mf', 'ms', 'slow'].indexOf(q.growth) < 0) return;
+      const learn = (Array.isArray(q.learn) ? q.learn : []).filter(function (l) { return Array.isArray(l) && addonNum(l[0], 1, 100) && MOVES[l[1]]; });
+      if (!learn.length) return;
+      const evo = q.evo && addonNum(q.evo.lv, 2, 100) && addonNum(q.evo.to, ADDON_FIRST, ADDON_LAST) ? { lv: q.evo.lv, to: q.evo.to } : null;
+      sp(q.n, q.name, q.types.slice(), q.base.slice(), q.rate, q.exp, q.growth, evo, learn, typeof q.dex === 'string' ? q.dex.slice(0, 200) : '', addonDesign(q.d));
+      SP[q.n].addon = d.pack;
+      top = Math.max(top, q.n);
+    });
+    // New evolutions for first-map Tornies (level-based), only once the Tornie they evolve into has arrived.
+    (Array.isArray(d.oldEvo) ? d.oldEvo : []).forEach(function (q) {
+      if (!q || !addonNum(q.from, 1, DEX_SIZE) || !SP[q.from] || SP[q.from].evo || !SP[q.to] || !SP[q.to].addon || !addonNum(q.lv, 2, 100)) return;
+      SP[q.from].evo = { lv: q.lv, to: q.to };
+    });
+    // Artwork for the new Tornies, checked the same way as the Art Packs.
+    const art = d.art && typeof d.art === 'object' ? d.art : {};
+    Object.keys(art).forEach(function (k) {
+      const v = art[k];
+      if (/^\d{3}$/.test(k) && SP[+k] && SP[+k].addon && typeof v === 'string' && v.length < 80000 && ART_B64.test(v)) PIX[+k] = v;
+    });
+    (Array.isArray(d.facesRight) ? d.facesRight : []).forEach(function (n) { if (SP[n] && SP[n].addon) ADDON_FACES[n] = 1; });   // art drawn facing right
+    // New people's looks (colours only), and their portraits.
+    const pals = d.pals && typeof d.pals === 'object' ? d.pals : {};
+    Object.keys(pals).forEach(function (k) {
+      const q = pals[k], hex = /^#[0-9a-f]{6}$/i;
+      if (!/^rv[a-z0-9]{1,12}$/.test(k) || PAL[k] && !PAL[k].addon || !q || !hex.test(q.h) || !hex.test(q.c) || !hex.test(q.p)) return;
+      PAL[k] = { h: q.h, c: q.c, p: q.p, style: typeof q.style === 'string' && /^[a-z]{2,10}$/.test(q.style) ? q.style : 'none', addon: 1 };
+      if (hex.test(q.k)) PAL[k].k = q.k;
+      const pt = d.ports && d.ports[k];
+      if (typeof pt === 'string' && pt.length < 80000 && ART_B64.test(pt)) PORTRAIT[k] = pt;
+    });
+    try { addonMaps(d.pack, d); } catch (err) { console.error('[Tornies] add-on maps', err); }
+    DEX_MAX = Math.max(DEX_MAX, top);
+    ADDON[d.pack] = { ver: Math.floor(d.ver), mons: top - DEX_SIZE };
+    if (artNotify) artNotify();   // the phone's Ravenport app icon
+  }
+  document.addEventListener('ta-addon', addonReceive);
+  function addonAsk() { try { document.dispatchEvent(new CustomEvent('ta-addon-request')); } catch (e) {} }
+  setTimeout(addonAsk, 0);
+  function addonHas(pack) { return !!ADDON[pack]; }
+
+  /* ----- Scenes: the add-on's story, written as plain lists of steps (data, never code) -----
+     ['say', text] · ['phone', from, text] · ['ask', text, [choices], [steps for each choice]] · ['yesno', text, [yes], [no]]
+     ['if', cond, [then], [else]] · ['flag', name, value] · ['give', item, n] · ['take', item, n] · ['money', n]
+     ['battle', trainerId, [on win], [on lose]] (no blackout; the steps decide) · ['wild', species, level, legend?, [caught], [knocked out], [ran]]
+     ['warp', map, x, y, dir] · ['heal'] · ['jingle', kind] · ['cry', species] · ['wait', seconds] · ['medal', id]
+     ['shop', [items]] · ['respawn', map, x, y] · ['ravenlog'] · ['fade', 'out'|'in'] · ['remove', npcId] · ['scene', id] · ['stop'] · ['blackout'] · ['save']
+     Conditions: { flag }, { not }, { medal }, { item }, { champion: 1 }, { night: 1 }, { all: [conds] }, { any: [conds] }.
+     The add-on's flags and medals live in their own space (G.flags['rv:'+name], G.rmedals) so they can never touch the
+     first map's story. */
+  const ADDON_SCENES = {}, ADDON_JINGLES = { item: 1, badge: 1, heal: 1 };
+  function addonFlag(pack, k) { return 'rv:' + pack + ':' + k; }
+  function addonCond(pack, c) {
+    if (!c || typeof c !== 'object') return true;
+    if (c.all) return c.all.every(function (q) { return addonCond(pack, q); });
+    if (c.any) return c.any.some(function (q) { return addonCond(pack, q); });
+    if (c.flag !== undefined && !G.flags[addonFlag(pack, c.flag)]) return false;
+    if (c.not !== undefined && G.flags[addonFlag(pack, c.not)]) return false;
+    if (c.medal !== undefined && (G.rmedals || []).indexOf(c.medal) < 0) return false;
+    if (c.nomedal !== undefined && (G.rmedals || []).indexOf(c.nomedal) >= 0) return false;
+    if (c.item !== undefined && !(G.bag[c.item] > 0)) return false;
+    if (c.champion && !G.flags.champion) return false;
+    if (c.night !== undefined && !!isNight() !== !!c.night) return false;
+    return true;
+  }
+  function addonScene(pack, id) { return !!(ADDON_SCENES[pack] && ADDON_SCENES[pack][id]); }
+  async function addonRun(pack, id) { const sc = ADDON_SCENES[pack] && ADDON_SCENES[pack][id]; if (sc) await addonSteps(pack, sc, 0); }
+  // Returns 'stop' to end the whole scene.
+  async function addonSteps(pack, steps, depth) {
+    if (!Array.isArray(steps) || depth > 12) return;
+    for (const st of steps) {
+      if (!Array.isArray(st)) continue;
+      const op = st[0], a = st[1];
+      let r;
+      if (op === 'say' && typeof a === 'string') await say(a);
+      else if (op === 'phone' && typeof a === 'string' && typeof st[2] === 'string') await phoneMsg(a, st[2]);
+      else if (op === 'ask' && typeof a === 'string' && Array.isArray(st[2])) { const i = await ask(a, st[2].map(String)); r = await addonSteps(pack, (st[3] || [])[i], depth + 1); }
+      else if (op === 'yesno' && typeof a === 'string') r = await addonSteps(pack, (await yesno(a)) ? st[2] : st[3], depth + 1);
+      else if (op === 'if') r = await addonSteps(pack, addonCond(pack, a) ? st[2] : st[3], depth + 1);
+      else if (op === 'flag' && typeof a === 'string') G.flags[addonFlag(pack, a)] = st[2] === undefined ? 1 : st[2];
+      else if (op === 'give' && ITEMS[a]) { addItem(a, Math.max(1, Math.min(99, st[2] | 0 || 1))); jingle('item'); await say('{P} got ' + ((st[2] | 0) > 1 ? st[2] + ' x ' : 'a ') + ITEMS[a].name + '!'); }
+      else if (op === 'take' && ITEMS[a]) takeItem(a, Math.max(1, st[2] | 0 || 1));
+      else if (op === 'money' && addonNum(a, -1e6, 1e6)) { G.money = Math.max(0, G.money + a); if (a > 0) { jingle('item'); await say('{P} got $' + a + '!'); } }
+      else if (op === 'battle' && TRAINERS[a] && TRAINERS[a].addon) { const res = await trainerBattle(a, { noBlackout: true }); r = await addonSteps(pack, res === 'win' ? st[2] : st[3], depth + 1); if (res !== 'win' && !st[3]) { await blackout(); return 'stop'; } }
+      else if (op === 'wild' && SP[a] && addonNum(st[2], 1, 100)) { const mon = makeMon(a, st[2]); if (Math.random() < rankedOdds()) mon.rk = 1; const res = await battle({ wild: mon, legend: !!st[3] }); if (res === 'lose') { await blackout(); return 'stop'; } r = await addonSteps(pack, res === 'caught' ? st[4] : res === 'win' ? st[5] : st[6], depth + 1); }
+      else if (op === 'warp' && MAPS[a] && addonNum(st[2], 0, 200) && addonNum(st[3], 0, 200)) { await fadeOut(0.4); loadMap(a, st[2], st[3], ['up', 'down', 'left', 'right'].indexOf(st[4]) >= 0 ? st[4] : 'down'); await wait(0.2); await fadeIn(0.4); }
+      else if (op === 'heal') { healParty(); await healFlash(false); }
+      else if (op === 'jingle' && ADDON_JINGLES[a]) jingle(a);
+      else if (op === 'cry' && SP[a]) cry(a);
+      else if (op === 'wait' && addonNum(a, 0, 5)) await wait(a);
+      else if (op === 'medal' && typeof a === 'string' && /^[a-z]{2,12}$/.test(a)) { G.rmedals = G.rmedals || []; if (G.rmedals.indexOf(a) < 0) G.rmedals.push(a); jingle('badge'); }
+      else if (op === 'shop' && Array.isArray(a)) await martTalk(a.filter(function (k) { return ITEMS[k]; }));
+      else if (op === 'respawn' && MAPS[a]) G.respawn = { map: a, x: st[2] | 0, y: st[3] | 0, dir: 'down' };
+      else if (op === 'ravenlog') G.flags.ravenLog = 1;
+      else if (op === 'fade') { if (a === 'out') await fadeOut(0.5); else await fadeIn(0.5); }
+      else if (op === 'remove' && typeof a === 'string') removeNpc(a);
+      else if (op === 'scene' && typeof a === 'string') r = await addonSteps(pack, ADDON_SCENES[pack] && ADDON_SCENES[pack][a], depth + 1);
+      else if (op === 'blackout') { await blackout(); return 'stop'; }
+      else if (op === 'save') saveGame();
+      else if (op === 'stop') return 'stop';
+      if (r === 'stop') return 'stop';
+    }
+  }
+
+  /* ----- Maps, people and trainers from the add-on -----
+     Every map id must start with 'rv_' (so nothing in Torn City can be replaced). Outdoor maps are laid out with the
+     same toolkit as the first map (paths, fills, decorations, buildings), from plain lists of drawing steps. */
+  const ADDON_TILE = /^[A-Za-z0-9.,_=~#%*|<>^v&@$+:;!?-]$/, ADDON_MAP = /^rv_[a-z0-9_]{1,24}$/;
+  function addonPeople(pack, list) {
+    return (Array.isArray(list) ? list : []).filter(function (q) { return q && ADDON_ID.test(q.id) && addonNum(q.x, 0, 200) && addonNum(q.y, 0, 200); }).map(function (q) {
+      const n = { id: 'rv_' + q.id, x: q.x, y: q.y, dir: ['up', 'down', 'left', 'right'].indexOf(q.dir) >= 0 ? q.dir : 'down', pal: PAL[q.pal] ? q.pal : 'man', move: ['still', 'look', 'wander'].indexOf(q.move) >= 0 ? q.move : 'look' };
+      if (q.cond) n.cond = function () { return addonCond(pack, q.cond); };
+      if (q.trainer && TRAINERS[q.trainer] && TRAINERS[q.trainer].addon) { n.trainer = q.trainer; n.sight = addonNum(q.sight, 0, 6) ? q.sight : 3; n.before = String(q.before || '').slice(0, 300); n.after = String(q.after || '').slice(0, 300); }
+      else if (typeof q.scene === 'string') n.run = function () { return addonRun(pack, q.scene); };
+      else if (typeof q.text === 'string') n.text = q.text.slice(0, 600);
+      if (q.kind === 'mon' && SP[q.sp]) { n.kind = 'mon'; n.sp = q.sp; n.size = 30; }
+      return n;
+    });
+  }
+  function addonOps(ops) {   // drawing steps for an outdoor map
+    return function (g) {
+      (Array.isArray(ops) ? ops : []).forEach(function (o) {
+        if (!Array.isArray(o)) return;
+        const pts = function (p) { return Array.isArray(p) && p.every(function (q) { return Array.isArray(q) && addonNum(q[0], -2, 200) && addonNum(q[1], -2, 200); }); };
+        if (o[0] === 'road' && pts(o[1]) && ADDON_TILE.test(o[2])) g.road(o[1], o[2], addonNum(o[3], 1, 4) ? o[3] : 2, o[4] !== false);
+        else if (o[0] === 'fill' && [1, 2, 3, 4].every(function (k) { return addonNum(o[k], -2, 200); }) && ADDON_TILE.test(o[5])) g.fill(o[1], o[2], o[3], o[4], o[5], !!o[6]);
+        else if (o[0] === 'put' && pts(o[1]) && ADDON_TILE.test(o[2])) g.put(o[1], o[2], !!o[3]);
+      });
+    };
+  }
+  function addonMaps(pack, d) {
+    const maps = Array.isArray(d.maps) ? d.maps : [];
+    // Trainers first, so people can use them.
+    (Array.isArray(d.trainers) ? d.trainers : []).forEach(function (t) {
+      if (!t || !/^rv_[a-z0-9_]{1,24}$/.test(t.id) || TRAINERS[t.id] && !TRAINERS[t.id].addon) return;
+      const party = (Array.isArray(t.party) ? t.party : []).filter(function (q) { return Array.isArray(q) && SP[q[0]] && addonNum(q[1], 1, 100); });
+      if (!party.length || !addonNum(t.base, 1, 400)) return;
+      TRAINERS[t.id] = { addon: pack, cls: String(t.cls || 'Trainer').slice(0, 24), name: String(t.name || '').slice(0, 24), pal: PAL[t.pal] ? t.pal : 'man', base: t.base, party: party, lose: String(t.lose || '...').slice(0, 300), leader: !!t.leader };
+      if (t.name2) { TRAINERS[t.id].name2 = String(t.name2).slice(0, 24); TRAINERS[t.id].pal2 = PAL[t.pal2] ? t.pal2 : 'man'; TRAINERS[t.id].lose2 = String(t.lose2 || '').slice(0, 300); }
+    });
+    maps.forEach(function (o) {
+      if (!o || !ADDON_MAP.test(o.id) || MAPS[o.id] && !MAPS[o.id].addon) return;
+      const base = { name: String(o.name || 'Ravenport').slice(0, 30), bg: typeof o.bg === 'string' ? o.bg : 'city', addon: pack };
+      if (o.indoor) {
+        if (!Array.isArray(o.rows) || !o.rows.length || o.rows.length > 60 || !o.rows.every(function (r) { return typeof r === 'string' && r.length === o.rows[0].length && r.length <= 60 && r.split('').every(function (c) { return ADDON_TILE.test(c); }); })) return;
+        defMap(o.id, Object.assign(base, { border: o.cave ? 'K' : 'w', cave: !!o.cave, banner: o.cave ? 1 : undefined, indoor: true, tiles: typeof o.tiles === 'string' ? o.tiles.charAt(0) : 'o', rows: o.rows.slice(),
+          warps: (o.warps || []).filter(function (w) { return w && ADDON_MAP.test(w.to) || w && MAPS[w.to]; }).map(function (w) { return { x: w.x | 0, y: w.y | 0, to: w.to, tx: w.tx | 0, ty: w.ty | 0, dir: w.dir || 'down' }; }),
+          npcs: addonPeople(pack, o.npcs), things: o.things && typeof o.things === 'object' ? o.things : undefined, conveyor: !!o.conveyor }));
+        // Wild Tornies in caves and sewers.
+        if (o.cave) MAPS[o.id].wild = (o.wild || []).filter(function (e) { return Array.isArray(e) && SP[e[0]] && addonNum(e[1], 1, 100) && addonNum(e[2], 1, 100) && addonNum(e[3], 1, 100); });
+        // Puzzle gates and valves (the same system as the first map's Arenas): plain data only.
+        if (o.pz && o.pz.gates && typeof o.pz.gates === 'object') {
+          const gates = {}, ok = function (t) { return Array.isArray(t) && addonNum(t[0], 0, 60) && addonNum(t[1], 0, 60); };
+          Object.keys(o.pz.gates).forEach(function (g) { if (/^[A-Z]$/.test(g) && Array.isArray(o.pz.gates[g]) && o.pz.gates[g].every(ok)) gates[g] = o.pz.gates[g]; });
+          const done = o.pz.done;
+          MAPS[o.id].pz = { style: ['laser', 'bars', 'water'].indexOf(o.pz.style) >= 0 ? o.pz.style : 'bars', gates: gates, init: o.pz.init || {},
+            saved: function (st) { if (typeof done === 'string' && G.flags[addonFlag(pack, done)]) Object.keys(st).forEach(function (k) { st[k] = true; }); },
+            switches: (o.pz.switches || []).filter(function (q) { return q && addonNum(q.x, 0, 60) && addonNum(q.y, 0, 60) && Array.isArray(q.flip) && q.flip.every(function (g) { return gates[g]; }); })
+              .map(function (q) { return { x: q.x, y: q.y, flip: q.flip.slice(), text: String(q.text || '').slice(0, 200) || undefined }; }) };
+          pzWire(MAPS[o.id]);
+        }
+        if (o.clinic) MAPS[o.id].clinic = 1;
+        if (o.clinic) MAPS[o.id].npcs.push({ id: o.id + '_nurse', x: o.clinic[0], y: o.clinic[1], dir: 'down', pal: 'nurse', move: 'still', run: nurseTalk });
+        if (o.shop) MAPS[o.id].npcs.push({ id: o.id + '_clerk', x: o.shop[0], y: o.shop[1], dir: 'down', pal: 'clerk', move: 'still', run: function () { return martTalk(o.shop[2].filter(function (k) { return ITEMS[k]; })); } });
+      } else {
+        const sp0 = o.spec || {};
+        if (!addonNum(sp0.w, 10, 120) || !addonNum(sp0.h, 10, 120)) return;
+        defMap(o.id, Object.assign(base, { outdoor: true, border: sp0.border || '#', rows: [new Array(sp0.w + 1).join('.')], npcs: addonPeople(pack, o.npcs),
+          signs: (o.signs || []).filter(function (q) { return Array.isArray(q) && typeof q[2] === 'string'; }).map(function (q) { return [q[0] | 0, q[1] | 0, q[2].slice(0, 300)]; }),
+          wild: (o.wild || []).filter(function (e) { return Array.isArray(e) && SP[e[0]] && addonNum(e[1], 1, 100) && addonNum(e[2], 1, 100) && addonNum(e[3], 1, 100); }) }));
+        if (o.town) MAPS[o.id].town = o.id;
+        const bl = (sp0.buildings || []).filter(function (b) { return b && addonNum(b.x, 0, 120) && addonNum(b.y, 0, 120) && addonNum(b.w, 1, 30) && addonNum(b.h, 1, 30) && typeof b.k === 'string'; });
+        rebuild(o.id, { w: sp0.w, h: sp0.h, base: sp0.base || '.', border: sp0.border || '#', exits: sp0.exits || {}, pathTile: sp0.pathTile, bg: base.bg,
+          buildings: bl, draw: addonOps(sp0.ops), deco: sp0.deco, pos: Object.keys(sp0.pos || {}).reduce(function (acc, k) { acc['rv_' + k] = sp0.pos[k]; return acc; }, {}), signs: sp0.signs, spawn: sp0.spawn });
+      }
+    });
+    // A few people the expansion adds to Torn City itself (only ever new people, with ids starting 'rv_').
+    (Array.isArray(d.visits) ? d.visits : []).forEach(function (v) {
+      if (!v || !MAPS[v.map] || MAPS[v.map].addon) return;
+      addonPeople(pack, [v.npc]).forEach(function (n) { const m = MAPS[v.map]; m.npcs = m.npcs.filter(function (q) { return q.id !== n.id; }).concat([n]); });
+    });
+    // Edges between outdoor maps, once all exist.
+    (Array.isArray(d.links) ? d.links : []).forEach(function (l) { if (Array.isArray(l) && MAPS[l[0]] && MAPS[l[2]] && MAPS[l[0]].addon && MAPS[l[2]].addon) { try { link(l[0], l[1], l[2]); } catch (e) {} } });
+    const sc = d.scenes && typeof d.scenes === 'object' ? d.scenes : {};
+    ADDON_SCENES[pack] = {}; Object.keys(sc).forEach(function (k) { if (ADDON_ID.test(k) && Array.isArray(sc[k])) ADDON_SCENES[pack][k] = sc[k]; });
+  }
+
+  // Once you're Champion (and the Ravenport add-on is installed), your rival calls with the news.
+  function ravenNewsCheck() {
+    if (!G || !G.flags || W.busy || !G.flags.champion || G.flags.ravenNews || !addonHas('ravenport') || (W.map && W.map.id === 'maple')) return false;
+    G.flags.ravenNews = 1;
+    runScript(async function () {
+      await phoneMsg('{R}', '{P}! Turn on the news! There\'s trouble across the sea, in a city called Ravenport.|Some gang called the 39th Route Dwellers. They say they\'re digging for something under the mountains.|The SS Bogie\'s sailing from the Docks again. You\'re the Champion... someone\'s got to go and look, right? Not me. I get seasick.');
+      saveGame();
+    });
+    return true;
+  }
+
+  // A save that has been to Ravenport needs the add-on (its Tornies, items and maps live there).
+  function addonMissing(d) {
+    if (!d) return false;
+    const mons = (d.party || []).concat(d.box || []);
+    if (mons.some(function (m) { return m && !SP[m.sp]; })) return true;
+    if (Object.keys(d.bag || {}).some(function (k) { return d.bag[k] > 0 && !ITEMS[k]; })) return true;
+    return /^rv_/.test(d.map || '') && !MAPS[d.map] || !!(d.respawn && /^rv_/.test(d.respawn.map || '') && !MAPS[d.respawn.map]);
+  }
+
   /* ---------- Tornie logic ---------- */
   let uidN = 1;
   function expFor(gr, n) {
@@ -14755,17 +15047,23 @@
   /* Tornie Log */
   function dexScreen() {
     return new Promise(function (res) {
-      const m = { i: 0, top: 0, detail: false }, VIS = 9;
-      function go(d) { m.i = Math.max(0, Math.min(DEX_SIZE - 1, m.i + d)); if (m.i < m.top) m.top = m.i; if (m.i >= m.top + VIS) m.top = m.i - VIS + 1; blip(); }
+      const m = { i: 0, top: 0, detail: false, sec: 0 }, VIS = 9;
+      // Two sections once the Ravenport Log is open: Torn City (1-179) and Ravenport (180+). START switches.
+      const two = !!(G.flags.ravenLog && DEX_MAX > DEX_SIZE);
+      function first() { return m.sec ? DEX_SIZE + 1 : 1; }
+      function size() { return m.sec ? DEX_MAX - DEX_SIZE : DEX_SIZE; }
+      function inSec(o) { return Object.keys(o || {}).filter(function (k) { return m.sec ? +k > DEX_SIZE && +k <= DEX_MAX : +k <= DEX_SIZE; }).length; }
+      function go(d) { m.i = Math.max(0, Math.min(size() - 1, m.i + d)); if (m.i < m.top) m.top = m.i; if (m.i >= m.top + VIS) m.top = m.i - VIS + 1; blip(); }
       m.btn = function (b) {
         if (m.detail) { if (b === 'a') { m.page = m.page ? 0 : 1; blip(); } else if (b === 'b') { m.detail = false; blip(); } return; }
         if (b === 'up') go(-1); else if (b === 'down') go(1); else if (b === 'left') go(-VIS); else if (b === 'right') go(VIS);
-        else if (b === 'a') { const n = m.i + 1; if (G.seen[n] && SP[n]) { m.detail = true; m.page = 0; cry(n); } else tone(200, 0.08, 'square', 0.04); }
+        else if (b === 'start' && two) { m.sec = m.sec ? 0 : 1; m.i = 0; m.top = 0; blip(); }
+        else if (b === 'a') { const n = m.i + first(); if (G.seen[n] && SP[n]) { m.detail = true; m.page = 0; cry(n); } else tone(200, 0.08, 'square', 0.04); }
         else if (b === 'b') { blip(); pop(m); res(); }
       };
       m.draw = function () {
         screenBg('#d84a4a', '#9a2a2a');
-        const n = m.i + 1, sp = SP[n], seen = !!G.seen[n] && sp, caught = !!G.caught[n] && sp;
+        const n = m.i + first(), sp = SP[n], seen = !!G.seen[n] && sp, caught = !!G.caught[n] && sp;
         if (m.detail && sp) {
           box(4, 4, VW - 8, VH - 8);
           fr(10, 10, 74, 74, '#e4eef4'); ctx.drawImage(monSprite(n), 15, 15, 64, 64);
@@ -14785,11 +15083,12 @@
           return;
         }
         box(4, 4, VW - 8, 16);
-        text('TORNIE LOG', 12, 7.5, '#303846', { sz: 8.5 });
-        text('Seen ' + countKeys(G.seen) + '   Caught ' + countKeys(G.caught) + '   Golden ' + countKeys(G.ranked), VW - 12, 7.5, '#5a6474', { sz: 7.5, al: 'right' });
+        text(two ? (m.sec ? 'RAVENPORT LOG' : 'TORN CITY LOG') : 'TORNIE LOG', 12, 7.5, '#303846', { sz: 8.5 });
+        if (two) text('START: ' + (m.sec ? 'Torn City' : 'Ravenport'), 181, 149, '#8a94a4', { sz: 6.5, al: 'center' });
+        text('Seen ' + inSec(G.seen) + '   Caught ' + inSec(G.caught) + '   Golden ' + inSec(G.ranked), VW - 12, 7.5, '#5a6474', { sz: 7.5, al: 'right' });
         box(4, 22, 118, 134);
-        for (let k = m.top; k < Math.min(DEX_SIZE, m.top + VIS); k++) {
-          const y = 28 + (k - m.top) * 14.2, nn = k + 1, s2 = SP[nn], sn = G.seen[nn] && s2;
+        for (let k = m.top; k < Math.min(size(), m.top + VIS); k++) {
+          const y = 28 + (k - m.top) * 14.2, nn = k + first(), s2 = SP[nn], sn = G.seen[nn] && s2;
           if (G.caught[nn] && s2) ctx.drawImage(CAPSULE, 13, y - 0.5, 9, 9);
           if (G.ranked && G.ranked[nn] && s2) star(110, y + 4, 3.2);
           text(pad3(nn), 24, y, '#6a7484', { sz: 7.5 });
@@ -14871,6 +15170,7 @@
     // Running Shoes: every Tornie Supplies shop sells them once you have three medals (until you own a pair).
     if (stock.indexOf('potion') >= 0 && hasMedals(3) && !G.flags.shoes) stock = ['running_shoes'].concat(stock);
     if (stock.indexOf('potion') >= 0) stock = stock.concat(shopExtras().filter(function (k) { return stock.indexOf(k) < 0; }));   // new items as you collect medals
+    if (stock.indexOf('potion') >= 0 && fedInStock()) stock = stock.concat(['federal']);   // the one shared Federal Capsule, after the Champion
     let first = true;
     while (true) {
       const c = await ask(first ? lines[0] : lines[1], ['BUY', 'SELL', 'QUIT']);
@@ -14880,6 +15180,10 @@
       else { await say(lines[2]); return; }
     }
   }
+  // Federal Capsule stock (Ravenport update): every Tornie Supplies shares one, from the Champion onwards. Once it's
+  // bought, the next one arrives after a random 3-28 days, counted in real days from Torn's daily reset (UTC midnight).
+  function utcDay() { return Math.floor(Date.now() / 864e5); }
+  function fedInStock() { return !!G.flags.champion && (G.fedNext || 0) <= utcDay(); }
   async function buyMenu(stock) {
     while (true) {
       let sel = 0;
@@ -14893,6 +15197,15 @@
         G.money -= price; G.flags.shoes = 1; stock.splice(i, 1); jingle('item');
         await say('You got the Running Shoes!|Hold B (or Shift on a keyboard) while walking to run.');
         continue;
+      }
+      if (stock[i] === 'federal') {
+        const price = ITEMS.federal.price;
+        if (!fedInStock()) { await say('CLERK: Sorry, that one\'s gone. We only get one in now and then.'); stock.splice(i, 1); continue; }
+        if (G.money < price) { await say('CLERK: The Federal Capsule is $' + price + '. Only one in stock, and it\'s not cheap.'); continue; }
+        if (!(await yesno('CLERK: Our only Federal Capsule, $' + price + '. Deal?'))) continue;
+        G.money -= price; addItem('federal', 1); G.fedNext = utcDay() + 3 + Math.floor(Math.random() * 26); stock.splice(i, 1); jingle('item');
+        await say('{P} got the Federal Capsule!|CLERK: That was our only one. Every Tornie Supplies shares the same supplier, so it\'ll be a while before the next.');
+        saveGame(); continue;
       }
       const id = stock[i], price = ITEMS[id].price, maxQ = Math.min(99, Math.floor(G.money / price));
       if (maxQ < 1) { await say('CLERK: You\'re a bit short for that one, sorry.'); continue; }
@@ -15035,7 +15348,7 @@
     if (m.outdoor) G.lastOut = id;
     // Walking into a Tornie Clinic makes it your wake-up point, so a full team faint sends you to the last Clinic
     // you passed rather than all the way home. Talking to the nurse is no longer needed for this.
-    if (id.indexOf('centre_') === 0) G.respawn = { map: id, x: 4, y: 4, dir: 'up' };
+    if (id.indexOf('centre_') === 0 || m.clinic) G.respawn = { map: id, x: 4, y: 4, dir: 'up' };
     if (m.town) { G.visited = G.visited || {}; G.visited[m.town] = 1; }
     if (m.outdoor || m.banner) { const wn = weatherNow(m); W.banner = { name: fillNames(m.name) + (wn !== 'clear' ? ' \u00b7 ' + WEATHER[wn].name : ''), t: 0 }; }
     saveGame();
@@ -15178,6 +15491,7 @@
     if (eggStep()) return;
     if (G.steps % 25 === 0) checkMerits();
     if (heldGiftCheck()) return;   // milestone gifts by phone (2zg-helditems.js)
+    if (ravenNewsCheck()) return;   // the rival's call about Ravenport (3j-addons.js)
     const door = m.doors[p.x + ',' + p.y];
     if (door && door.to) { warpTo(door.to, door.tx, door.ty, 'up', true); return; }
     const wp = m.warps.find(function (w) { return w.x === p.x && w.y === p.y; });
@@ -15190,6 +15504,9 @@
       const d = DV[p.dir], nx = p.x + d[0], ny = p.y + d[1];
       if (nx >= 0 && ny >= 0 && nx < m.w && ny < m.h && !blocked(m, nx, ny)) { G.steps--; startMove(nx, ny); return; }
     }
+    // Conveyor belts (Ravenport Metal Arena): carried along in the belt's direction until it ends or something blocks it.
+    if (m.conveyor) { const cv = { 6: 'right', 4: 'left', 8: 'up', 2: 'down' }[tileAt(m, p.x, p.y)];
+      if (cv) { const d = DV[cv], nx = p.x + d[0], ny = p.y + d[1]; if (nx >= 0 && ny >= 0 && nx < m.w && ny < m.h && !blocked(m, nx, ny)) { p.dir = cv; G.steps--; startMove(nx, ny); return; } } }
     const here = tileAt(m, p.x, p.y);
     if (surfStep(m, here)) return;
     const enc = here === ',' ? 0.1 : (m.cave && 'CJW'.indexOf(here) >= 0 ? 0.06 : 0);
@@ -15321,7 +15638,7 @@
     try { healParty(); } catch (e) { console.error('[Tornies] heal', e); repairSave(G); }
     try { loadMap(r.map, r.x, r.y, r.dir); } catch (e) { console.error('[Tornies] respawn', e); loadMap('home', 4, 5, 'up'); }
     await fadeIn(0.6);
-    await say(r.map.indexOf('centre') === 0 ? 'NURSE: There you are! Your team\'s all patched up. Maybe go easy out there?' : 'MOM: {P}! What happened to you? Sit down, love.|I\'ve looked after your Tornies. Be more careful!');
+    await say(r.map.indexOf('centre') === 0 || (MAPS[r.map] && MAPS[r.map].clinic) ? 'NURSE: There you are! Your team\'s all patched up. Maybe go easy out there?' : 'MOM: {P}! What happened to you? Sit down, love.|I\'ve looked after your Tornies. Be more careful!');
     saveGame();
   }
   async function healFlash(centre) {
@@ -15358,7 +15675,8 @@
   async function talkTo(n) {
     const d = n.def;
     if (d.kind !== 'capsule' && d.kind !== 'mon' && d.kind !== 'pet') n.dir = OPP[W.p.dir];
-    if (d.kind === 'mon') await legendEncounter(n);
+    if (d.kind === 'mon' && d.run) await d.run(n);   // a scripted encounter (Ravenport)
+    else if (d.kind === 'mon') await legendEncounter(n);
     else if (d.trainer) {
       if (rematchReady(d.id) && G.party.some(alive)) await rematchTalk(n);
       else if (G.defeated[d.id]) await say(TRAINERS[d.trainer].cls.toUpperCase() + ' ' + TRAINERS[d.trainer].name.toUpperCase() + ': ' + d.after);
@@ -15718,7 +16036,10 @@
   function effSpe(b) { let v = calcStats(b.mon)[5] * stageMul(b.st.spe); if (b.mon.st === 'par') v *= 0.5; return v; }
   function typesOf(b) { return SP[b.mon.sp].types; }
   function bname(b) { return b.side === 'e' ? (B.wild ? 'Wild ' : 'Foe ') + monName(b.mon) : monName(b.mon); }
-  function trainerTitle() { return B.tr.cls + ' ' + fillNames(B.tr.name); }
+  // Twin trainers (Ravenport): one trainer entry with two people, e.g. "Leaders Knox & Nyx". They share one team and
+  // take turns sending it out; tr.name2 / tr.pal2 / tr.lose2 are the second twin's name, look and defeat line.
+  function trainerTitle() { return B.tr.cls + ' ' + fillNames(B.tr.name) + (B.tr.name2 ? ' & ' + fillNames(B.tr.name2) : ''); }
+  function twinSender(i) { return B.tr.name2 ? (i % 2 ? fillNames(B.tr.name2) : fillNames(B.tr.name)) : trainerTitle(); }
 
   /* Battle text */
   function bsay(t) {
@@ -15747,7 +16068,7 @@
      Every move plays an animation themed on its type. Physical moves charge in and strike, special moves fire
      something across the field, and status moves show an aura, a heal or a cloud on the target. */
   const ANIM_STYLE = { Fire: 'fire', Water: 'water', Plant: 'leaf', Electric: 'bolt', Ice: 'ice', Brawl: 'punch', Toxic: 'sludge', Earth: 'quake', Air: 'wind',
-    Mind: 'psy', Bug: 'swarm', Stone: 'rock', Spirit: 'ghost', Mythic: 'dragon', Shadow: 'dark', Metal: 'steel', Street: 'hit' };
+    Mind: 'psy', Bug: 'swarm', Stone: 'rock', Spirit: 'ghost', Mythic: 'dragon', Shadow: 'dark', Metal: 'steel', Street: 'hit', Dragon: 'dragon', Fairy: 'psy' };
   function cen(side) { const v = B.v; return side === 'p' ? [62 + v.pX, 84 + v.pY] : [176 + v.eX, 40 + v.eY]; }
   function lerp(a, b, k) { return a + (b - a) * k; }
   function ease(k) { return k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; }
@@ -16274,6 +16595,7 @@
     v.tVis = true; await tween(0.5, function (k) { v.tX = (1 - k) * 140; });
     await bsay('{P} beat ' + trainerTitle() + '!');
     await bsay(fillNames(B.tr.name).toUpperCase() + ': ' + B.tr.lose);
+    if (B.tr.name2 && B.tr.lose2) await bsay(fillNames(B.tr.name2).toUpperCase() + ': ' + B.tr.lose2);
     // Prize money, as in the classic games: the trainer's base pay x the level of their last Tornie (2.47.7).
     const prize = Math.round(B.tr.base * B.eParty[B.eParty.length - 1].lv) * (B.penny ? 2 : 1);   // Lucky Penny doubles it
     if (B.o.tower) return 'win';
@@ -16388,7 +16710,7 @@
   async function sendOutEnemy(i) {
     const v = B.v;
     B.ei = i; B.e = battler(B.eParty[i], 'e'); G.seen[B.e.mon.sp] = 1;
-    await bsay(trainerTitle() + ' calls on ' + SP[B.e.mon.sp].name + '!');
+    await bsay(twinSender(i) + ' calls on ' + SP[B.e.mon.sp].name + '!');
     v.eX = 0; v.eY = 0; v.eS = 0; v.eVis = true; v.eHP = B.e.mon.hp;
     tone(900, 0.08, 'square', 0.03, 400);
     await tween(0.3, function (k) { v.eS = k; });
@@ -16542,7 +16864,7 @@
   const ART_FACES_RIGHT = { 179: 1 };   // Mirabit
   function drawMonB(n, flip, cx, gy, s, dy, blink, rk) {
     if (blink || s <= 0) return;
-    if (ART_FACES_RIGHT[n] && PIXIMG[n]) flip = !flip;
+    if ((ART_FACES_RIGHT[n] || ADDON_FACES[n]) && PIXIMG[n]) flip = !flip;
     const im = monSprite(n, flip, rk), w = 64 * s;
     ctx.save(); ctx.beginPath(); ctx.rect(0, 0, VW, gy + 1); ctx.clip();
     ctx.drawImage(im, Math.round(cx - w / 2), Math.round(gy - 62 * s + dy), w, w);
@@ -16557,7 +16879,10 @@
     ctx.drawImage(battleBg(B.bg), 0, 0);
     ctx.save(); if (v.shake) ctx.translate(v.shake, Math.abs(v.shake) * 0.4);
     plat(176, 68, 50, 10, pl); plat(62, 112, 58, 11, pl);
-    if (v.tVis && !drawPortrait(ctx, B.tr.pal, 142 + v.tX, 2, 68)) drawPerson(ctx, PAL[B.tr.pal] || PAL.man, 'down', 0, 152 + v.tX, 16, 3);
+    if (v.tVis && B.tr.pal2) {   // twins stand side by side
+      if (!drawPortrait(ctx, B.tr.pal, 124 + v.tX, 6, 60)) drawPerson(ctx, PAL[B.tr.pal] || PAL.man, 'down', 0, 136 + v.tX, 18, 3);
+      if (!drawPortrait(ctx, B.tr.pal2, 168 + v.tX, 6, 60)) drawPerson(ctx, PAL[B.tr.pal2] || PAL.man, 'down', 0, 180 + v.tX, 18, 3);
+    } else if (v.tVis && !drawPortrait(ctx, B.tr.pal, 142 + v.tX, 2, 68)) drawPerson(ctx, PAL[B.tr.pal] || PAL.man, 'down', 0, 152 + v.tX, 16, 3);
     if (v.eVis) drawMonB(B.e.mon.sp, false, 176 + v.eX, 70, v.eS, v.eY, v.eBlink, B.e.mon.rk);
     if (v.pVis) drawMonB(B.p.mon.sp, true, 62 + v.pX, 113, v.pS, v.pY + (v.bob && Math.floor(T * 3) % 2 ? 1 : 0), v.pBlink, B.p.mon.rk);
     if (v.cap) { ctx.save(); ctx.translate(v.cap.x, v.cap.y); ctx.rotate(v.cap.r); ctx.drawImage(v.cap.img || CAPSULE, -8, -8); ctx.restore(); if (v.cap.done) { ctx.fillStyle = '#ffe070'; [[-12, -10], [12, -12], [0, -16]].forEach(function (q) { ctx.fillRect(v.cap.x + q[0], v.cap.y + q[1], 2, 2); }); } }
@@ -16642,7 +16967,7 @@
       } else {
         B.v.tVis = true;
         await tween(0.6, function (k) { B.v.tX = (1 - k) * 180; });
-        await bsay(trainerTitle() + ' squares up for a fight!');
+        await bsay(trainerTitle() + (B.tr.name2 ? ' square up for a fight!' : ' squares up for a fight!'));
         await tween(0.35, function (k) { B.v.tX = k * 140; });
         B.v.tVis = false;
         await sendOutEnemy(0);
@@ -16814,6 +17139,7 @@
     } finally { titleBusy = false; }
   }
   async function continueGame(save) {
+    if (addonMissing(save)) { await say('This save has been to Ravenport.|Install or switch on the "Torn Arcade - Ravenport" add-on to keep playing it. Nothing in your save has been changed.'); return; }
     G = save;
     G.opts = G.opts || { speed: 1 }; G.flags = G.flags || {}; G.defeated = G.defeated || {}; G.bag = G.bag || {}; G.box = G.box || [];
     if (!MAPS[G.map]) { G.map = G.respawn.map; G.x = G.respawn.x; G.y = G.respawn.y; }

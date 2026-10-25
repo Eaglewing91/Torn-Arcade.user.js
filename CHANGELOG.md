@@ -8,6 +8,19 @@ Every Torn Arcade update since 2.2.0, newest first. Dates are in TCT (Torn City 
 
 ---
 
+## 2.49.0 — 2026-10-25
+### New
+- **Tornies: the Ravenport expansion.** A new optional add-on script, **Torn Arcade - Ravenport** ([install](https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade-Ravenport.user.js)), opens a whole new region across the sea for Champions. Sail there on the SS Bogie from the Docks.
+  - The neon city of Ravenport, Routes 26–40, Skyridge, Saltmarsh, Wyrmhold, and a few places best found for yourself.
+  - 78 new Tornies in a new **Ravenport Log** (switch sections with START in the Tornie Log), two new types, **Dragon** and **Fairy**, and new moves you can only learn there.
+  - Three new Arenas with medals of their own, a gang that runs the city, and a story with some very old secrets.
+  - Once the story is done, the Ravenport line runs trains between Ravenport and Midtown.
+  - A new **Ravenport** app sits next to the Art Packs on the phone's bottom row, with an install link and a gallery of the Tornies you've caught there.
+- Tornies: the Federal Capsule is no longer one of a kind. Once you're Champion, Tornie Supplies get one in now and then ($50,000). Every shop shares the same supplier, so after someone buys it, the next one takes a while to arrive.
+### Changed
+- Tornies: Arena puzzles can now have conveyor belts.
+- Tornies: a save that has been to Ravenport asks for the add-on if it's missing, rather than loading without it.
+
 ## 2.48.0 — 2026-10-25
 ### New
 - Tornies: held items. Give a Tornie an item from the new HELD ITEMS pocket; take it back from TEAM → ITEM. A small icon shows who's holding something.
