@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.47.7
+// @version      2.48.0
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with nine game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -664,7 +664,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gifts and trades', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.47.7';
+  const VERSION = '2.48.0';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -12899,6 +12899,7 @@
   }
   // The Tornie leaves the save once the server has it (a copy of its code is kept until the trade ends).
   function sentToTrade(p, tradeId) {
+    if (p.mon && p.mon.held) { addItem(p.mon.held, 1); p.mon.held = null; }   // held items stay with you, back in the bag
     p.pick.list.splice(p.pick.i, 1);
     G.trades.held = (G.trades.held || []).concat([{ id: tradeId, code: p.code }]).slice(-20);
     gstat('tradesOut'); saveGame();
@@ -14171,6 +14172,115 @@
     });
   })();
 
+  /* ---------- Held items and new consumables (2.48) ----------
+     A Tornie can hold one item (mon.held = item id). Give one by using it from the bag; take it back from TEAM > ITEM.
+     Older saves need nothing: every Tornie simply starts with empty paws. */
+  const HELD = {
+    radiant_orb: { name: 'Radiant Orb', price: 0, desc: 'A warm, shining orb. Its holder earns 50% more battle experience.' },
+    twin_shard: { name: 'Twin Shard', price: 0, desc: 'A sliver of crystal that hums with its twin. Its holder gets half the battle experience even without fighting.' },
+    lucky_penny: { name: 'Lucky Penny', price: 0, desc: 'Doubles the prize money from a trainer battle if its holder took part.' },
+    chocolate: { name: 'Box of Chocolate Bars', price: 4000, desc: 'Its holder nibbles away and gets back a little HP every turn.' },
+    sneakers: { name: 'Sports Sneakers', price: 4000, desc: 'Sometimes lets its holder move first.' },
+    flak_jacket: { name: 'Flak Jacket', price: 5000, desc: 'Once per battle, a holder at full health survives a hit that would make it faint.' },
+    paperweight: { name: 'Paperweight', price: 1000, desc: 'Weighs its holder down. A Tornie holding it won\'t evolve.' },
+    smoke_bomb: { name: 'Smoke Bomb', price: 2500, desc: 'Its holder can always escape from a wild Tornie.' },
+    brass_knuckles: { name: 'Brass Knuckles', price: 3000, type: 'Brawl', desc: 'Powers up its holder\'s Brawl moves by 20%.' },
+    lighter: { name: 'Lighter', price: 3000, type: 'Fire', desc: 'Powers up its holder\'s Fire moves by 20%.' },
+    taser: { name: 'Taser', price: 3000, type: 'Electric', desc: 'Powers up its holder\'s Electric moves by 20%.' },
+    water_pistol: { name: 'Water Pistol', price: 3000, type: 'Water', desc: 'Powers up its holder\'s Water moves by 20%.' }
+  };
+  Object.keys(HELD).forEach(function (k) { if (!ITEMS[k]) { ITEMS[k] = Object.assign({ kind: 'held' }, HELD[k]); ITEM_ORDER.push(k); } });
+  const NEW_ITEMS = {
+    red_cow: { name: 'Energy Gummy', price: 300, kind: 'pp', pp: 10, desc: 'A chewy energy snack. Gives one move 10 more uses.' },
+    taurine: { name: 'Power Chew', price: 1200, kind: 'pp', pp: 99, desc: 'A tough, sugary chew. Fully restores one move\'s uses.' },
+    munster: { name: 'Snack Pack', price: 3000, kind: 'pp', pp: 99, all: 1, desc: 'A whole bag of energy snacks. Fully restores every move of one Tornie.' },
+    lawyer_card: { name: 'Lawyer\'s Business Card', price: 550, kind: 'escape', desc: 'Your lawyer gets you out of any cave or building, back to the last Clinic you used.' },
+    capsule_night: { name: 'Night Capsule', price: 800, kind: 'ball', rate: 1, desc: 'A dark capsule. Catches far better at night.' }
+  };
+  Object.keys(NEW_ITEMS).forEach(function (k) { if (!ITEMS[k]) { ITEMS[k] = NEW_ITEMS[k]; ITEM_ORDER.push(k); } });
+  function heldOf(mon) { return mon && mon.held && ITEMS[mon.held] ? mon.held : null; }
+  function ballRate(id) { return id === 'capsule_night' ? (isNight() ? 3.5 : 1) : ITEMS[id].rate; }
+  function movePP(mv) { return MOVES[mv.id] ? MOVES[mv.id].pp : mv.pp; }
+
+  // Shops stock the new items as you collect medals, so players part-way through find them in the next shop.
+  function shopExtras() {
+    const n = (G.badges && G.badges.length) || 0, out = ['red_cow'];
+    if (n >= 2) out.push('lawyer_card', 'taurine');
+    if (n >= 3) out.push('capsule_night');
+    if (n >= 4) out.push('munster');
+    return out;
+  }
+  // Held items are sold by one shady dealer in the back of Lucky's Pawn (Casino Strip), never in Tornie Supplies.
+  const DEALER_STOCK = ['paperweight', 'chocolate', 'sneakers', 'flak_jacket', 'smoke_bomb', 'brass_knuckles', 'lighter', 'taser', 'water_pistol'];
+  if (MAPS.pawn) MAPS.pawn.npcs.push({ id: 'pawn_dealer', x: 9, y: 5, dir: 'left', pal: 'biker', move: 'still', run: async function () {
+    if (!G.flags.metDealer) { G.flags.metDealer = 1; await say('DEALER: Psst. Over here. Lucky lets me use the back room.|Gear for your Tornies. Things the Tornie Supplies won\'t stock. Don\'t ask where it came from.'); }
+    return martTalk(DEALER_STOCK, ['DEALER: Looking for something... special?', 'DEALER: Anything else catch your eye?', 'DEALER: You never saw me.']);
+  } });
+
+  // Gifts for story milestones. Anyone who has already passed one gets it on their next steps, by phone.
+  const HELD_GIFTS = [
+    ['twin_shard', 1, function () { return medal('brick'); }, 'Prof. Quinn', 'A Twin Shard for you! Give it to a Tornie and it learns from every battle, even watching from your team.'],
+    ['radiant_orb', 1, function () { return medal('ivy'); }, 'Prof. Quinn', 'I found a Radiant Orb in the lab. Give it to a Tornie and it\'ll grow faster in battle.'],
+    ['lucky_penny', 1, function () { return medal('ace'); }, 'Madame Ace', 'A little something from the Casino: a Lucky Penny. Let a Tornie hold it and trainers will pay double.'],
+    ['lawyer_card', 3, function () { return !!G.flags.hq; }, 'Prof. Quinn', 'A lawyer friend sent you 3 of his business cards. Use one to get out of any cave or building in a hurry.']
+  ];
+  function heldGiftCheck() {
+    if (!G || !G.flags || W.busy) return false;
+    const due = HELD_GIFTS.filter(function (g) { return !G.flags['gift_' + g[0]] && g[2](); });
+    if (!due.length) return false;
+    runScript(async function () {
+      for (const g of due) {
+        G.flags['gift_' + g[0]] = 1; addItem(g[0], g[1]);
+        await phoneMsg(g[3], g[4]);
+        jingle('item'); await say('{P} got ' + (g[1] > 1 ? g[1] + ' ' : 'a ') + ITEMS[g[0]].name + (g[1] > 1 ? 's' : '') + '!');
+      }
+      saveGame();
+    });
+    return true;
+  }
+
+  // Using the new items outside battle.
+  async function useNewItem(id) {
+    const it = ITEMS[id];
+    if (it.kind === 'held') {
+      const t = await partyScreen({ pick: true, prompt: 'Give the ' + it.name + ' to which Tornie?' });
+      if (t === null) return true;
+      const mon = G.party[t], had = heldOf(mon);
+      takeItem(id); if (had) addItem(had, 1);
+      mon.held = id; sfx.click();
+      await say(monName(mon) + ' is now holding the ' + it.name + '.' + (had ? '|' + ITEMS[had].name + ' went back in the bag.' : ''));
+      saveGame(); return true;
+    }
+    if (it.kind === 'pp') {
+      const t = await partyScreen({ pick: true, prompt: 'Use the ' + it.name + ' on which Tornie?' });
+      if (t === null) return true;
+      const mon = G.party[t], r = await ppApply(id, mon, null);
+      if (r) { takeItem(id); jingle('item'); await say(r); saveGame(); } else await say('It won\'t have any effect.');
+      return true;
+    }
+    if (it.kind === 'escape') {
+      const m = W.map;
+      if (!m.indoor || /^gym_|^council|^champion|btower|^tower/.test(m.id) || !G.respawn) { await say('There\'s nothing to escape from here.'); return true; }
+      takeItem(id); jingle('item');
+      await say('{P} calls the number on the card...|LAWYER: Say no more. I\'ll have you out of there in no time.');
+      warpTo(G.respawn.map, G.respawn.x, G.respawn.y, G.respawn.dir || 'down');
+      return true;
+    }
+    if (it.kind === 'flee') { await say('Save it for a wild battle.'); return true; }
+    return false;
+  }
+  // Energy drinks: pick a move unless the drink restores them all. Returns the message, or null if it did nothing.
+  async function ppApply(id, mon, mvIndex) {
+    const it = ITEMS[id], low = mon.moves.filter(function (m) { return m.pp < movePP(m); });
+    if (!low.length) return null;
+    if (it.all) { mon.moves.forEach(function (m) { m.pp = movePP(m); }); return monName(mon) + '\'s moves are all fully charged!'; }
+    let i = mvIndex;
+    if (i === null || i === undefined) { i = await menu(mon.moves.map(function (m) { return MOVES[m.id].name + ' ' + m.pp + '/' + movePP(m); }).concat(['CANCEL']), {}); if (i < 0 || i >= mon.moves.length) return null; }
+    const mv = mon.moves[i]; if (mv.pp >= movePP(mv)) return null;
+    const before = mv.pp; mv.pp = Math.min(movePP(mv), mv.pp + it.pp);
+    return MOVES[mv.id].name + ' got ' + (mv.pp - before) + ' uses back!';
+  }
+
   /* ---------- Tornie logic ---------- */
   let uidN = 1;
   function expFor(gr, n) {
@@ -14292,6 +14402,19 @@
       pxEllipse(ctx, x + 8, y + 8, 7, 7, function (xx, yy, d) { fr(xx, yy, 1, 1, d > 0.8 ? (it.kind === 'field' ? '#d0a030' : '#2a2a34') : d < 0.06 ? '#2a2a34' : TYPE_COL[MOVES[it.move].type] || '#888'); });
       fr(x + 5, y + 4, 3, 1, 'rgba(255,255,255,.6)'); return;
     }
+    if (it.kind === 'held') {   // held items: orbs and shards glow; gear gets a little tag
+      if (id === 'radiant_orb') { pxEllipse(ctx, x + 8, y + 8, 6, 6, function (xx, yy, d) { fr(xx, yy, 1, 1, d > 0.75 ? '#c88a10' : d < 0.25 ? '#fff8c0' : '#f8c840'); }); return; }
+      if (id === 'twin_shard') { fr(x + 4, y + 3, 3, 10, '#7ac8f0'); fr(x + 9, y + 3, 3, 10, '#7ac8f0'); fr(x + 4, y + 3, 1, 10, '#e0f6ff'); fr(x + 9, y + 3, 1, 10, '#e0f6ff'); fr(x + 5, y + 2, 1, 1, '#7ac8f0'); fr(x + 10, y + 2, 1, 1, '#7ac8f0'); return; }
+      if (id === 'lucky_penny') { pxEllipse(ctx, x + 8, y + 8, 5, 5, function (xx, yy, d) { fr(xx, yy, 1, 1, d > 0.7 ? '#8a4a1a' : '#d0803a'); }); fr(x + 7, y + 6, 2, 4, '#f0b070'); return; }
+      fr(x + 3, y + 5, 10, 8, '#e0a030'); fr(x + 7, y + 4, 2, 10, '#c04040'); fr(x + 3, y + 8, 10, 2, '#c04040'); fr(x + 5, y + 2, 2, 3, '#c04040'); fr(x + 9, y + 2, 2, 3, '#c04040'); return;
+    }
+    if (it.kind === 'pp') {   // energy snacks: a wrapped sweet, a chew, a snack bag
+      const c2 = id === 'red_cow' ? '#e05080' : id === 'taurine' ? '#e0a020' : '#40a060';
+      if (id === 'munster') { fr(x + 3, y + 3, 10, 11, c2); fr(x + 3, y + 3, 10, 2, '#2a6a40'); fr(x + 5, y + 7, 6, 4, '#f4f4f8'); fr(x + 4, y + 5, 1, 8, 'rgba(255,255,255,.35)'); return; }
+      fr(x + 4, y + 6, 8, 5, c2); fr(x + 1, y + 5, 3, 7, c2); fr(x + 12, y + 5, 3, 7, c2); fr(x + 4, y + 6, 8, 1, 'rgba(255,255,255,.45)'); fr(x + 6, y + 8, 4, 1, '#ffffff'); return;
+    }
+    if (it.kind === 'escape') { fr(x + 2, y + 4, 12, 8, '#f4f0e0'); fr(x + 2, y + 4, 12, 1, '#c8c0a0'); fr(x + 4, y + 6, 6, 1, '#303846'); fr(x + 4, y + 8, 8, 1, '#8a94a4'); fr(x + 4, y + 10, 5, 1, '#8a94a4'); return; }
+    if (it.kind === 'flee') { pxEllipse(ctx, x + 8, y + 9, 5, 5, function (xx, yy, d) { fr(xx, yy, 1, 1, d > 0.7 ? '#3a4a3a' : '#5a6a5a'); }); fr(x + 7, y + 2, 2, 3, '#8a94a4'); fr(x + 9, y + 2, 3, 1, '#8a94a4'); return; }
     if (it.kind === 'shoes') { fr(x + 3, y + 8, 8, 4, '#d84a3a'); fr(x + 2, y + 11, 12, 3, '#d84a3a'); fr(x + 2, y + 13, 12, 2, '#f4f4f8'); fr(x + 5, y + 8, 4, 1, '#f4f4f8'); fr(x + 4, y + 10, 5, 1, '#f4f4f8'); return; }
     if (it.kind === 'key') { fr(x + 3, y + 6, 10, 5, '#d0a030'); fr(x + 3, y + 6, 4, 5, '#f0d070'); fr(x + 11, y + 4, 3, 9, '#a07818'); return; }
     if (it.kind === 'level') { fr(x + 2, y + 5, 12, 7, '#3a2a1a'); fr(x + 3, y + 6, 10, 5, '#e0a040'); fr(x + 3, y + 6, 4, 5, '#f0d080'); fr(x + 8, y + 6, 1, 5, '#8a5a20'); return; }
@@ -14320,7 +14443,7 @@
           if (o.pick) { pop(m); res(m.i); return; }
           const mon = G.party[m.i];
           m.busy = true;
-          const opts = o.battle ? ['SEND IN', 'DETAILS', 'CANCEL'] : ['DETAILS', 'MOVE', 'CANCEL'];
+          const opts = o.battle ? ['SEND IN', 'DETAILS', 'CANCEL'] : ['DETAILS', 'MOVE', 'ITEM', 'CANCEL'];
           const c = await menu(opts, { x: VW - 78, y: VH - 72, w: 74 });
           m.busy = false;
           if (o.battle && c === 0) {
@@ -14330,6 +14453,12 @@
           }
           if ((o.battle && c === 1) || (!o.battle && c === 0)) await summaryScreen(m.i);
           if (!o.battle && c === 1) m.swap = m.i;
+          if (!o.battle && c === 2) {   // held item: see it, take it back (give one from the bag)
+            const h = heldOf(mon);
+            if (!h) { await say(monName(mon) + ' isn\'t holding anything.|Give it an item from the bag: HELD ITEMS.'); return; }
+            const t = await ask(monName(mon) + ' is holding the ' + ITEMS[h].name + '.', ['TAKE', 'CANCEL']);
+            if (t === 0) { mon.held = null; addItem(h, 1); sfx.click(); await say('{P} took the ' + ITEMS[h].name + ' and put it in the bag.'); saveGame(); }
+          }
         }
       };
       m.draw = function () {
@@ -14342,6 +14471,7 @@
           drawMini(ctx, mon.sp, 8, y - 1, 21, mon.rk);
           text(monName(mon), 33, y + 2, '#303846', { sz: 8.5 });
           if (mon.rk) star(33 + tw(monName(mon), 8.5) + 5, y + 6.5);
+          if (heldOf(mon)) { const hx = 33 + tw(monName(mon), 8.5) + (mon.rk ? 14 : 5); fr(hx, y + 3, 6, 5, '#e0a030'); fr(hx + 2, y + 2, 2, 7, '#c04040'); fr(hx, y + 5, 6, 1, '#c04040'); }
           text('Lv' + mon.lv, 33, y + 11, '#5a6474', { sz: 6.5 });
           stChip(mon.st, 58, y + 11);
           // When teaching a move, each row shows ABLE / LEARNED / NOT ABLE in place of the HP bar.
@@ -14426,11 +14556,13 @@
     if (it.kind === 'heal') return mon.hp > 0 && mon.hp < maxHp(mon);
     if (it.kind === 'cure') return mon.hp > 0 && (it.cure === 'all' ? !!mon.st : mon.st === it.cure);
     if (it.kind === 'revive') return mon.hp <= 0;
+    if (it.kind === 'pp') return mon.moves.some(function (m) { return m.pp < movePP(m); });
     return false;
   }
   const CURE_MSG = { psn: 'was cured of its poisoning', par: 'was cured of paralysis', brn: 'had its burn healed', slp: 'woke up', frz: 'thawed out' };
   async function useItemWorld(id) {
     const it = ITEMS[id];
+    if (await useNewItem(id)) return;   // held items, energy drinks, Lawyer's Business Card, Smoke Grenade (2zg-helditems.js)
     if (it.kind === 'ball') { await say('Save it for a wild Tornie!'); return; }
     if (it.kind === 'key') {
       if (id === 'rod' || id === 'good_rod' || id === 'super_rod') {
@@ -14497,9 +14629,10 @@
   }
   // Bag pockets. Items go in a pocket by their kind; anything else goes in Other.
   const POCKETS = [
-    { name: 'MEDICINE', kinds: ['heal', 'revive', 'cure', 'level', 'vitamin'] },
+    { name: 'MEDICINE', kinds: ['heal', 'revive', 'cure', 'level', 'vitamin', 'pp'] },
     { name: 'CAPSULES', kinds: ['ball'] },
     { name: 'DISCS', kinds: ['disc', 'field'] },
+    { name: 'HELD ITEMS', kinds: ['held'] },
     { name: 'KEY ITEMS', kinds: ['key'] },
     { name: 'OTHER', kinds: null }
   ];
@@ -14514,13 +14647,13 @@
     return new Promise(function (res) {
       const m = { i: 0, top: 0, busy: false }, VIS = 7;
       function allowed(id) {
-        if (o.battle) return ['ball', 'heal', 'cure', 'revive'].indexOf(ITEMS[id].kind) >= 0;
+        if (o.battle) return ['ball', 'heal', 'cure', 'revive', 'pp', 'flee'].indexOf(ITEMS[id].kind) >= 0;
         if (o.sell) return ITEMS[id].price > 0 && ITEMS[id].kind !== 'key';
         return true;
       }
       // Pockets that make sense here (in battle: Medicine and Capsules; when selling: no Key Items).
       const pockets = POCKETS.map(function (p, i) { return i; }).filter(function (i) {
-        if (o.battle) return i <= 1;
+        if (o.battle) return i <= 1 || POCKETS[i].name === 'OTHER';
         if (o.sell) return POCKETS[i].name !== 'KEY ITEMS';
         return true;
       });
@@ -14544,11 +14677,13 @@
           m.busy = true;
           try {
             if (o.battle) {
-              if (it.kind === 'ball' || it.kind === 'boost') { pop(m); res({ item: id }); return; }
+              if (it.kind === 'ball' || it.kind === 'boost' || it.kind === 'flee') { pop(m); res({ item: id }); return; }
               const t = await partyScreen({ pick: true, prompt: 'Use on which Tornie?' });
               if (t === null) return;
               if (!canUse(id, G.party[t])) { await say('It won\'t have any effect.'); return; }
-              pop(m); res({ item: id, target: t }); return;
+              let mv = null;
+              if (it.kind === 'pp' && !it.all) { const mon = G.party[t]; mv = await menu(mon.moves.map(function (q) { return MOVES[q.id].name + ' ' + q.pp + '/' + movePP(q); }).concat(['CANCEL']), {}); if (mv < 0 || mv >= mon.moves.length) return; if (mon.moves[mv].pp >= movePP(mon.moves[mv])) { await say('That move is already fully charged.'); return; } }
+              pop(m); res({ item: id, target: t, mv: mv }); return;
             }
             const c = await menu(['USE', 'CANCEL'], { x: VW - 70, y: VH - 82, w: 66 });
             if (c === 0) await useItemWorld(id);
@@ -14730,17 +14865,19 @@
       push(m);
     });
   }
-  async function martTalk(stock) {
+  async function martTalk(stock, lines) {
+    lines = lines || ['CLERK: Welcome to Tornie Supplies! What do you need?', 'CLERK: Anything else?', 'CLERK: Cheers! Mind how you go.'];
     stock = stock.filter(function (id) { return ITEMS[id] && !(ITEMS[id].kind === 'disc' && !ITEMS[id].price); });   // prize-only discs (price 0) are never sold
     // Running Shoes: every Tornie Supplies shop sells them once you have three medals (until you own a pair).
     if (stock.indexOf('potion') >= 0 && hasMedals(3) && !G.flags.shoes) stock = ['running_shoes'].concat(stock);
+    if (stock.indexOf('potion') >= 0) stock = stock.concat(shopExtras().filter(function (k) { return stock.indexOf(k) < 0; }));   // new items as you collect medals
     let first = true;
     while (true) {
-      const c = await ask(first ? 'CLERK: Welcome to Tornie Supplies! What do you need?' : 'CLERK: Anything else?', ['BUY', 'SELL', 'QUIT']);
+      const c = await ask(first ? lines[0] : lines[1], ['BUY', 'SELL', 'QUIT']);
       first = false;
       if (c === 0) await buyMenu(stock);
       else if (c === 1) await sellMenu();
-      else { await say('CLERK: Cheers! Mind how you go.'); return; }
+      else { await say(lines[2]); return; }
     }
   }
   async function buyMenu(stock) {
@@ -15040,6 +15177,7 @@
     dayCareStep();
     if (eggStep()) return;
     if (G.steps % 25 === 0) checkMerits();
+    if (heldGiftCheck()) return;   // milestone gifts by phone (2zg-helditems.js)
     const door = m.doors[p.x + ',' + p.y];
     if (door && door.to) { warpTo(door.to, door.tx, door.ty, 'up', true); return; }
     const wp = m.warps.find(function (w) { return w.x === p.x && w.y === p.y; });
@@ -15893,6 +16031,7 @@
     if (crit) dmg = Math.floor(dmg * 1.5);
     dmg = Math.floor(dmg * (85 + Math.floor(Math.random() * 16)) / 100);
     if (typesOf(u).indexOf(M.type) >= 0) dmg = Math.floor(dmg * 1.5);
+    if (u.side === 'p' && heldOf(u.mon) && ITEMS[heldOf(u.mon)].type === M.type) dmg = Math.floor(dmg * 1.2);   // type booster
     dmg = Math.floor(dmg * e);
     dmg = Math.floor(dmg * weatherMul(M.type));
     if (phys && u.mon.st === 'brn') dmg = Math.floor(dmg / 2);
@@ -15955,8 +16094,11 @@
     let total = 0, n = 0;
     for (let i = 0; i < hits && t.mon.hp > 0 && u.mon.hp > 0; i++) {
       const r = calcDamage(u, t, M, e);
+      let flak = false;
+      if (t.side === 'p' && heldOf(t.mon) === 'flak_jacket' && !(B.flak && B.flak[t.mon.uid]) && t.mon.hp === maxHp(t.mon) && r.dmg >= t.mon.hp) { r.dmg = t.mon.hp - 1; flak = true; (B.flak = B.flak || {})[t.mon.uid] = 1; }
       await attackAnim(u, t, M);
       await hurt(t, r.dmg);
+      if (flak) await bsay(tn + ' hung on thanks to its Flak Jacket!');
       total += r.dmg; n++;
       if (r.crit) await bsay('A lucky blow!');
     }
@@ -16046,13 +16188,14 @@
         return { move: pm.moves[mi].id };
       }
       if (c === 1 && B.o.tower) { await bsay('Items can\'t be used in the Battle Tower.'); continue; }
-      if (c === 1) { const r = await bagScreen({ battle: true }); if (!r) continue; return { item: r.item, target: r.target }; }
+      if (c === 1) { const r = await bagScreen({ battle: true }); if (!r) continue; return { item: r.item, target: r.target, mv: r.mv }; }
       if (c === 2) { const r = await partyScreen({ battle: true }); if (r === null) continue; return { sw: r }; }
       if (c === 3) { if (!B.wild) { await bsay('You can\'t walk out on a trainer battle!'); continue; } return { run: true }; }
     }
   }
   function tryRun() {
     B.escapes++;
+    if (heldOf(B.p.mon) === 'smoke_bomb') return true;
     const ps = effSpe(B.p), es = effSpe(B.e);
     if (ps >= es) return true;
     return Math.random() * 256 < (Math.floor(ps * 128 / es) + 30 * B.escapes) % 256;
@@ -16073,7 +16216,9 @@
     queue.push({ b: E, t: B.p, m: eAct });
     if (queue.length === 2) {
       const a = MOVES[queue[0].m].fx.prio || 0, c = MOVES[queue[1].m].fx.prio || 0, sp1 = effSpe(B.p), sp2 = effSpe(E);
-      const pFirst = a !== c ? a > c : sp1 !== sp2 ? sp1 > sp2 : Math.random() < 0.5;
+      const sneak = a === c && heldOf(B.p.mon) === 'sneakers' && Math.random() < 0.2;
+      const pFirst = sneak ? true : a !== c ? a > c : sp1 !== sp2 ? sp1 > sp2 : Math.random() < 0.5;
+      if (sneak && sp1 < sp2) await bsay(bname(B.p) + '\'s Sports Sneakers let it move first!');
       if (!pFirst) queue.reverse();
     }
     for (const q of queue) {
@@ -16090,6 +16235,7 @@
     const mx = maxHp(b.mon);
     if (b.mon.st === 'brn') { burst(b.side, '#f08040', 8); await hurt(b, Math.max(1, Math.floor(mx / 16))); await bsay(bname(b) + ' is hurt by its burn!'); }
     else if (b.mon.st === 'psn') { burst(b.side, '#b060c0', 8); await hurt(b, Math.max(1, Math.floor(mx / 8))); await bsay(bname(b) + ' is hurt by poison!'); }
+    if (b.side === 'p' && b.mon.hp > 0 && b.mon.hp < mx && heldOf(b.mon) === 'chocolate') { await healB(b, Math.max(1, Math.floor(mx / 16))); await bsay(bname(b) + ' nibbles a chocolate bar and gets some HP back.'); }
   }
   async function faintChecks() {
     for (const b of [B.e, B.p]) {
@@ -16129,7 +16275,7 @@
     await bsay('{P} beat ' + trainerTitle() + '!');
     await bsay(fillNames(B.tr.name).toUpperCase() + ': ' + B.tr.lose);
     // Prize money, as in the classic games: the trainer's base pay x the level of their last Tornie (2.47.7).
-    const prize = Math.round(B.tr.base * B.eParty[B.eParty.length - 1].lv);
+    const prize = Math.round(B.tr.base * B.eParty[B.eParty.length - 1].lv) * (B.penny ? 2 : 1);   // Lucky Penny doubles it
     if (B.o.tower) return 'win';
     G.money += prize; sfx.point(); gstat('trainerWins');
     await bsay('{P} pockets $' + prize + ' in prize money.');
@@ -16169,8 +16315,17 @@
     const each = Math.max(1, Math.floor(total / parts.length));
     for (const m of parts) {
       if (m.lv >= 100) continue;
-      await bsay(monName(m) + ' earned ' + (dbl ? 'a boosted ' : '') + each + ' XP!');
-      await addExp(m, each, B.p && m === B.p.mon);
+      if (heldOf(m) === 'lucky_penny') B.penny = true;
+      const got = heldOf(m) === 'radiant_orb' ? Math.floor(each * 1.5) : each;
+      await bsay(monName(m) + ' earned ' + (dbl ? 'a boosted ' : '') + got + ' XP!');
+      await addExp(m, got, B.p && m === B.p.mon);
+    }
+    // Twin Shard: a holder that didn't fight still gets half the experience.
+    for (const m of G.party) {
+      if (m.hp <= 0 || m.lv >= 100 || parts.indexOf(m) >= 0 || heldOf(m) !== 'twin_shard') continue;
+      const half = Math.max(1, Math.floor(each / 2));
+      await bsay(monName(m) + ' earned ' + half + ' XP from its Twin Shard!');
+      await addExp(m, half, false);
     }
   }
   async function addExp(m, amt, isActive) {
@@ -16262,6 +16417,16 @@
   async function useItemBattle(act) {
     const it = ITEMS[act.item];
     if (it.kind === 'ball') return await throwBall(act.item);
+    if (it.kind === 'flee') {
+      if (!B.wild) { await bsay('A smoke grenade won\'t help in a trainer battle!'); return null; }
+      takeItem(act.item); tone(300, 0.4, 'sawtooth', 0.03, 120);
+      await bsay('{P} throws a Smoke Grenade!|In the cloud of smoke, you slip away.'); return 'run';
+    }
+    if (it.kind === 'pp') {
+      const mon = G.party[act.target], msg = await ppApply(act.item, mon, act.mv);
+      if (!msg) { await bsay('It won\'t have any effect.'); return null; }
+      takeItem(act.item); jingle('item'); await bsay('{P} uses a ' + it.name + '.|' + msg); return null;
+    }
     if (it.kind === 'boost') {
       takeItem(act.item);
       await useBooster(it);
@@ -16301,7 +16466,7 @@
     v.eVis = false;
     await tween(0.3, function (k) { v.cap = { x: 176, y: 38 + 24 * k, r: 0, img: capImg }; });
     const M = maxHp(m), bonus = { slp: 2, frz: 2, par: 1.5, psn: 1.5, brn: 1.5 }[m.st] || 1;
-    const a = ((3 * M - 2 * m.hp) * SP[m.sp].rate * ITEMS[id].rate) / (3 * M) * bonus;
+    const a = ((3 * M - 2 * m.hp) * SP[m.sp].rate * ballRate(id)) / (3 * M) * bonus;
     let shakes = 0;
     if (a >= 255) shakes = 4;
     else { const b = 1048560 / Math.sqrt(Math.sqrt(16711680 / a)); for (let i = 0; i < 4; i++) { if (Math.random() * 65536 < b) shakes++; else break; } }
@@ -16334,6 +16499,7 @@
     return SIL[n] = mk(192, 192, function (g) { g.drawImage(monSprite(n), 0, 0); g.globalCompositeOperation = 'source-in'; g.fillStyle = '#ffffff'; g.fillRect(0, 0, 192, 192); });
   }
   async function evolve(m) {
+    if (heldOf(m) === 'paperweight') return;   // weighed down: no evolving
     const from = m.sp, to = SP[from].evo.to;
     const E = { show: from, white: false, stop: false, canStop: false };
     const md = {

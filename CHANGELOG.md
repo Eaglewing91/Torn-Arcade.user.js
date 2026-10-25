@@ -8,6 +8,18 @@ Every Torn Arcade update since 2.2.0, newest first. Dates are in TCT (Torn City 
 
 ---
 
+## 2.48.0 — 2026-10-25
+### New
+- Tornies: held items. Give a Tornie an item from the new HELD ITEMS pocket; take it back from TEAM → ITEM. A small icon shows who's holding something.
+  - **Radiant Orb:** its holder earns 50% more battle experience.
+  - **Twin Shard:** its holder gets half the battle experience even without fighting.
+  - **Lucky Penny:** doubles prize money from a trainer battle the holder took part in.
+  - **Box of Chocolate Bars, Sports Sneakers, Flak Jacket, Paperweight, Smoke Bomb**, and type boosters **Brass Knuckles, Lighter, Taser, Water Pistol**.
+- Tornies: a black-market dealer in the back of Lucky's Pawn sells held items. Some are gifts for story milestones instead; if you're already past one, it arrives by phone as you play.
+- Tornies: new in Tornie Supplies as you collect medals: Energy Gummy, Power Chew and Snack Pack (restore move uses, in or out of battle), Lawyer's Business Card (gets you out of any cave or building) and Night Capsule (much better at night).
+### Changed
+- Tornies: a Tornie sent in an online trade leaves its held item behind in your bag.
+
 ## 2.47.7 — 2026-10-25
 ### Changed
 - Tornies: battle balance. Boss teams now have one strong Tornie with the rest a few levels lower, like the classic games, and the jump in difficulty from the Racket HQ to Dr. Graves is smoother. Arena Leaders and other bosses occasionally make a less-than-perfect move.
