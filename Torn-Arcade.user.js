@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.49.4
+// @version      2.49.5
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with nine game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -665,7 +665,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gifts and trades', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.49.4';
+  const VERSION = '2.49.5';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -14567,6 +14567,12 @@
         const bl = (sp0.buildings || []).filter(function (b) { return b && addonNum(b.x, 0, 120) && addonNum(b.y, 0, 120) && addonNum(b.w, 1, 30) && addonNum(b.h, 1, 30) && typeof b.k === 'string'; });
         rebuild(o.id, { w: sp0.w, h: sp0.h, base: sp0.base || '.', border: sp0.border || '#', exits: sp0.exits || {}, pathTile: sp0.pathTile, bg: base.bg,
           buildings: bl, draw: addonOps(sp0.ops), deco: sp0.deco, pos: Object.keys(sp0.pos || {}).reduce(function (acc, k) { acc['rv_' + k] = sp0.pos[k]; return acc; }, {}), signs: sp0.signs, spawn: sp0.spawn });
+        // Where you arrive inside each building: one step in from the room's own way out (unless the add-on says).
+        MAPS[o.id].buildings.forEach(function (b) {
+          if (!b.to || !MAPS[b.to] || (addonNum(b.tx, 0, 200) && addonNum(b.ty, 0, 200))) return;
+          const w = (MAPS[b.to].warps || []).find(function (q) { return q.to === o.id; });
+          if (w) { b.tx = w.x; b.ty = Math.max(0, w.y - 1); } else { b.tx = 1; b.ty = 1; }
+        });
       }
     });
     // A few people the expansion adds to Torn City itself (only ever new people, with ids starting 'rv_').
@@ -17170,6 +17176,12 @@
     G = save;
     G.opts = G.opts || { speed: 1 }; G.flags = G.flags || {}; G.defeated = G.defeated || {}; G.bag = G.bag || {}; G.box = G.box || [];
     if (!MAPS[G.map]) { G.map = G.respawn.map; G.x = G.respawn.x; G.y = G.respawn.y; }
+    // A save made after walking into a Ravenport building in 2.49.0-2.49.4 can have no position (it showed a black
+    // screen): put the player just inside the room's way out.
+    if (typeof G.x !== 'number' || typeof G.y !== 'number' || !isFinite(G.x) || !isFinite(G.y)) {
+      const m0 = MAPS[G.map], w0 = m0 && (m0.warps || []).find(function (q) { return MAPS[q.to] && MAPS[q.to].outdoor; });
+      if (w0) { G.x = w0.x; G.y = Math.max(0, w0.y - 1); G.dir = 'up'; } else { G.map = G.respawn.map; G.x = G.respawn.x; G.y = G.respawn.y; }
+    }
     migrateWorld();
     // A room may have been redrawn since this save (2.47 puzzle rooms): if you'd load inside something solid, start
     // at the room's entrance instead.

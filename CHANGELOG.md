@@ -8,6 +8,10 @@ Every Torn Arcade update since 2.2.0, newest first. Dates are in TCT (Torn City 
 
 ---
 
+## 2.49.5 — 2026-10-25
+### Fixed
+- Tornies: walking into a building in Ravenport could freeze the game on a black screen with no sound. Every Ravenport door now works, and a save stuck that way loads just inside the building.
+
 ## 2.49.4 — 2026-10-25
 ### Fixed
 - Tornies: the screen stayed black during the SS Bogie voyage and a few other Ravenport scenes. The text now shows on the black screen as it should.
