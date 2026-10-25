@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.47.5
+// @version      2.47.6
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with nine game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -664,7 +664,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gifts and trades', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.47.5';
+  const VERSION = '2.47.6';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -12595,9 +12595,20 @@
     acts: [[1, 4, function () { return say('A note in neat handwriting:|"Gone to Christmas Town. Back in 5 minutes. -C"|...The ink is still wet.'); }, function () { return !!G.flags.clans; }]],
     npcs: [{ id: 'clansdancer', x: 6, y: 5, dir: 'down', pal: 'clansdancer', move: 'still', cond: function () { return !G.flags.clans; }, run: clansdancerTalk }]
   });
+  // Old Pete's reef chart (2.47.6): the monkeys of the Coral Jungle carried it off into their temple (2ze-puzzlemaps.js).
+  if (!ITEMS.pete_chart) { ITEMS.pete_chart = { name: 'Reef Chart', price: 0, kind: 'key', desc: 'Old Pete\'s chart of the reef round the Private Island, a little chewed by monkeys.' }; ITEM_ORDER.push('pete_chart'); }
   // Old Pete and his rowing boat on the west shore of the Coral Isles.
   if (MAPS.isles) MAPS.isles.npcs.push({ id: 'is_pete', x: 3, y: 10, dir: 'left', pal: 'seadog', move: 'look', run: async function () {
     await say('OLD PETE: See that speck out in the bay? That\'s a Private Island. Best property in all of Torn City.|The owner hasn\'t been seen since 2016. Folk say the lights are still on.');
+    // Since 2.47.6 you need Old Pete's reef chart first (anyone who has already been to the island can still go).
+    if (!G.flags.clans && !G.bag.pete_chart) {
+      if (!G.flags.peteChart) {
+        G.flags.peteChart = 1;
+        await say('OLD PETE: Trouble is, the reef round that island will rip a boat in half. Only my old reef chart shows the safe way through.|I lost it the night I got shipwrecked, out by the jungle. Ask that castaway fella. He picks up everything that washes ashore.');
+      } else await say('OLD PETE: No chart, no boat. Ask the castaway in the jungle, he\'ll know where it went.');
+      saveGame(); return;
+    }
+    if (!G.flags.clans && !G.flags.peteRead) { G.flags.peteRead = 1; await say('OLD PETE: Well I never! My reef chart! Bit chewed, but the safe way through is all there.'); }
     if (!(await yesno('OLD PETE: I\'ll row you out there for $2,016. Fair price. It\'s the year, see? Go?'))) { await say('OLD PETE: Suit yourself. The island\'s not going anywhere. Neither is she, I reckon.'); return; }
     if (G.money < 2016) { await say('OLD PETE: You\'re a bit short, friend. Come back with $2,016.'); return; }
     G.money -= 2016; sfx.point();
@@ -14070,6 +14081,71 @@
       { id: 'fg_g2', x: 14, y: 4, dir: 'left', pal: TRAINERS.ind_g2.pal, trainer: 'fg_g2', sight: 2, before: 'Oi! Nobody touches this generator!', after: 'Whatever. It\'s not my factory.' }]
   }; });
 
+  /* ===== The Monkey Temple (Coral Jungle): the expedition's lost temple, where the monkeys took Old Pete's chart. =====
+     Found behind the vines at the top of the waterfall pool (ride the waves, press A on the vines) once the castaway has
+     told you about it. Four stone monkeys must be pressed in the order of the carved rhyme to lower the stone gate;
+     then push the stone blocks aside to reach the altar. */
+  const TEMPLE_ORDER = ['eyes', 'ears', 'mouth', 'fear'];
+  const TEMPLE_IDOLS = {   // where each monkey sits, and what it's doing
+    '11,10': ['ears', 'A stone monkey with its hands over its ears.'],
+    '0,13': ['eyes', 'A stone monkey with its hands over its eyes.'],
+    '11,13': ['fear', 'A stone monkey hugging its knees, trembling.'],
+    '0,10': ['mouth', 'A stone monkey with its hands over its mouth.']
+  };
+  async function templeIdol(x, y) {
+    const I = TEMPLE_IDOLS[x + ',' + y], seq = W.pz.seq = W.pz.seq || [];
+    if (W.pz.T) { await say(I[1] + '|It doesn\'t move any more.'); return; }
+    if (seq.indexOf(I[0]) >= 0) { await say(I[1] + '|It has already been pressed in.'); return; }
+    await say(I[1]);
+    if (!(await yesno('Press the monkey\'s nose?'))) return;
+    seq.push(I[0]); tone(260 + seq.length * 60, 0.12, 'square', 0.04);
+    await say('*Click.* The stone nose sinks in.');
+    if (seq.length < 4) return;
+    if (seq.join() === TEMPLE_ORDER.join()) { pzSet('T', true); jingle('item'); await say('Deep rumbling... The stone gate grinds down into the floor!'); return; }
+    W.pz.seq = []; tone(110, 0.4, 'sawtooth', 0.05, 70);
+    await say('The four noses pop back out with a loud CLACK. Wrong order!');
+    if (Math.random() < 0.5 && G.party.some(alive)) { await say('Something drops from the ceiling!'); await wildBattle(MAPS.jungle.wild); }
+  }
+  async function templeAltar() {
+    if (G.flags.templeAltar) { await say('An empty stone altar. The monkeys have nothing left to hide.'); return; }
+    G.flags.templeAltar = 1;
+    addItem('pete_chart', 1); addItem('energy_bar', 2); G.money += 8000; jingle('get');
+    await say('A rolled-up chart lies on the altar, surrounded by shiny things the monkeys collected.|{P} got the REEF CHART, 2 Energy Bars and $8,000!');
+    saveGame();
+  }
+  pzRoom('jungle_temple', function () { return {
+    name: 'Monkey Temple', bg: 'rock', border: 'w', indoor: true, tiles: 'G', banner: 1, crates: true, crateStyle: 'stone',
+    crateSolved: [[3, 5], [7, 6]],
+    rows: ['wwwwwwwwwwww', 'wwwwwwwwwwww', 'KKKKKxKKKKKK', 'KKKGGGGGGKKK', 'KKKKKGKKKKKK', 'KKKGGRGGKKKK', 'KKKGGRGGKKKK', 'KKKGGGGGKKKK',
+      'KKKKKGGKKKKK', 'GGGGGGGGGGGG', 'xGGGGGGGGGGx', 'GGGGGGGGGGGG', 'GGGGGGGGGGGG', 'xGGGGGGGGGGx', 'GGGGGGGGGGGG', 'GGGGGmmGGGGG'],
+    warps: mats([5, 6], 15, 'jungle', 21, 3),
+    things: { K: 'Ancient stone, carved with hundreds of tiny monkeys.', R: 'A heavy stone block on worn grooves. Walk into it to push it.' },
+    statue: function () { return 'The stone altar.'; },
+    signs: [[4, 8, 'Words are carved into the wall:|"First the one who will not SEE,|then the one who will not HEAR,|then the one who will not SPEAK,|and last the one who shakes with FEAR."'], [7, 8, 'Someone has scratched underneath the carving:|"Monkeys took my chart in here. Never again. -Pete"']],
+    pz: { style: 'bars', gates: { T: [[5, 8], [6, 8]] },
+      switches: Object.keys(TEMPLE_IDOLS).map(function (k) { const xy = k.split(',').map(Number); return { x: xy[0], y: xy[1], run: function () { return templeIdol(xy[0], xy[1]); }, lit: function () { return !!(W.pz.T || (W.pz.seq || []).indexOf(TEMPLE_IDOLS[k][0]) >= 0); } }; })
+        .concat([{ x: 5, y: 2, run: templeAltar, lit: function () { return !G.flags.templeAltar; } }]) },
+    npcs: []
+  }; });
+  // The way in: vines over the rocks above the waterfall pool, reached by riding the waves.
+  if (MAPS.jungle) {
+    MAPS.jungle.acts = (MAPS.jungle.acts || []).concat([[25, 1, async function () {
+      if (!G.flags.castawayTemple) { await say('Thick vines hang down over the rocks. Behind them, the waterfall roars.'); return; }
+      await say('You part the vines... There\'s a stone doorway behind the waterfall, carved with monkeys!');
+      G.surf = 0; warpTo('jungle_temple', 5, 14, 'up');
+    }]]);
+    // The castaway knows where Pete's chart went.
+    const cw = MAPS.jungle.npcs.find(function (n) { return n.id === 'castaway'; });
+    if (cw) { const first = cw.run; cw.run = async function (n) {
+      await first(n);
+      if (G.flags.peteChart && !G.bag.pete_chart && !G.flags.clans) {
+        G.flags.castawayTemple = 1;
+        await say('CASTAWAY: Pete\'s chart? Ha! I had it, till the monkeys pinched it.|They took it into their temple, behind the waterfall up north. Ride across the pool and look behind the vines.|It\'s full of stone monkeys. I\'ve never been brave enough to go in.');
+        saveGame();
+      }
+    }; }
+  }
+
   /* ---------- Tornie logic ---------- */
   let uidN = 1;
   function expFor(gr, n) {
@@ -14717,6 +14793,7 @@
           for (let a = 0; a < 6; a++) { const ang = Math.PI / 6 + a * Math.PI / 3; ctx.lineTo(x + Math.cos(ang) * 9, y + Math.sin(ang) * 9); }
           ctx.closePath(); ctx.fillStyle = has ? BADGES[k][1] : '#e2d6bc'; ctx.fill(); ctx.lineWidth = 1; ctx.strokeStyle = has ? '#5a3010' : '#c8b898'; ctx.stroke();
           if (has) { fr(x - 4, y - 3, 8, 2, '#f0c080'); fr(x - 4, y + 1, 8, 2, '#f0c080'); }
+          text(has ? MEDALS[k][1].toUpperCase() : '?', x, y + 11, has ? '#5a3a1a' : '#b0a080', { sz: 4.6, al: 'center' });
         }
       };
       push(m);
@@ -15443,6 +15520,13 @@
       if (tileAt(m, tx, ty) !== 'R') continue;
       // Pushable crates ride on a little trolley with wheels and steel corners, so they stand out from fixed crate stacks.
       const sx = tx * 16 - camX, sy = ty * 16 - camY;
+      if (m.crateStyle === 'stone') {   // a carved stone block sitting in worn grooves
+        ctx.save(); ctx.fillStyle = 'rgba(0,0,0,0.28)'; ctx.fillRect(sx + 1, sy + 13, 14, 2);
+        ctx.fillStyle = '#9a9488'; ctx.fillRect(sx + 1.5, sy + 1, 13, 12.5); ctx.fillStyle = '#b8b2a4'; ctx.fillRect(sx + 1.5, sy + 1, 13, 2);
+        ctx.strokeStyle = '#5e594f'; ctx.lineWidth = 0.9; ctx.strokeRect(sx + 1.9, sy + 1.4, 12.2, 11.7);
+        ctx.fillStyle = '#6e695e'; ctx.fillRect(sx + 6, sy + 5, 4, 1); ctx.fillRect(sx + 5, sy + 7, 6, 1); ctx.fillRect(sx + 6.5, sy + 9, 3, 1);
+        ctx.restore(); continue;
+      }
       ctx.save();
       ctx.fillStyle = 'rgba(0,0,0,0.28)'; ctx.beginPath(); ctx.ellipse(sx + 8, sy + 15, 7.5, 2, 0, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = '#3a414c'; ctx.fillRect(sx + 1, sy + 11.5, 14, 2);
