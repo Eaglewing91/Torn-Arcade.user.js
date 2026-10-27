@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.49.5
+// @version      2.49.6
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with nine game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -665,7 +665,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gifts and trades', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.49.5';
+  const VERSION = '2.49.6';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -3064,6 +3064,7 @@
       const len = function () { return pages[m.pi].join('').length; };
       m.update = function (dt) {
         m.t += dt;
+        m.typing = m.ch < len();
         if (m.ch < len()) m.ch = Math.min(len(), m.ch + dt * textCps());
         else if (o.hold && m.pi === pages.length - 1 && !m.done) { m.done = true; res(m); }
       };
@@ -9982,8 +9983,19 @@
     if (IWC.id !== m) return;
     // Quiet moments get several small steps per frame (about 8 ms of work); walking gets at most one.
     const t0 = performance.now(), quiet = iwQuiet();
+    // On slower devices one drawing step can take longer than a frame, which made text and battles stutter while a new
+    // area was being drawn in the background (most noticeable on a first visit to Ravenport). There, quiet moments
+    // only take one small step every third frame; fast devices keep the 8 ms budget.
+    const slow = IWC.stepPeak !== undefined && IWC.stepPeak > 6;
+    if (quiet && slow) {
+      // never while text is being typed out or a battle is animating; otherwise one step every third frame
+      const top = modals[modals.length - 1];
+      if (top && top.typing) return;
+      if (B && (!B.msg || B.msg.ch < B.msg.len || B.anim)) { if (!modals.some(function (q) { return q.items; })) return; }
+      if ((IWC.tick = (IWC.tick || 0) + 1) % 3) return;
+    }
     let n = 0;
-    do { iwPrebakeStep(m, camX, camY, quiet); n++; } while (quiet && n < 40 && IWC.pending && performance.now() - t0 < 8);
+    do { iwPrebakeStep(m, camX, camY, quiet); n++; } while (quiet && !slow && n < 40 && IWC.pending && performance.now() - t0 < 8);
   }
   function iwPrebakeStep(m, camX, camY, quiet) {
     IWC.camX = camX; IWC.camY = camY;
