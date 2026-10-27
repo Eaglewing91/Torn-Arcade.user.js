@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.49.7
+// @version      2.49.8
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with nine game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -252,6 +252,9 @@
 
   if (window.top !== window.self) return;            // never inside frames
   if (document.getElementById('ta-root')) return;    // only one copy per page
+  // Styles this script adds, kept so they can be put back if a page (Torn's maintenance page) rebuilds itself.
+  const TA_STYLES = [];
+  function taStyle(css) { let s = null; try { s = GM_addStyle(css); } catch (e) {} TA_STYLES.push({ css: css, el: s && s.nodeType === 1 ? s : null }); return s; }
 
   /* ================= Starter =================
    * On every Torn page only this small part runs: it adds the "Mobile Phone" link (or a small floating
@@ -259,7 +262,7 @@
    * so pages where you never open the phone pay almost nothing. */
   let arcade = null;
   function startArcade() { if (!arcade) arcade = TA_MAIN(); return arcade; }
-  try { GM_addStyle('.ta-launch{position:fixed;left:12px;bottom:12px;z-index:2147482999;display:flex;align-items:center;gap:6px;padding:7px 13px 7px 10px;margin:0;border-radius:999px;border:1px solid #2f7bd1;background:rgba(12,20,31,.92);color:#e6f2ff;font:700 13px/1 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.45)}.ta-launch[hidden]{display:none}'); } catch (e) {}
+  try { taStyle('.ta-launch{position:fixed;left:12px;bottom:12px;z-index:2147482999;display:flex;align-items:center;gap:6px;padding:7px 13px 7px 10px;margin:0;border-radius:999px;border:1px solid #2f7bd1;background:rgba(12,20,31,.92);color:#e6f2ff;font:700 13px/1 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.45)}.ta-launch[hidden]{display:none}'); } catch (e) {}
   const launcher = document.createElement('button');
   launcher.type = 'button'; launcher.className = 'ta-launch'; launcher.innerHTML = '<span>📱</span><span>Phone</span>';
   launcher.title = 'Open Mobile Phone'; launcher.hidden = true;
@@ -337,10 +340,6 @@
     if (++linkTries < 30) setTimeout(tryLink, 400);
     else {
       launcher.hidden = false;   // no sidebar on this page: show the small floating button instead
-      // Pages without a sidebar (like Torn's maintenance page) can reload themselves. If the phone was open in this
-      // tab moments ago, open it again so you can keep playing. Only this tab's own note is read; nothing is sent.
-      let was = 0; try { was = +sessionStorage.getItem('ta-phone-open') || 0; } catch (e) {}
-      if (was && Date.now() - was < 30000) startArcade().open();
     }
     keepOnPage(launcher, function () { return !launcher.hidden; });
   }
@@ -348,10 +347,22 @@
   // phone. Put it back if that happens. This only looks at the phone's own elements.
   function keepOnPage(el, wanted) {
     if (el._keep) return;
-    el._keep = setInterval(function () { if (wanted() && !el.isConnected) (document.body || document.documentElement).append(el); }, 500);
+    el._keep = setInterval(function () {
+      if (!wanted()) return;
+      if (!el.isConnected) (document.body || document.documentElement).append(el);
+      // our styles went with the page: put them back (the phone and the button are always position:fixed when styled)
+      if (getComputedStyle(el).position !== 'fixed') TA_STYLES.forEach(function (t) {
+        if (t.el) { if (!t.el.isConnected) (document.head || document.documentElement).append(t.el); }
+        else { try { const s = GM_addStyle(t.css); if (s && s.nodeType === 1) t.el = s; } catch (e) {} }
+      });
+    }, 500);
   }
 
   tryLink();
+  // Torn's maintenance page can reload itself. If the phone was open in this tab moments ago, open it again straight
+  // away so you can keep playing. Only this tab's own note is read; nothing is sent anywhere.
+  { let was = 0; try { was = +sessionStorage.getItem('ta-phone-open') || 0; } catch (e) {}
+    if (was && Date.now() - was < 30000) setTimeout(function () { startArcade().open(); }, 300); }
   try { GM_registerMenuCommand('Open Mobile Phone', function () { startArcade().open(); }); } catch (e) {}
 
   /* ================= The phone and its games (set up on first open) ================= */
@@ -444,7 +455,7 @@
   };
 
   /* ================= Styles ================= */
-  GM_addStyle([
+  taStyle([
     '.ta-root{--bg:#0a1018;--panel:#0f1823;--panel2:#132031;--line:#22344d;--line2:#2c4466;--text:#dfe8f3;--muted:#8ea3bb;--accent:#2f7bd1;--good:#3fbf6a;--gold:#ffd65a;',
     '  position:fixed;inset:0;z-index:2147483000;font:14px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:var(--text);text-align:left}',
     '.ta-root[hidden]{display:none!important}',
@@ -678,13 +689,13 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gifts and trades', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.49.7';
+  const VERSION = '2.49.8';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
   const CHANGELOG_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/blob/main/CHANGELOG.md';
 
-  GM_addStyle([
+  taStyle([
     /* The phone */
     '.ta-root{--pw:400px;--ph:820px}',
     '.ta-phone{position:absolute;left:50%;top:50%;width:var(--pw);height:var(--ph);transform:translate(-50%,-50%);padding:11px;border-radius:56px;outline:none;',
@@ -2861,7 +2872,7 @@
   (function () {
   const VW = 240, VH = 160, SC = 3;
 
-  GM_addStyle([
+  taStyle([
     '.ta-panel[data-game="pocket"] .ta-stats{display:none}',
     '.ta-panel[data-game="pocket"] .ta-stage{position:relative;flex-direction:column;justify-content:flex-start;gap:10px;padding:8px;min-height:0}',
     '.ta-pt{display:flex;flex-direction:column;align-items:center;gap:12px;width:100%}',
@@ -17427,7 +17438,7 @@
   }
   function invOld() { try { return GM_getValue('invasion', {}) || {}; } catch (e) { return {}; } }
   function send(cmd, extra) { const o = Object.assign({ cmd: cmd }, extra || {}); document.dispatchEvent(new CustomEvent('ta-inv-cmd', { detail: JSON.stringify(o) })); }
-  GM_addStyle([
+  taStyle([
     '.ta-phone .ta-panel.tim-wrap.ta-on{display:block;height:100%;min-height:0}',
     '.tim-wrap #ta-inv-root{height:100%}',
     '.tim{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;height:100%;min-height:0;padding:24px 22px;text-align:center;overflow:auto}',
@@ -21197,7 +21208,7 @@
     };
     function icon(r) { return '<svg viewBox="0 0 30 30" aria-hidden="true">' + ICON[r] + '</svg>'; }
 
-    GM_addStyle([
+    taStyle([
       '.ta-panel[data-game="territories"] .ta-bar,.ta-panel[data-game="territories"] .ta-stats,.ta-panel[data-game="territories"] .ta-help{display:none}',
       '.ta-land .ta-panel[data-game="territories"].ta-on{grid-template-columns:minmax(0,1fr)}',
       '.ta-land .ta-panel[data-game="territories"] .ta-stage{grid-column:1}',
@@ -22446,7 +22457,7 @@
       '<linearGradient id="ta-ch-gb" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5a5652"/><stop offset=".5" stop-color="#2a2725"/><stop offset="1" stop-color="#0d0c0b"/></linearGradient>' +
       '</defs></svg>';
 
-    GM_addStyle([
+    taStyle([
       '.ta-panel[data-game="chess"] .ta-stage{padding:6px;align-items:stretch;justify-content:stretch;background:#16120e}',
       '.ta-ch{position:absolute;inset:6px;--cp:#211b15;--cp2:#2c241c;--cl:#4a3b2c;--cm:#bfa98d;--cg:#f2c45a;color:#f6efe4;font-size:13px;line-height:1.3}',
       '.ta-ch [hidden]{display:none!important}',

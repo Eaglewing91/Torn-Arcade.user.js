@@ -8,6 +8,10 @@ Every Torn Arcade update since 2.2.0, newest first. Dates are in TCT (Torn City 
 
 ---
 
+## 2.49.8 — 2026-10-27
+### Fixed
+- The phone could still close on Torn's maintenance page. It now also survives the page rebuilding its whole layout, and after a reload it opens again straight away.
+
 ## 2.49.7 — 2026-10-27
 ### Fixed
 - The phone closed by itself after a couple of seconds while Torn was down for maintenance. It now stays open, and if the maintenance page reloads, the phone opens again.
