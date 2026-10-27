@@ -8,6 +8,10 @@ Every Torn Arcade update since 2.2.0, newest first. Dates are in TCT (Torn City 
 
 ---
 
+## 2.49.7 — 2026-10-27
+### Fixed
+- The phone closed by itself after a couple of seconds while Torn was down for maintenance. It now stays open, and if the maintenance page reloads, the phone opens again.
+
 ## 2.49.6 — 2026-10-27
 ### Changed
 - Tornies: smoother text and battles on slower phones and computers. The game draws new areas in the background during quiet moments; on slower devices it now waits while text is being typed out or a battle is animating, and works in smaller pieces. Most noticeable on a first visit to Ravenport.

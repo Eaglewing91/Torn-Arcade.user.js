@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.49.6
+// @version      2.49.7
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with nine game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online), Dirty Bombs and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -335,7 +335,20 @@
   function tryLink() {
     if (insertPhoneLink()) return;
     if (++linkTries < 30) setTimeout(tryLink, 400);
-    else launcher.hidden = false;   // no sidebar on this page: show the small floating button instead
+    else {
+      launcher.hidden = false;   // no sidebar on this page: show the small floating button instead
+      // Pages without a sidebar (like Torn's maintenance page) can reload themselves. If the phone was open in this
+      // tab moments ago, open it again so you can keep playing. Only this tab's own note is read; nothing is sent.
+      let was = 0; try { was = +sessionStorage.getItem('ta-phone-open') || 0; } catch (e) {}
+      if (was && Date.now() - was < 30000) startArcade().open();
+    }
+    keepOnPage(launcher, function () { return !launcher.hidden; });
+  }
+  // Some pages (Torn's maintenance page) redraw everything on the page every few seconds, which also removed the
+  // phone. Put it back if that happens. This only looks at the phone's own elements.
+  function keepOnPage(el, wanted) {
+    if (el._keep) return;
+    el._keep = setInterval(function () { if (wanted() && !el.isConnected) (document.body || document.documentElement).append(el); }, 500);
   }
 
   tryLink();
@@ -665,7 +678,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gifts and trades', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.49.6';
+  const VERSION = '2.49.7';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -2127,13 +2140,15 @@
   function openArcade() {
     if (isOpen) return;
     refreshDevIcon();
+    keepOnPage(root, function () { return isOpen; });
+    try { sessionStorage.setItem('ta-phone-open', String(Date.now())); } catch (e) {}
     isOpen = true; root.hidden = false;
     savedOverflow = document.documentElement.style.overflow;
     document.documentElement.style.overflow = 'hidden';
     if (document.activeElement && document.activeElement !== document.body && !root.contains(document.activeElement)) {
       try { document.activeElement.blur(); } catch (e) {}
     }
-    applyWallpaper(); tickClock(); clockTimer = setInterval(tickClock, 5000);
+    applyWallpaper(); tickClock(); clockTimer = setInterval(function () { tickClock(); try { sessionStorage.setItem('ta-phone-open', String(Date.now())); } catch (e) {} }, 5000);
     evStart(); rmStart(); inboxStart(); showNews(); applyChatOver();
     setOrientation(wantsLand(current), false);
     win.classList.remove('ta-turn-l', 'ta-turn-p');
@@ -2148,6 +2163,7 @@
     tornLeft();
     if (current && games[current]) games[current].leave();
     isOpen = false; root.hidden = true; clearInterval(clockTimer); inboxStop(); cloudPush();
+    try { sessionStorage.removeItem('ta-phone-open'); } catch (e) {}
     evStop(); rmStop(); applyChatOver();
     document.documentElement.style.overflow = savedOverflow;
   }
