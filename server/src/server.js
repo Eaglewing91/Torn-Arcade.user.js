@@ -34,6 +34,7 @@ BOARDS['tornies:merits'] = { dir: 'desc', min: 1, max: 5000 };
 BOARDS['tornies:golden'] = { dir: 'desc', min: 1, max: 2000 };
 BOARDS['tornies:fish'] = { dir: 'desc', min: 1, max: 1000000 };
 BOARDS['invasion:standard'] = { dir: 'desc', min: 1, max: 100000000 };
+BOARDS['banker:best'] = { dir: 'desc', min: 1, max: 25000000 };   // Deal or No Deal: biggest win, in cents (1 cent to $250,000)
 const ORIGINS = ['https://www.torn.com', 'https://torn.com'];
 
 /* ---------- Rate limits: per IP, in memory (one server instance) ---------- */

@@ -8,6 +8,14 @@ Every Torn Arcade update since 2.2.0, newest first. Dates are in TCT (Torn City 
 
 ---
 
+## 2.50.0 — 2026-10-28
+### New
+- **Deal or No Deal** (the **DoND** app), a new game on the phone, played like the UK TV show. 22 sealed boxes hide amounts from 1 cent to $250,000, and one of them is yours. Open 5 boxes, then 3 at a time over 6 rounds; after each round the Banker phones with an offer for your box: **DEAL** or **NO DEAL**? Now and then he offers a swap instead. Turn him down every time and you win whatever is in your box. Pretend money only, nothing to do with your Torn cash.
+- Global leaderboard for Deal or No Deal: the biggest win.
+
+### Server
+- Server 1.8.0: the Deal or No Deal leaderboard.
+
 ## 2.49.8 — 2026-10-27
 ### Fixed
 - The phone could still close on Torn's maintenance page. It now also survives the page rebuilding its whole layout, and after a reload it opens again straight away.
