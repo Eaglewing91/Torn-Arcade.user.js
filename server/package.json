@@ -1,6 +1,6 @@
 {
   "name": "torn-arcade-server",
-  "version": "1.8.0",
+  "version": "1.8.1",
   "private": true,
   "description": "Server for Torn Arcade online play: sign-in with a Torn ID, global leaderboards, online Torn Territories and safe Tornie trades.",
   "license": "UNLICENSED",

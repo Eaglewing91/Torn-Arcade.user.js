@@ -8,6 +8,16 @@ Every Torn Arcade update since 2.2.0, newest first. Dates are in TCT (Torn City 
 
 ---
 
+## 2.50.1 — 2026-10-29
+### Changed
+- Torn Territories: games against the computer now count towards your global Territories rating (Classic, Flight Paths 12 and Flight Paths 16), as long as you're signed in online and only one person is playing. Wins and losses both count, at half the step of an online game, and harder computer players are worth more. Your new rating shows in the game log when the game ends.
+
+### Fixed
+- Deal or No Deal now has its own illustrated app icon (added in 2.50.0).
+
+### Server
+- Server 1.8.1: rated results for Territories games against the computer.
+
 ## 2.50.0 — 2026-10-28
 ### New
 - **Deal or No Deal** (the **DoND** app), a new game on the phone, played like the UK TV show. 22 sealed boxes hide amounts from 1 cent to $250,000, and one of them is yours. Open 5 boxes, then 3 at a time over 6 rounds; after each round the Banker phones with an offer for your box: **DEAL** or **NO DEAL**? Now and then he offers a swap instead. Turn him down every time and you win whatever is in your box. Pretend money only, nothing to do with your Torn cash.

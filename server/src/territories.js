@@ -199,6 +199,20 @@ async function route(req, res, url, c) {
   if (me.banned) return c.fail(res, 403, 'banned', 'This account can\'t play online.');
   if (!me.verified) return c.fail(res, 403, 'verify_first', 'Verify your Torn ID to play online games.');
   let m;
+  // A finished game against the computer on the player's phone (one person, 1 to 7 computer players). It moves the same
+  // rating as online games, at half the step, against a fixed rating for the difficulty.
+  if (path === '/v1/tt/solo' && method === 'POST') {
+    if (c.limited('a' + me.id, 'ttsolo', 30, 24 * 3600000)) return c.fail(res, 429, 'slow_down', 'That\'s enough rated games against the computer for today.');
+    const b = await c.readBody(req), size = { classic: 'large', fp12: 'fp12', fp16: 'fp16' }[b.game], ai = Math.floor(Number(b.ai)), opp = { easy: 1000, normal: 1200, hard: 1400 }[b.diff];
+    if (!size || !opp || !(ai >= 1 && ai <= 7) || typeof b.won !== 'boolean') return c.fail(res, 400, 'bad_request', 'Bad game result.');
+    const rk = ratingKey(size);
+    await db.q("INSERT INTO ratings (account_id, game) VALUES ($1, $2) ON CONFLICT DO NOTHING", [me.id, rk]);
+    const r = (await db.q("SELECT rating FROM ratings WHERE account_id = $1 AND game = $2", [me.id, rk])).rows[0].rating;
+    const d = Math.round(16 * ((b.won ? 1 : 0) - 1 / (1 + Math.pow(10, (opp - r) / 400))));
+    const u = await db.q("UPDATE ratings SET rating = rating + $2, games = games + 1, wins = wins + $3, updated_at = now() WHERE account_id = $1 AND game = $4 RETURNING rating",
+      [me.id, d, b.won ? 1 : 0, rk]);
+    return c.send(res, 200, { rating: u.rows[0].rating, change: d });
+  }
   if (path === '/v1/tt/games' && method === 'GET') return c.send(res, 200, { games: await myGames(me) });
   if (path === '/v1/tt/public' && method === 'GET') return c.send(res, 200, { games: openGames(me, GAME_TYPES.indexOf(url.searchParams.get('size')) >= 0 ? url.searchParams.get('size') : null) });
   if ((path === '/v1/tt/games' || path === '/v1/tt/quick') && method === 'POST') {
