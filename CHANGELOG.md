@@ -8,6 +8,10 @@ Every Torn Arcade update since 2.2.0, newest first. Dates are in TCT (Torn City 
 
 ---
 
+## 2.51.0 — 2026-10-29
+### Removed
+- Dirty Bombs has been retired from the phone, along with its leaderboard tab. The phone now has nine game apps.
+
 ## 2.50.1 — 2026-10-29
 ### Changed
 - Torn Territories: games against the computer now count towards your global Territories rating (Classic, Flight Paths 12 and Flight Paths 16), as long as you're signed in online and only one person is playing. Wins and losses both count, at half the step of an online game, and harder computer players are worth more. Your new rating shows in the game log when the game ends.
