@@ -84,6 +84,7 @@ From version 2.15.2, Tampermonkey checks this link for new versions (about once 
 | ![Frostbite Cave](screenshots/tornies-ice-cave.png) | ![Torn Invasion 3D](screenshots/torn-invasion-3d.png) |
 | ![Angry Bogies](screenshots/angry-bogies.png) | ![Flappy Torn](screenshots/flappy-torn.png) |
 | ![Faction Defence, Casino Strip](screenshots/faction-defence.png) | ![Faction Defence, Racket HQ](screenshots/faction-defence-racket-hq.png) |
+| ![Deal or No Deal](screenshots/deal-or-no-deal.png) | ![Chess](screenshots/chess.png) |
 
 ![Anton's Egg Dash: Downtown, Casino Strip, The Docks and the Industrial Zone](screenshots/anton-egg-dash.png)
 
