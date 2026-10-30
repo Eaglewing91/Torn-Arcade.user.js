@@ -27,6 +27,9 @@ BOARDS['bombs:hard'] = { dir: 'asc', min: 25, max: 86400 };
 BOARDS['eggdash:endless'] = { dir: 'desc', min: 1, max: 100000000 };
 BOARDS['bogies:total'] = { dir: 'desc', min: 1, max: 100000000 };
 for (let i = 1; i <= 6; i++) BOARDS['defence:' + i] = { dir: 'desc', min: 1, max: 30 };   // 30 waves since 2.40
+BOARDS['defence:run'] = { dir: 'desc', min: 1, max: 2000000 };    // Faction Defence score for one game, Overtime included (2.52)
+BOARDS['defence:total'] = { dir: 'desc', min: 1, max: 12000000 };
+BOARDS['defence:wave'] = { dir: 'desc', min: 1, max: 1000 };       // highest wave on any map, Overtime waves included  // the best games on all six maps added up
 BOARDS['tornies:caught'] = { dir: 'desc', min: 1, max: 179 };
 BOARDS['tornies:medals'] = { dir: 'desc', min: 1, max: 8 };
 BOARDS['tornies:time'] = { dir: 'desc', min: 60, max: 10 * 365 * 86400 };   // play time in seconds

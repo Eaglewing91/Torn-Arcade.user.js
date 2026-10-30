@@ -8,6 +8,21 @@ Every Torn Arcade update since 2.2.0, newest first. Dates are in TCT (Torn City 
 
 ---
 
+## 2.52.0 — 2026-10-30
+### Changed
+- Faction Defence: the Sniper has been toned down. It now has a shorter range, fires more slowly and costs $300 (was $250). It's still the best answer to armour and bosses, but a wall of Snipers no longer holds every map on its own.
+
+### New
+- Faction Defence: **Smoke runners**. These raiders hide in a cloud of smoke, so Snipers can't see them until they're close. Gunners, Cannons, Molotovs and Tasers hit them normally. They join the raids part-way through each map.
+- Faction Defence: **Swarm waves**. On waves 15 and 25 a tight pack of Bikers comes in behind the usual raid. Splash damage and slows are your friends.
+- Faction Defence: **Overtime**. After you win a map you can choose to keep going: endless waves that keep getting harder, with a Juggernaut every fifth wave, until your HQ falls. Every Overtime wave you clear adds to that game's score, and your progress is saved as you go.
+- Faction Defence: **new global leaderboards**, **Total score** and **Highest wave**.
+  - **Total score** adds up your best game on each of the six maps. Every game now ends with a score: 1,000 per wave cleared, up to 10,000 for HQ health left, 5 per raider defeated, a speed bonus for winning in under 30 minutes of game time (fast-forward doesn't count, calling waves early does), 1 per $10 left over, minus 500 per Air strike used, and 2,000 per Overtime wave. The total is then multiplied by the map's difficulty, from x1.0 on Westgate to x1.5 on Racket HQ.
+  - **Highest wave** is the furthest you've got on any map, Overtime included.
+
+### Server
+- Server 1.8.2: the Faction Defence Total score and Highest wave boards.
+
 ## 2.51.0 — 2026-10-29
 ### Removed
 - Dirty Bombs has been retired from the phone, along with its leaderboard tab. The phone now has nine game apps.

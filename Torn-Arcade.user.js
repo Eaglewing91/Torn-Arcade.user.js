@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.51.0
+// @version      2.52.0
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with nine game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online), Deal or No Deal (the box game show) and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -679,7 +679,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gifts and trades', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.51.0';
+  const VERSION = '2.52.0';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -1186,7 +1186,7 @@
     eggdash: function (k, v) { return ['Endless', Number(v).toLocaleString('en-GB')]; },
     territories: function (k, v) { return k[1] === 'wins' ? ['Wins', v] : ['Fastest win', v + ' turns']; },
     bogies: function (k, v) { return ['Level ' + k[1], Number(v).toLocaleString('en-GB')]; },
-    defence: function (k, v) { return [['Westgate', 'The Docks', 'Midtown', 'Casino Strip', 'Industrial Zone', 'Racket HQ'][k[1] - 1] || 'Map ' + k[1], 'Wave ' + v]; }
+    defence: function (k, v) { if (k[1] === 'wave') return ['Highest wave', v > 30 ? '30 + ' + (v - 30) + ' Overtime' : 'Wave ' + v]; if (k[1] === 'total' || k[1] === 'run') return [k[1] === 'total' ? 'Total score' : 'Best game', Number(v).toLocaleString('en-GB')]; return [['Westgate', 'The Docks', 'Midtown', 'Casino Strip', 'Industrial Zone', 'Racket HQ'][k[1] - 1] || 'Map ' + k[1], 'Wave ' + v]; }
   };
   function iconSmall(a) {
     const img = APP_ART[a.id] ? 'data:image/webp;base64,' + APP_ART[a.id] : '';
@@ -1982,7 +1982,7 @@
     { id: 'pocket', boards: [['tornies:caught', 'Tornies caught'], ['tornies:medals', 'Arena medals'], ['tornies:time', 'Total playtime'], ['tornies:merits', 'Merit points'], ['tornies:golden', 'Golden Tornies'], ['tornies:fish', 'Fish caught']] },
     { id: 'invasion', boards: [['invasion:standard', 'Best score']] },
     { id: 'bogies', boards: [['bogies:total', 'Total score']] },
-    { id: 'defence', boards: [1, 2, 3, 4, 5, 6].map(function (n) { return ['defence:' + n, ['Westgate', 'The Docks', 'Midtown', 'Casino Strip', 'Industrial Zone', 'Racket HQ'][n - 1]]; }) },
+    { id: 'defence', boards: [['defence:total', 'Total score'], ['defence:wave', 'Highest wave']] },
     { id: 'eggdash', boards: [['eggdash:endless', 'Best score']] },
     { id: 'flappy', boards: [['flappy:hard', 'Best score']] },
     { id: 'banker', boards: [['banker:best', 'Biggest win']] }
@@ -1992,6 +1992,8 @@
   function lbFmt(board, v) {
     if (v === null || v === undefined) return '–';
     if (board.indexOf('bombs:') === 0) return v + 's';
+    if (board === 'defence:total' || board === 'defence:run') return Number(v).toLocaleString('en-GB');
+    if (board === 'defence:wave' && v > 30) return '30 + ' + (v - 30) + ' OT';
     if (board.indexOf('defence:') === 0) return 'Wave ' + v;
     if (board === 'banker:best') return v < 100 ? v + '¢' : '$' + (v / 100).toLocaleString('en-US', { maximumFractionDigits: 2 });
     if (board === 'tornies:caught') return v + '/179';
@@ -2069,7 +2071,7 @@
     else {
       const d = c.data, list = d.players || [];
       // A table: Rank · Name · ID (opens their Torn profile when tapped) · Score
-      body = list.length ? '<div class="ta-lbt ta-lbhead"><span>Rank</span><span>Name</span><span>ID</span><span>' + (rated ? 'Rating' : lbBoard.indexOf('bombs:') === 0 ? 'Time' : lbBoard.indexOf('defence:') === 0 ? 'Wave' : 'Score') + '</span></div>' + list.map(function (p) {
+      body = list.length ? '<div class="ta-lbt ta-lbhead"><span>Rank</span><span>Name</span><span>ID</span><span>' + (rated ? 'Rating' : lbBoard.indexOf('bombs:') === 0 ? 'Time' : lbBoard.indexOf('defence:') === 0 && !/^defence:(total|run)$/.test(lbBoard) ? 'Wave' : 'Score') + '</span></div>' + list.map(function (p) {
         const mine = o.account && o.account.tornId === p.tornId;
         return '<div class="ta-lbt' + (mine ? ' ta-lbme' : '') + '"><span class="ta-lbrank">' + (p.rank <= 3 ? ['🥇', '🥈', '🥉'][p.rank - 1] : p.rank) + '</span><span class="ta-lbname"><b>' + esc(p.name) + '</b>' +
           (rated ? '<small>' + p.wins + ' wins · ' + p.games + ' games</small>' : '') + '</span><a class="ta-lbid" href="https://www.torn.com/profiles.php?XID=' + Number(p.tornId) + '" target="_blank" rel="noopener" title="Open ' + esc(p.name) + '\'s Torn profile">' + Number(p.tornId) + '</a><span class="ta-lbr">' + (rated ? p.rating : lbFmt(lbBoard, p.value).replace(/^Wave /, '')) + '</span></div>';
@@ -18775,7 +18777,7 @@
       cannon:  { name: 'Cannon',  icon: '💥', cost: 170, dmg: 26,  cd: 1.5,  range: 104, pierce: 0.5, col: '#5b5f68', splash: 38, desc: 'Explosive shells hit a group.' },
       molotov: { name: 'Molotov', icon: '🔥', cost: 150, dmg: 17,  cd: 2.0,  range: 100, pierce: 0.6, col: '#d0612a', pool: 36, burn: 3.0, desc: 'Leaves a fire on the road that burns everyone in it.' },
       taser:   { name: 'Taser',   icon: '⚡', cost: 120, dmg: 6,   cd: 0.9,  range: 100, pierce: 0,   col: '#e8c832', slow: 0.5, chain: 2, desc: 'Slows raiders down. Zaps two more nearby.' },
-      sniper:  { name: 'Sniper',  icon: '🎯', cost: 250, dmg: 80,  cd: 3.3,  range: 190, pierce: 1,   col: '#3a6a3a', desc: 'Long range. Goes through armour. Aims at the toughest raider.' }
+      sniper:  { name: 'Sniper',  icon: '🎯', cost: 300, dmg: 80,  cd: 4.5,  range: 150, pierce: 1,   col: '#3a6a3a', desc: 'Long range. Goes through armour. Aims at the toughest raider. Can\'t see raiders in smoke until they\'re close.' }
     };
     const TW_ORDER = ['gunner', 'cannon', 'molotov', 'taser', 'sniper'];
     const LV_DMG = [1, 1.45, 2.1], LV_RNG = [1, 1.08, 1.16], UP_COST = [0, 0.75, 1.25];
@@ -18785,13 +18787,15 @@
       biker:  { hp: 24,   spd: 105, armor: 0,    cash: 4,   hit: 1,  r: 8,  name: 'Biker' },
       brute:  { hp: 115,  spd: 38, armor: 0.55, cash: 8,  hit: 2,  r: 10, name: 'Armoured brute' },
       medic:  { hp: 48,   spd: 48, armor: 0,    cash: 7,  hit: 1,  r: 7,  name: 'Medic', heal: 7 },
+      smoke:  { hp: 40,   spd: 60, armor: 0,    cash: 6,  hit: 1,  r: 8,  name: 'Smoke runner', smoke: 70 },   // hides in smoke: Snipers only see it within 70px
       boss:   { hp: 600,  spd: 26, armor: 0.3,  cash: 50,  hit: 5,  r: 13, name: 'Enforcer', big: 'ENFORCER' },
       riot:   { hp: 700,  spd: 24, armor: 0.25, cash: 70,  hit: 7,  r: 14, name: 'Riot Captain', big: 'RIOT CAPTAIN', shield: 0.5 },   // the shield soaks up hits (fire gets under it)
       jugg:   { hp: 1000, spd: 17, armor: 0.4,  cash: 160, hit: 15, r: 16, name: 'Juggernaut', big: 'JUGGERNAUT', blast: 0.6, slowRes: 0.5 },   // bomb-suit armour: half damage from shells and fire, shrugs off half of any slow
       don:    { hp: 1500, spd: 22, armor: 0.35, cash: 150, hit: 12, r: 15, name: 'Don Varro', big: 'DON VARRO' }
     };
     // When each raider type first appears, per map (wave number).
-    const INTRO = [{ biker: 8, brute: 14, medic: 20 }, { biker: 6, brute: 11, medic: 16 }, { biker: 6, brute: 10, medic: 14 }, { biker: 5, brute: 11, medic: 13 }, { biker: 5, brute: 8, medic: 11 }, { biker: 4, brute: 8, medic: 10 }];
+    const INTRO = [{ biker: 8, brute: 14, medic: 20, smoke: 16 }, { biker: 6, brute: 11, medic: 16, smoke: 13 }, { biker: 6, brute: 10, medic: 14, smoke: 12 }, { biker: 5, brute: 11, medic: 13, smoke: 11 }, { biker: 5, brute: 8, medic: 11, smoke: 10 }, { biker: 4, brute: 8, medic: 10, smoke: 9 }];
+    const SWARM = { 15: 12, 25: 20 };   // swarm waves: a tight pack of Bikers on top of the usual wave
     const BOSSES = { 10: ['boss'], 20: ['riot'], 30: ['jugg'] };
     // From wave 21 the Racket sends its best: tougher raiders (LT.hp, LT.hp2) and bigger groups (LT.n), so the last ten waves
     // are a real test even with a built-up defence. (2.40: 30 waves; play-testing showed waves 21+ were too easy.)
@@ -18804,12 +18808,15 @@
       if (w >= I.biker) add('biker', 2 + Math.floor((w - I.biker) * 0.4) + Math.floor(late * LT.n * 0.6), 0.45);
       if (w >= I.brute) add('brute', 1 + Math.floor((w - I.brute) * 0.33) + Math.floor(late * LT.n * 0.4), 1.15);
       if (w >= I.medic) add('medic', 1 + Math.floor((w - I.medic) * 0.17) + Math.floor(late * LT.n * 0.25), 1.0);
+      if (w >= I.smoke) add('smoke', 1 + Math.floor((w - I.smoke) * 0.25) + Math.floor(late * LT.n * 0.3), 0.9);
       // bosses: the Enforcer at 10, the Riot Captain at 20, and the Juggernaut to finish (escorting Don Varro on the last map)
+      if (w > WAVES && w % 5 === 0) out.push({ t: 'jugg', gap: 2.2 });   // Overtime: a Juggernaut every fifth wave
       (BOSSES[w] || []).forEach(function (t) { out.push({ t: t, gap: 2.2 }); });
       if (w === WAVES && mi === MAPS.length - 1) out.push({ t: 'don', gap: 2.2 });
       // mix the order a little (the same every time, so a wave plays the same way twice)
       let s = (mi + 1) * 977 + w * 131;
       for (let i = out.length - 1; i > 0; i--) { s = (s * 16807) % 2147483647; const j = s % (i + 1); if (!RD[out[i].t].big && !RD[out[j].t].big) { const q = out[i]; out[i] = out[j]; out[j] = q; } }
+      if (SWARM[w]) add('biker', SWARM[w] + Math.floor(late * LT.n), 0.18);   // the swarm comes last, all together
       const both = MAPS[mi].both || 1;   // until this wave everyone takes the first route, so new players learn the map first
       out.forEach(function (o, i) { o.p = np > 1 && w >= both ? (i + w) % np : 0; });
       return out;
@@ -18859,16 +18866,16 @@
     let st = 'select', mi = 0, M = MAPS[0], wave = 0, cash = 0, hq = 20, hqMax = 20, speed = 1, paused = false;
     let leakLog = [], raiders = [], towers = [], shots = [], fires = [], fx = [], floats = [], queue = [], spawnT = 0, waveOn = false;
     let banked = 0, paidIn = 0, shopping = false;   // War Chest money already paid in during this game, and the wave-20 Armoury visit
-    let sel = null, menu = null, strikeMode = false, earned = 0, kills = 0, leaked = 0, endT = 0, result = null, btns = [], t = 0, raf = 0, last = 0, acc = 0, active = false, shake = 0;
+    let sel = null, menu = null, strikeMode = false, earned = 0, kills = 0, leaked = 0, endT = 0, result = null, gt = 0, airUsed = 0, otBase = null, otKills = 0, btns = [], t = 0, raf = 0, last = 0, acc = 0, active = false, shake = 0;
 
     function startMap(i, resume) {
       const cp = resume && save.runs && save.runs[i];
       if (!cp && save.runs && save.runs[i]) { delete save.runs[i]; persist(); }   // a new game replaces this map's checkpoint
       mi = i; M = MAPS[i]; wave = 0; hqMax = 20 + 4 * armLv('walls'); hq = hqMax; cash = M.cash + 40 * armLv('fund');
       raiders = []; shots = []; fires = []; fx = []; floats = []; queue = []; waveOn = false; spawnT = 0;
-      towers = M.pads.map(function () { return null; }); banked = 0; paidIn = 0; shopping = false; groups = {}; leakLog = []; sel = null; menu = null; strikeMode = false; earned = 0; kills = 0; leaked = 0; result = null; paused = false;
+      towers = M.pads.map(function () { return null; }); banked = 0; paidIn = 0; shopping = false; groups = {}; leakLog = []; sel = null; menu = null; strikeMode = false; earned = 0; kills = 0; leaked = 0; result = null; paused = false; gt = 0; airUsed = 0; otBase = null;
       if (cp) {   // carry on from the last checkpoint (the end of wave 10, 20 or 30)
-        wave = cp.wave; cash = cp.cash; hq = cp.hq; hqMax = cp.hqMax; banked = cp.banked; paidIn = cp.paidIn; earned = cp.earned; kills = cp.kills; leaked = cp.leaked;
+        wave = cp.wave; cash = cp.cash; hq = cp.hq; hqMax = cp.hqMax; banked = cp.banked; paidIn = cp.paidIn; earned = cp.earned; kills = cp.kills; leaked = cp.leaked; gt = cp.gt || 0; airUsed = cp.air || 0;
         towers = M.pads.map(function (p, k) { const q = cp.towers[k]; return q && TW[q.t] ? { t: q.t, lv: q.lv, x: p.x, y: p.y, cd: 0.2, ang: -Math.PI / 2, spent: q.spent, flash: 0, dealt: q.dealt || 0 } : null; });
         floatText(W / 2, 118, 'Carrying on after wave ' + wave, '#9fd0ff');
       }
@@ -18876,16 +18883,18 @@
     }
     function checkpoint() {   // saved at the end of waves 10 and 20
       save.runs = save.runs || {};
-      save.runs[mi] = { wave: wave, cash: cash, hq: hq, hqMax: hqMax, banked: banked, paidIn: paidIn, earned: earned, kills: kills, leaked: leaked,
+      save.runs[mi] = { wave: wave, cash: cash, hq: hq, hqMax: hqMax, banked: banked, paidIn: paidIn, earned: earned, kills: kills, leaked: leaked, gt: Math.round(gt), air: airUsed,
         towers: towers.map(function (q) { return q && { t: q.t, lv: q.lv, spent: q.spent, dealt: Math.round(q.dealt || 0) }; }) };
       persist();
     }
     function nextWave() {
-      if (st !== 'play' || wave >= WAVES) return;
+      if (st !== 'play' || (wave >= WAVES && !otBase)) return;
       if (queue.length) return;   // the current wave is still arriving
       if (bossHold()) { floatText(W / 2, 118, 'Clear the boss wave first', '#ffd65a'); snd('alarm'); return; }   // waves 10 and 20 must be finished (milestone payout, wave-20 Armoury)
       if (wave > 0 && raiders.length) { const b = 5 + wave; cash += b; floatText(W - 120, 60, '+$' + b + ' early', '#7ee07e'); }   // the early-start bonus; this wave's own bonus still waits until its group is finished
+      if (otBase && wave > WAVES) { const sc = otScore(); saveScore(sc.total); record('defence:wave', WAVES + sc.otWaves); }   // Overtime: keep what you've earned so far
       wave++; queue = waveList(mi, wave); queue.forEach(function (o) { o.w = wave; }); groups[wave] = queue.length; spawnT = 0.6; waveOn = true; snd('horn'); showStats();
+      if (SWARM[wave]) floatText(W / 2, 118, 'SWARM! A pack of Bikers is coming', '#ff7a5a');
     }
     function hpMult(w, big) {
       const late = Math.max(0, w - LATE) * LT.maps[mi];
@@ -18915,6 +18924,7 @@
       let best = null, score = -1;
       for (const r of raiders) {
         if (r.dead || r.d < 4 || !inRange(tw, r, R)) continue;
+        if (tw.t === 'sniper' && r.D.smoke && !inRange(tw, r, r.D.smoke)) continue;   // hidden in smoke
         const s = tw.t === 'sniper' ? r.hp : tw.t === 'taser' ? (r.slowT > 0.3 ? -1 : r.d) : r.d;   // sniper: toughest; taser: first one not already slowed
         if (s > score) { score = s; best = r; }
       }
@@ -18925,6 +18935,7 @@
     function update(dt) {
       t += dt;
       if (st !== 'play') return;
+      gt += dt;   // game time (fast-forward runs more steps, so it doesn't count; pauses don't either)
       // spawning
       if (queue.length) { spawnT -= dt; if (spawnT <= 0) { const o = queue.shift(); spawn(o); spawnT = o.gap; } }
       // raiders
@@ -18939,7 +18950,7 @@
         if (r.D.heal) for (const o of raiders) if (o !== r && !o.dead && o.hp < o.max && Math.abs(o.x - r.x) < 50 && Math.abs(o.y - r.y) < 50) o.hp = Math.min(o.max, o.hp + r.D.heal * dt * (1 + 0.05 * wave));
         if (r.d >= r.P.len) {
           r.dead = true; r.leaked = true; groupGone(r); hq -= r.D.hit; leaked += r.D.hit; shake = 0.25; snd('alarm');           floatText(M.hq.x, M.hq.y - 30, '-' + r.D.hit + ' HQ', '#ff6a5a');
-          if (hq <= 0) { hq = 0; endGame(false); return; }
+          if (hq <= 0) { hq = 0; if (otBase) endOvertime(); else endGame(false); return; }
         }
       }
       // defenders
@@ -18999,7 +19010,8 @@
       // wave cleared
       if (waveOn && !queue.length && !raiders.length) {
         waveOn = false; snd('clear');
-        if (wave >= WAVES) endGame(true);
+        if (otBase) { const sc = otScore(); saveScore(sc.total); record('defence:wave', WAVES + sc.otWaves); floatText(W / 2, 118, 'Overtime wave ' + (wave - WAVES) + ' cleared · score ' + sc.total.toLocaleString('en-GB'), '#ffd65a'); }   // saved after every Overtime wave, so leaving loses nothing
+        else if (wave >= WAVES) endGame(true);
         else if (MILESTONE[wave]) payMilestone();
         showStats();
       }
@@ -19027,6 +19039,48 @@
       if (mi === 0 && w < 10) { cash += EARLY_BONUS; floatText(W / 2, 60, 'Early Wave Bonus +$' + EARLY_BONUS, '#ffd65a'); }   // Westgate only: help new players build up before the first boss
       showStats();
     }
+    /* Score for one game on one map:
+         waves cleared x 1,000 (a win is 30,000)
+       + HQ left: up to 10,000 (as a share of your HQ, so the Walls upgrade doesn't inflate it)
+       + raiders defeated x 5
+       + speed (wins only): 20 for every second of game time under 30 minutes (calling waves early pays off)
+       + cash left at the end: 1 for every $10
+       - 500 for each Air strike used
+       all x the map's difficulty: Westgate x1.0 up to Racket HQ x1.5 */
+    const SCORE_MAP = [1, 1.1, 1.2, 1.3, 1.4, 1.5], PAR = 1800;
+    function scoreOf(win, reached) {
+      const p = { waves: (win ? WAVES : Math.max(0, reached - 1)) * 1000, hq: win ? Math.round(10000 * Math.max(0, hq) / hqMax) : 0, kills: kills * 5,
+        speed: win ? Math.round(20 * Math.max(0, PAR - gt)) : 0, cash: win ? Math.floor(cash / 10) : 0, air: -500 * airUsed };
+      const raw = p.waves + p.hq + p.kills + p.speed + p.cash + p.air;
+      p.mult = SCORE_MAP[mi] || 1; p.total = Math.max(1, Math.round(raw * p.mult));
+      return p;
+    }
+    function saveScore(total) {
+      save.score = save.score || {};
+      const nb = total > (save.score[mi] || 0);
+      if (nb) { save.score[mi] = total; persist(); }
+      record('defence:run', total);
+      record('defence:total', Object.keys(save.score).reduce(function (a, k) { return a + (save.score[k] || 0); }, 0));
+      return nb;
+    }
+    /* Overtime (optional, after a win): endless waves that keep getting harder, until the HQ falls. The win's score is kept
+       as it was at wave 30, and each Overtime wave cleared adds 2,000 (plus 5 per raider), times the map's difficulty. */
+    function otScore() {
+      const n = Math.max(0, (waveOn ? wave - 1 : wave) - WAVES), b = otBase;
+      const add = Math.round((n * 2000 + (kills - otKills) * 5) * b.mult);
+      return Object.assign({}, b, { otWaves: n, ot: add, total: b.total + add });
+    }
+    function startOvertime() {
+      otBase = result.score; otKills = kills; result = null; st = 'play'; endT = 0; waveOn = false;
+      floatText(W / 2, 118, 'OVERTIME! How long can you hold?', '#ffd65a'); snd('horn'); showStats();
+    }
+    function endOvertime() {
+      const sc = otScore(), nb = saveScore(sc.total), add = sc.otWaves * 10; record('defence:wave', WAVES + sc.otWaves);
+      save.chest += add; persist();
+      result = { win: true, ot: true, stars: save.stars[mi] || 0, gain: add, reached: wave, score: sc, newBest: nb };
+      st = 'win'; endT = 0; queue = []; menu = null; sel = null; strikeMode = false;
+      snd('lose'); showStats();
+    }
     function shopOpen() { return st === 'play' && wave === SHOP_WAVE && !waveOn && !queue.length; }
     function endGame(win) {
       const stars = win ? (hq >= hqMax * 0.75 ? 3 : hq >= hqMax * 0.4 ? 2 : 1) : 0;
@@ -19038,11 +19092,13 @@
       if (stars > prevStars) save.stars[mi] = stars;
       const reached = win ? WAVES : wave;
       if (reached > (save.best[mi] || 0)) save.best[mi] = reached;
-      record('defence:' + (mi + 1), reached);
+      record('defence:' + (mi + 1), reached); record('defence:wave', reached);
+      // Leaderboard score for this game (see scoreOf). Best per map is kept; the boards are the best single game and the total of all six maps.
+      const sc = scoreOf(win, reached), newBest = saveScore(sc.total);
       if (win) save.open = Math.max(save.open, Math.min(MAPS.length - 1, mi + 1));
       if (save.runs) delete save.runs[mi];   // the game is over, so its checkpoint goes
       persist();
-      result = { win: win, stars: stars, gain: gain, reached: reached, newStars: stars > prevStars, first: firstWin };
+      result = { win: win, stars: stars, gain: gain, reached: reached, newStars: stars > prevStars, first: firstWin, score: sc, newBest: newBest };
       st = win ? 'win' : 'lose'; endT = 0; queue = []; menu = null; sel = null; strikeMode = false;
       snd(win ? 'win' : 'lose'); showStats();
     }
@@ -19064,7 +19120,7 @@
     }
     function airStrike(x, y) {
       if (save.strikes <= 0) return;
-      save.strikes--; persist(); strikeMode = false;
+      save.strikes--; airUsed++; persist(); strikeMode = false;
       const R = 75, dm = 160 * M.mult * (1 + 0.06 * wave);
       for (const r of raiders) if (!r.dead && inRange({ x: x, y: y }, r, R)) dmgTo(r, dm, 1);
       fx.push({ k: 'boom', x: x, y: y, r: R, life: 0.6, big: 1 }); shake = 0.5; snd('boom');
@@ -19144,6 +19200,10 @@
       const D = r.D, s = D.r * 1.75, bob = Math.sin(t * 12 + r.seed) * 1.6, x = r.x, y = r.y, hurt = r.hurt > 0;
       const O = '#141418';   // outline
       ctx.save(); ctx.translate(x, y);
+      if (D.smoke) {   // a drifting smoke cloud around the runner, who shows through it faintly
+        ctx.fillStyle = 'rgba(200,205,212,.28)'; for (let q = 0; q < 5; q++) { const a = q * 1.26 + t * 0.8 + r.seed; ctx.beginPath(); ctx.arc(Math.cos(a) * s * 0.75, Math.sin(a) * s * 0.75, s * (0.7 + 0.15 * Math.sin(t * 3 + q)), 0, TAU); ctx.fill(); }
+        ctx.globalAlpha = 0.6;
+      }
       ctx.fillStyle = 'rgba(0,0,0,.32)'; ctx.beginPath(); ctx.ellipse(2, s * 0.55, s * 1.05, s * 0.5, 0, 0, TAU); ctx.fill();
       ctx.rotate(r.a); ctx.lineWidth = 2; ctx.strokeStyle = O; ctx.lineJoin = 'round';
       if (r.t === 'biker') {
@@ -19152,7 +19212,7 @@
         ctx.fillStyle = hurt ? '#fff' : '#e8e8ee'; ctx.beginPath(); ctx.arc(s * 0.12, 0, s * 0.42, 0, TAU); ctx.fill(); ctx.stroke();   // helmet
         ctx.fillStyle = '#2a6fd6'; ctx.fillRect(s * 0.3, -s * 0.22, s * 0.16, s * 0.44);   // visor
       } else {
-        const body = hurt ? '#ffffff' : { thug: HOOD[Math.floor(r.seed * 7) % HOOD.length], brute: '#5d6b3a', medic: '#f4f4f4', boss: '#22222a', don: '#3a1d48', riot: '#1d2a44', jugg: '#6b6a45' }[r.t];
+        const body = hurt ? '#ffffff' : { thug: HOOD[Math.floor(r.seed * 7) % HOOD.length], brute: '#5d6b3a', medic: '#f4f4f4', smoke: '#6c7078', boss: '#22222a', don: '#3a1d48', riot: '#1d2a44', jugg: '#6b6a45' }[r.t];
         // feet stepping
         ctx.fillStyle = '#2a2a2e'; ctx.beginPath(); ctx.ellipse(bob, -s * 0.32, s * 0.24, s * 0.16, 0, 0, TAU); ctx.ellipse(-bob, s * 0.32, s * 0.24, s * 0.16, 0, 0, TAU); ctx.fill();
         // body with arms
@@ -19169,8 +19229,8 @@
         if (r.t === 'boss' || r.t === 'don') { ctx.strokeStyle = '#f0c040'; ctx.lineWidth = 2.2; ctx.beginPath(); ctx.arc(-s * 0.05, 0, s * 0.42, -1.1, 1.1); ctx.stroke(); ctx.strokeStyle = O; ctx.lineWidth = 2; }
         // head
         const hx = s * (r.t === 'jugg' ? 0.3 : 0.22), hr = s * (r.t === 'jugg' ? 0.5 : 0.42);
-        ctx.fillStyle = r.t === 'thug' ? body : '#e8bf96'; ctx.beginPath(); ctx.arc(hx, 0, hr, 0, TAU); ctx.fill(); ctx.stroke();
-        if (r.t === 'thug') { ctx.fillStyle = '#e8bf96'; ctx.beginPath(); ctx.arc(hx + hr * 0.42, 0, hr * 0.5, -1.3, 1.3); ctx.fill(); }   // face in the hood
+        ctx.fillStyle = r.t === 'thug' || r.t === 'smoke' ? body : '#e8bf96'; ctx.beginPath(); ctx.arc(hx, 0, hr, 0, TAU); ctx.fill(); ctx.stroke();
+        if (r.t === 'thug' || r.t === 'smoke') { ctx.fillStyle = '#e8bf96'; ctx.beginPath(); ctx.arc(hx + hr * 0.42, 0, hr * 0.5, -1.3, 1.3); ctx.fill(); }   // face in the hood
         if (r.t === 'brute') { ctx.fillStyle = '#4a5530'; ctx.beginPath(); ctx.arc(hx, 0, hr, Math.PI * 0.55, Math.PI * 1.45); ctx.fill(); }   // helmet
         if (r.t === 'riot') { ctx.fillStyle = hurt ? '#fff' : '#18233a'; ctx.beginPath(); ctx.arc(hx, 0, hr * 1.12, 0, TAU); ctx.fill(); ctx.stroke(); ctx.fillStyle = 'rgba(150,200,255,.75)'; ctx.beginPath(); ctx.arc(hx, 0, hr * 1.0, -0.95, 0.95); ctx.lineTo(hx + hr * 0.25, 0); ctx.fill(); }   // helmet with visor
         if (r.t === 'jugg') {   // big round bomb-suit helmet with a dark visor
@@ -19260,13 +19320,13 @@
       for (const f of floats) { ctx.globalAlpha = Math.min(1, f.life * 2); ot(f.s, f.x, f.y, 12, f.c, 'center', 800); ctx.globalAlpha = 1; }
       ctx.restore();
       // HUD
-      ot('Wave ' + Math.max(1, wave) + ' / ' + WAVES + ' · ' + M.name, 12, 19, 15, '#fff');
+      ot((otBase && wave > WAVES ? 'Overtime wave ' + (wave - WAVES) : 'Wave ' + Math.max(1, wave) + ' / ' + WAVES) + ' · ' + M.name, 12, 19, 15, otBase ? '#ffd65a' : '#fff');
       const left = queue.length + raiders.length;
-      ot(waveOn ? left + ' raider' + (left === 1 ? '' : 's') + ' left' : wave >= WAVES ? '' : 'Build, then start the next wave', 12, 39, 11, '#dfe6f2', 'left', 700);
+      ot(waveOn ? left + ' raider' + (left === 1 ? '' : 's') + ' left' : wave >= WAVES && !otBase ? '' : 'Build, then start the next wave', 12, 39, 11, '#dfe6f2', 'left', 700);
       ot('$' + cash.toLocaleString('en-GB'), 12, 62, 18, '#ffe27a');
       drawHQBar();
       if (st === 'play') {
-        const hold = bossHold(), canNext = !queue.length && wave < WAVES && !hold;
+        const hold = bossHold(), canNext = !queue.length && (wave < WAVES || !!otBase) && !hold;
         button(W - 150, H - 46, 138, 34, wave === 0 ? '▶ Start' : hold ? 'Clear the boss wave' : waveOn ? '▶ Next wave +$' + (5 + wave) : '▶ Next wave', nextWave, { off: !canNext, size: hold ? 11.5 : 13 });
         button(W - 210, H - 46, 52, 34, speed === 1 ? '1×' : '2×', function () { speed = speed === 1 ? 2 : 1; }, { fill: 'rgba(26,34,48,.92)', size: 14 });
         if (shopOpen()) button(W - 432, H - 46, 124, 34, '🛠️ Armoury', function () { shopping = true; st = 'armoury'; menu = null; sel = null; strikeMode = false; showStats(); }, { fill: '#c98a1e', size: 13 });
@@ -19305,14 +19365,16 @@
     function drawEnd() {
       const r = result;
       ctx.fillStyle = 'rgba(5,8,14,.55)'; ctx.fillRect(0, 0, W, H);
-      const w = 420, h = 250, x = (W - w) / 2, y = (H - h) / 2;
+      const canOT = r.win && !r.ot, w = 420, h = canOT ? 296 : 250, x = (W - w) / 2, y = (H - h) / 2;
       pill(x, y, w, h, 'rgba(18,24,36,.96)', r.win ? '#ffd65a' : '#e5483a');
-      ot(r.win ? 'HQ DEFENDED!' : 'HQ OVERRUN', W / 2, y + 36, 30, r.win ? '#ffd65a' : '#ff7a6a', 'center');
-      ot(M.name + ' · ' + (r.win ? 'all ' + WAVES + ' waves' : 'reached wave ' + r.reached), W / 2, y + 68, 14, '#dfe6f2', 'center', 700);
+      ot(r.ot ? 'OVERTIME OVER' : r.win ? 'HQ DEFENDED!' : 'HQ OVERRUN', W / 2, y + 36, 30, r.win ? '#ffd65a' : '#ff7a6a', 'center');
+      ot(M.name + ' · ' + (r.ot ? 'all ' + WAVES + ' waves + ' + r.score.otWaves + ' in Overtime' : r.win ? 'all ' + WAVES + ' waves' : 'reached wave ' + r.reached), W / 2, y + 68, 14, '#dfe6f2', 'center', 700);
       for (let k = 0; k < 3; k++) ot('★', W / 2 - 44 + k * 44, y + 104, 36, k < r.stars ? '#ffd65a' : '#3a4558', 'center');
       ot('+$' + r.gain.toLocaleString('en-GB') + ' to your War Chest' + (r.first ? ' (first clear bonus)' : ''), W / 2, y + 144, 14, '#7ee07e', 'center', 800);
-      tx('War Chest: $' + save.chest.toLocaleString('en-GB'), W / 2, y + 166, 12, '#c9d3e3', 'center', 700);
+      tx('War Chest: $' + save.chest.toLocaleString('en-GB'), W / 2, y + 164, 12, '#c9d3e3', 'center', 700);
+      ot('Score ' + r.score.total.toLocaleString('en-GB') + (r.newBest ? '  · new best!' : '  · best ' + (save.score[mi] || 0).toLocaleString('en-GB')), W / 2, y + 186, 14, '#9fd0ff', 'center', 800);
       const last = mi >= MAPS.length - 1;
+      if (canOT) button(W / 2 - 130, y + 204, 260, 36, '🔥 Keep going: Overtime', startOvertime, { fill: '#c0392b', size: 14 });
       button(x + 20, y + h - 52, 120, 36, 'Maps', function () { st = 'select'; showStats(); });
       button(x + 150, y + h - 52, 120, 36, 'Armoury', function () { st = 'armoury'; showStats(); });
       if (r.win && !last) button(x + 280, y + h - 52, 120, 36, 'Next map', function () { startMap(mi + 1); });
@@ -19386,7 +19448,7 @@
     function showStats() {
       const inGame = st === 'play' || st === 'win' || st === 'lose' || shopping, key = st + wave + ':' + cash + ':' + hq + ':' + save.chest;
       if (key === shown) return; shown = key;
-      stat(panel, 'wave', inGame ? Math.max(1, wave) + ' / ' + WAVES : '–');
+      stat(panel, 'wave', inGame ? (otBase && wave > WAVES ? 'OT ' + (wave - WAVES) : Math.max(1, wave) + ' / ' + WAVES) : '–');
       stat(panel, 'cash', inGame ? '$' + cash.toLocaleString('en-GB') : '–');
       stat(panel, 'hq', inGame ? hq + ' / ' + hqMax : '–');
       stat(panel, 'chest', '$' + save.chest.toLocaleString('en-GB'));
