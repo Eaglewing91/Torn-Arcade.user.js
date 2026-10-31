@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.54.7
+// @version      2.54.8
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with seven game apps and a Legends folder for Legend of Varrowmere (a separate, optional game script): Tornies (a creature-collecting RPG), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online) and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -122,7 +122,7 @@
  *   you tap Play; the game opens inside the phone, in a box this script
  *   provides; older game versions open in their own window),
  *   'varrowmere:close' (you left the game), 'varrowmere:pad' (the 🎮 touch pad
- *   button) and 'varrowmere:closed' (the game
+ *   button), 'varrowmere:mute' (the speaker button) and 'varrowmere:closed' (the game
  *   closed itself, so the phone goes back to its home screen). With "Preload Legend" on
  *   (Settings, off by default) it also sends 'varrowmere:preload' once per page
  *   when the phone opens, so the game can unpack itself ahead of time. When the game closes
@@ -698,7 +698,7 @@
   };
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gifts and trades', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { lvGame: 1, pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.54.7';
+  const VERSION = '2.54.8';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -1257,7 +1257,7 @@
   const lvPanel = document.createElement('section'); lvPanel.className = 'ta-panel'; lvPanel.dataset.game = 'lvGame';
   lvPanel.innerHTML = '<div id="ta-lv-host"></div>'; main.appendChild(lvPanel);
   games.lvGame = {
-    enter: function () { try { document.dispatchEvent(new CustomEvent('varrowmere:open', { detail: JSON.stringify({ host: 'ta-lv-host', pad: lvPadOn() }) })); } catch (e) {} },
+    enter: function () { try { document.dispatchEvent(new CustomEvent('varrowmere:open', { detail: JSON.stringify({ host: 'ta-lv-host', pad: lvPadOn(), muted: muted }) })); } catch (e) {} },
     leave: function () { try { document.dispatchEvent(new CustomEvent('varrowmere:close')); } catch (e) {} },
     onKey: function () { return false; }   // the game reads the keys itself
   };
@@ -1393,7 +1393,7 @@
   function lvPreload() { lvPing(); if (lvPreloaded || !LVS.ver || !store.get('lvPreload', false)) return; lvPreloaded = true; try { document.dispatchEvent(new CustomEvent('varrowmere:preload')); } catch (e) {} }
   // 1.0.2 and later can play inside the phone; older copies open in their own window
   // The versions this phone needs. Older copies are shown as needing an update (and the game can't be played) until updated.
-  const LV_NEED = { game: [1, 0, 4], music: [1, 0, 3] };
+  const LV_NEED = { game: [1, 0, 5], music: [1, 0, 3] };
   function verAtLeast(ver, w) { const v = String(ver || '').split('.').map(Number); for (let i = 0; i < 3; i++) { if ((v[i] || 0) !== w[i]) return (v[i] || 0) > w[i]; } return true; }
   function lvAtLeast(a, b, c) { return verAtLeast(LVS.ver, [a, b, c]); }
   function lvOld(id) {
@@ -2358,6 +2358,7 @@
   function setMuted(m) {
     muted = !!m; store.set('muted', muted);
     if (games.territories && games.territories.mute) games.territories.mute(muted);
+    try { document.dispatchEvent(new CustomEvent('varrowmere:mute', { detail: JSON.stringify({ muted: muted }) })); } catch (e) {}   // Legend of Varrowmere follows the phone's mute
     muteBtn.textContent = muted ? '🔇' : '🔊';
     muteBtn.title = muted ? 'Sound off (click to turn on)' : 'Sound on (click to mute)';
   }

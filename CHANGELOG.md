@@ -8,6 +8,10 @@ Every Torn Arcade update since 2.2.0, newest first. Dates are in TCT (Torn City 
 
 ---
 
+## 2.54.8 — 2026-10-31
+### Fixed
+- The phone's speaker (mute) button now mutes Legend of Varrowmere too, including while it's playing. Needs Legend of Varrowmere 1.0.5 (the folder shows an update badge until you have it).
+
 ## 2.54.7 — 2026-10-31
 ### New
 - Legend of Varrowmere: a **touch pad** like Tornies' (D-pad, Sword, Item and Talk buttons, plus Dash, Map and Menu). Turn it on or off with **🎮** in the top bar while the game is open; it's on by default on touch screens. **Space** now talks and opens, and a **mouse click** swings the sword. Needs Legend of Varrowmere 1.0.4 (the folder shows an update badge until you have it).
