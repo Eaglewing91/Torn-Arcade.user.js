@@ -8,6 +8,10 @@ Every Torn Arcade update since 2.2.0, newest first. Dates are in TCT (Torn City 
 
 ---
 
+## 2.54.7 — 2026-10-31
+### New
+- Legend of Varrowmere: a **touch pad** like Tornies' (D-pad, Sword, Item and Talk buttons, plus Dash, Map and Menu). Turn it on or off with **🎮** in the top bar while the game is open; it's on by default on touch screens. **Space** now talks and opens, and a **mouse click** swings the sword. Needs Legend of Varrowmere 1.0.4 (the folder shows an update badge until you have it).
+
 ## 2.54.6 — 2026-10-31
 ### Changed
 - Legend of Varrowmere and its Soundtrack now show an **update badge (↻)**, like the Art Packs, when your copy is older than the version this phone needs. The Legends folder shows the badge too. An out-of-date game can't be played until you update it: its page shows an Update button instead of Play. Your saves are kept.

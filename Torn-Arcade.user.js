@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.54.6
+// @version      2.54.7
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with seven game apps and a Legends folder for Legend of Varrowmere (a separate, optional game script): Tornies (a creature-collecting RPG), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online) and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -121,7 +121,8 @@
  *   with its version and the Soundtrack's), 'varrowmere:open' (sent only when
  *   you tap Play; the game opens inside the phone, in a box this script
  *   provides; older game versions open in their own window),
- *   'varrowmere:close' (you left the game) and 'varrowmere:closed' (the game
+ *   'varrowmere:close' (you left the game), 'varrowmere:pad' (the 🎮 touch pad
+ *   button) and 'varrowmere:closed' (the game
  *   closed itself, so the phone goes back to its home screen). With "Preload Legend" on
  *   (Settings, off by default) it also sends 'varrowmere:preload' once per page
  *   when the phone opens, so the game can unpack itself ahead of time. When the game closes
@@ -697,7 +698,7 @@
   };
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gifts and trades', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { lvGame: 1, pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.54.6';
+  const VERSION = '2.54.7';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -786,6 +787,7 @@
     '.ta-dock .ta-applabel{display:none}',
     '.ta-artrow{margin-top:auto;padding-bottom:2px}',
     '.ta-root[data-app="lvGame"] .ta-main{padding:0;overflow:hidden;position:relative;background:#000}',
+    '.ta-appbar .ta-lv-padbtn{display:none}', '.ta-root[data-app="lvGame"] .ta-appbar .ta-lv-padbtn{display:grid}', '.ta-appbar .ta-lv-padbtn.ta-on{border-color:#e0843a;background:#5a3416}',
     '.ta-panel[data-game="lvGame"]{position:absolute;inset:0;min-height:0;gap:0;padding:0}', '#ta-lv-host{position:absolute;inset:0;overflow:hidden;background:#000}',
     /* The Legends folder (Premium Games) */
     '.ta-folderbtn .ta-appicon{background:rgba(255,255,255,.2)!important;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:grid;grid-template-columns:repeat(2,20px);grid-auto-rows:20px;gap:5px;place-content:center;font-size:12px}',
@@ -1015,7 +1017,7 @@
   news254El.className = 'ta-clash ta-news'; news254El.hidden = true;
   news254El.innerHTML = '<div class="ta-clashbox"><b>⚔️ New in Torn Arcade 2.54: Legend of Varrowmere</b>' +
     '<p>A brand-new <strong>top-down action-adventure</strong> in the style of the 16-bit classics. Explore the kingdom of Varrowmere and its Shadow twin: towns, forests, mountains, swamps and deserts. Fight through <strong>19 dungeons</strong> full of keys, switches, puzzles and unique bosses, take on <strong>15 side quests</strong>, find new gear and tools, and visit shops, secret caves and Great Fairies. Create up to <strong>three heroes</strong>, each with their own name, tunic and save. Your progress saves as you play.</p>' +
-    '<p>It lives in the new <strong>Legends</strong> folder on your home screen. The <strong>game</strong> (1.5 MB) and its optional <strong>Soundtrack</strong> (two parts) are separate scripts. Install them from inside the folder, then reload the page. It plays inside the phone with a keyboard, so it\'s best on a PC or laptop. Your playtime, completion and monsters defeated appear in <strong>Leaderboards</strong>.</p>' +
+    '<p>It lives in the new <strong>Legends</strong> folder on your home screen. The <strong>game</strong> (1.5 MB) and its optional <strong>Soundtrack</strong> (two parts) are separate scripts. Install them from inside the folder, then reload the page. It plays inside the phone with a keyboard and mouse, or the touch pad. Your playtime, completion and monsters defeated appear in <strong>Leaderboards</strong>.</p>' +
     '<p><strong>A Premium Game, free for now.</strong> Legend of Varrowmere will be listed as a Premium Game. Right now it is completely free, until Torn Staff approve a subscription service for it.</p>' +
     '<p><strong>Everything else stays free.</strong> Only Legends games will be premium. Tornies, Angry Bogies, Faction Defence, Flappy Torn, Anton\'s Egg Dash, Torn Territories and Chess will all remain free.</p>' +
     '<button type="button" class="ta-btn" data-news="legends"><span>Open the Legends folder</span><small>Install the game and the Soundtrack</small></button>' +
@@ -1243,11 +1245,19 @@
   const scoresBox = sysPanel('scores'), settingsBox = sysPanel('settings');
   const artBox = { artT: sysPanel('artT'), artC: sysPanel('artC'), artR: sysPanel('artR') };
   const lvBox = { lvPlay: sysPanel('lvPlay'), lvMusic: sysPanel('lvMusic') };
+  // The touch pad switch for Legend of Varrowmere, in the app bar like Tornies' (on by default on touch screens)
+  function lvPadOn() { return store.get('lvPad', (function () { try { return window.matchMedia('(pointer: coarse)').matches; } catch (e) { return false; } })()); }
+  const lvPadBtn = document.createElement('button'); lvPadBtn.type = 'button'; lvPadBtn.className = 'ta-icon ta-lv-padbtn' + (lvPadOn() ? ' ta-on' : ''); lvPadBtn.innerHTML = '🎮'; lvPadBtn.title = 'Touch pad on/off';
+  $(root, '.ta-appbar').insertBefore(lvPadBtn, muteBtn);
+  lvPadBtn.addEventListener('click', function () {
+    const on = !lvPadOn(); store.set('lvPad', on); lvPadBtn.classList.toggle('ta-on', on); sfx.click();
+    try { document.dispatchEvent(new CustomEvent('varrowmere:pad', { detail: JSON.stringify({ on: on }) })); } catch (e) {}
+  });
   // Legend of Varrowmere plays inside this panel: the game draws into #ta-lv-host when it gets 'varrowmere:open'
   const lvPanel = document.createElement('section'); lvPanel.className = 'ta-panel'; lvPanel.dataset.game = 'lvGame';
   lvPanel.innerHTML = '<div id="ta-lv-host"></div>'; main.appendChild(lvPanel);
   games.lvGame = {
-    enter: function () { try { document.dispatchEvent(new CustomEvent('varrowmere:open', { detail: JSON.stringify({ host: 'ta-lv-host' }) })); } catch (e) {} },
+    enter: function () { try { document.dispatchEvent(new CustomEvent('varrowmere:open', { detail: JSON.stringify({ host: 'ta-lv-host', pad: lvPadOn() }) })); } catch (e) {} },
     leave: function () { try { document.dispatchEvent(new CustomEvent('varrowmere:close')); } catch (e) {} },
     onKey: function () { return false; }   // the game reads the keys itself
   };
@@ -1383,7 +1393,7 @@
   function lvPreload() { lvPing(); if (lvPreloaded || !LVS.ver || !store.get('lvPreload', false)) return; lvPreloaded = true; try { document.dispatchEvent(new CustomEvent('varrowmere:preload')); } catch (e) {} }
   // 1.0.2 and later can play inside the phone; older copies open in their own window
   // The versions this phone needs. Older copies are shown as needing an update (and the game can't be played) until updated.
-  const LV_NEED = { game: [1, 0, 3], music: [1, 0, 3] };
+  const LV_NEED = { game: [1, 0, 4], music: [1, 0, 3] };
   function verAtLeast(ver, w) { const v = String(ver || '').split('.').map(Number); for (let i = 0; i < 3; i++) { if ((v[i] || 0) !== w[i]) return (v[i] || 0) > w[i]; } return true; }
   function lvAtLeast(a, b, c) { return verAtLeast(LVS.ver, [a, b, c]); }
   function lvOld(id) {
@@ -1423,7 +1433,7 @@
         '<div class="ta-row"><span class="ta-ricon" style="background:linear-gradient(160deg,#ffd65a,#d08a10)">★</span><div class="ta-rtext"><b>Premium Game · free for now</b><small>Free until Torn Staff approve a subscription service. Only Legends games will be premium; every other game stays free.</small></div></div>' +
         '</div></div>' +
         '<div class="ta-group"><h3>About</h3><div class="ta-list">' +
-        '<p class="ta-lvnote">A top-down action-adventure in the style of the 16-bit classics. Explore the kingdom of Varrowmere, fight through <strong>19 dungeons</strong> with keys, switches, puzzles and unique bosses, take on 15 side quests, and find new gear, shops, secret caves and Great Fairies. Three save files, each with its own named hero. It plays inside the phone, turned sideways, and saves as you play.<br><br>Controls: <strong>Arrows/WASD</strong> move · <strong>Z</strong> sword (hold for a spin) · <strong>X</strong> item · <strong>C</strong> lift, talk, open · <strong>Enter</strong> items · <strong>M</strong> map · <strong>Esc</strong> back to the phone. It needs a keyboard, so it is best on a PC or laptop.</p>' +
+        '<p class="ta-lvnote">A top-down action-adventure in the style of the 16-bit classics. Explore the kingdom of Varrowmere, fight through <strong>19 dungeons</strong> with keys, switches, puzzles and unique bosses, take on 15 side quests, and find new gear, shops, secret caves and Great Fairies. Three save files, each with its own named hero. It plays inside the phone, turned sideways, and saves as you play.<br><br>Controls: <strong>Arrows/WASD</strong> move · <strong>Z</strong> or <strong>click</strong> sword (hold for a spin) · <strong>X</strong> item · <strong>C</strong> or <strong>Space</strong> lift, talk, open · <strong>Enter</strong> items · <strong>M</strong> map · <strong>Esc</strong> back to the phone. On a touch screen, use the touch pad (🎮 in the top bar).</p>' +
         (on ? '' : '<div class="ta-artinst"><a class="ta-btn" href="' + LV_URL.game + '" target="_blank" rel="noopener">Install Legend of Varrowmere</a>' +
           '<small>Opens the script on GitHub, where Tampermonkey shows its install screen. Once installed, reload the page. It is a separate script so it stays under 2 MB. It makes no requests and needs no API key; your saves stay in Tampermonkey storage on this device.</small></div>') +
         '</div></div>';
