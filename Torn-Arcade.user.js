@@ -685,8 +685,8 @@
     { id: 'lvMusic', name: 'Soundtrack', title: 'Varrowmere Soundtrack', icon: '🎵', bg: ['#f0b050', '#8a3a10'], size: '1.3 MB' }
   ];
   const LV_URL = {
-    game: 'https://github.com/Eaglewing91/Legend-of-Varrowmere/raw/dev/build/Legend-of-Varrowmere.user.js',
-    music: 'https://github.com/Eaglewing91/Legend-of-Varrowmere/raw/dev/build/Legend-of-Varrowmere-Soundtrack.user.js'
+    game: 'https://github.com/Eaglewing91/Legend-of-Varrowmere/raw/main/build/Legend-of-Varrowmere.user.js',
+    music: 'https://github.com/Eaglewing91/Legend-of-Varrowmere/raw/main/build/Legend-of-Varrowmere-Soundtrack.user.js'
   };
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gifts and trades', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
@@ -973,7 +973,7 @@
         '<div class="ta-home">' +
           '<div class="ta-widget"><button type="button" class="ta-lock" data-act="close" title="Lock phone (closes it; your games are saved)">🔒 Lock</button><b class="ta-wclock">00:00</b><span class="ta-wdate"></span><em>Torn City Time</em></div>' +
           '<div class="ta-note" hidden><span class="ta-noteicon">👋</span><div class="ta-notetext"><b>Welcome to Torn Arcade v' + VERSION + '!</b><small>Seven games in your pocket. Start with Tornies, and grab the free Art Packs on the bottom row for illustrated artwork. Bugs or ideas? Message Eaglewing [571041].</small></div><button type="button" class="ta-notex" title="Dismiss">✕</button></div>' +
-          '<div class="ta-grid">' + GAMES.map(appButton).join('') + folderButton() + '</div>' +
+          '<div class="ta-grid">' + folderButton() + GAMES.map(appButton).join('') + '</div>' +
           '<div class="ta-grid ta-artrow">' + ART_APPS.map(appButton).join('') + '</div>' +
           '<div class="ta-dock">' + SYS_APPS.map(function (a) { return (a.id === 'settings' ? appButton(DEV_APP).replace('<button ', '<button hidden ') : '') + appButton(a); }).join('') + '</div>' +
           '<div class="ta-homebar" data-act="close" title="Lock phone"><i></i></div>' +
