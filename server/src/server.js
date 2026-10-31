@@ -11,7 +11,7 @@ const trades = require('./trades');
 const saves = require('./saves');
 
 const PORT = Number(process.env.PORT) || 8080;
-const VERSION = '1.7.0';
+const VERSION = '1.9.0';
 // The 2.40 fresh start: scores and cloud saves for every game except Tornies must come from Torn Arcade 2.40.0 or later
 // (older copies still hold the scores from before the reset).
 const MIN_SCRIPT = [2, 40, 0];
@@ -36,6 +36,10 @@ BOARDS['tornies:time'] = { dir: 'desc', min: 60, max: 10 * 365 * 86400 };   // p
 BOARDS['tornies:merits'] = { dir: 'desc', min: 1, max: 5000 };
 BOARDS['tornies:golden'] = { dir: 'desc', min: 1, max: 2000 };
 BOARDS['tornies:fish'] = { dir: 'desc', min: 1, max: 1000000 };
+// Legend of Varrowmere (2.54): the best of the game's three save files, handed to the phone when the game closes
+BOARDS['varrowmere:time'] = { dir: 'desc', min: 60, max: 10 * 365 * 86400 };    // play time in seconds
+BOARDS['varrowmere:completion'] = { dir: 'desc', min: 1, max: 1000 };           // tenths of a percent (874 = 87.4%)
+BOARDS['varrowmere:kills'] = { dir: 'desc', min: 1, max: 10000000 };            // monsters defeated
 BOARDS['invasion:standard'] = { dir: 'desc', min: 1, max: 100000000 };
 BOARDS['banker:best'] = { dir: 'desc', min: 1, max: 25000000 };   // Deal or No Deal: biggest win, in cents (1 cent to $250,000)
 const ORIGINS = ['https://www.torn.com', 'https://torn.com'];

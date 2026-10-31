@@ -1268,6 +1268,10 @@
       }).join('');
       rows += '<div class="ta-row">' + iconSmall(a) + '<div class="ta-rtext"><b>' + a.name + '</b>' + (chips ? '<div class="ta-chips">' + chips + '</div>' : '<small>No scores yet</small>') + '</div></div>';
     });
+    // Legend of Varrowmere (a separate script; its numbers arrive when the game closes)
+    const lvA = LEGEND_APPS[0], lvC = [['varrowmere:time', 'Playtime'], ['varrowmere:completion', 'Completion'], ['varrowmere:kills', 'Monsters']].filter(function (c) { return best[c[0]]; })
+      .map(function (c) { return '<span class="ta-chip">' + c[1] + ' <b>' + esc(lbFmt(c[0], best[c[0]])) + '</b></span>'; }).join('');
+    rows += '<div class="ta-row">' + iconSmall(lvA) + '<div class="ta-rtext"><b>' + lvA.title + '</b>' + (lvC ? '<div class="ta-chips">' + lvC + '</div>' : '<small>No scores yet</small>') + '</div></div>';
     html += '<div class="ta-group"><h3>Best scores</h3><div class="ta-list">' + rows + '</div></div>';
     scoresBox.innerHTML = html;
   }
@@ -1327,8 +1331,19 @@
      'varrowmere:closed' comes back and the phone opens again. Install buttons are ordinary links to GitHub. */
   const LVS = { ver: '', music: '', launched: false };
   document.addEventListener('varrowmere:here', function (e) {
-    try { const d = JSON.parse(e.detail); LVS.ver = String(d.version || '').slice(0, 20); LVS.music = String(d.music || '').slice(0, 20); } catch (x) {}
+    try { const d = JSON.parse(e.detail); LVS.ver = String(d.version || '').slice(0, 20); LVS.music = String(d.music || '').slice(0, 20); lvScores(d.scores); } catch (x) {}
   });
+  // Leaderboard numbers from the game (best of its three save files): sent when its window closes, and kept by the game
+  // so the next ping brings them too. Checked here before they're saved: whole numbers in range only.
+  const LV_BOARDS = { time: [60, 10 * 365 * 86400], completion: [1, 1000], kills: [1, 10000000] };
+  function lvScores(sc) {
+    if (!sc || typeof sc !== 'object') return;
+    Object.keys(LV_BOARDS).forEach(function (k) {
+      const v = Math.floor(Number(sc[k])), r = LV_BOARDS[k];
+      if (v >= r[0] && v <= r[1]) record('varrowmere:' + k, v);
+    });
+  }
+  document.addEventListener('varrowmere:scores', function (e) { try { lvScores(JSON.parse(e.detail)); } catch (x) {} });
   document.addEventListener('varrowmere:closed', function () {
     if (!LVS.launched) return; LVS.launched = false;
     // back to the phone, at the Legends folder (after this key press, so Esc doesn't also act on the phone)
@@ -2075,7 +2090,8 @@
     { id: 'bogies', boards: [['bogies:total', 'Total score']] },
     { id: 'defence', boards: [['defence:total', 'Total score'], ['defence:wave', 'Highest wave']] },
     { id: 'eggdash', boards: [['eggdash:endless', 'Best score']] },
-    { id: 'flappy', boards: [['flappy:hard', 'Best score']] }
+    { id: 'flappy', boards: [['flappy:hard', 'Best score']] },
+    { id: 'lvPlay', boards: [['varrowmere:time', 'Total playtime'], ['varrowmere:completion', 'Completion'], ['varrowmere:kills', 'Monsters defeated']] }
   ];
   const lbCache = {};
   let lbTab = 'mine', lbGame = 'territories', lbBoard = 'territories', syncT = 0, lbSynced = 0;
@@ -2087,7 +2103,8 @@
     if (board.indexOf('defence:') === 0) return 'Wave ' + v;
     if (board === 'tornies:caught') return v + '/179';
     if (board === 'tornies:medals') return v + '/8';
-    if (board === 'tornies:time') { const h = Math.floor(v / 3600), m = Math.floor(v / 60) % 60; return h + 'h ' + (m < 10 ? '0' : '') + m + 'm'; }
+    if (board === 'varrowmere:completion') return (v / 10).toFixed(1) + '%';
+    if (board === 'tornies:time' || board === 'varrowmere:time') { const h = Math.floor(v / 3600), m = Math.floor(v / 60) % 60; return h + 'h ' + (m < 10 ? '0' : '') + m + 'm'; }
     return Number(v).toLocaleString('en-GB');
   }
   // Your bests on this device, in the server's board names.
@@ -2097,7 +2114,7 @@
     Object.keys(best).forEach(function (k) {
       const v = Math.floor(Number(best[k])), g = k.split(':');
       if (!(v > 0)) return;
-      if (k === 'flappy:hard' || k === 'eggdash:endless' || g[0] === 'defence') out[k] = v;
+      if (k === 'flappy:hard' || k === 'eggdash:endless' || g[0] === 'defence' || g[0] === 'varrowmere') out[k] = v;
       else if (g[0] === 'bogies') bog += v;
     });
     if (bog) out['bogies:total'] = bog;
