@@ -8,6 +8,13 @@ Every Torn Arcade update since 2.2.0, newest first. Dates are in TCT (Torn City 
 
 ---
 
+## 2.54.1 — 2026-10-31
+### Changed
+- Settings: **Prepare all maps** is now **Preload Tornies**, so it's clear it only covers Tornies.
+
+### New
+- Settings → Legends: **Preload Legend** (off by default). When it's on, Legend of Varrowmere gets itself ready in the background whenever you open the phone, so it starts straight away. Nothing is downloaded or saved; it only uses some extra memory on that page. Needs Legend of Varrowmere 1.0.1.
+
 ## 2.54.0 — 2026-10-31
 ### New
 - **Legend of Varrowmere**, a new top-down action-adventure in the style of the 16-bit classics, in a new **Legends** folder on the home screen. Explore the kingdom of Varrowmere and fight through 19 dungeons with keys, switches, puzzles and unique bosses.

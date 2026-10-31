@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.54.0
+// @version      2.54.1
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with seven game apps and a Legends folder for Legend of Varrowmere (a separate, optional game script): Tornies (a creature-collecting RPG), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online) and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -120,7 +120,9 @@
  *   'varrowmere:ping' (is it installed? the game answers 'varrowmere:here'
  *   with its version and the Soundtrack's), 'varrowmere:open' (sent only when
  *   you tap Play; the phone locks and the game opens) and 'varrowmere:closed'
- *   (the game window closed, so the phone opens again). When the game closes
+ *   (the game window closed, so the phone opens again). With "Preload Legend" on
+ *   (Settings, off by default) it also sends 'varrowmere:preload' once per page
+ *   when the phone opens, so the game can unpack itself ahead of time. When the game closes
  *   it also sends 'varrowmere:scores' (total playtime, completion, monsters
  *   defeated: the best of its three save files), kept with your other best
  *   scores and, only with Online play on, sent to the global leaderboards
@@ -690,7 +692,7 @@
   };
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gifts and trades', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.54.0';
+  const VERSION = '2.54.1';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -1354,6 +1356,10 @@
     setTimeout(function () { openArcade(); if (!current) openFolder(); }, 0);
   });
   function lvPing() { try { document.dispatchEvent(new CustomEvent('varrowmere:ping')); } catch (e) {} }
+  // Preload Legend (Settings, off by default): asks the game to unpack itself in the background on this page, so Play is
+  // instant. One page event, once per page; the game does the work itself and makes no requests.
+  let lvPreloaded = false;
+  function lvPreload() { lvPing(); if (lvPreloaded || !LVS.ver || !store.get('lvPreload', false)) return; lvPreloaded = true; try { document.dispatchEvent(new CustomEvent('varrowmere:preload')); } catch (e) {} }
   function lvInstalled(id) { return id === 'lvMusic' ? !!LVS.music : !!LVS.ver; }
   function refreshLegendIcons() {
     LEGEND_APPS.forEach(function (a) {
@@ -1672,10 +1678,13 @@
       '<div class="ta-group"><h3>Tornies</h3><div class="ta-list">' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#3a9a5a">🗺️</span><div class="ta-rtext"><b>Detailed maps</b><small>Illustrated towns, routes, buildings and caves. Turn off for classic pixel maps on slower devices.</small></div><button type="button" class="ta-switch' + (store.get('detailMaps', true) ? ' ta-on' : '') + '" data-set="detailMaps"></button></div>' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#6a5acd">💾</span><div class="ta-rtext"><b>Save maps on this device</b><small>Keeps each map you have visited as images in this browser\'s storage, so it opens instantly next time with no loading. Stays on this device only; nothing is uploaded or shared.</small></div><button type="button" class="ta-switch' + (store.get('saveMaps', true) ? ' ta-on' : '') + '" data-set="saveMaps"></button></div>' +
-        '<div class="ta-row"><span class="ta-ricon" style="background:#8a4ad0">🧭</span><div class="ta-rtext"><b>Prepare all maps</b><small class="ta-mapmsg">' + mapMsg() + '</small></div><button type="button" class="ta-btn ta-mapbtn" data-set="mapPrep">' + (mapInfo() && mapInfo().running ? 'Stop' : 'Prepare') + '</button></div>' +
+        '<div class="ta-row"><span class="ta-ricon" style="background:#8a4ad0">🧭</span><div class="ta-rtext"><b>Preload Tornies</b><small class="ta-mapmsg">' + mapMsg() + '</small></div><button type="button" class="ta-btn ta-mapbtn" data-set="mapPrep">' + (mapInfo() && mapInfo().running ? 'Stop' : 'Preload') + '</button></div>' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#7a7f8a">🧹</span><div class="ta-rtext"><b>Clear saved maps</b><small>Deletes the map images saved on this device (your game save is not touched). Maps are drawn again as you visit them.</small></div><button type="button" class="ta-danger" data-set="mapClear">Clear</button></div>' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#1c9a8a">🔑</span><div class="ta-rtext"><b>Redeem code</b><small class="ta-cheatmsg">Got a code from Eaglewing, or know a secret word? Enter it here.</small>' +
           '<div class="ta-cheat"><input type="text" class="ta-cheatin" autocomplete="off" spellcheck="false" maxlength="600" placeholder="Enter code"><button type="button" class="ta-btn" data-set="cheat">Redeem</button></div></div></div>' +
+      '</div></div>' +
+      '<div class="ta-group"><h3>Legends</h3><div class="ta-list">' +
+        '<div class="ta-row"><span class="ta-ricon" style="background:linear-gradient(160deg,#6cc05a,#1f5a2a)">⚔️</span><div class="ta-rtext"><b>Preload Legend</b><small>' + (LVS.ver ? 'Gets Legend of Varrowmere ready in the background whenever you open the phone, so it starts straight away. Uses some extra memory on that page while it\'s open; nothing is downloaded or saved.' : 'Install Legend of Varrowmere (in the Legends folder) to use this.') + '</small></div><button type="button" class="ta-switch' + (store.get('lvPreload', false) ? ' ta-on' : '') + '" data-set="lvPreload"></button></div>' +
       '</div></div>' +
       '<div class="ta-group"><h3>Data</h3><div class="ta-list">' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#d08a10">🏆</span><div class="ta-rtext"><b>Reset best scores</b><small>Clears the scores for every mini-game</small></div><button type="button" class="ta-danger" data-set="resetBest">Reset</button></div>' +
@@ -1750,6 +1759,7 @@
     if (k && k.indexOf('onl') === 0) { onlAction(k, t); return; }
     if (k === 'keyDel') { store.set('apiKey', ''); evState = { msg: 'Key removed. Event notifications are off.' }; evStop(); rmStop(); rmAllowed = null; sfx.click(); renderSettings(); return; }
     if (k === 'saveMaps') { const on = !store.get('saveMaps', true); store.set('saveMaps', on); t.classList.toggle('ta-on', on); sfx.click(); if (on && games.pocket && games.pocket.maps) games.pocket.maps.open(); else if (games.pocket && games.pocket.maps) games.pocket.maps.stop(); mapProgress(); return; }
+    if (k === 'lvPreload') { const on = !store.get('lvPreload', false); store.set('lvPreload', on); t.classList.toggle('ta-on', on); sfx.click(); if (on) lvPreload(); return; }
     if (k === 'mapPrep') {
       const mp = games.pocket && games.pocket.maps; if (!mp) return;
       const i = mp.info();
@@ -2209,21 +2219,21 @@
   function mapMsg(p) {
     const i = mapInfo();
     if (p && p.error) return 'Saving maps is not available in this browser.';
-    if (i && i.running) return 'Preparing maps: ' + Math.floor(i.done / Math.max(1, i.total) * 100) + '% (' + i.done + ' of ' + i.total + ' pieces). You can keep playing; keep the phone open.';
+    if (i && i.running) return 'Preloading Tornies maps: ' + Math.floor(i.done / Math.max(1, i.total) * 100) + '% (' + i.done + ' of ' + i.total + ' pieces). You can keep playing; keep the phone open.';
     const saved = i && i.saved ? ' Saved now: ' + i.saved + ' pieces, about ' + Math.max(1, Math.round(i.mb)) + ' MB.' : '';
-    return 'Draws and saves every map now (towns, routes, buildings and caves), so no map ever needs loading. One-off: uses about 40–100 MB of this device\'s storage and takes a few minutes.' + saved;
+    return 'Draws and saves every Tornies map now (towns, routes, buildings and caves), so no map ever needs loading. One-off: uses about 40–100 MB of this device\'s storage and takes a few minutes.' + saved;
   }
   function mapProgress(p) {
     const el = root.querySelector('.ta-mapmsg'), btn = root.querySelector('.ta-mapbtn');
     const i = mapInfo();
-    if (el) el.textContent = p && p.total && p.done >= p.total ? 'All maps are prepared and saved on this device (about ' + Math.max(1, Math.round(i ? i.mb : 0)) + ' MB). Clear them below at any time.' : mapMsg(p);
-    if (btn) btn.textContent = i && i.running ? 'Stop' : 'Prepare';
+    if (el) el.textContent = p && p.total && p.done >= p.total ? 'Every Tornies map is preloaded and saved on this device (about ' + Math.max(1, Math.round(i ? i.mb : 0)) + ' MB). Clear them below at any time.' : mapMsg(p);
+    if (btn) btn.textContent = i && i.running ? 'Stop' : 'Preload';
   }
 
   /* Opening apps */
   function refreshNav() {
     refreshArtIcons();
-    lvPing(); refreshLegendIcons();
+    lvPing(); refreshLegendIcons(); lvPreload();
     if (current === 'scores') renderScores();
   }
   function appInfo(id) { return GAMES.concat(SYS_APPS, ART_APPS, LEGEND_APPS, [DEV_APP]).find(function (a) { return a.id === id; }); }
