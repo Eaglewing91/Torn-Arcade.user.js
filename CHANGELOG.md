@@ -8,6 +8,10 @@ Every Torn Arcade update since 2.2.0, newest first. Dates are in TCT (Torn City 
 
 ---
 
+## 2.54.4 — 2026-10-31
+### Fixed
+- The Soundtrack app could show Part 2 as not installed after you installed it, while your copy of Legend of Varrowmere was still an older version. Each part is now detected directly, and the app tells you when the game needs updating (with an Update button) to play both parts.
+
 ## 2.54.3 — 2026-10-31
 ### Fixed
 - Legend of Varrowmere's music was distorted and crackly: it had been squeezed too hard to fit in one script. The Soundtrack is now **two scripts** (Part 1 and Part 2, about 1.8 MB each) at much higher quality. The Soundtrack app in the Legends folder shows both parts with an Install button for each. Needs Legend of Varrowmere 1.0.3.

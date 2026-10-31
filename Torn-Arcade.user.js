@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.54.3
+// @version      2.54.4
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with seven game apps and a Legends folder for Legend of Varrowmere (a separate, optional game script): Tornies (a creature-collecting RPG), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online) and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -697,7 +697,7 @@
   };
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gifts and trades', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { lvGame: 1, pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.54.3';
+  const VERSION = '2.54.4';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -1352,7 +1352,7 @@
      'varrowmere:closed' comes back and the phone opens again. Install buttons are ordinary links to GitHub. */
   const LVS = { ver: '', music: '', music2: '', launched: false };
   document.addEventListener('varrowmere:here', function (e) {
-    try { const d = JSON.parse(e.detail); LVS.ver = String(d.version || '').slice(0, 20); LVS.music = String(d.music || '').slice(0, 20); LVS.music2 = String(d.music2 || '').slice(0, 20); lvScores(d.scores); } catch (x) {}
+    try { const d = JSON.parse(e.detail); LVS.ver = String(d.version || '').slice(0, 20); lvMusicSeen(d.music, d.music2); lvScores(d.scores); } catch (x) {}
   });
   // Leaderboard numbers from the game (best of its three save files): sent when its window closes, and kept by the game
   // so the next ping brings them too. Checked here before they're saved: whole numbers in range only.
@@ -1371,13 +1371,19 @@
     // back to the phone, at the Legends folder (after this key press, so Esc doesn't also act on the phone)
     setTimeout(function () { openArcade(); if (!current) openFolder(); }, 0);
   });
-  function lvPing() { try { document.dispatchEvent(new CustomEvent('varrowmere:ping')); } catch (e) {} }
+  // each Soundtrack part also marks the page when it loads, so it shows as installed even if the game is an older copy
+  function lvMusicSeen(m1, m2) {
+    const ds = document.documentElement.dataset;
+    LVS.music = String(m1 || ds.varrowmereMusic || '').slice(0, 20); LVS.music2 = String(m2 || ds.varrowmereMusic2 || '').slice(0, 20);
+  }
+  function lvPing() { try { lvMusicSeen(); document.dispatchEvent(new CustomEvent('varrowmere:ping')); } catch (e) {} }
   // Preload Legend (Settings, off by default): asks the game to unpack itself in the background on this page, so Play is
   // instant. One page event, once per page; the game does the work itself and makes no requests.
   let lvPreloaded = false;
   function lvPreload() { lvPing(); if (lvPreloaded || !LVS.ver || !store.get('lvPreload', false)) return; lvPreloaded = true; try { document.dispatchEvent(new CustomEvent('varrowmere:preload')); } catch (e) {} }
   // 1.0.2 and later can play inside the phone; older copies open in their own window
-  function lvInPhone() { const v = LVS.ver.split('.').map(Number); return (v[0] || 0) > 1 || ((v[0] || 0) === 1 && ((v[1] || 0) > 0 || (v[2] || 0) >= 2)); }
+  function lvAtLeast(a, b, c) { const v = LVS.ver.split('.').map(Number), w = [a, b, c]; for (let i = 0; i < 3; i++) { if ((v[i] || 0) !== w[i]) return (v[i] || 0) > w[i]; } return true; }
+  function lvInPhone() { return lvAtLeast(1, 0, 2); }
   function lvInstalled(id) { return id === 'lvMusic' ? !!(LVS.music && LVS.music2) : !!LVS.ver; }
   function refreshLegendIcons() {
     LEGEND_APPS.forEach(function (a) {
@@ -1417,7 +1423,9 @@
           (ver ? '' : '<a class="ta-btn ta-mapbtn" href="' + url + '" target="_blank" rel="noopener">Install</a>') + '</div>';
       };
       html = '<div class="ta-group"><div class="ta-list">' + part(1, LVS.music, LV_URL.music) + part(2, LVS.music2, LV_URL.music2) +
-        '<div class="ta-row"><span class="ta-ricon" style="background:' + (LVS.ver ? '#3a9a5a' : '#5a6676') + '">🗡️</span><div class="ta-rtext"><b>Legend of Varrowmere</b><small>' + (LVS.ver ? 'Installed: the music plays the next time you start the game.' : 'Install the game too: the Soundtrack only adds its music.') + '</small></div></div>' +
+        '<div class="ta-row"><span class="ta-ricon" style="background:' + (!LVS.ver ? '#5a6676' : lvAtLeast(1, 0, 3) ? '#3a9a5a' : '#e08a1e') + '">🗡️</span><div class="ta-rtext"><b>Legend of Varrowmere</b><small>' +
+          (!LVS.ver ? 'Install the game too: the Soundtrack only adds its music.' : lvAtLeast(1, 0, 3) ? 'Installed: the music plays the next time you start the game.' : 'Version ' + esc(LVS.ver) + ' needs updating to 1.0.3 or later to play both Soundtrack parts. Tap Update, then reload the page.') + '</small></div>' +
+          (LVS.ver && !lvAtLeast(1, 0, 3) ? '<a class="ta-btn ta-mapbtn" href="' + LV_URL.game + '" target="_blank" rel="noopener">Update</a>' : '') + '</div>' +
         '</div></div>' +
         '<div class="ta-group"><h3>About</h3><div class="ta-list"><p class="ta-lvnote">The music for Legend of Varrowmere, in two scripts so each stays under 2 MB. Install both for the full soundtrack; with only one, the other areas play simple built-in tunes. The install buttons open the scripts on GitHub, where Tampermonkey shows its install screen; reload the page afterwards. They make no requests, need no API key and store nothing: they only hand their music to the game.</p></div></div>';
     }
