@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.54.2
+// @version      2.54.3
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with seven game apps and a Legends folder for Legend of Varrowmere (a separate, optional game script): Tornies (a creature-collecting RPG), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online) and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -686,17 +686,18 @@
   const LEGENDS = { id: 'legends', name: 'Legends', title: 'Legends', icon: '📁', bg: ['#4a3a7a', '#1a1030'] };
   const LEGEND_APPS = [
     { id: 'lvPlay', name: 'Varrowmere', title: 'Legend of Varrowmere', icon: '🗡️', bg: ['#6cc05a', '#1f5a2a'], size: '1.5 MB', premium: 1 },
-    { id: 'lvMusic', name: 'Soundtrack', title: 'Varrowmere Soundtrack', icon: '🎵', bg: ['#f0b050', '#8a3a10'], size: '1.3 MB' }
+    { id: 'lvMusic', name: 'Soundtrack', title: 'Varrowmere Soundtrack', icon: '🎵', bg: ['#f0b050', '#8a3a10'], size: '2 parts, about 1.8 MB each' }
   ];
   // the game itself, running inside the phone (Legend of Varrowmere 1.0.2 and later)
   const LV_GAME_APP = { id: 'lvGame', name: 'Varrowmere', title: 'Legend of Varrowmere', icon: '🗡️', bg: ['#6cc05a', '#1f5a2a'] };
   const LV_URL = {
     game: 'https://github.com/Eaglewing91/Legend-of-Varrowmere/raw/main/build/Legend-of-Varrowmere.user.js',
-    music: 'https://github.com/Eaglewing91/Legend-of-Varrowmere/raw/main/build/Legend-of-Varrowmere-Soundtrack.user.js'
+    music: 'https://github.com/Eaglewing91/Legend-of-Varrowmere/raw/main/build/Legend-of-Varrowmere-Soundtrack.user.js',
+    music2: 'https://github.com/Eaglewing91/Legend-of-Varrowmere/raw/main/build/Legend-of-Varrowmere-Soundtrack-2.user.js'
   };
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gifts and trades', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { lvGame: 1, pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.54.2';
+  const VERSION = '2.54.3';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -1014,7 +1015,7 @@
   news254El.className = 'ta-clash ta-news'; news254El.hidden = true;
   news254El.innerHTML = '<div class="ta-clashbox"><b>⚔️ New in Torn Arcade 2.54: Legend of Varrowmere</b>' +
     '<p>A brand-new <strong>top-down action-adventure</strong> in the style of the 16-bit classics. Explore the kingdom of Varrowmere and its Shadow twin: towns, forests, mountains, swamps and deserts. Fight through <strong>19 dungeons</strong> full of keys, switches, puzzles and unique bosses, take on <strong>15 side quests</strong>, find new gear and tools, and visit shops, secret caves and Great Fairies. Create up to <strong>three heroes</strong>, each with their own name, tunic and save. Your progress saves as you play.</p>' +
-    '<p>It lives in the new <strong>Legends</strong> folder on your home screen, as two separate scripts: the <strong>game</strong> (1.5 MB) and its optional <strong>Soundtrack</strong> (1.3 MB). Install them from inside the folder, then reload the page. It plays with a keyboard, so it\'s best on a PC or laptop. Your playtime, completion and monsters defeated appear in <strong>Leaderboards</strong>.</p>' +
+    '<p>It lives in the new <strong>Legends</strong> folder on your home screen. The <strong>game</strong> (1.5 MB) and its optional <strong>Soundtrack</strong> (two parts) are separate scripts. Install them from inside the folder, then reload the page. It plays inside the phone with a keyboard, so it\'s best on a PC or laptop. Your playtime, completion and monsters defeated appear in <strong>Leaderboards</strong>.</p>' +
     '<p><strong>A Premium Game, free for now.</strong> Legend of Varrowmere will be listed as a Premium Game. Right now it is completely free, until Torn Staff approve a subscription service for it.</p>' +
     '<p><strong>Everything else stays free.</strong> Only Legends games will be premium. Tornies, Angry Bogies, Faction Defence, Flappy Torn, Anton\'s Egg Dash, Torn Territories and Chess will all remain free.</p>' +
     '<button type="button" class="ta-btn" data-news="legends"><span>Open the Legends folder</span><small>Install the game and the Soundtrack</small></button>' +
@@ -1349,9 +1350,9 @@
      page events, with no requests: this phone sends 'varrowmere:ping' and the game answers 'varrowmere:here' with its
      version and the Soundtrack's; tapping Play locks the phone and sends 'varrowmere:open'; when the game window closes,
      'varrowmere:closed' comes back and the phone opens again. Install buttons are ordinary links to GitHub. */
-  const LVS = { ver: '', music: '', launched: false };
+  const LVS = { ver: '', music: '', music2: '', launched: false };
   document.addEventListener('varrowmere:here', function (e) {
-    try { const d = JSON.parse(e.detail); LVS.ver = String(d.version || '').slice(0, 20); LVS.music = String(d.music || '').slice(0, 20); lvScores(d.scores); } catch (x) {}
+    try { const d = JSON.parse(e.detail); LVS.ver = String(d.version || '').slice(0, 20); LVS.music = String(d.music || '').slice(0, 20); LVS.music2 = String(d.music2 || '').slice(0, 20); lvScores(d.scores); } catch (x) {}
   });
   // Leaderboard numbers from the game (best of its three save files): sent when its window closes, and kept by the game
   // so the next ping brings them too. Checked here before they're saved: whole numbers in range only.
@@ -1377,7 +1378,7 @@
   function lvPreload() { lvPing(); if (lvPreloaded || !LVS.ver || !store.get('lvPreload', false)) return; lvPreloaded = true; try { document.dispatchEvent(new CustomEvent('varrowmere:preload')); } catch (e) {} }
   // 1.0.2 and later can play inside the phone; older copies open in their own window
   function lvInPhone() { const v = LVS.ver.split('.').map(Number); return (v[0] || 0) > 1 || ((v[0] || 0) === 1 && ((v[1] || 0) > 0 || (v[2] || 0) >= 2)); }
-  function lvInstalled(id) { return id === 'lvMusic' ? !!LVS.music : !!LVS.ver; }
+  function lvInstalled(id) { return id === 'lvMusic' ? !!(LVS.music && LVS.music2) : !!LVS.ver; }
   function refreshLegendIcons() {
     LEGEND_APPS.forEach(function (a) {
       const b = $(folderEl, '[data-app="' + a.id + '"]'); if (!b) return;
@@ -1397,20 +1398,29 @@
   function renderLegend(id) {
     lvPing();
     const a = appInfo(id), box = lvBox[id], on = lvInstalled(id), game = id === 'lvPlay';
-    const url = game ? LV_URL.game : LV_URL.music;
-    let html = '<div class="ta-group"><div class="ta-list"><div class="ta-row">' + iconSmall(a) + '<div class="ta-rtext"><b>' + a.title + '</b><small>' +
-      (on ? 'Installed · version ' + esc(game ? LVS.ver : LVS.music) : 'Not installed · ' + a.size) + '</small></div>' +
-      (on && game ? '<button type="button" class="ta-btn ta-mapbtn" data-lv="play">Play</button>' : '') + '</div>';
-    if (game) html += '<div class="ta-row"><span class="ta-ricon" style="background:linear-gradient(160deg,#ffd65a,#d08a10)">★</span><div class="ta-rtext"><b>Premium Game · free for now</b><small>Free until Torn Staff approve a subscription service. Only Legends games will be premium; every other game stays free.</small></div></div>';
-    if (!game) html += '<div class="ta-row"><span class="ta-ricon" style="background:' + (LVS.ver ? '#3a9a5a' : '#5a6676') + '">🗡️</span><div class="ta-rtext"><b>Legend of Varrowmere</b><small>' + (LVS.ver ? 'Installed: the music plays the next time you start the game.' : 'Install the game too: the Soundtrack only adds its music.') + '</small></div></div>';
-    html += '</div></div>';
-    html += '<div class="ta-group"><h3>About</h3><div class="ta-list">' +
-      (game
-        ? '<p class="ta-lvnote">A top-down action-adventure in the style of the 16-bit classics. Explore the kingdom of Varrowmere, fight through <strong>19 dungeons</strong> with keys, switches, puzzles and unique bosses, take on 15 side quests, and find new gear, shops, secret caves and Great Fairies. Three save files, each with its own named hero. It opens in its own window over the page and saves as you play.<br><br>Controls: <strong>Arrows/WASD</strong> move · <strong>Z</strong> sword (hold for a spin) · <strong>X</strong> item · <strong>C</strong> lift, talk, open · <strong>Enter</strong> items · <strong>M</strong> map · <strong>Esc</strong> close. It needs a keyboard, so it is best on a PC or laptop.</p>'
-        : '<p class="ta-lvnote">The music for Legend of Varrowmere: the title, towns, fields, caves, dungeons and boss fights. Without it the game plays simple built-in tunes.</p>') +
-      (on ? '' : '<div class="ta-artinst"><a class="ta-btn" href="' + url + '" target="_blank" rel="noopener">Install ' + (game ? 'Legend of Varrowmere' : 'the Soundtrack') + '</a>' +
-        '<small>Opens the script on GitHub, where Tampermonkey shows its install screen. Once installed, reload the page. It is a separate script so each one stays under 2 MB. It makes no requests and needs no API key' + (game ? '; your save stays in Tampermonkey storage on this device.' : ', and stores nothing: it only hands its music to the game.') + '</small></div>') +
-      '</div></div>';
+    let html;
+    if (game) {
+      html = '<div class="ta-group"><div class="ta-list"><div class="ta-row">' + iconSmall(a) + '<div class="ta-rtext"><b>' + a.title + '</b><small>' +
+        (on ? 'Installed · version ' + esc(LVS.ver) : 'Not installed · ' + a.size) + '</small></div>' +
+        (on ? '<button type="button" class="ta-btn ta-mapbtn" data-lv="play">Play</button>' : '') + '</div>' +
+        '<div class="ta-row"><span class="ta-ricon" style="background:linear-gradient(160deg,#ffd65a,#d08a10)">★</span><div class="ta-rtext"><b>Premium Game · free for now</b><small>Free until Torn Staff approve a subscription service. Only Legends games will be premium; every other game stays free.</small></div></div>' +
+        '</div></div>' +
+        '<div class="ta-group"><h3>About</h3><div class="ta-list">' +
+        '<p class="ta-lvnote">A top-down action-adventure in the style of the 16-bit classics. Explore the kingdom of Varrowmere, fight through <strong>19 dungeons</strong> with keys, switches, puzzles and unique bosses, take on 15 side quests, and find new gear, shops, secret caves and Great Fairies. Three save files, each with its own named hero. It plays inside the phone, turned sideways, and saves as you play.<br><br>Controls: <strong>Arrows/WASD</strong> move · <strong>Z</strong> sword (hold for a spin) · <strong>X</strong> item · <strong>C</strong> lift, talk, open · <strong>Enter</strong> items · <strong>M</strong> map · <strong>Esc</strong> back to the phone. It needs a keyboard, so it is best on a PC or laptop.</p>' +
+        (on ? '' : '<div class="ta-artinst"><a class="ta-btn" href="' + LV_URL.game + '" target="_blank" rel="noopener">Install Legend of Varrowmere</a>' +
+          '<small>Opens the script on GitHub, where Tampermonkey shows its install screen. Once installed, reload the page. It is a separate script so it stays under 2 MB. It makes no requests and needs no API key; your saves stay in Tampermonkey storage on this device.</small></div>') +
+        '</div></div>';
+    } else {
+      const part = function (n, ver, url) {
+        return '<div class="ta-row"><span class="ta-ricon" style="background:' + (ver ? '#3a9a5a' : '#5a6676') + '">🎵</span><div class="ta-rtext"><b>Soundtrack Part ' + n + '</b><small>' +
+          (n === 1 ? 'Title, towns, fields and boss fights. ' : 'Shadow world, dungeons, caves and the ending. ') + (ver ? 'Installed · version ' + esc(ver) : 'Not installed · about 1.8 MB') + '</small></div>' +
+          (ver ? '' : '<a class="ta-btn ta-mapbtn" href="' + url + '" target="_blank" rel="noopener">Install</a>') + '</div>';
+      };
+      html = '<div class="ta-group"><div class="ta-list">' + part(1, LVS.music, LV_URL.music) + part(2, LVS.music2, LV_URL.music2) +
+        '<div class="ta-row"><span class="ta-ricon" style="background:' + (LVS.ver ? '#3a9a5a' : '#5a6676') + '">🗡️</span><div class="ta-rtext"><b>Legend of Varrowmere</b><small>' + (LVS.ver ? 'Installed: the music plays the next time you start the game.' : 'Install the game too: the Soundtrack only adds its music.') + '</small></div></div>' +
+        '</div></div>' +
+        '<div class="ta-group"><h3>About</h3><div class="ta-list"><p class="ta-lvnote">The music for Legend of Varrowmere, in two scripts so each stays under 2 MB. Install both for the full soundtrack; with only one, the other areas play simple built-in tunes. The install buttons open the scripts on GitHub, where Tampermonkey shows its install screen; reload the page afterwards. They make no requests, need no API key and store nothing: they only hand their music to the game.</p></div></div>';
+    }
     box.innerHTML = html;
   }
   lvBox.lvPlay.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('[data-lv="play"]')) { sfx.click(); if (lvInPhone()) openApp('lvGame'); else lvLaunch(); } });

@@ -67,9 +67,10 @@ The **Legends** folder on the home screen holds **Legend of Varrowmere**, a top-
 | Script | What it adds | Size | Install |
 |---|---|---|---|
 | **Legend of Varrowmere** | The game | about 1.5 MB | [Install](https://github.com/Eaglewing91/Legend-of-Varrowmere/raw/main/build/Legend-of-Varrowmere.user.js) |
-| **Legend of Varrowmere - Soundtrack** | Its music (optional; without it the game plays simple built-in tunes) | about 1.3 MB | [Install](https://github.com/Eaglewing91/Legend-of-Varrowmere/raw/main/build/Legend-of-Varrowmere-Soundtrack.user.js) |
+| **Legend of Varrowmere - Soundtrack** | Its music, part 1: title, towns, fields and boss fights (optional) | about 1.7 MB | [Install](https://github.com/Eaglewing91/Legend-of-Varrowmere/raw/main/build/Legend-of-Varrowmere-Soundtrack.user.js) |
+| **Legend of Varrowmere - Soundtrack Part 2** | Its music, part 2: Shadow world, dungeons, caves and the ending (optional) | about 1.8 MB | [Install](https://github.com/Eaglewing91/Legend-of-Varrowmere/raw/main/build/Legend-of-Varrowmere-Soundtrack-2.user.js) |
 
-Once installed, tap **Varrowmere** in the folder: the phone locks and the game opens over the page. Close the game (✕ or Esc) and the phone comes back. It needs a keyboard, so it's best on a PC or laptop. Torn Arcade and the game talk only through browser events on the page you're viewing (`varrowmere:ping`, `varrowmere:here`, `varrowmere:open`, `varrowmere:closed`); neither makes any request for this, and no data is shared.
+Once installed, tap **Varrowmere** in the folder: the phone turns sideways and the game plays inside it, like Tornies. Tap Home (or press Esc) to go back; the game saves. It needs a keyboard, so it's best on a PC or laptop. Torn Arcade and the game talk only through browser events on the page you're viewing (`varrowmere:ping`, `varrowmere:here`, `varrowmere:open`, `varrowmere:closed`); neither makes any request for this, and no data is shared.
 
 Legends games will be listed as **Premium Games**. For now they're **completely free**, until Torn Staff approve a subscription service. **Only Legends games will be premium; every other game in Torn Arcade will remain free.**
 
