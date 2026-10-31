@@ -10,7 +10,7 @@ Every Torn Arcade update since 2.2.0, newest first. Dates are in TCT (Torn City 
 
 ## 2.54.0 — 2026-10-31
 ### New
-- **Legend of Varrowmere**, a new top-down action-adventure in the style of the 16-bit classics, in a new **Legends** folder on the home screen. Explore the kingdom of Varrowmere and fight through twelve hand-built dungeons with keys, switches, puzzles and unique bosses.
+- **Legend of Varrowmere**, a new top-down action-adventure in the style of the 16-bit classics, in a new **Legends** folder on the home screen. Explore the kingdom of Varrowmere and fight through 19 dungeons with keys, switches, puzzles and unique bosses.
 - It comes as two separate optional scripts, so each stays under 2 MB: the **game** (1.4 MB) and its **Soundtrack** (1.3 MB). Tap either app in the folder to install it. Once the game is installed, tapping it locks the phone and opens the game; closing the game brings the phone back.
 - **Premium Game, free for now.** Legend of Varrowmere is listed as a Premium Game, but it is completely free until Torn Staff approve a subscription service. Only Legends games will be premium; every other game in Torn Arcade will remain free.
 - A one-time "What's new" notice explains all of this the first time you open the phone after updating.

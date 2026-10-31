@@ -6,7 +6,7 @@
 
 Torn Arcade is a Tampermonkey userscript that adds a **Mobile Phone** link to Torn's sidebar. Click it and a phone opens on top of the page with seven games, the Legends folder, leaderboards and settings. Everything runs inside the phone, and every image, sound and piece of music is built into the script or its two optional Art Packs.
 
-> ⚔️ **2.54: Legend of Varrowmere.** A new top-down action-adventure in the new **Legends** folder on the home screen: explore the kingdom of Varrowmere and fight through twelve hand-built dungeons. It's listed as a **Premium Game** but is **free for now**, until Torn Staff approve a subscription service. Only Legends games will be premium; every other game stays free. See [Legends](#-legends-premium-games-free-for-now).
+> ⚔️ **2.54: Legend of Varrowmere.** A new top-down action-adventure in the new **Legends** folder on the home screen: explore the kingdom of Varrowmere and fight through 19 dungeons. It's listed as a **Premium Game** but is **free for now**, until Torn Staff approve a subscription service. Only Legends games will be premium; every other game stays free. See [Legends](#-legends-premium-games-free-for-now).
 
 > 🧩 **2.47: Puzzle Arenas.** Each Tornies Arena now has its own puzzle (fuse boxes, bridges, a hedge maze, crates, a quiz, teleport pads and ice), and the Docks Warehouse and TornTech Factory each gain a second floor.
 
