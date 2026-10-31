@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.54.5
+// @version      2.54.6
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with seven game apps and a Legends folder for Legend of Varrowmere (a separate, optional game script): Tornies (a creature-collecting RPG), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online) and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -697,7 +697,7 @@
   };
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gifts and trades', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { lvGame: 1, pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.54.5';
+  const VERSION = '2.54.6';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -1382,18 +1382,28 @@
   let lvPreloaded = false;
   function lvPreload() { lvPing(); if (lvPreloaded || !LVS.ver || !store.get('lvPreload', false)) return; lvPreloaded = true; try { document.dispatchEvent(new CustomEvent('varrowmere:preload')); } catch (e) {} }
   // 1.0.2 and later can play inside the phone; older copies open in their own window
-  function lvAtLeast(a, b, c) { const v = LVS.ver.split('.').map(Number), w = [a, b, c]; for (let i = 0; i < 3; i++) { if ((v[i] || 0) !== w[i]) return (v[i] || 0) > w[i]; } return true; }
+  // The versions this phone needs. Older copies are shown as needing an update (and the game can't be played) until updated.
+  const LV_NEED = { game: [1, 0, 3], music: [1, 0, 3] };
+  function verAtLeast(ver, w) { const v = String(ver || '').split('.').map(Number); for (let i = 0; i < 3; i++) { if ((v[i] || 0) !== w[i]) return (v[i] || 0) > w[i]; } return true; }
+  function lvAtLeast(a, b, c) { return verAtLeast(LVS.ver, [a, b, c]); }
+  function lvOld(id) {
+    if (id === 'lvMusic') return !!((LVS.music && !verAtLeast(LVS.music, LV_NEED.music)) || (LVS.music2 && !verAtLeast(LVS.music2, LV_NEED.music)));
+    return !!(LVS.ver && !verAtLeast(LVS.ver, LV_NEED.game));
+  }
   function lvInPhone() { return lvAtLeast(1, 0, 2); }
   function lvInstalled(id) { return id === 'lvMusic' ? !!(LVS.music && LVS.music2) : !!LVS.ver; }
   function refreshLegendIcons() {
     LEGEND_APPS.forEach(function (a) {
       const b = $(folderEl, '[data-app="' + a.id + '"]'); if (!b) return;
-      const on = lvInstalled(a.id);
-      $(b, '.ta-appicon').classList.toggle('ta-dim', !on);
+      const on = lvInstalled(a.id), old = on && lvOld(a.id);
+      $(b, '.ta-appicon').classList.toggle('ta-dim', !on || old);
       let dl = $(b, '.ta-dl');
-      if (!on && !dl) { dl = document.createElement('span'); dl.className = 'ta-dl'; dl.textContent = '⬇️'; b.appendChild(dl); }
-      if (on && dl) dl.remove();
+      const badge = !on ? '⬇️' : old ? '↻' : '';
+      if (badge && !dl) { dl = document.createElement('span'); dl.className = 'ta-dl'; b.appendChild(dl); }
+      if (dl) { if (!badge) dl.remove(); else { dl.textContent = badge; dl.classList.toggle('ta-upd', badge === '↻'); } }
     });
+    const fb = $(root, '.ta-folderbtn');
+    if (fb) { const need = lvOld('lvPlay') || lvOld('lvMusic'); let u = $(fb, '.ta-dl'); if (need && !u) { u = document.createElement('span'); u.className = 'ta-dl ta-upd'; u.textContent = '↻'; fb.appendChild(u); } if (!need && u) u.remove(); }
     if (current === 'lvPlay' || current === 'lvMusic') renderLegend(current);
   }
   function lvLaunch() {
@@ -1408,8 +1418,8 @@
     if (game) {
       html = '<div class="ta-group"><div class="ta-list"><div class="ta-row">' + iconSmall(a) + '<div class="ta-rtext"><b>' + a.title + '</b><small>' +
         (on ? 'Installed · version ' + esc(LVS.ver) : 'Not installed · ' + a.size) + '</small></div>' +
-        (on ? '<button type="button" class="ta-btn ta-mapbtn" data-lv="play">Play</button>' : '') + '</div>' +
-        (on && !lvInPhone() ? '<div class="ta-row"><span class="ta-ricon" style="background:#e08a1e">↻</span><div class="ta-rtext"><b>Update to play inside the phone</b><small>Your copy (version ' + esc(LVS.ver) + ') opens in its own window. Version 1.0.2 and later play inside the phone, like Tornies. Tap Update, install, then reload the page.</small></div><a class="ta-btn ta-mapbtn" href="' + LV_URL.game + '" target="_blank" rel="noopener">Update</a></div>' : '') +
+        (on && !lvOld('lvPlay') ? '<button type="button" class="ta-btn ta-mapbtn" data-lv="play">Play</button>' : '') + '</div>' +
+        (lvOld('lvPlay') ? '<div class="ta-row"><span class="ta-ricon" style="background:#e08a1e">↻</span><div class="ta-rtext"><b>Update available</b><small>A newer version (' + LV_NEED.game.join('.') + ' or later) is out. Update to keep playing: tap Update, install, then reload the page. Your saves are kept.</small></div><a class="ta-btn ta-mapbtn" href="' + LV_URL.game + '" target="_blank" rel="noopener">Update</a></div>' : '') +
         '<div class="ta-row"><span class="ta-ricon" style="background:linear-gradient(160deg,#ffd65a,#d08a10)">★</span><div class="ta-rtext"><b>Premium Game · free for now</b><small>Free until Torn Staff approve a subscription service. Only Legends games will be premium; every other game stays free.</small></div></div>' +
         '</div></div>' +
         '<div class="ta-group"><h3>About</h3><div class="ta-list">' +
@@ -1419,20 +1429,21 @@
         '</div></div>';
     } else {
       const part = function (n, ver, url) {
-        return '<div class="ta-row"><span class="ta-ricon" style="background:' + (ver ? '#3a9a5a' : '#5a6676') + '">🎵</span><div class="ta-rtext"><b>Soundtrack Part ' + n + '</b><small>' +
-          (n === 1 ? 'Title, towns, fields and boss fights. ' : 'Shadow world, dungeons, caves and the ending. ') + (ver ? 'Installed · version ' + esc(ver) : 'Not installed · about 1.8 MB') + '</small></div>' +
-          (ver ? '' : '<a class="ta-btn ta-mapbtn" href="' + url + '" target="_blank" rel="noopener">Install</a>') + '</div>';
+        const old = ver && !verAtLeast(ver, LV_NEED.music);
+        return '<div class="ta-row"><span class="ta-ricon" style="background:' + (!ver ? '#5a6676' : old ? '#e08a1e' : '#3a9a5a') + '">🎵</span><div class="ta-rtext"><b>Soundtrack Part ' + n + '</b><small>' +
+          (n === 1 ? 'Title, towns, fields and boss fights. ' : 'Shadow world, dungeons, caves and the ending. ') + (!ver ? 'Not installed · about 1.8 MB' : old ? 'Version ' + esc(ver) + ': update available' : 'Installed · version ' + esc(ver)) + '</small></div>' +
+          (!ver || old ? '<a class="ta-btn ta-mapbtn" href="' + url + '" target="_blank" rel="noopener">' + (old ? 'Update' : 'Install') + '</a>' : '') + '</div>';
       };
       html = '<div class="ta-group"><div class="ta-list">' + part(1, LVS.music, LV_URL.music) + part(2, LVS.music2, LV_URL.music2) +
-        '<div class="ta-row"><span class="ta-ricon" style="background:' + (!LVS.ver ? '#5a6676' : lvAtLeast(1, 0, 3) ? '#3a9a5a' : '#e08a1e') + '">🗡️</span><div class="ta-rtext"><b>Legend of Varrowmere</b><small>' +
-          (!LVS.ver ? 'Install the game too: the Soundtrack only adds its music.' : lvAtLeast(1, 0, 3) ? 'Installed: the music plays the next time you start the game.' : 'Version ' + esc(LVS.ver) + ' needs updating to 1.0.3 or later to play both Soundtrack parts. Tap Update, then reload the page.') + '</small></div>' +
-          (LVS.ver && !lvAtLeast(1, 0, 3) ? '<a class="ta-btn ta-mapbtn" href="' + LV_URL.game + '" target="_blank" rel="noopener">Update</a>' : '') + '</div>' +
+        '<div class="ta-row"><span class="ta-ricon" style="background:' + (!LVS.ver ? '#5a6676' : !lvOld('lvPlay') ? '#3a9a5a' : '#e08a1e') + '">🗡️</span><div class="ta-rtext"><b>Legend of Varrowmere</b><small>' +
+          (!LVS.ver ? 'Install the game too: the Soundtrack only adds its music.' : !lvOld('lvPlay') ? 'Installed: the music plays the next time you start the game.' : 'Version ' + esc(LVS.ver) + ': update available. Update the game too, then reload the page.') + '</small></div>' +
+          (lvOld('lvPlay') ? '<a class="ta-btn ta-mapbtn" href="' + LV_URL.game + '" target="_blank" rel="noopener">Update</a>' : '') + '</div>' +
         '</div></div>' +
         '<div class="ta-group"><h3>About</h3><div class="ta-list"><p class="ta-lvnote">The music for Legend of Varrowmere, in two scripts so each stays under 2 MB. Install both for the full soundtrack; with only one, the other areas play simple built-in tunes. The install buttons open the scripts on GitHub, where Tampermonkey shows its install screen; reload the page afterwards. They make no requests, need no API key and store nothing: they only hand their music to the game.</p></div></div>';
     }
     box.innerHTML = html;
   }
-  lvBox.lvPlay.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('[data-lv="play"]')) { sfx.click(); if (lvInPhone()) openApp('lvGame'); else lvLaunch(); } });
+  lvBox.lvPlay.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('[data-lv="play"]')) { sfx.click(); if (!lvOld('lvPlay')) openApp('lvGame'); } });
 
   /* ================= Dev app (Eaglewing [571041] only) =================
      Makes signed gift codes for Tornies. It only shows when the Torn ID on the page you're viewing is the developer's
@@ -2275,7 +2286,7 @@
   function appInfo(id) { return GAMES.concat(SYS_APPS, ART_APPS, LEGEND_APPS, [LV_GAME_APP, DEV_APP]).find(function (a) { return a.id === id; }); }
   function openApp(id) {
     if (id === 'legends') { openFolder(); return; }
-    if (id === 'lvPlay') { lvPing(); if (LVS.ver && lvInPhone()) id = 'lvGame'; }
+    if (id === 'lvPlay') { lvPing(); if (LVS.ver && !lvOld('lvPlay')) id = 'lvGame'; }
     const a = appInfo(id);
     if (!a) return;
     folderEl.hidden = true;

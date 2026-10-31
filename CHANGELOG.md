@@ -8,6 +8,10 @@ Every Torn Arcade update since 2.2.0, newest first. Dates are in TCT (Torn City 
 
 ---
 
+## 2.54.6 — 2026-10-31
+### Changed
+- Legend of Varrowmere and its Soundtrack now show an **update badge (↻)**, like the Art Packs, when your copy is older than the version this phone needs. The Legends folder shows the badge too. An out-of-date game can't be played until you update it: its page shows an Update button instead of Play. Your saves are kept.
+
 ## 2.54.5 — 2026-10-31
 ### Changed
 - If your copy of Legend of Varrowmere is too old to play inside the phone (before 1.0.2), tapping it now shows an **Update** button instead of opening the game in a window over the page. You can still tap Play there to use the old window.
