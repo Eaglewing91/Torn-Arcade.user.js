@@ -8,6 +8,10 @@ Every Torn Arcade update since 2.2.0, newest first. Dates are in TCT (Torn City 
 
 ---
 
+## 2.52.1 — 2026-10-31
+### Fixed
+- Tornies: the Record Board in the Battle Tower showed a line of code instead of your streaks and Battle Points.
+
 ## 2.52.0 — 2026-10-30
 ### Changed
 - Faction Defence: the Sniper has been toned down. It now has a shorter range, fires more slowly and costs $300 (was $250). It's still the best answer to armour and bosses, but a wall of Snipers no longer holds every map on its own.
