@@ -4,7 +4,7 @@
 
 > ⚠️ **For use on Torn only.** Torn Arcade and its Art Packs are licensed solely for use on [torn.com](https://www.torn.com) through a userscript manager. Using, hosting or embedding any part of them anywhere else, or copying, modifying, redistributing or reusing them, is not allowed without written permission from the author. See [Licence](#-licence).
 
-Torn Arcade is a Tampermonkey userscript that adds a **Mobile Phone** link to Torn's sidebar. Click it and a phone opens on top of the page with nine games, leaderboards and settings. Everything runs inside the phone, and every image, sound and piece of music is built into the script or its two optional Art Packs.
+Torn Arcade is a Tampermonkey userscript that adds a **Mobile Phone** link to Torn's sidebar. Click it and a phone opens on top of the page with seven games, leaderboards and settings. Everything runs inside the phone, and every image, sound and piece of music is built into the script or its two optional Art Packs.
 
 > 🧩 **2.47: Puzzle Arenas.** Each Tornies Arena now has its own puzzle (fuse boxes, bridges, a hedge maze, crates, a quiz, teleport pads and ice), and the Docks Warehouse and TornTech Factory each gain a second floor.
 
@@ -57,15 +57,6 @@ The illustrated Tornie and character artwork comes in two separate, optional scr
 
 Install them like the main script, then reload Torn. The **Tornies Art** and **Character Art** apps on the bottom row of the phone show whether each pack is installed, a before/after preview, a gallery of the art you've unlocked and an on/off switch. Each pack updates itself separately.
 
-### 👽 Torn Invasion 3D (optional add-on)
-Torn Invasion is a full 3D shooter, so it comes as its own optional script and keeps Torn Arcade small.
-
-| Script | What it adds | Size | Install |
-|---|---|---|---|
-| **Torn Arcade - Invasion** | Torn Invasion 3D: the 3D alien shooter that opens in the phone's Invasion app | about 1.4 MB | [Install](https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade-Invasion.user.js) |
-
-Install it like the main script, then reload Torn. Without it, the Invasion app shows an install button. If you played the old Torn Invasion, your kill counts, achievement progress and best scores carry over the first time it opens.
-
 How they link: the packs hand their pictures to Torn Arcade using browser events on the Torn page you're viewing. Torn Arcade checks every picture (known names, WebP images only) before using it. The packs make **no requests of any kind**, store nothing and need no API key.
 
 ### 🔄 Automatic updates
@@ -81,10 +72,9 @@ From version 2.15.2, Tampermonkey checks this link for new versions (about once 
 | ![Route 1](screenshots/tornies-route.png) | ![A Tornies battle](screenshots/tornies-battle.png) |
 | ![Westgate](screenshots/tornies-town.png) | ![The beach](screenshots/tornies-beach.png) |
 | ![Tornie Clinic](screenshots/tornies-clinic.png) | ![Golden Torn Casino](screenshots/tornies-casino.png) |
-| ![Frostbite Cave](screenshots/tornies-ice-cave.png) | ![Torn Invasion 3D](screenshots/torn-invasion-3d.png) |
+| ![Frostbite Cave](screenshots/tornies-ice-cave.png) | ![Chess](screenshots/chess.png) |
 | ![Angry Bogies](screenshots/angry-bogies.png) | ![Flappy Torn](screenshots/flappy-torn.png) |
 | ![Faction Defence, Casino Strip](screenshots/faction-defence.png) | ![Faction Defence, Racket HQ](screenshots/faction-defence-racket-hq.png) |
-| ![Deal or No Deal](screenshots/deal-or-no-deal.png) | ![Chess](screenshots/chess.png) |
 
 ![Anton's Egg Dash: Downtown, Casino Strip, The Docks and the Industrial Zone](screenshots/anton-egg-dash.png)
 
@@ -107,9 +97,6 @@ A creature-collecting RPG set in Torn City. You start in Maple Hollow with one o
 - Smooth maps: what is on screen is drawn during the normal fade, and the rest of the map (and the next map, as you head for an exit) is drawn only in quiet moments: battles, menus, dialogue and while you stand still. If you walk non-stop into a part that isn't ready yet, it briefly shows the classic pixel tiles instead of stuttering.
 - Gift codes: the developer may send you a gift code (Tornies, items or money). Paste it into Settings → Redeem code. Each code is signed, made for one Torn ID and works once, so codes can't be faked or shared.
 - Running Shoes: sold in every Tornie Supplies shop once you have three medals ($10,000). Hold B (or Shift) to run. Map options in Settings → Tornies: **Detailed maps** (off for classic pixel maps on slower phones), **Save maps on this device** (maps you have visited open instantly next time), **Prepare all maps** (a one-off that draws and saves every map, indoors and out; about 40–100 MB of browser storage and a few minutes) and **Clear saved maps**.
-
-### 👽 Torn Invasion
-A 3D first-person shooter (optional add-on, see [Install](#-install)). Aliens have taken Downtown: fight up the main street past neon shops, street lamps and crashed cars to the alien crash site and its green exit beam. Grunts rush you, Spitters fire goo, Drones hover and zap, and an armoured Brute guards the crash site. You start with a **pistol**, then find a pump-action **shotgun** and the **plasma rifle**; headshots do double damage. Drones fly over cars but not through buildings, and the Brute fires spreads of fireballs as it walks in and charges when you get close. Space jumps (handy for dodging goo and zaps). Settings for mouse speed, invert look and graphics quality (Low for older phones), a pause menu and tiered achievements. On a phone, your left thumb moves, your right thumb looks, with fire, jump, reload and swap buttons. The aliens and guns are custom illustrated 3D models made specifically for Torn Arcade, and the aliens walk, attack and fall with their own skeletons. More levels are on the way.
 
 ### 🐦 Angry Bogies
 Bogie versus the Racket. Pull back the slingshot, fling Bogies (the green Slime, the Fuzz that splits into three, the hard-hitting Brawler and the explosive Bot) into the gang's hideouts, smash the structures and knock out every thug. **Fifteen levels with three stars each**, from the backstreets to Racket HQ, with more structures and more thugs as you go. Stars are scored on thugs knocked out, blocks smashed and Bogies left over.
@@ -168,7 +155,6 @@ Torn Arcade is built to follow Torn's scripting rules:
 - It doesn't talk to any website other than the official Torn API (only if you add a key for event notifications or reminders) and, only if you turn on the optional **Online play**, the Torn Arcade server (see below). The Art Pack install buttons are plain links to this GitHub page that only open when you tap them.
 - It uses **no websockets**.
 - The optional Art Packs make no requests at all. They only pass pictures to Torn Arcade on the page.
-- The optional **Torn Arcade - Invasion** script makes no requests at all. It only draws the game inside the phone and talks to Torn Arcade through events on the page.
 - Games only react to keys while the phone is open, and never while you're typing in a text box.
 - **No game needs an API key or Online play.** Both are optional extras.
 
@@ -212,7 +198,7 @@ While the phone is open, the phone shows a warning **2 minutes** before:
 How it works: **once a minute while the phone is open**, one request to `api.torn.com` (`/v2/user?selections=basic,travel,cooldowns,bars,refills,organizedcrime`) reads the times; the phone counts down by itself in between. The answers are only shown, never saved or sent anywhere. Turn them all on or off with one switch (Settings → Notifications → Timed reminders). With key 1, only the hospital, jail and new-day reminders work; the key table in Settings shows what each key covers.
 
 ### 🌐 Optional online play
-**Online play is completely optional and off until you turn it on** (Settings → Online). **Every game works fully without it**: Tornies, Torn Invasion, Angry Bogies, Faction Defence, Egg Dash, Torn Territories against the computer or pass-and-play, Chess against the computer, Dirty Bombs and Flappy Torn all play on your own device, with no API key, no account and no server. Online play only *adds* four things:
+**Online play is completely optional and off until you turn it on** (Settings → Online). **Every game works fully without it**: Tornies, Angry Bogies, Faction Defence, Egg Dash, Torn Territories against the computer or pass-and-play, Chess against the computer, Dirty Bombs and Flappy Torn all play on your own device, with no API key, no account and no server. Online play only *adds* four things:
 
 1. **Global leaderboards** in the Leaderboards app (your best scores against every verified player).
 2. **Online Torn Territories and Chess**: games against other players. Invite by Torn ID, make a public game anyone can join, or use **Quick match**.
@@ -251,7 +237,7 @@ With Online play off, **nothing** is ever sent, and nothing is requested while t
 |---|---|---|---|---|
 | Only locally | Nobody | Public amusement (games), event notifications and timed reminders on the phone | Stored locally / Used only for automation (event and reminder checks while the phone is open). Never shared. | Custom, one of two (optional): **Key 1** user → basic, events · **Key 2** user → basic, events, travel, cooldowns, bars, refills, organizedcrime Optional: only needed for event notifications |
 
-- **Data Storage:** settings, theme, wallpaper, best scores, your Tornies save, Torn Invasion progress, Angry Bogies stars, Faction Defence progress (stars, War Chest and Armoury), Egg Dash eggs and achievements, a Torn Territories game in progress and your API key are kept in Tampermonkey storage on your device. Events are shown on the phone but never saved. With **Save maps on this device** on (Settings → Tornies), pictures of the Tornies maps the game has drawn are also kept in your browser's own storage for torn.com (IndexedDB, `torn-arcade-maps`). They are drawn by the script on your device, contain no personal data, are never uploaded or shared, and **Clear saved maps** deletes them.
+- **Data Storage:** settings, theme, wallpaper, best scores, your Tornies save, Angry Bogies stars, Faction Defence progress (stars, War Chest and Armoury), Egg Dash eggs and achievements, a Torn Territories game in progress and your API key are kept in Tampermonkey storage on your device. Events are shown on the phone but never saved. With **Save maps on this device** on (Settings → Tornies), pictures of the Tornies maps the game has drawn are also kept in your browser's own storage for torn.com (IndexedDB, `torn-arcade-maps`). They are drawn by the script on your device, contain no personal data, are never uploaded or shared, and **Clear saved maps** deletes them.
 - **Data Sharing:** nothing is sent anywhere except event requests to `api.torn.com` and, only if you turn on Online play, requests to the Torn Arcade server (see below).
 - **Where it may be used:** Torn (torn.com) only. See [Licence](#-licence).
 - The same table is shown next to the API key box in Settings and at the top of the script.
@@ -263,12 +249,6 @@ With Online play off, **nothing** is ever sent, and nothing is requested while t
 | Persistent - until account deletion (on the Torn Arcade server: your Torn ID, name, best scores, online rating, online game records, Tornie trades and, if you turn them on, cloud saves of your game progress; on your device: a sign-in token). Persistent - forever for trade anti-cheat records (Tornie IDs and owners' Torn IDs, refused trade attempts and trade bans) | General public (your name, Torn ID, rating and best scores on the global leaderboards); the players in your online games and trades see your name, Torn ID, your moves, and the Tornie you offer; the service owner sees trade records for anti-cheat | Public community tools (global leaderboards, online Torn Territories and Chess games and Tornie trades, with trade anti-cheat) | Not stored / Not shared (sent once to the Torn Arcade server to confirm your Torn ID with `api.torn.com`, then forgotten) | Public (user → basic). The custom key (user → basic, events) or a Limited key also works; only your name and Torn ID are read |
 
 The same table is shown in Settings → Online wherever you can enter a key, and at the top of the script. The server is hosted on Railway ([Railway privacy policy](https://railway.com/legal/privacy)); see also the Torn API terms on Torn's API page.
-
-**Torn Arcade - Invasion:**
-
-| Data Storage | Data Sharing | Purpose of Use | Key Storage & Sharing | Key Access Level |
-|---|---|---|---|---|
-| Only locally (settings, best scores and achievement progress) | Nobody | Public amusement (Torn Invasion 3D) | Not stored / Not shared (no key used) | None (no API key needed) |
 
 **Art Packs** (Tornies Art and Character Art):
 

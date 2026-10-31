@@ -3,10 +3,15 @@
 Every Torn Arcade update since 2.2.0, newest first. Dates are in TCT (Torn City Time).
 
 - **Install or update:** [Torn-Arcade.user.js](https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js), or Settings → Check for updates on the phone.
-- **Art Packs** (Tornies Art, Character Art) and **Torn Arcade - Invasion** are separate optional scripts; their updates are noted with the Torn Arcade version that first asked for them.
+- **Art Packs** (Tornies Art, Character Art) are separate optional scripts; their updates are noted with the Torn Arcade version that first asked for them.
 - **Server** changes (online play, leaderboards, trades) are noted with the version they shipped with.
 
 ---
+
+## 2.53.0 — 2026-10-31
+### Removed
+- Torn Invasion and Deal or No Deal have been retired from the phone, along with their leaderboard tabs. The phone now has seven game apps.
+- The optional **Torn Arcade - Invasion** script is no longer offered. If you have it installed, you can remove it from Tampermonkey; it does nothing without the Invasion app.
 
 ## 2.52.1 — 2026-10-31
 ### Fixed

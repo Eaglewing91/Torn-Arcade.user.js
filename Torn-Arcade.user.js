@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.52.1
-// @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with nine game apps: Tornies (a creature-collecting RPG), Torn Invasion (a 3D alien shooter, installed as the optional companion script Torn Arcade - Invasion), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online), Deal or No Deal (the box game show) and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
+// @version      2.53.0
+// @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with seven game apps: Tornies (a creature-collecting RPG), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online) and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
 // @license      All Rights Reserved - for use on Torn (torn.com) only; no copying, modifying, redistribution or use elsewhere (see LICENCE below)
@@ -25,8 +25,7 @@
  * Copyright (c) 2026 Eaglewing [571041]. All rights reserved.
  *
  * This licence covers the author's own work in Torn Arcade and its optional
- * companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art
- * and Torn Arcade - Invasion): the
+ * companion scripts (Torn Arcade - Tornies Art and Torn Arcade - Character Art): the
  * code, the games and their design, the original characters and creatures
  * (including the Tornies), the artwork, the music and the original text
  * ("the Author's Work"). The Author's Work belongs to Eaglewing [571041].
@@ -84,7 +83,7 @@
  * HOW IT WORKS
  * - Adds a "Mobile Phone" link under Calendar in Torn's sidebar (Areas). It is
  *   a copy of Torn's own Calendar row, so it matches the other links. Clicking
- *   it opens a mobile phone on top of the page with nine game apps, plus Scores
+ *   it opens a mobile phone on top of the page with seven game apps, plus Scores
  *   and Settings. Everything runs inside that phone. On pages without the
  *   sidebar, a small floating "Phone" button is shown instead.
  * - On pages where you don't open the phone, only the small part that adds
@@ -115,15 +114,6 @@
  *   pixel-art versions are used. The "Tornies Art" and "Character Art" apps
  *   on the phone show their status and link to them on GitHub (the link only
  *   opens when you tap it).
- * - TORN INVASION (optional): the 3D shooter is its own script, "Torn Arcade -
- *   Invasion". Both scripts run on the Torn page you are viewing and talk only
- *   through browser events on that page ('ta-inv-ping', 'ta-inv-hello',
- *   'ta-inv-cmd', 'ta-inv-state', 'ta-inv-summary') carrying plain text. The
- *   phone gives the game an empty box to draw in, tells it when the app opens,
- *   closes or is muted, shows its scores, and once hands it your old Torn
- *   Invasion progress (kept in this script's storage) so it carries over.
- *   Neither script makes any request. Without it, the Invasion app shows a
- *   link to install it on GitHub (the link only opens when you tap it).
  * - EVENT NOTIFICATIONS (optional, off until you add an API key in
  *   Settings): while the phone is open, it asks the official Torn API
  *   (api.torn.com, /v2/user/events) for your new events every 5 seconds
@@ -198,7 +188,7 @@
  *
  * TERMS OF SERVICE
  * - Data Storage:          Only locally (settings, wallpaper, best scores, your
- *                          Tornies save, Torn Invasion progress, Angry Bogies
+ *                          Tornies save, Angry Bogies
  *                          stars, Faction Defence progress, Egg Dash
  *                          eggs and achievements, a Torn Territories game
  *                          in progress and your API
@@ -258,7 +248,7 @@
 
   /* ================= Starter =================
    * On every Torn page only this small part runs: it adds the "Mobile Phone" link (or a small floating
-   * button where there is no sidebar). The phone and all nine games are set up the first time you open it,
+   * button where there is no sidebar). The phone and all seven games are set up the first time you open it,
    * so pages where you never open the phone pay almost nothing. */
   let arcade = null;
   function startArcade() { if (!arcade) arcade = TA_MAIN(); return arcade; }
@@ -646,21 +636,17 @@
   /* ================= Shell: the Mobile Phone ================= */
   const GAMES = [
     { id: 'pocket', name: 'Tornies',        icon: '🐾', bg: ['#4fd8b8', '#0f7a6a'] , desc: 'A creature-collecting adventure across Torn City. Catch 178 Tornies, win 8 Arena medals and take on the Torn Council.' },
-    { id: 'invasion', name: 'Invasion', title: 'Torn Invasion', icon: '👽', bg: ['#6be38a', '#14532a'] , desc: 'A 3D alien shooter. Fight through alien-infested Torn City with pistol, shotgun and plasma rifle. Needs the free Torn Invasion add-on.' },
     { id: 'bogies', name: 'Angry Bogies', icon: '😠', bg: ['#ff9a5a', '#c8382a'] , desc: 'Bogie versus the Racket. Fling Bogies from a slingshot, smash the hideouts and knock out every thug. Fifteen levels, three stars each.' },
     { id: 'defence', name: 'Faction Defence', icon: '🛡️', bg: ['#7fb0ff', '#2a4f9a'], desc: 'Hold your Faction HQ against Racket raids. Build and upgrade defenders beside the road, survive 30 waves on 6 maps and spend your War Chest in the Armoury.' },
     { id: 'flappy', name: 'Flappy Torn',    icon: '🐦', bg: ['#6cc8ff', '#1f72c8'] , desc: 'Fly through the gaps in the pipes over Torn City. Every pipe you pass is a point.' },
     { id: 'eggdash', name: 'Egg Dash', title: "Anton's Egg Dash", icon: '🐰', bg: ['#8a5ae8', '#2a1458'], desc: 'Run the rooftops of Torn City as Anton in his bunny onesie. Grab the Easter eggs, jump the gaps and stay ahead of the police. One endless run that keeps getting faster.' },
     { id: 'territories', name: 'Territories', title: 'Torn Territories', icon: '🏘️', bg: ['#4a8ad8', '#1a3a6a'], desc: 'A district-building board game. Build roads, safehouses and HQs across Torn City, trade with rival factions and dodge the police raids. Classic (first to 14 Respect) or the Flight Paths expansion: fly to islands named after Torn\'s travel destinations (first to 12 or 16). Play against the computer, pass-and-play or online.' },
-    { id: 'banker', name: 'DoND', title: 'Deal or No Deal', icon: '💼', bg: ['#e3443a', '#7a1410'], desc: 'Twenty-two sealed boxes, from 1 cent to $250,000. Open them one by one, then DEAL or NO DEAL when the Banker calls. Pretend money only.' },
     { id: 'chess', name: 'Chess', title: 'Chess', icon: '♞', bg: ['#e8c88a', '#7a5230'], desc: 'Classic chess against the computer (Easy, Normal, Hard), or online against other Torn players with Quick match, public games and invites. 45 seconds a move online.' },
   ];
   // Home-screen icons for the games: small WebP pictures stored as text in the script (nothing is downloaded).
   const APP_ART = {
-    banker: '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',
     chess: 'UklGRsIFAABXRUJQVlA4ILYFAADwGwCdASqAAIAAPmEskUYkIqGhJZdNIIAMCWUIcAGLSEH8z7JEavmN949bvSNt5bucgZrWr8t+UuVb/JZz77kuOax//pfCp1Mu8Gsbxu+hVoEej/Rm33M/wxTeGc5vm0W3GpLH4/nugSXPqoiLx2y4IE2RxXwfOEwec40x04184CHRX7vyMLTHtnjvNnQjEYQMmiS8kt07Si3+0NRwe8DCLPUM+NHg+s6qkj0Kt3F++jFZuFSbdEfsJ5+Tkl6sOT49wYAns4qlTydcbtxRoj+OzWyx1vqP7V3XfZZRNrMrMkQL811lj+AAAP6qs3o8Rzz4blwXKVdCfWuUorCSeb+9YUYFyCAUU0o69XRWG2uAEJVaoLu930PqIvSkhnMvwCLBEZlvmPSeMt+4IWTItEIZnO7PFmjyrUr55oftERirHqMvR/Mhtn3y6Ge5rKZ8u5x0verHsDc5fsTst/XVXP9leTRYP2f4U3jW1NDRxTae0U7iL/cIrzUSO73K/hYlHf+AkwZZSdPvSEzeSwK1RFrPKN63NsKFsFu+XEl+8pljb9QP1tcHoYHxVr30YN4/TOR5YLogqnjxC/EXSBIzB0YkArW6PFvkaZY/ZJ7LvXLdQZVyf5hTq+7p7hOyMKXzoZS5nNaETxQXsjuO2k8xBtyt/Wx+cUfwcCioChUnkJRGxGAqleGPltSXQr8Gju93PrTP5/qtfENSRssbUb617RPQoeOiPJEvsrxfbJ7f8GgH6bspijsonbRPVUKkV+bxPWeZd+l969Fk+rt0gH/vy6nogsLNiwVRhTX1r/YwpPBRCMM/vFVHR5lNKLyJrCBXW47MjwrXvhSDSbjL8CAr66F/O17BEFZwwuqh/o85t/WqC83hbNLVJRvUvJb34QQs071eTorVXInf/S2xH/f8r/7NuWS1126A2aFd971vvU6vOMr49OzjvpAMg34VS8uLih1mzd9XLZt5LBxGnstQF3EApF/9ZP1WhgAPw59L/RsjdhvuItLJPvGcl5blkJGi96SjCngSvT+l0c2HpeFQJ0tbDFmecglvABDNQ2g2QH+L5wMQMe/53nbfGarYzoO29LJmB3qDoiaVWC8tksmboFtBpTzT/gZq9QWHqlGnW/ngTjk0ia4lt1+Mjx60xj5ZbvSrp7Du+BFUF+YHPt6Rwu7q/dtJztdkop/Q4HYv2KuzAO+qruUJms0LngUnebue5FZF5NG2AtVYMd6QG3qJBkpIjEiQ9mj0jOxGPI3Jod9L/CMBVwJs5BDa02s2KR8iB/JNscrs6uWyrhl0Dfx60x6Om9KJOsfha4bsQxwkBG4ontDtyKE3z7vcQkzYu+v6fHuWAPN0C27GheN9u0ptXvmC9w2tfRJQ6yUdIN5tXx2r1wDrJyNmJ/MO6+iuhn52e64dk5mAk9XBc9nTO1pi5c/+Sbo614wH/2twslzNDVO8DTNyxxBcfDtmd1tC5BDaYRvnOCVQbLYZwE3T/fpxxBuqaFsUdIRIDpNkjQn/HG3aLDy06lkn/kOi2XCG+zoSkfWGtAUF1WY2B2WxfAKOf38FGxbbWHWs60baFiT88xnCuroF/GCZpQ/r5a9xNlb/LyM9NsZC9OnWGBbjIEv7N/wWpSTGeJ6WahNeZdcC7tfY3A/DLs5Q+v0Edvtpzpd4KHWCASMZamLp/ysOzS2WXVM0829qnf6iDZqsaieId6/aAMkbuB4T5hnR1wzAVxwznBBHjI45qTWmXcRVRHZy/dlpWnC+6OvRZ5+9ZCD1ExE1yv21vpGOmflfI4uO/TevF0936MG/azCaQ6Na8Jr9dMgiIKor1QY4ISKfFte9mGvKi5CCt/hK7TngjpiEkbczeA2nCaoCQmaIMIkXoHhlo0Aqb/5BPGWvJVdtb/FBZ6/D49YxAAJ+/NLBh0LvcDKMNjsL0fQCmdzD+FL6Svse/sAHdajQAAAA',
     pocket: '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',
-    invasion: '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',
     bogies: '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',
     defence: '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',
     territories: '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',
@@ -679,7 +665,7 @@
   ];
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gifts and trades', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.52.1';
+  const VERSION = '2.53.0';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -945,7 +931,7 @@
           '<span class="ta-sicons"><span class="ta-bars"><i style="height:4px"></i><i style="height:6px"></i><i style="height:8.5px"></i><i style="height:11px"></i></span><span>TornTel</span><span class="ta-batt"><i></i></span></span></div>' +
         '<div class="ta-home">' +
           '<div class="ta-widget"><button type="button" class="ta-lock" data-act="close" title="Lock phone (closes it; your games are saved)">🔒 Lock</button><b class="ta-wclock">00:00</b><span class="ta-wdate"></span><em>Torn City Time</em></div>' +
-          '<div class="ta-note" hidden><span class="ta-noteicon">👋</span><div class="ta-notetext"><b>Welcome to Torn Arcade v' + VERSION + '!</b><small>Nine games in your pocket. Start with Tornies, and grab the free Art Packs on the bottom row for illustrated artwork. Bugs or ideas? Message Eaglewing [571041].</small></div><button type="button" class="ta-notex" title="Dismiss">✕</button></div>' +
+          '<div class="ta-note" hidden><span class="ta-noteicon">👋</span><div class="ta-notetext"><b>Welcome to Torn Arcade v' + VERSION + '!</b><small>Seven games in your pocket. Start with Tornies, and grab the free Art Packs on the bottom row for illustrated artwork. Bugs or ideas? Message Eaglewing [571041].</small></div><button type="button" class="ta-notex" title="Dismiss">✕</button></div>' +
           '<div class="ta-grid">' + GAMES.map(appButton).join('') + '</div>' +
           '<div class="ta-grid ta-artrow">' + ART_APPS.map(appButton).join('') + '</div>' +
           '<div class="ta-dock">' + SYS_APPS.map(function (a) { return (a.id === 'settings' ? appButton(DEV_APP).replace('<button ', '<button hidden ') : '') + appButton(a); }).join('') + '</div>' +
@@ -1206,16 +1192,6 @@
           '<span class="ta-chip">Seen <b>' + s.seen + '</b></span><span class="ta-chip">★ Golden <b>' + s.ranked + '</b></span><span class="ta-chip">Money <b>$' + s.money.toLocaleString('en-GB') + '</b></span></div>'
           : '<b>No adventure yet</b><small>Open Tornies to start your journey.</small>') +
         '</div></div></div></div>';
-    }
-    const invApp = appInfo('invasion');
-    const invSum = invApp && games.invasion && games.invasion.summary ? games.invasion.summary() : null;
-    if (invSum) {
-      const s = invSum;
-      const chips = s.diffs.map(function (d) { return '<span class="ta-chip">' + esc(d.name) + ' <b>' + (d.best ? d.best.toLocaleString('en-GB') : '–') + '</b> · level ' + d.level + '/' + s.levels + '</span>'; }).join('') +
-        (s.classic ? Object.keys(s.classic).map(function (d) { return '<span class="ta-chip">Classic ' + esc(d.charAt(0).toUpperCase() + d.slice(1)) + ' <b>' + Number(s.classic[d]).toLocaleString('en-GB') + '</b></span>'; }).join('') : '');
-      html += '<div class="ta-group"><h3>Torn Invasion</h3><div class="ta-list"><div class="ta-row">' + iconSmall(invApp) + '<div class="ta-rtext"><b>Torn Invasion</b>' +
-        (chips ? '' : '<small>No runs yet. Clear a level to unlock the next one.</small>') +
-        '<div class="ta-chips">' + chips + '<span class="ta-chip">🏆 Achievements <b>' + s.ach.n + '/' + s.ach.all + '</b></span></div></div></div></div></div>';
     }
     let rows = '';
     GAMES.forEach(function (a) {
@@ -1567,7 +1543,6 @@
       '<div class="ta-group"><h3>Data</h3><div class="ta-list">' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#d08a10">🏆</span><div class="ta-rtext"><b>Reset best scores</b><small>Clears the scores for every mini-game</small></div><button type="button" class="ta-danger" data-set="resetBest">Reset</button></div>' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#1c9a8a">🐾</span><div class="ta-rtext"><b>Delete Tornies save</b><small>Your team, medals and Tornie Log</small></div><button type="button" class="ta-danger" data-set="resetPocket">Delete</button></div>' +
-        '<div class="ta-row"><span class="ta-ricon" style="background:#1c6a32">👽</span><div class="ta-rtext"><b>Delete Invasion progress</b><small>Unlocked levels, best scores and achievements</small></div><button type="button" class="ta-danger" data-set="resetInvasion">Delete</button></div>' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#2a4f9a">🛡️</span><div class="ta-rtext"><b>Delete Faction Defence progress</b><small>Stars, War Chest and Armoury upgrades</small></div><button type="button" class="ta-danger" data-set="resetDefence">Delete</button></div>' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#5a3ab8">🐰</span><div class="ta-rtext"><b>Delete Egg Dash progress</b><small>Lifetime eggs, double jump and achievements</small></div><button type="button" class="ta-danger" data-set="resetEggdash">Delete</button></div>' +
       '</div></div>' +
@@ -1660,10 +1635,9 @@
     if (k === 'detailMaps') { const on = !store.get('detailMaps', true); store.set('detailMaps', on); t.classList.toggle('ta-on', on); sfx.click(); return; }
     if (k === 'evNotify') { const on = !store.get('evNotify', true); store.set('evNotify', on); t.classList.toggle('ta-on', on); sfx.click(); if (on) evStart(); else evStop(); return; }
     if (k === 'sound') { setMuted(!muted); t.classList.toggle('ta-on', !muted); if (!muted) sfx.click(); return; }
-    if (k === 'resetBest' || k === 'resetPocket' || k === 'resetInvasion' || k === 'resetDefence' || k === 'resetEggdash') {
+    if (k === 'resetBest' || k === 'resetPocket' || k === 'resetDefence' || k === 'resetEggdash') {
       if (!t.classList.contains('ta-sure')) { t.classList.add('ta-sure'); t.textContent = 'Tap again'; setTimeout(function () { if (t.isConnected) { t.classList.remove('ta-sure'); t.textContent = k === 'resetBest' ? 'Reset' : 'Delete'; } }, 3000); return; }
       if (k === 'resetBest') { store.set('best', {}); t.textContent = 'Done'; }
-      else if (k === 'resetInvasion') { if (games.invasion) games.invasion.wipe(); t.textContent = 'Deleted'; }
       else if (k === 'resetDefence') { if (games.defence) games.defence.wipe(); t.textContent = 'Deleted'; }
       else if (k === 'resetEggdash') { if (games.eggdash) games.eggdash.wipe(); t.textContent = 'Deleted'; }
       else { if (games.pocket && games.pocket.wipe) games.pocket.wipe(); else store.set('pocket', null); t.textContent = 'Deleted'; }
@@ -1980,12 +1954,10 @@
     { id: 'territories', boards: [['territories', 'Classic rating'], ['territories:fp12', 'Flight Paths 12'], ['territories:fp16', 'Flight Paths 16']] },
     { id: 'chess', boards: [['chess', 'Online rating']] },   // separate ratings, so wins to 12 and to 16 never mix
     { id: 'pocket', boards: [['tornies:caught', 'Tornies caught'], ['tornies:medals', 'Arena medals'], ['tornies:time', 'Total playtime'], ['tornies:merits', 'Merit points'], ['tornies:golden', 'Golden Tornies'], ['tornies:fish', 'Fish caught']] },
-    { id: 'invasion', boards: [['invasion:standard', 'Best score']] },
     { id: 'bogies', boards: [['bogies:total', 'Total score']] },
     { id: 'defence', boards: [['defence:total', 'Total score'], ['defence:wave', 'Highest wave']] },
     { id: 'eggdash', boards: [['eggdash:endless', 'Best score']] },
-    { id: 'flappy', boards: [['flappy:hard', 'Best score']] },
-    { id: 'banker', boards: [['banker:best', 'Biggest win']] }
+    { id: 'flappy', boards: [['flappy:hard', 'Best score']] }
   ];
   const lbCache = {};
   let lbTab = 'mine', lbGame = 'territories', lbBoard = 'territories', syncT = 0, lbSynced = 0;
@@ -1995,7 +1967,6 @@
     if (board === 'defence:total' || board === 'defence:run') return Number(v).toLocaleString('en-GB');
     if (board === 'defence:wave' && v > 30) return '30 + ' + (v - 30) + ' OT';
     if (board.indexOf('defence:') === 0) return 'Wave ' + v;
-    if (board === 'banker:best') return v < 100 ? v + '¢' : '$' + (v / 100).toLocaleString('en-US', { maximumFractionDigits: 2 });
     if (board === 'tornies:caught') return v + '/179';
     if (board === 'tornies:medals') return v + '/8';
     if (board === 'tornies:time') { const h = Math.floor(v / 3600), m = Math.floor(v / 60) % 60; return h + 'h ' + (m < 10 ? '0' : '') + m + 'm'; }
@@ -2008,14 +1979,13 @@
     Object.keys(best).forEach(function (k) {
       const v = Math.floor(Number(best[k])), g = k.split(':');
       if (!(v > 0)) return;
-      if (k === 'flappy:hard' || k === 'eggdash:endless' || g[0] === 'defence' || k === 'banker:best') out[k] = v;
+      if (k === 'flappy:hard' || k === 'eggdash:endless' || g[0] === 'defence') out[k] = v;
       else if (g[0] === 'bogies') bog += v;
     });
     if (bog) out['bogies:total'] = bog;
     try { const t = games.pocket && games.pocket.summary && games.pocket.summary(); if (t) { if (t.caught) out['tornies:caught'] = t.caught; if (t.badges) out['tornies:medals'] = t.badges;
       const lb = t.lb || {};
       if (lb.secs >= 60) out['tornies:time'] = lb.secs; if (lb.merits > 0) out['tornies:merits'] = lb.merits; if (lb.golden > 0) out['tornies:golden'] = lb.golden; if (lb.fish > 0) out['tornies:fish'] = lb.fish; } } catch (e) {}
-    try { const iv = games.invasion && games.invasion.summary && games.invasion.summary(); const d = iv && iv.season === 2 && iv.diffs && iv.diffs.find(function (x) { return x.name === 'Standard'; }); if (d && d.best > 0) out['invasion:standard'] = Math.floor(d.best); } catch (e) {}
     return out;
   }
   // Send the bests that changed since last time (verified players only).
@@ -2176,7 +2146,6 @@
   function arcadeShows(id) { return isOpen && current === id; }
   function setMuted(m) {
     muted = !!m; store.set('muted', muted);
-    if (games.invasion && games.invasion.mute) games.invasion.mute(muted);
     if (games.territories && games.territories.mute) games.territories.mute(muted);
     muteBtn.textContent = muted ? '🔇' : '🔊';
     muteBtn.title = muted ? 'Sound off (click to turn on)' : 'Sound on (click to mute)';
@@ -2676,157 +2645,6 @@
         const k = keyName(e);
         if (k === ' ' || k === 'ArrowUp' || k === 'w') { if (!e.repeat) flap(); return true; }
         if (k === 'p' || k === 'Enter') { if (!e.repeat) { if (state === 'playing') pause(); else if (state === 'paused') flap(); } return true; }
-        return false;
-      }
-    };
-  })();
-
-  /* ================= Deal or No Deal (box game, after the UK TV show's format) =================
-     22 sealed boxes hide 22 cash amounts from 1 cent to $250,000. One box is yours, chosen at random. Open the others
-     5, then 3 at a time; after each round the Banker phones with an offer for your box: DEAL or NO DEAL. Sometimes he
-     offers a swap instead. Turn every offer down and you win whatever is in your box. Pretend money only: it has
-     nothing to do with your Torn cash. Your biggest win goes on the global leaderboard. */
-  (function () {
-    const VALUES = [1, 10, 50, 100, 500, 1000, 5000, 10000, 25000, 50000, 75000, 100000, 300000, 500000, 1000000, 1500000, 2000000, 3500000, 5000000, 7500000, 10000000, 25000000];   // in cents
-    const ROUNDS = [5, 3, 3, 3, 3, 3];   // boxes opened before each call (20 of the 21 others)
-    taStyle([
-      '.ta-bk{display:flex;flex-direction:column;gap:8px;height:100%;padding:8px 10px;box-sizing:border-box;overflow:auto}',
-      '.ta-bk-board{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:3px 10px}',
-      '.ta-bk-v{font:700 11.5px system-ui,Arial,sans-serif;padding:2px 8px;border-radius:6px;text-align:right;transition:opacity .3s,filter .3s}',
-      '.ta-bk-v.lo{background:linear-gradient(90deg,#1d4f8a,#2f75c8);color:#fff}',
-      '.ta-bk-v.hi{background:linear-gradient(90deg,#a8241e,#e0453a);color:#fff}',
-      '.ta-bk-v.gone{opacity:.18;filter:grayscale(1)}',
-      '.ta-bk-boxes{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px}',
-      '.ta-bk-box{position:relative;aspect-ratio:1.5;min-width:0;padding:0;overflow:hidden;white-space:nowrap;border:0;border-radius:8px;cursor:pointer;font:800 15px system-ui,Arial,sans-serif;color:#fff;',
-      '  background:linear-gradient(160deg,#e3443a,#9a1a14);box-shadow:inset 0 -4px 0 rgba(0,0,0,.25),0 2px 6px rgba(0,0,0,.35);transition:transform .15s}',
-      '.ta-bk-box:hover:not(:disabled){transform:translateY(-2px)}',
-      '.ta-bk-box.mine{outline:3px solid #ffd65a;outline-offset:2px;cursor:default}',
-      '.ta-bk-box.open{background:#20262f;color:#9aa6b8;box-shadow:none;cursor:default;font-size:9.5px;letter-spacing:-.02em}',
-      '.ta-bk-box:disabled{cursor:default}',
-      '.ta-bk-info{text-align:center;font:600 13px system-ui,Arial,sans-serif;color:var(--muted,#9aa6b8);min-height:18px}',
-      '.ta-bk-call{position:absolute;inset:0;z-index:6;display:flex;align-items:center;justify-content:center;background:rgba(5,8,14,.72)}',
-      '.ta-bk-call[hidden]{display:none}',
-      '.ta-bk-card{width:min(320px,88%);padding:20px 18px;border-radius:18px;text-align:center;background:linear-gradient(160deg,#1a2230,#0d121a);border:1px solid #3a4658;box-shadow:0 20px 50px rgba(0,0,0,.6)}',
-      '.ta-bk-card .ring{font-size:38px;animation:ta-bk-ring .35s ease-in-out 4}',
-      '@keyframes ta-bk-ring{0%,100%{transform:rotate(0)}25%{transform:rotate(-14deg)}75%{transform:rotate(14deg)}}',
-      '.ta-bk-card h3{margin:6px 0 2px;font:800 15px system-ui,Arial,sans-serif;color:#fff;letter-spacing:.06em}',
-      '.ta-bk-card .amt{margin:8px 0 14px;font:900 30px system-ui,Arial,sans-serif;color:#ffd65a}',
-      '.ta-bk-card p{margin:0 0 12px;font-size:13px;color:#c8d4e4}',
-      '.ta-bk-btns{display:flex;gap:10px;justify-content:center}',
-      '.ta-bk-btns button{flex:1;max-width:130px;padding:11px 0;border:0;border-radius:12px;font:900 15px system-ui,Arial,sans-serif;cursor:pointer;color:#fff}',
-      '.ta-bk-deal{background:linear-gradient(160deg,#3fbf6a,#1f7a3e)}',
-      '.ta-bk-no{background:linear-gradient(160deg,#e3443a,#9a1a14)}'
-    ].join(''));
-    const panel = makePanel('banker', 'Deal or No Deal', 'Open the boxes, then DEAL or NO DEAL when the Banker calls. 22 boxes, from 1 cent to $250,000. Pretend money only.',
-      '<button type="button" class="ta-btn ta-bk-new">New game</button>',
-      [['round', 'Round', '–'], ['left', 'To open', '–'], ['best', 'Best', '–']],
-      '<div class="ta-bk"><div class="ta-bk-info"></div><div class="ta-bk-board"></div><div class="ta-bk-boxes"></div></div>' +
-      '<div class="ta-bk-call" hidden><div class="ta-bk-card"></div></div>',
-      'Click a box to open it · when the Banker calls: <span class="ta-kbd">D</span> deal, <span class="ta-kbd">N</span> no deal · <span class="ta-kbd">Space</span> new game when it\'s over');
-    const boardEl = $(panel, '.ta-bk-board'), boxesEl = $(panel, '.ta-bk-boxes'), infoEl = $(panel, '.ta-bk-info'), callEl = $(panel, '.ta-bk-call'), cardEl = $(panel, '.ta-bk-card');
-    let G = null, active = false, gen = 0;
-    function money(c) { return c < 100 ? c + '¢' : '$' + (c / 100).toLocaleString('en-US', { maximumFractionDigits: c % 100 ? 2 : 0, minimumFractionDigits: c % 100 ? 2 : 0 }); }
-    function showBest() { const b = getBest('banker:best'); stat(panel, 'best', b === undefined ? '–' : money(b)); }
-    function left() { return VALUES.filter(function (v, i) { return !G.gone[i]; }); }
-    function build() {
-      gen++;
-      const shuffled = VALUES.map(function (v, i) { return i; }).sort(function () { return Math.random() - 0.5; });
-      G = { box: shuffled, mine: 1 + Math.floor(Math.random() * 22), opened: {}, gone: {}, round: 0, toOpen: ROUNDS[0], offers: [], over: false, dealt: 0, swapped: false };
-      callEl.hidden = true; hideMsg(panel);
-      boardEl.innerHTML = '';
-      for (let k = 0; k < 11; k++) [k, k + 11].forEach(function (i) { const d = document.createElement('div'); d.className = 'ta-bk-v ' + (i < 11 ? 'lo' : 'hi'); d.dataset.i = i; d.textContent = money(VALUES[i]); boardEl.appendChild(d); });
-      boxesEl.innerHTML = '';
-      for (let n = 1; n <= 22; n++) { const b = document.createElement('button'); b.type = 'button'; b.className = 'ta-bk-box' + (n === G.mine ? ' mine' : ''); b.dataset.n = n; b.textContent = n; boxesEl.appendChild(b); }
-      infoEl.textContent = 'Your box is box ' + G.mine + '. Open ' + G.toOpen + ' boxes, then the Banker will call.';
-      showStats(); showBest();
-    }
-    function showStats() { stat(panel, 'round', G.over ? '–' : (G.round + 1) + ' / ' + ROUNDS.length); stat(panel, 'left', G.over ? '–' : String(G.toOpen)); }
-    function cross(i) { const el = $(boardEl, '[data-i="' + i + '"]'); if (el) el.classList.add('gone'); G.gone[i] = 1; }
-    function openBox(n) {
-      if (!G || G.over || G.calling || G.toOpen <= 0 || n === G.mine || G.opened[n]) return;
-      const i = G.box[n - 1], el = $(boxesEl, '[data-n="' + n + '"]');
-      G.opened[n] = 1; G.toOpen--; cross(i);
-      el.classList.add('open'); el.disabled = true; el.textContent = money(VALUES[i]);
-      // big amounts get a groan, small ones a cheer
-      if (VALUES[i] >= 5000000) seq([[0, 220, 0.25, 'sawtooth', 0.05, 110]]); else if (VALUES[i] <= 100000) seq([[0, 660, 0.08, 'square', 0.04], [90, 990, 0.12, 'square', 0.04]]); else tone(440, 0.1, 'triangle', 0.05);
-      infoEl.textContent = 'Box ' + n + ' had ' + money(VALUES[i]) + '.' + (G.toOpen ? ' ' + G.toOpen + ' more to open.' : '');
-      showStats();
-      if (!G.toOpen) { const g = gen; G.calling = true; setTimeout(function () { if (g === gen) bankerCall(); }, 900); }
-    }
-    // The Banker's offer: a share of the average of what's left that rises each round, with a little mood.
-    function offer() {
-      const L = left(), avg = L.reduce(function (a, b) { return a + b; }, 0) / L.length;
-      const share = [0.18, 0.3, 0.45, 0.6, 0.75, 0.9][G.round] * (0.88 + Math.random() * 0.2);
-      let o = avg * share;
-      const step = o >= 1000000 ? 50000 : o >= 100000 ? 5000 : o >= 10000 ? 500 : 100;   // round to a "nice" figure
-      o = Math.max(100, Math.round(o / step) * step);
-      return o;
-    }
-    function bankerCall(moneyOnly) {
-      if (!active) { G.pendingCall = true; return; }
-      G.pendingCall = false;
-      const finalCall = G.round === ROUNDS.length - 1;
-      // Now and then (and always worth asking at the very end) the Banker offers a swap instead of money.
-      const swap = !moneyOnly && !G.swapped && (finalCall ? Math.random() < 0.5 : G.round >= 2 && Math.random() < 0.15);
-      seq([[0, 1320, 0.18, 'sine', 0.06], [220, 1320, 0.18, 'sine', 0.06], [700, 1320, 0.18, 'sine', 0.06], [920, 1320, 0.18, 'sine', 0.06]]);
-      G.offer = swap ? 0 : offer();
-      if (!swap) G.offers.push(G.offer);
-      cardEl.innerHTML = '<div class="ring">☎️</div><h3>THE BANKER</h3>' +
-        (swap ? '<p>He\'s offering you a <b>swap</b>: your box for the other one still in play' + (finalCall ? '' : ' (pick any unopened box)') + '.</p><div class="amt">SWAP?</div>'
-          : '<p>' + (G.round === 0 ? 'Here\'s his first offer for your box.' : finalCall ? 'His final offer. After this, you open your box.' : 'His offer for your box:') + '</p><div class="amt">' + money(G.offer) + '</div>') +
-        '<div class="ta-bk-btns"><button type="button" class="ta-bk-deal" data-bk="deal">' + (swap ? 'SWAP' : 'DEAL') + '</button><button type="button" class="ta-bk-no" data-bk="no">NO DEAL</button></div>';
-      G.swapOffer = swap; callEl.hidden = false;
-    }
-    function answer(deal) {
-      if (!G || callEl.hidden) return;
-      callEl.hidden = true; G.calling = false;
-      if (G.swapOffer) {
-        if (deal) doSwap();
-        else infoEl.textContent = 'No swap. You keep box ' + G.mine + '.';
-        // a swap call stands in for the money offer this round, so the Banker calls again with money
-        G.swapped = true; const g = gen; G.calling = true; setTimeout(function () { if (g === gen) bankerCall(true); }, 900);
-        return;
-      }
-      if (deal) { G.dealt = G.offer; finish(); return; }
-      seq([[0, 330, 0.12, 'square', 0.05], [120, 262, 0.18, 'square', 0.05]]);
-      nextRound();
-    }
-    function doSwap() {
-      const others = []; for (let n = 1; n <= 22; n++) if (n !== G.mine && !G.opened[n]) others.push(n);
-      const to = others[Math.floor(Math.random() * others.length)];
-      $(boxesEl, '[data-n="' + G.mine + '"]').classList.remove('mine');
-      G.mine = to; $(boxesEl, '[data-n="' + to + '"]').classList.add('mine');
-      infoEl.textContent = 'Swapped! Your box is now box ' + to + '.';
-    }
-    function nextRound() {
-      G.round++;
-      if (G.round >= ROUNDS.length) { finish(); return; }
-      G.toOpen = ROUNDS[G.round]; showStats();
-      infoEl.textContent = 'No deal! Open ' + G.toOpen + ' more boxes.';
-    }
-    function finish() {
-      G.over = true; showStats();
-      const mine = VALUES[G.box[G.mine - 1]], won = G.dealt || mine;
-      for (let n = 1; n <= 22; n++) { const el = $(boxesEl, '[data-n="' + n + '"]'); el.disabled = true; if (!G.opened[n]) { el.classList.add('open'); el.textContent = money(VALUES[G.box[n - 1]]); } }
-      const best = record('banker:best', won);
-      showBest();
-      const title = G.dealt ? 'DEAL! You won ' + money(won) : 'You won ' + money(won) + '!';
-      const sub = G.dealt ? 'Your box ' + G.mine + ' had ' + money(mine) + '. ' + (mine > won ? 'The Banker got the better of you this time.' : mine < won ? 'You beat the Banker!' : 'Dead level with the Banker.') : 'You turned down every offer. Box ' + G.mine + ' had ' + money(mine) + '.';
-      showMsg(panel, title, sub, best ? 'New best!' : 'Space or New game to play again');
-      if (won >= 5000000) seq([[0, 523, 0.12, 'square', 0.05], [130, 659, 0.12, 'square', 0.05], [260, 784, 0.25, 'square', 0.05]]);
-    }
-    boxesEl.addEventListener('click', function (e) { const b = e.target.closest && e.target.closest('.ta-bk-box'); if (b) openBox(+b.dataset.n); });
-    cardEl.addEventListener('click', function (e) { const b = e.target.closest && e.target.closest('[data-bk]'); if (b) answer(b.dataset.bk === 'deal'); });
-    $(panel, '.ta-bk-new').addEventListener('click', function () { build(); sfx.click(); });
-    build();
-    games.banker = {
-      enter: function () { active = true; showBest(); if (G && G.pendingCall) bankerCall(); },
-      leave: function () { active = false; },
-      bestText: function () { const b = getBest('banker:best'); return b === undefined ? 'No score yet' : 'Biggest win ' + money(b); },
-      onKey: function (e) {
-        const k = keyName(e);
-        if (!callEl.hidden && (k === 'd' || k === 'n')) { if (!e.repeat) answer(k === 'd'); return true; }
-        if ((k === ' ' || k === 'Enter') && G && G.over) { if (!e.repeat) build(); return true; }
         return false;
       }
     };
@@ -17383,91 +17201,6 @@
   };
   })();
 
-  /* ================= Torn Invasion: link to the separate Invasion script ================= */
-  // Torn Invasion is its own optional script ("Torn Arcade - Invasion"). Both scripts run on the Torn page you
-  // are viewing and talk with page events carrying JSON text; nothing is downloaded and no request is made.
-  // The phone gives the game an empty box to draw in, and tells it when the app opens, closes or is muted.
-  // Old Torn Invasion progress (kept in this script's storage) is handed over once when the new game asks.
-  (function () {
-  const INV_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade-Invasion.user.js';
-  const INV_WANT = '3.1.0';   // newest Invasion version this phone knows about (filled in at build time)
-  const inv = { ok: false, ver: '', old: false, playing: false, summary: store.get('invSummary', null) };
-  function verLess(a, b) { const x = String(a).split('.').map(Number), y = String(b).split('.').map(Number); for (let i = 0; i < 3; i++) { if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) < (y[i] || 0); } return false; }
-  // badge on the Invasion icon, like the Art Pack apps: download when missing, update arrow when out of date
-  function invBadge() {
-    const b = $(gridEl, '.ta-appbtn[data-app="invasion"]'); if (!b) return;
-    const badge = !inv.ok ? '⬇️' : inv.old ? '↻' : '';
-    let dl = $(b, '.ta-dl');
-    if (badge && !dl) { dl = document.createElement('span'); dl.className = 'ta-dl'; b.appendChild(dl); }
-    if (dl) { if (!badge) dl.remove(); else { dl.textContent = badge; dl.classList.toggle('ta-upd', badge === '↻'); } }
-  }
-  function invOld() { try { return GM_getValue('invasion', {}) || {}; } catch (e) { return {}; } }
-  function send(cmd, extra) { const o = Object.assign({ cmd: cmd }, extra || {}); document.dispatchEvent(new CustomEvent('ta-inv-cmd', { detail: JSON.stringify(o) })); }
-  taStyle([
-    '.ta-phone .ta-panel.tim-wrap.ta-on{display:block;height:100%;min-height:0}',
-    '.tim-wrap #ta-inv-root{height:100%}',
-    '.tim{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;height:100%;min-height:0;padding:24px 22px;text-align:center;overflow:auto}',
-    '.tim[hidden]{display:none}',
-    '.tim-badge{width:84px;height:84px;border-radius:22px;display:grid;place-items:center;font-size:44px;background:linear-gradient(135deg,#6be38a,#14532a);box-shadow:0 10px 26px rgba(20,83,42,.45)}',
-    '.tim h2{margin:0;font-size:19px;line-height:1.25;color:var(--text,#fff)}',
-    '.tim p{margin:0;max-width:340px;font-size:13.5px;line-height:1.5;color:var(--muted,#9aa6b8)}',
-    '.tim ul{margin:0;padding:0;list-style:none;display:grid;gap:6px;max-width:340px;width:100%}',
-    '.tim li{font-size:13px;padding:8px 12px;border-radius:10px;background:rgba(255,255,255,.06);color:var(--text,#fff);text-align:left}',
-    '.tim small{font-size:12px;color:var(--muted,#9aa6b8);max-width:340px;line-height:1.45}',
-    '.tim-get{display:inline-block;text-decoration:none!important;border-radius:12px;padding:11px 20px;font:800 14px system-ui,Arial,sans-serif;color:#04140a!important;background:#3fbf6a}'
-  ].join(''));
-  const root = document.createElement('section');
-  root.className = 'ta-panel tim-wrap'; root.dataset.game = 'invasion';
-  root.innerHTML = '<div id="ta-inv-root" hidden></div><div class="tim"><div class="tim-badge">👽</div>' +
-    '<h2>Torn Invasion 3D</h2><p>Torn Invasion is now a full 3D shooter, installed as its own free add-on so the phone stays small.</p>' +
-    '<ul><li>🏙️ Real 3D streets and alien hives</li><li>🔫 Pistol, shotgun and plasma rifle</li><li>👾 Animated aliens, from Grunts to the armoured Brute</li></ul>' +
-    '<a class="tim-get" href="' + INV_URL + '" target="_blank" rel="noopener noreferrer">Get Torn Invasion 3D</a>' +
-    '<small class="tim-save">Tampermonkey opens and asks you to install it. Then reload this page.</small></div>';
-  main.appendChild(root);
-  const gameBox = $(root, '#ta-inv-root'), getBox = $(root, '.tim');
-  // Out of date: the game stays closed and the same page asks for the update instead (playing needs the latest version).
-  function render() {
-    const ready = inv.ok && !inv.old;
-    gameBox.hidden = !ready; getBox.hidden = ready;
-    $(root, 'h2').textContent = inv.old ? 'Update Torn Invasion 3D' : 'Torn Invasion 3D';
-    $(root, '.tim-get').textContent = inv.old ? 'Update to version ' + INV_WANT : 'Get Torn Invasion 3D';
-    $(root, '.tim p').textContent = inv.old ? 'A new version is out (you have ' + inv.ver + '). Update to keep playing. Your progress is kept.' : 'Torn Invasion is now a full 3D shooter, installed as its own free add-on so the phone stays small.';
-    if (inv.old) $(root, '.tim-save').textContent = 'Tampermonkey opens and asks you to update it. Then reload this page.';
-    if (!inv.ok) {
-      const d = invOld(), has = Object.keys(d).some(function (k) { return /^(best|reached):/.test(k) || k === 'stats'; });
-      $(root, '.tim-save').textContent = 'Tampermonkey opens and asks you to install it. Then reload this page.' + (has ? ' Your old Invasion scores and achievement progress will carry over.' : '');
-    }
-  }
-  document.addEventListener('ta-inv-hello', function (e) {
-    let d; try { d = JSON.parse(e.detail); } catch (er) { return; }
-    if (d.proto !== 1) return;
-    const first = !inv.ok; inv.ok = true; inv.ver = d.ver; inv.old = verLess(d.ver, INV_WANT); if (!inv.old) LAND_APPS.invasion = 1; render(); invBadge();
-    if (d.needLegacy) send('legacy', { data: invOld() });
-    if (first && isOpen && current === 'invasion' && !inv.old) { setOrientation(wantsLand('invasion'), true); send('enter', { muted: muted }); }
-  });
-  document.addEventListener('ta-inv-state', function (e) { try { inv.playing = !!JSON.parse(e.detail).playing; } catch (er) {} });
-  document.addEventListener('ta-inv-summary', function (e) { try { const sm = JSON.parse(e.detail); if (sm && sm.season !== 2) return; inv.summary = sm; store.set('invSummary', inv.summary); } catch (er) {} });   // only scores from after the 2.40 fresh start
-  render(); invBadge();
-  document.dispatchEvent(new CustomEvent('ta-inv-ping'));
-  games.invasion = {
-    enter: function () { if (inv.ok && !inv.old) send('enter', { muted: muted }); else render(); },
-    leave: function () { if (inv.ok) send('leave'); inv.playing = false; },
-    onKey: function () { return false; },          // the game reads its own keys
-    onEscape: function () { return inv.ok && inv.playing; },   // while playing, Escape pauses the game instead of closing the app
-    landscape: function () { return inv.ok && !inv.old; },
-    mute: function (m) { if (inv.ok) send('mute', { muted: m }); },
-    summary: function () { return inv.summary; },
-    // Settings > Delete Invasion progress: the new game's saves and the old ones (control settings are kept).
-    wipe: function () {
-      if (inv.ok) send('wipe');
-      const d = invOld(), k = {};
-      ['difficulty', 'sensitivity', 'invertY', 'gfx'].forEach(function (n) { if (d[n] !== undefined) k[n] = d[n]; });
-      try { GM_setValue('invasion', k); } catch (e) {}
-      inv.summary = null; store.set('invSummary', null);
-    }
-  };
-  })();
-
   /* ================= Angry Bogies (slingshot physics game) ================= */
   (function () {
     // The world is measured in metres. y points down; the ground surface is at y = GY.
@@ -22952,7 +22685,7 @@
     if (document.hidden) { if (isOpen && current && games[current]) games[current].leave(); return; }
     // Back on the tab: wake the open game up again (Tornies and Invasion do this themselves). A game that was
     // mid-play comes back paused where it has a pause (Faction Defence, Flappy Torn).
-    if (isOpen && current && games[current] && current !== 'pocket' && current !== 'invasion') games[current].enter();
+    if (isOpen && current && games[current] && current !== 'pocket') games[current].enter();
   });
   // Keys only act while the phone is open, and never while typing.
   window.addEventListener('keydown', function (e) {
