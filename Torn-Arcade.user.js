@@ -120,8 +120,12 @@
  *   'varrowmere:ping' (is it installed? the game answers 'varrowmere:here'
  *   with its version and the Soundtrack's), 'varrowmere:open' (sent only when
  *   you tap Play; the phone locks and the game opens) and 'varrowmere:closed'
- *   (the game window closed, so the phone opens again). No requests are made
- *   and no data is shared. The Install buttons are ordinary links to GitHub.
+ *   (the game window closed, so the phone opens again). When the game closes
+ *   it also sends 'varrowmere:scores' (total playtime, completion, monsters
+ *   defeated: the best of its three save files), kept with your other best
+ *   scores and, only with Online play on, sent to the global leaderboards
+ *   like every other game's. The game makes no requests. The Install buttons
+ *   are ordinary links to GitHub.
  *   Legends are listed as Premium Games but are currently free, until Torn
  *   Staff approve a subscription service; every other game stays free.
  * - EVENT NOTIFICATIONS (optional, off until you add an API key in
