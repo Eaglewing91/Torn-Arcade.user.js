@@ -8,6 +8,10 @@ Every Torn Arcade update since 2.2.0, newest first. Dates are in TCT (Torn City 
 
 ---
 
+## 2.54.2 — 2026-10-31
+### Changed
+- **Legend of Varrowmere now plays inside the phone**, turned sideways like Tornies, instead of in its own window over the page. Tap Home (or press Esc) to go back; the game saves. Needs Legend of Varrowmere 1.0.2 (older versions still open in their own window).
+
 ## 2.54.1 — 2026-10-31
 ### Changed
 - Settings: **Prepare all maps** is now **Preload Tornies**, so it's clear it only covers Tornies.

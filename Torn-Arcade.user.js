@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.54.1
+// @version      2.54.2
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with seven game apps and a Legends folder for Legend of Varrowmere (a separate, optional game script): Tornies (a creature-collecting RPG), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online) and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -119,8 +119,10 @@
  *   talks to it only through browser events on the page you are viewing:
  *   'varrowmere:ping' (is it installed? the game answers 'varrowmere:here'
  *   with its version and the Soundtrack's), 'varrowmere:open' (sent only when
- *   you tap Play; the phone locks and the game opens) and 'varrowmere:closed'
- *   (the game window closed, so the phone opens again). With "Preload Legend" on
+ *   you tap Play; the game opens inside the phone, in a box this script
+ *   provides; older game versions open in their own window),
+ *   'varrowmere:close' (you left the game) and 'varrowmere:closed' (the game
+ *   closed itself, so the phone goes back to its home screen). With "Preload Legend" on
  *   (Settings, off by default) it also sends 'varrowmere:preload' once per page
  *   when the phone opens, so the game can unpack itself ahead of time. When the game closes
  *   it also sends 'varrowmere:scores' (total playtime, completion, monsters
@@ -686,13 +688,15 @@
     { id: 'lvPlay', name: 'Varrowmere', title: 'Legend of Varrowmere', icon: '🗡️', bg: ['#6cc05a', '#1f5a2a'], size: '1.5 MB', premium: 1 },
     { id: 'lvMusic', name: 'Soundtrack', title: 'Varrowmere Soundtrack', icon: '🎵', bg: ['#f0b050', '#8a3a10'], size: '1.3 MB' }
   ];
+  // the game itself, running inside the phone (Legend of Varrowmere 1.0.2 and later)
+  const LV_GAME_APP = { id: 'lvGame', name: 'Varrowmere', title: 'Legend of Varrowmere', icon: '🗡️', bg: ['#6cc05a', '#1f5a2a'] };
   const LV_URL = {
     game: 'https://github.com/Eaglewing91/Legend-of-Varrowmere/raw/main/build/Legend-of-Varrowmere.user.js',
     music: 'https://github.com/Eaglewing91/Legend-of-Varrowmere/raw/main/build/Legend-of-Varrowmere-Soundtrack.user.js'
   };
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gifts and trades', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
-  const LAND_APPS = { pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.54.1';
+  const LAND_APPS = { lvGame: 1, pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
+  const VERSION = '2.54.2';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -780,6 +784,8 @@
     '.ta-dock{position:relative;margin:auto 12px 22px;padding:12px 10px;border-radius:30px;display:flex;justify-content:space-around;background:rgba(255,255,255,.16);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.14)}',
     '.ta-dock .ta-applabel{display:none}',
     '.ta-artrow{margin-top:auto;padding-bottom:2px}',
+    '.ta-root[data-app="lvGame"] .ta-main{padding:0;overflow:hidden;position:relative;background:#000}',
+    '.ta-panel[data-game="lvGame"]{position:absolute;inset:0;min-height:0;gap:0;padding:0}', '#ta-lv-host{position:absolute;inset:0;overflow:hidden;background:#000}',
     /* The Legends folder (Premium Games) */
     '.ta-folderbtn .ta-appicon{background:rgba(255,255,255,.2)!important;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:grid;grid-template-columns:repeat(2,20px);grid-auto-rows:20px;gap:5px;place-content:center;font-size:12px}',
     '.ta-folderbtn .ta-mini{width:20px;height:20px;border-radius:6px;display:grid;place-items:center;font-size:12px;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,.35)}',
@@ -1236,6 +1242,14 @@
   const scoresBox = sysPanel('scores'), settingsBox = sysPanel('settings');
   const artBox = { artT: sysPanel('artT'), artC: sysPanel('artC'), artR: sysPanel('artR') };
   const lvBox = { lvPlay: sysPanel('lvPlay'), lvMusic: sysPanel('lvMusic') };
+  // Legend of Varrowmere plays inside this panel: the game draws into #ta-lv-host when it gets 'varrowmere:open'
+  const lvPanel = document.createElement('section'); lvPanel.className = 'ta-panel'; lvPanel.dataset.game = 'lvGame';
+  lvPanel.innerHTML = '<div id="ta-lv-host"></div>'; main.appendChild(lvPanel);
+  games.lvGame = {
+    enter: function () { try { document.dispatchEvent(new CustomEvent('varrowmere:open', { detail: JSON.stringify({ host: 'ta-lv-host' }) })); } catch (e) {} },
+    leave: function () { try { document.dispatchEvent(new CustomEvent('varrowmere:close')); } catch (e) {} },
+    onKey: function () { return false; }   // the game reads the keys itself
+  };
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
   const SCORE_FMT = {
@@ -1351,7 +1365,8 @@
   }
   document.addEventListener('varrowmere:scores', function (e) { try { lvScores(JSON.parse(e.detail)); } catch (x) {} });
   document.addEventListener('varrowmere:closed', function () {
-    if (!LVS.launched) return; LVS.launched = false;
+    if (!LVS.launched) { if (isOpen && current === 'lvGame') goHome(); return; }   // closed from inside the phone: back to the home screen
+    LVS.launched = false;
     // back to the phone, at the Legends folder (after this key press, so Esc doesn't also act on the phone)
     setTimeout(function () { openArcade(); if (!current) openFolder(); }, 0);
   });
@@ -1360,6 +1375,8 @@
   // instant. One page event, once per page; the game does the work itself and makes no requests.
   let lvPreloaded = false;
   function lvPreload() { lvPing(); if (lvPreloaded || !LVS.ver || !store.get('lvPreload', false)) return; lvPreloaded = true; try { document.dispatchEvent(new CustomEvent('varrowmere:preload')); } catch (e) {} }
+  // 1.0.2 and later can play inside the phone; older copies open in their own window
+  function lvInPhone() { const v = LVS.ver.split('.').map(Number); return (v[0] || 0) > 1 || ((v[0] || 0) === 1 && ((v[1] || 0) > 0 || (v[2] || 0) >= 2)); }
   function lvInstalled(id) { return id === 'lvMusic' ? !!LVS.music : !!LVS.ver; }
   function refreshLegendIcons() {
     LEGEND_APPS.forEach(function (a) {
@@ -1396,7 +1413,7 @@
       '</div></div>';
     box.innerHTML = html;
   }
-  lvBox.lvPlay.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('[data-lv="play"]')) { sfx.click(); lvLaunch(); } });
+  lvBox.lvPlay.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('[data-lv="play"]')) { sfx.click(); if (lvInPhone()) openApp('lvGame'); else lvLaunch(); } });
 
   /* ================= Dev app (Eaglewing [571041] only) =================
      Makes signed gift codes for Tornies. It only shows when the Torn ID on the page you're viewing is the developer's
@@ -2236,10 +2253,10 @@
     lvPing(); refreshLegendIcons(); lvPreload();
     if (current === 'scores') renderScores();
   }
-  function appInfo(id) { return GAMES.concat(SYS_APPS, ART_APPS, LEGEND_APPS, [DEV_APP]).find(function (a) { return a.id === id; }); }
+  function appInfo(id) { return GAMES.concat(SYS_APPS, ART_APPS, LEGEND_APPS, [LV_GAME_APP, DEV_APP]).find(function (a) { return a.id === id; }); }
   function openApp(id) {
     if (id === 'legends') { openFolder(); return; }
-    if (id === 'lvPlay') { lvPing(); if (LVS.ver) { lvLaunch(); return; } }
+    if (id === 'lvPlay') { lvPing(); if (LVS.ver) { if (lvInPhone()) id = 'lvGame'; else { lvLaunch(); return; } } }
     const a = appInfo(id);
     if (!a) return;
     folderEl.hidden = true;
