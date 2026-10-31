@@ -8,6 +8,10 @@ Every Torn Arcade update since 2.2.0, newest first. Dates are in TCT (Torn City 
 
 ---
 
+## 2.54.9 — 2026-10-31
+### Fixed
+- The volume slider (Settings) now sets Legend of Varrowmere's volume too. Needs Legend of Varrowmere 1.0.7 (the app shows ↻ until you update).
+
 ## 2.54.8 — 2026-10-31
 ### Fixed
 - The phone's speaker (mute) button now mutes Legend of Varrowmere too, including while it's playing. Needs Legend of Varrowmere 1.0.5 (the folder shows an update badge until you have it).
