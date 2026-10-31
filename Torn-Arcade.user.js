@@ -681,7 +681,7 @@
   // Premium Games of Torn Arcade; for now they are free (see the 2.54 notice). Every other game stays free.
   const LEGENDS = { id: 'legends', name: 'Legends', title: 'Legends', icon: '📁', bg: ['#4a3a7a', '#1a1030'] };
   const LEGEND_APPS = [
-    { id: 'lvPlay', name: 'Varrowmere', title: 'Legend of Varrowmere', icon: '🗡️', bg: ['#6cc05a', '#1f5a2a'], size: '1.4 MB', premium: 1 },
+    { id: 'lvPlay', name: 'Varrowmere', title: 'Legend of Varrowmere', icon: '🗡️', bg: ['#6cc05a', '#1f5a2a'], size: '1.5 MB', premium: 1 },
     { id: 'lvMusic', name: 'Soundtrack', title: 'Varrowmere Soundtrack', icon: '🎵', bg: ['#f0b050', '#8a3a10'], size: '1.3 MB' }
   ];
   const LV_URL = {
@@ -972,7 +972,7 @@
           '<span class="ta-sicons"><span class="ta-bars"><i style="height:4px"></i><i style="height:6px"></i><i style="height:8.5px"></i><i style="height:11px"></i></span><span>TornTel</span><span class="ta-batt"><i></i></span></span></div>' +
         '<div class="ta-home">' +
           '<div class="ta-widget"><button type="button" class="ta-lock" data-act="close" title="Lock phone (closes it; your games are saved)">🔒 Lock</button><b class="ta-wclock">00:00</b><span class="ta-wdate"></span><em>Torn City Time</em></div>' +
-          '<div class="ta-note" hidden><span class="ta-noteicon">👋</span><div class="ta-notetext"><b>Welcome to Torn Arcade v' + VERSION + '!</b><small>Seven games in your pocket. Start with Tornies, and grab the free Art Packs on the bottom row for illustrated artwork. Bugs or ideas? Message Eaglewing [571041].</small></div><button type="button" class="ta-notex" title="Dismiss">✕</button></div>' +
+          '<div class="ta-note" hidden><span class="ta-noteicon">👋</span><div class="ta-notetext"><b>Welcome to Torn Arcade v' + VERSION + '!</b><small>Seven games in your pocket, plus Legend of Varrowmere in the Legends folder. Start with Tornies, and grab the free Art Packs on the bottom row for illustrated artwork. Bugs or ideas? Message Eaglewing [571041].</small></div><button type="button" class="ta-notex" title="Dismiss">✕</button></div>' +
           '<div class="ta-grid">' + folderButton() + GAMES.map(appButton).join('') + '</div>' +
           '<div class="ta-grid ta-artrow">' + ART_APPS.map(appButton).join('') + '</div>' +
           '<div class="ta-dock">' + SYS_APPS.map(function (a) { return (a.id === 'settings' ? appButton(DEV_APP).replace('<button ', '<button hidden ') : '') + appButton(a); }).join('') + '</div>' +
@@ -1004,9 +1004,9 @@
   // What's new in 2.54 (shown once to everyone, after the 2.40 notice if that one is still waiting): Legend of Varrowmere.
   const news254El = document.createElement('div');
   news254El.className = 'ta-clash ta-news'; news254El.hidden = true;
-  news254El.innerHTML = '<div class="ta-clashbox"><b>⚔️ New in Torn Arcade ' + VERSION + ': Legend of Varrowmere</b>' +
+  news254El.innerHTML = '<div class="ta-clashbox"><b>⚔️ New in Torn Arcade 2.54: Legend of Varrowmere</b>' +
     '<p>A brand-new <strong>top-down action-adventure</strong> in the style of the 16-bit classics. Explore the kingdom of Varrowmere and its Shadow twin: towns, forests, mountains, swamps and deserts. Fight through <strong>19 dungeons</strong> full of keys, switches, puzzles and unique bosses, take on <strong>15 side quests</strong>, find new gear and tools, and visit shops, secret caves and Great Fairies. Create up to <strong>three heroes</strong>, each with their own name, tunic and save. Your progress saves as you play.</p>' +
-    '<p>It lives in the new <strong>Legends</strong> folder on your home screen, as two separate scripts: the <strong>game</strong> (1.4 MB) and its optional <strong>Soundtrack</strong> (1.3 MB). Install them from inside the folder, then reload the page. It plays with a keyboard, so it\'s best on a PC or laptop.</p>' +
+    '<p>It lives in the new <strong>Legends</strong> folder on your home screen, as two separate scripts: the <strong>game</strong> (1.5 MB) and its optional <strong>Soundtrack</strong> (1.3 MB). Install them from inside the folder, then reload the page. It plays with a keyboard, so it\'s best on a PC or laptop. Your playtime, completion and monsters defeated appear in <strong>Leaderboards</strong>.</p>' +
     '<p><strong>A Premium Game, free for now.</strong> Legend of Varrowmere will be listed as a Premium Game. Right now it is completely free, until Torn Staff approve a subscription service for it.</p>' +
     '<p><strong>Everything else stays free.</strong> Only Legends games will be premium. Tornies, Angry Bogies, Faction Defence, Flappy Torn, Anton\'s Egg Dash, Torn Territories and Chess will all remain free.</p>' +
     '<button type="button" class="ta-btn" data-news="legends"><span>Open the Legends folder</span><small>Install the game and the Soundtrack</small></button>' +
