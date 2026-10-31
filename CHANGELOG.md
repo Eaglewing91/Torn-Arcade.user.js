@@ -8,6 +8,10 @@ Every Torn Arcade update since 2.2.0, newest first. Dates are in TCT (Torn City 
 
 ---
 
+## 2.54.5 — 2026-10-31
+### Changed
+- If your copy of Legend of Varrowmere is too old to play inside the phone (before 1.0.2), tapping it now shows an **Update** button instead of opening the game in a window over the page. You can still tap Play there to use the old window.
+
 ## 2.54.4 — 2026-10-31
 ### Fixed
 - The Soundtrack app could show Part 2 as not installed after you installed it, while your copy of Legend of Varrowmere was still an older version. Each part is now detected directly, and the app tells you when the game needs updating (with an Update button) to play both parts.

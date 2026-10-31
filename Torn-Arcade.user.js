@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.54.4
+// @version      2.54.5
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with seven game apps and a Legends folder for Legend of Varrowmere (a separate, optional game script): Tornies (a creature-collecting RPG), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online) and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -697,7 +697,7 @@
   };
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gifts and trades', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { lvGame: 1, pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.54.4';
+  const VERSION = '2.54.5';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -1409,6 +1409,7 @@
       html = '<div class="ta-group"><div class="ta-list"><div class="ta-row">' + iconSmall(a) + '<div class="ta-rtext"><b>' + a.title + '</b><small>' +
         (on ? 'Installed · version ' + esc(LVS.ver) : 'Not installed · ' + a.size) + '</small></div>' +
         (on ? '<button type="button" class="ta-btn ta-mapbtn" data-lv="play">Play</button>' : '') + '</div>' +
+        (on && !lvInPhone() ? '<div class="ta-row"><span class="ta-ricon" style="background:#e08a1e">↻</span><div class="ta-rtext"><b>Update to play inside the phone</b><small>Your copy (version ' + esc(LVS.ver) + ') opens in its own window. Version 1.0.2 and later play inside the phone, like Tornies. Tap Update, install, then reload the page.</small></div><a class="ta-btn ta-mapbtn" href="' + LV_URL.game + '" target="_blank" rel="noopener">Update</a></div>' : '') +
         '<div class="ta-row"><span class="ta-ricon" style="background:linear-gradient(160deg,#ffd65a,#d08a10)">★</span><div class="ta-rtext"><b>Premium Game · free for now</b><small>Free until Torn Staff approve a subscription service. Only Legends games will be premium; every other game stays free.</small></div></div>' +
         '</div></div>' +
         '<div class="ta-group"><h3>About</h3><div class="ta-list">' +
@@ -2274,7 +2275,7 @@
   function appInfo(id) { return GAMES.concat(SYS_APPS, ART_APPS, LEGEND_APPS, [LV_GAME_APP, DEV_APP]).find(function (a) { return a.id === id; }); }
   function openApp(id) {
     if (id === 'legends') { openFolder(); return; }
-    if (id === 'lvPlay') { lvPing(); if (LVS.ver) { if (lvInPhone()) id = 'lvGame'; else { lvLaunch(); return; } } }
+    if (id === 'lvPlay') { lvPing(); if (LVS.ver && lvInPhone()) id = 'lvGame'; }
     const a = appInfo(id);
     if (!a) return;
     folderEl.hidden = true;
