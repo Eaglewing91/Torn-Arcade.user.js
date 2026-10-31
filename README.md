@@ -4,7 +4,9 @@
 
 > ⚠️ **For use on Torn only.** Torn Arcade and its Art Packs are licensed solely for use on [torn.com](https://www.torn.com) through a userscript manager. Using, hosting or embedding any part of them anywhere else, or copying, modifying, redistributing or reusing them, is not allowed without written permission from the author. See [Licence](#-licence).
 
-Torn Arcade is a Tampermonkey userscript that adds a **Mobile Phone** link to Torn's sidebar. Click it and a phone opens on top of the page with seven games, leaderboards and settings. Everything runs inside the phone, and every image, sound and piece of music is built into the script or its two optional Art Packs.
+Torn Arcade is a Tampermonkey userscript that adds a **Mobile Phone** link to Torn's sidebar. Click it and a phone opens on top of the page with seven games, the Legends folder, leaderboards and settings. Everything runs inside the phone, and every image, sound and piece of music is built into the script or its two optional Art Packs.
+
+> ⚔️ **2.54: Legend of Varrowmere.** A new top-down action-adventure in the new **Legends** folder on the home screen: explore the kingdom of Varrowmere and fight through twelve hand-built dungeons. It's listed as a **Premium Game** but is **free for now**, until Torn Staff approve a subscription service. Only Legends games will be premium; every other game stays free. See [Legends](#-legends-premium-games-free-for-now).
 
 > 🧩 **2.47: Puzzle Arenas.** Each Tornies Arena now has its own puzzle (fuse boxes, bridges, a hedge maze, crates, a quiz, teleport pads and ice), and the Docks Warehouse and TornTech Factory each gain a second floor.
 
@@ -58,6 +60,18 @@ The illustrated Tornie and character artwork comes in two separate, optional scr
 Install them like the main script, then reload Torn. The **Tornies Art** and **Character Art** apps on the bottom row of the phone show whether each pack is installed, a before/after preview, a gallery of the art you've unlocked and an on/off switch. Each pack updates itself separately.
 
 How they link: the packs hand their pictures to Torn Arcade using browser events on the Torn page you're viewing. Torn Arcade checks every picture (known names, WebP images only) before using it. The packs make **no requests of any kind**, store nothing and need no API key.
+
+### ⚔️ Legends: Premium Games (free for now)
+The **Legends** folder on the home screen holds **Legend of Varrowmere**, a top-down action-adventure in the style of the 16-bit classics. It's a separate game with its own scripts, so each stays under 2 MB:
+
+| Script | What it adds | Size | Install |
+|---|---|---|---|
+| **Legend of Varrowmere** | The game | about 1.4 MB | [Install](https://github.com/Eaglewing91/Legend-of-Varrowmere/raw/dev/build/Legend-of-Varrowmere.user.js) |
+| **Legend of Varrowmere - Soundtrack** | Its music (optional; without it the game plays simple built-in tunes) | about 1.3 MB | [Install](https://github.com/Eaglewing91/Legend-of-Varrowmere/raw/dev/build/Legend-of-Varrowmere-Soundtrack.user.js) |
+
+Once installed, tap **Varrowmere** in the folder: the phone locks and the game opens over the page. Close the game (✕ or Esc) and the phone comes back. It needs a keyboard, so it's best on a PC or laptop. Torn Arcade and the game talk only through browser events on the page you're viewing (`varrowmere:ping`, `varrowmere:here`, `varrowmere:open`, `varrowmere:closed`); neither makes any request for this, and no data is shared.
+
+Legends games will be listed as **Premium Games**. For now they're **completely free**, until Torn Staff approve a subscription service. **Only Legends games will be premium; every other game in Torn Arcade will remain free.**
 
 ### 🔄 Automatic updates
 From version 2.15.2, Tampermonkey checks this link for new versions (about once a day by default) and updates the script for you. If you installed an older version from somewhere else, reinstall once from the link above. After that, updates are automatic. This check is made by Tampermonkey to GitHub only. It isn't a request to Torn and sends no data.
