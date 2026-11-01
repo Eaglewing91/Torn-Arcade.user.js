@@ -113,6 +113,8 @@ A creature-collecting RPG set in Torn City. You start in Maple Hollow with one o
 - Gift codes: the developer may send you a gift code (Tornies, items or money). Paste it into Settings → Redeem code. Each code is signed, made for one Torn ID and works once, so codes can't be faked or shared.
 - Running Shoes: sold in every Tornie Supplies shop once you have three medals ($10,000). Hold B (or Shift) to run. Map options in Settings → Tornies: **Detailed maps** (off for classic pixel maps on slower phones), **Save maps on this device** (maps you have visited open instantly next time), **Prepare all maps** (a one-off that draws and saves every map, indoors and out; about 40–100 MB of browser storage and a few minutes) and **Clear saved maps**.
 
+- 📖 **[Tornies Field Guide](https://github.com/Eaglewing91/Torn-Arcade.user.js/blob/main/guide/Tornies-Field-Guide.pdf)** (PDF): every Tornie with where to find it, its evolutions, stats, weaknesses and moves, plus a walkthrough of every place and the Legendaries. Also opens from the phone's Settings → Tornies, or Tornies → OPTIONS → Field Guide.
+
 ### 🐦 Angry Bogies
 Bogie versus the Racket. Pull back the slingshot, fling Bogies (the green Slime, the Fuzz that splits into three, the hard-hitting Brawler and the explosive Bot) into the gang's hideouts, smash the structures and knock out every thug. **Fifteen levels with three stars each**, from the backstreets to Racket HQ, with more structures and more thugs as you go. Stars are scored on thugs knocked out, blocks smashed and Bogies left over.
 

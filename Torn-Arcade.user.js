@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.54.9
+// @version      2.55.0
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with seven game apps and a Legends folder for Legend of Varrowmere (a separate, optional game script): Tornies (a creature-collecting RPG), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online) and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -700,11 +700,12 @@
   };
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gifts and trades', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { lvGame: 1, pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.54.9';
+  const VERSION = '2.55.0';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
   const CHANGELOG_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/blob/main/CHANGELOG.md';
+  const GUIDE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/blob/main/guide/Tornies-Field-Guide.pdf';   // the Tornies Field Guide (a PDF on GitHub)
 
   taStyle([
     /* The phone */
@@ -1735,6 +1736,7 @@
         GAMES.map(function (g) { return '<div class="ta-row">' + iconSmall(g) + '<div class="ta-rtext"><b>' + (g.title || g.name) + '</b><small>' + g.desc + '</small></div></div>'; }).join('') +
       '</div></div>' +
       '<div class="ta-group"><h3>Tornies</h3><div class="ta-list">' +
+        '<div class="ta-row"><span class="ta-ricon" style="background:#c8382a">📖</span><div class="ta-rtext"><b>Tornies Field Guide</b><small>Every Tornie: where to find it, how it evolves, its stats and what beats it. Includes Ravenport. Opens a PDF on GitHub in a new tab.</small></div><a class="ta-upd" href="' + GUIDE_URL + '" target="_blank" rel="noopener noreferrer">Open</a></div>' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#3a9a5a">🗺️</span><div class="ta-rtext"><b>Detailed maps</b><small>Illustrated towns, routes, buildings and caves. Turn off for classic pixel maps on slower devices.</small></div><button type="button" class="ta-switch' + (store.get('detailMaps', true) ? ' ta-on' : '') + '" data-set="detailMaps"></button></div>' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#6a5acd">💾</span><div class="ta-rtext"><b>Save maps on this device</b><small>Keeps each map you have visited as images in this browser\'s storage, so it opens instantly next time with no loading. Stays on this device only; nothing is uploaded or shared.</small></div><button type="button" class="ta-switch' + (store.get('saveMaps', true) ? ' ta-on' : '') + '" data-set="saveMaps"></button></div>' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#8a4ad0">🧭</span><div class="ta-rtext"><b>Preload Tornies</b><small class="ta-mapmsg">' + mapMsg() + '</small></div><button type="button" class="ta-btn ta-mapbtn" data-set="mapPrep">' + (mapInfo() && mapInfo().running ? 'Stop' : 'Preload') + '</button></div>' +
@@ -15346,13 +15348,18 @@
     const names = ['SLOW', 'MID', 'FAST'];
     while (true) {
       const music = function () { return G.opts.music === 0 ? 'OFF' : 'ON'; }, flipMusic = function () { G.opts.music = G.opts.music === 0 ? 1 : 0; blip(); };
-      const i = await menu([{ label: 'Text speed', right: function () { return names[G.opts.speed]; } }, { label: 'Music', right: music }, 'DONE'], {
+      const i = await menu([{ label: 'Text speed', right: function () { return names[G.opts.speed]; } }, { label: 'Music', right: music }, 'Field Guide', 'DONE'], {
         x: 40, y: 50, w: 160,
         onLeft: function (k) { if (k === 0) { G.opts.speed = (G.opts.speed + 2) % 3; blip(); } else if (k === 1) flipMusic(); },
         onRight: function (k) { if (k === 0) { G.opts.speed = (G.opts.speed + 1) % 3; blip(); } else if (k === 1) flipMusic(); }
       });
       if (i === 0) { G.opts.speed = (G.opts.speed + 1) % 3; continue; }
       if (i === 1) { flipMusic(); continue; }
+      if (i === 2) {   // the Tornies Field Guide: opens the PDF on GitHub in a new tab (a plain link, nothing is sent)
+        let w = null; try { w = window.open(GUIDE_URL, '_blank'); if (w) w.opener = null; } catch (e) {}
+        await say(w !== null ? 'The Tornies Field Guide opened in a new tab.' : 'Your browser blocked the new tab.|Open the guide from the phone\'s Settings app instead: Tornies, Field Guide.');
+        continue;
+      }
       return;
     }
   }

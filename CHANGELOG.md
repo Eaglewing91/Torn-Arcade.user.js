@@ -8,6 +8,10 @@ Every Torn Arcade update since 2.2.0, newest first. Dates are in TCT (Torn City 
 
 ---
 
+## 2.55.0 — 2026-11-01
+### Added
+- **Tornies Field Guide.** A full guide to all 257 Tornies, Ravenport included: a walkthrough of every place with the Tornies you can find there (level, day and night odds, fishing rods), the starters, gifts and Legendaries and how to unlock them, and a page for every Tornie with its stats, evolutions, weaknesses, resistances and moves. Open it from the phone's **Settings → Tornies → Tornies Field Guide**, or in Tornies from **OPTIONS → Field Guide**. It opens as a PDF on GitHub in a new tab.
+
 ## 2.54.9 — 2026-10-31
 ### Fixed
 - The volume slider (Settings) now sets Legend of Varrowmere's volume too. Needs Legend of Varrowmere 1.0.7 (the app shows ↻ until you update).
