@@ -8,6 +8,10 @@ Every Torn Arcade update since 2.2.0, newest first. Dates are in TCT (Torn City 
 
 ---
 
+## 2.55.1 — 2026-11-01
+### Changed
+- Legend of Varrowmere's help text shows its new keys: **F** to talk, lift and open, **Space** (or X) to use your item.
+
 ## 2.55.0 — 2026-11-01
 ### Added
 - **Tornies Field Guide.** A full guide to all 257 Tornies, Ravenport included: a walkthrough of every place with the Tornies you can find there (level, day and night odds, fishing rods), the starters, gifts and Legendaries and how to unlock them, and a page for every Tornie with its stats, evolutions, weaknesses, resistances and moves. Open it from the phone's **Settings → Tornies → Tornies Field Guide**, or in Tornies from **OPTIONS → Field Guide**. It opens as a PDF on GitHub in a new tab.

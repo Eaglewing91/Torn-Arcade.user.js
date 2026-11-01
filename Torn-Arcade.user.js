@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.55.0
+// @version      2.55.1
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with seven game apps and a Legends folder for Legend of Varrowmere (a separate, optional game script): Tornies (a creature-collecting RPG), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online) and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -700,7 +700,7 @@
   };
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gifts and trades', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { lvGame: 1, pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.55.0';
+  const VERSION = '2.55.1';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -1436,7 +1436,7 @@
         '<div class="ta-row"><span class="ta-ricon" style="background:linear-gradient(160deg,#ffd65a,#d08a10)">★</span><div class="ta-rtext"><b>Premium Game · free for now</b><small>Free until Torn Staff approve a subscription service. Only Legends games will be premium; every other game stays free.</small></div></div>' +
         '</div></div>' +
         '<div class="ta-group"><h3>About</h3><div class="ta-list">' +
-        '<p class="ta-lvnote">A top-down action-adventure in the style of the 16-bit classics. Explore the kingdom of Varrowmere, fight through <strong>19 dungeons</strong> with keys, switches, puzzles and unique bosses, take on 15 side quests, and find new gear, shops, secret caves and Great Fairies. Three save files, each with its own named hero. It plays inside the phone, turned sideways, and saves as you play.<br><br>Controls: <strong>Arrows/WASD</strong> move · <strong>Z</strong> or <strong>click</strong> sword (hold for a spin) · <strong>X</strong> item · <strong>C</strong> or <strong>Space</strong> lift, talk, open · <strong>Enter</strong> items · <strong>M</strong> map · <strong>Esc</strong> back to the phone. On a touch screen, use the touch pad (🎮 in the top bar).</p>' +
+        '<p class="ta-lvnote">A top-down action-adventure in the style of the 16-bit classics. Explore the kingdom of Varrowmere, fight through <strong>19 dungeons</strong> with keys, switches, puzzles and unique bosses, take on 15 side quests, and find new gear, shops, secret caves and Great Fairies. Three save files, each with its own named hero. It plays inside the phone, turned sideways, and saves as you play.<br><br>Controls: <strong>Arrows/WASD</strong> move · <strong>Z</strong> or <strong>click</strong> sword (hold for a spin) · <strong>Space</strong> or <strong>X</strong> item (dice, bow, bombs) · <strong>F</strong> lift, talk, open · <strong>Enter</strong> items · <strong>M</strong> map · <strong>Esc</strong> back to the phone. On a touch screen, use the touch pad (🎮 in the top bar).</p>' +
         (on ? '' : '<div class="ta-artinst"><a class="ta-btn" href="' + LV_URL.game + '" target="_blank" rel="noopener">Install Legend of Varrowmere</a>' +
           '<small>Opens the script on GitHub, where Tampermonkey shows its install screen. Once installed, reload the page. It is a separate script so it stays under 2 MB. It makes no requests and needs no API key; your saves stay in Tampermonkey storage on this device.</small></div>') +
         '</div></div>';
