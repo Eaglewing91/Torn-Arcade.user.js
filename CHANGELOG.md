@@ -8,6 +8,10 @@ Every Torn Arcade update since 2.2.0, newest first. Dates are in TCT (Torn City 
 
 ---
 
+## 2.55.2 — 2026-11-01
+### Fixed
+- **Anton The Bunnster no longer brings final evolutions to an early fight.** His Tornies now always start from the first stage of their family and only evolve as far as their level allows (a Lv 10 Anton brings a Gutterat, not a Rodfather). Families you only meet later in the game, like Lidlurk or Aceprowler, only join his team once yours is near the level they turn up in the wild.
+
 ## 2.55.1 — 2026-11-01
 ### Changed
 - Legend of Varrowmere's help text shows its new keys: **F** to talk, lift and open, **Space** (or X) to use your item.

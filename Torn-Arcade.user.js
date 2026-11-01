@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.55.1
+// @version      2.55.2
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with seven game apps and a Legends folder for Legend of Varrowmere (a separate, optional game script): Tornies (a creature-collecting RPG), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online) and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -700,7 +700,7 @@
   };
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gifts and trades', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { lvGame: 1, pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.55.1';
+  const VERSION = '2.55.2';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -11834,15 +11834,36 @@
     }
     return false;
   }
+  function antonRoot(sp) {   // the first stage of a Tornie's family
+    for (let k = 0; k < 5; k++) { const pre = Object.keys(SP).find(function (n) { return SP[n].evo && SP[n].evo.to === sp; }); if (!pre) break; sp = +pre; }
+    return sp;
+  }
+  let ANTON_FIRST = null;
+  function antonFirstLv(sp) {   // the lowest level this Tornie is met at in the wild (any map, any rod); 30 if it is never wild
+    if (!ANTON_FIRST) {
+      ANTON_FIRST = {};
+      Object.keys(MAPS).forEach(function (id) {
+        const m = MAPS[id];
+        [m.wild, m.fish, m.fishGood, m.fishSuper].concat((m.zones || []).map(function (z) { return z.wild; })).forEach(function (t) {
+          (t || []).forEach(function (e) { if (ANTON_FIRST[e[0]] === undefined || e[1] < ANTON_FIRST[e[0]]) ANTON_FIRST[e[0]] = e[1]; });
+        });
+      });
+    }
+    return ANTON_FIRST[sp] !== undefined ? ANTON_FIRST[sp] : 30;
+  }
   function antonTeam() {
     const lvs = G.party.map(function (mon) { return mon.lv; }).sort(function (a, b) { return b - a; });
     const top = lvs.slice(0, 3), lv = Math.max(3, Math.round(top.reduce(function (a, b) { return a + b; }, 0) / top.length));
     const n = Math.max(2, Math.min(6, G.party.length));
-    const pick = ANTON_POOL.slice().sort(function () { return Math.random() - 0.5; });
+    // Every family starts from its first stage and only evolves as far as the level allows, so a low-level team never
+    // meets a final evolution. A family only joins once the player's team is near the level it is first met in the wild.
+    const roots = [];
+    ANTON_POOL.forEach(function (sp) { const r = antonRoot(sp); if (roots.indexOf(r) < 0 && lv >= antonFirstLv(r) - 4) roots.push(r); });
+    if (roots.length < 2) [13, 22].forEach(function (r) { if (roots.indexOf(r) < 0) roots.push(r); });   // Gutterat and Pickpockit: met from Route 1
+    const pick = roots.sort(function () { return Math.random() - 0.5; });
     const team = [];
     for (let i = 0; i < pick.length && team.length < n; i++) {
       let sp = pick[i];
-      // Use the right stage for the level, so a low-level team never meets a final evolution.
       while (SP[sp].evo && lv >= SP[sp].evo.lv) sp = SP[sp].evo.to;
       if (!team.some(function (t) { return t[0] === sp; })) team.push([sp, Math.max(2, lv + (team.length === n - 1 ? 1 : -1 + (i % 2)))]);
     }
