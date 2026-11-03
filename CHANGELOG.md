@@ -8,6 +8,10 @@ Every Torn Arcade update since 2.2.0, newest first. Dates are in TCT (Torn City 
 
 ---
 
+## 2.56.0 — 2026-11-03
+### Paused
+- **Torn Arcade is temporarily down while Torn staff review it**, to make sure it fully complies with Torn's scripting rules and advertising rules. This version only adds the Mobile Phone link, which shows a notice that Torn Arcade is paused. It runs no games, makes no requests of any kind and stores nothing. Your saved progress is kept on your device and will be there when Torn Arcade returns.
+
 ## 2.55.2 — 2026-11-01
 ### Fixed
 - **Anton The Bunnster no longer brings final evolutions to an early fight.** His Tornies now always start from the first stage of their family and only evolve as far as their level allows (a Lv 10 Anton brings a Gutterat, not a Rodfather). Families you only meet later in the game, like Lidlurk or Aceprowler, only join his team once yours is near the level they turn up in the wild.

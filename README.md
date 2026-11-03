@@ -1,5 +1,8 @@
 # 📱 Torn Arcade
 
+> ⏸️ **Torn Arcade is temporarily down while Torn staff review it**, to make sure it fully complies with Torn's scripting and advertising rules. The current version (2.56.0) only shows a notice on the Mobile Phone: it runs no games and makes no requests. Your saved progress is kept on your device. It will be back once the review is finished.
+
+
 **A phone full of games for [Torn](https://www.torn.com), by Eaglewing [571041].**
 
 > ⚠️ **For use on Torn only.** Torn Arcade and its Art Packs are licensed solely for use on [torn.com](https://www.torn.com) through a userscript manager. Using, hosting or embedding any part of them anywhere else, or copying, modifying, redistributing or reusing them, is not allowed without written permission from the author. See [Licence](#-licence).
