@@ -8,6 +8,10 @@ Every Torn Arcade update since 2.2.0, newest first. Dates are in TCT (Torn City 
 
 ---
 
+## 2.56.1 — 2026-11-12
+### Back
+- **Torn Arcade is back**, exactly as it was in 2.55.2 before the pause: every game, Tornies, the phone apps, online play and trades. Your saved progress was kept on your device the whole time, so everything carries on where you left it.
+
 ## 2.56.0 — 2026-11-03
 ### Paused
 - **Torn Arcade is temporarily down while Torn staff review it**, to make sure it fully complies with Torn's scripting rules and advertising rules. This version only adds the Mobile Phone link, which shows a notice that Torn Arcade is paused. It runs no games, makes no requests of any kind and stores nothing. Your saved progress is kept on your device and will be there when Torn Arcade returns.
