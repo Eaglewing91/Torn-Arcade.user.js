@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.56.1
+// @version      2.56.2
 // @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with seven game apps and a Legends folder for Legend of Varrowmere (a separate, optional game script): Tornies (a creature-collecting RPG), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online) and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
@@ -131,9 +131,7 @@
  *   defeated: the best of its three save files), kept with your other best
  *   scores and, only with Online play on, sent to the global leaderboards
  *   like every other game's. The game makes no requests. The Install buttons
- *   are ordinary links to GitHub.
- *   Legends are listed as Premium Games but are currently free, until Torn
- *   Staff approve a subscription service; every other game stays free.
+ *   are ordinary links to GitHub. Like every game in Torn Arcade, it is free.
  * - EVENT NOTIFICATIONS (optional, off until you add an API key in
  *   Settings): while the phone is open, it asks the official Torn API
  *   (api.torn.com, /v2/user/events) for your new events every 5 seconds
@@ -684,11 +682,10 @@
     { id: 'artC', pack: 'chars', name: 'Character Art', title: 'Character Art Pack', icon: '🖌️', bg: ['#c39bff', '#5a3ab8'], size: '1.4 MB', what: 'illustrated portraits for the gym leaders, story characters, trainers and your outfits, plus the Faction Defence maps and the Egg Dash and Torn Territories artwork' },
     { id: 'artR', pack: 'ravenport', addon: 1, name: 'Ravenport', title: 'Ravenport Expansion', icon: '⚓', bg: ['#5ac8e0', '#2a3a8a'], size: '0.8 MB', what: 'the Ravenport expansion for Tornies: a new region across the sea for Champions, with 78 new Tornies, the Dragon and Fairy types, three new Arenas and a new story' }
   ];
-  // The Legends folder: Legend of Varrowmere, a separate game script (plus its optional Soundtrack script). Legends are the
-  // Premium Games of Torn Arcade; for now they are free (see the 2.54 notice). Every other game stays free.
+  // The Legends folder: Legend of Varrowmere, a separate game script (plus its optional Soundtrack script). Free, like every game.
   const LEGENDS = { id: 'legends', name: 'Legends', title: 'Legends', icon: '📁', bg: ['#4a3a7a', '#1a1030'] };
   const LEGEND_APPS = [
-    { id: 'lvPlay', name: 'Varrowmere', title: 'Legend of Varrowmere', icon: '🗡️', bg: ['#6cc05a', '#1f5a2a'], size: '1.5 MB', premium: 1 },
+    { id: 'lvPlay', name: 'Varrowmere', title: 'Legend of Varrowmere', icon: '🗡️', bg: ['#6cc05a', '#1f5a2a'], size: '1.5 MB' },
     { id: 'lvMusic', name: 'Soundtrack', title: 'Varrowmere Soundtrack', icon: '🎵', bg: ['#f0b050', '#8a3a10'], size: '2 parts, about 1.8 MB each' }
   ];
   // the game itself, running inside the phone (Legend of Varrowmere 1.0.2 and later)
@@ -700,7 +697,7 @@
   };
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gifts and trades', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
   const LAND_APPS = { lvGame: 1, pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.56.1';
+  const VERSION = '2.56.2';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -792,10 +789,9 @@
     '.ta-root[data-app="lvGame"] .ta-main{padding:0;overflow:hidden;position:relative;background:#000}',
     '.ta-appbar .ta-lv-padbtn{display:none}', '.ta-root[data-app="lvGame"] .ta-appbar .ta-lv-padbtn{display:grid}', '.ta-appbar .ta-lv-padbtn.ta-on{border-color:#e0843a;background:#5a3416}',
     '.ta-panel[data-game="lvGame"]{position:absolute;inset:0;min-height:0;gap:0;padding:0}', '#ta-lv-host{position:absolute;inset:0;overflow:hidden;background:#000}',
-    /* The Legends folder (Premium Games) */
+    /* The Legends folder */
     '.ta-folderbtn .ta-appicon{background:rgba(255,255,255,.2)!important;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:grid;grid-template-columns:repeat(2,20px);grid-auto-rows:20px;gap:5px;place-content:center;font-size:12px}',
     '.ta-folderbtn .ta-mini{width:20px;height:20px;border-radius:6px;display:grid;place-items:center;font-size:12px;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,.35)}',
-    '.ta-prem{position:absolute;left:50%;top:-7px;transform:translateX(-50%);z-index:2;padding:1px 6px;border-radius:7px;background:linear-gradient(180deg,#ffd65a,#d08a10);color:#3a2400;font:800 8.5px/1.4 system-ui,Arial,sans-serif;letter-spacing:.4px;text-shadow:none;white-space:nowrap;box-shadow:0 2px 5px rgba(0,0,0,.4)}',
     '.ta-folder{position:absolute;inset:0;z-index:4;display:grid;place-items:center;padding:20px;background:rgba(5,8,13,.55);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);animation:ta-open .2s cubic-bezier(.2,1,.4,1)}', '.ta-folder[hidden]{display:none}',
     '.ta-fbox{width:min(300px,100%);padding:16px 12px 14px;border-radius:30px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.16);color:#fff;font:500 12px/1.35 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;text-align:center}',
     '.ta-fbox>b{display:block;font-size:20px;font-weight:800;text-shadow:0 1px 3px rgba(0,0,0,.6)}',
@@ -965,7 +961,7 @@
     return '<span class="ta-appicon' + (cls ? ' ' + cls : '') + '" style="background:linear-gradient(160deg,' + a.bg[0] + ',' + a.bg[1] + ')">' + appArt(a) + '</span>';
   }
   function folderButton() {
-    return '<button type="button" class="ta-appbtn ta-folderbtn" data-app="legends"><span class="ta-prem">PREMIUM</span><span class="ta-appicon">' +
+    return '<button type="button" class="ta-appbtn ta-folderbtn" data-app="legends"><span class="ta-appicon">' +
       LEGEND_APPS.map(function (a) { return '<span class="ta-mini" style="background:linear-gradient(160deg,' + a.bg[0] + ',' + a.bg[1] + ')">' + a.icon + '</span>'; }).join('') +
       '</span><span class="ta-applabel">' + LEGENDS.name + '</span></button>';
   }
@@ -1021,8 +1017,7 @@
   news254El.innerHTML = '<div class="ta-clashbox"><b>⚔️ New in Torn Arcade 2.54: Legend of Varrowmere</b>' +
     '<p>A brand-new <strong>top-down action-adventure</strong> in the style of the 16-bit classics. Explore the kingdom of Varrowmere and its Shadow twin: towns, forests, mountains, swamps and deserts. Fight through <strong>19 dungeons</strong> full of keys, switches, puzzles and unique bosses, take on <strong>15 side quests</strong>, find new gear and tools, and visit shops, secret caves and Great Fairies. Create up to <strong>three heroes</strong>, each with their own name, tunic and save. Your progress saves as you play.</p>' +
     '<p>It lives in the new <strong>Legends</strong> folder on your home screen. The <strong>game</strong> (1.5 MB) and its optional <strong>Soundtrack</strong> (two parts) are separate scripts. Install them from inside the folder, then reload the page. It plays inside the phone with a keyboard and mouse, or the touch pad. Your playtime, completion and monsters defeated appear in <strong>Leaderboards</strong>.</p>' +
-    '<p><strong>A Premium Game, free for now.</strong> Legend of Varrowmere will be listed as a Premium Game. Right now it is completely free, until Torn Staff approve a subscription service for it.</p>' +
-    '<p><strong>Everything else stays free.</strong> Only Legends games will be premium. Tornies, Angry Bogies, Faction Defence, Flappy Torn, Anton\'s Egg Dash, Torn Territories and Chess will all remain free.</p>' +
+    '<p><strong>Completely free</strong>, like every game in Torn Arcade.</p>' +
     '<button type="button" class="ta-btn" data-news="legends"><span>Open the Legends folder</span><small>Install the game and the Soundtrack</small></button>' +
     '<button type="button" class="ta-btn ta-btn2" data-news="later"><span>Maybe later</span><small>The folder is on your home screen</small></button></div>';
   $(root, '.ta-screen').appendChild(news254El);
@@ -1038,9 +1033,8 @@
   // The Legends folder (opens over the home screen; tap outside it to close)
   const folderEl = document.createElement('div');
   folderEl.className = 'ta-folder'; folderEl.hidden = true;
-  folderEl.innerHTML = '<div class="ta-fbox"><b>' + LEGENDS.title + '</b><em>★ PREMIUM · FREE FOR NOW</em>' +
-    '<div class="ta-grid">' + LEGEND_APPS.map(appButton).join('') + '</div>' +
-    '<small>Free until Torn Staff approve a subscription service. All other games stay free.</small></div>';
+  folderEl.innerHTML = '<div class="ta-fbox"><b>' + LEGENDS.title + '</b>' +
+    '<div class="ta-grid">' + LEGEND_APPS.map(appButton).join('') + '</div></div>';
   $(root, '.ta-screen').appendChild(folderEl);
   folderEl.addEventListener('click', function (e) { if (e.target === folderEl) { folderEl.hidden = true; sfx.click(); } });
   function openFolder() { lvPing(); refreshLegendIcons(); folderEl.hidden = false; }
@@ -1433,7 +1427,6 @@
         (on ? 'Installed · version ' + esc(LVS.ver) : 'Not installed · ' + a.size) + '</small></div>' +
         (on && !lvOld('lvPlay') ? '<button type="button" class="ta-btn ta-mapbtn" data-lv="play">Play</button>' : '') + '</div>' +
         (lvOld('lvPlay') ? '<div class="ta-row"><span class="ta-ricon" style="background:#e08a1e">↻</span><div class="ta-rtext"><b>Update available</b><small>A newer version (' + LV_NEED.game.join('.') + ' or later) is out. Update to keep playing: tap Update, install, then reload the page. Your saves are kept.</small></div><a class="ta-btn ta-mapbtn" href="' + LV_URL.game + '" target="_blank" rel="noopener">Update</a></div>' : '') +
-        '<div class="ta-row"><span class="ta-ricon" style="background:linear-gradient(160deg,#ffd65a,#d08a10)">★</span><div class="ta-rtext"><b>Premium Game · free for now</b><small>Free until Torn Staff approve a subscription service. Only Legends games will be premium; every other game stays free.</small></div></div>' +
         '</div></div>' +
         '<div class="ta-group"><h3>About</h3><div class="ta-list">' +
         '<p class="ta-lvnote">A top-down action-adventure in the style of the 16-bit classics. Explore the kingdom of Varrowmere, fight through <strong>19 dungeons</strong> with keys, switches, puzzles and unique bosses, take on 15 side quests, and find new gear, shops, secret caves and Great Fairies. Three save files, each with its own named hero. It plays inside the phone, turned sideways, and saves as you play.<br><br>Controls: <strong>Arrows/WASD</strong> move · <strong>Z</strong> or <strong>click</strong> sword (hold for a spin) · <strong>Space</strong> or <strong>X</strong> item (dice, bow, bombs) · <strong>F</strong> lift, talk, open · <strong>Enter</strong> items · <strong>M</strong> map · <strong>Esc</strong> back to the phone. On a touch screen, use the touch pad (🎮 in the top bar).</p>' +

@@ -6,7 +6,7 @@
 
 Torn Arcade is a Tampermonkey userscript that adds a **Mobile Phone** link to Torn's sidebar. Click it and a phone opens on top of the page with seven games, the Legends folder, leaderboards and settings. Everything runs inside the phone, and every image, sound and piece of music is built into the script or its two optional Art Packs.
 
-> ⚔️ **2.54: Legend of Varrowmere.** A new top-down action-adventure in the new **Legends** folder on the home screen: explore the kingdom of Varrowmere and fight through 19 dungeons. It's listed as a **Premium Game** but is **free for now**, until Torn Staff approve a subscription service. Only Legends games will be premium; every other game stays free. See [Legends](#-legends-premium-games-free-for-now).
+> ⚔️ **2.54: Legend of Varrowmere.** A new top-down action-adventure in the new **Legends** folder on the home screen: explore the kingdom of Varrowmere and fight through 19 dungeons. It's completely free, like every game in Torn Arcade. See [Legends](#-legends).
 
 > 🧩 **2.47: Puzzle Arenas.** Each Tornies Arena now has its own puzzle (fuse boxes, bridges, a hedge maze, crates, a quiz, teleport pads and ice), and the Docks Warehouse and TornTech Factory each gain a second floor.
 
@@ -61,7 +61,7 @@ Install them like the main script, then reload Torn. The **Tornies Art** and **C
 
 How they link: the packs hand their pictures to Torn Arcade using browser events on the Torn page you're viewing. Torn Arcade checks every picture (known names, WebP images only) before using it. The packs make **no requests of any kind**, store nothing and need no API key.
 
-### ⚔️ Legends: Premium Games (free for now)
+### ⚔️ Legends
 The **Legends** folder on the home screen holds **Legend of Varrowmere**, a top-down action-adventure in the style of the 16-bit classics. It's a separate game with its own scripts, so each stays under 2 MB:
 
 | Script | What it adds | Size | Install |
@@ -71,8 +71,6 @@ The **Legends** folder on the home screen holds **Legend of Varrowmere**, a top-
 | **Legend of Varrowmere - Soundtrack Part 2** | Its music, part 2: Shadow world, dungeons, caves and the ending (optional) | about 1.8 MB | [Install](https://github.com/Eaglewing91/Legend-of-Varrowmere/raw/main/build/Legend-of-Varrowmere-Soundtrack-2.user.js) |
 
 Once installed, tap **Varrowmere** in the folder: the phone turns sideways and the game plays inside it, like Tornies. Tap Home (or press Esc) to go back; the game saves. It needs a keyboard, so it's best on a PC or laptop. Torn Arcade and the game talk only through browser events on the page you're viewing (`varrowmere:ping`, `varrowmere:here`, `varrowmere:open`, `varrowmere:closed`); neither makes any request for this, and no data is shared.
-
-Legends games will be listed as **Premium Games**. For now they're **completely free**, until Torn Staff approve a subscription service. **Only Legends games will be premium; every other game in Torn Arcade will remain free.**
 
 ### 🔄 Automatic updates
 From version 2.15.2, Tampermonkey checks this link for new versions (about once a day by default) and updates the script for you. If you installed an older version from somewhere else, reinstall once from the link above. After that, updates are automatic. This check is made by Tampermonkey to GitHub only. It isn't a request to Torn and sends no data.

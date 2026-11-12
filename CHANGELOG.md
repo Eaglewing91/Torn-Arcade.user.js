@@ -8,6 +8,10 @@ Every Torn Arcade update since 2.2.0, newest first. Dates are in TCT (Torn City 
 
 ---
 
+## 2.56.2 — 2026-11-12
+### Changed
+- **Every game in Torn Arcade is free, Legend of Varrowmere included.** The badge and notes on the Legends folder, the game's page, the 2.54 notice and the README now say so.
+
 ## 2.56.1 — 2026-11-12
 ### Back
 - **Torn Arcade is back**, exactly as it was in 2.55.2 before the pause: every game, Tornies, the phone apps, online play and trades. Your saved progress was kept on your device the whole time, so everything carries on where you left it.
@@ -71,7 +75,6 @@ Every Torn Arcade update since 2.2.0, newest first. Dates are in TCT (Torn City 
 ### New
 - **Legend of Varrowmere**, a new top-down action-adventure in the style of the 16-bit classics, in a new **Legends** folder on the home screen. Explore the kingdom of Varrowmere and fight through 19 dungeons with keys, switches, puzzles and unique bosses.
 - It comes as two separate optional scripts, so each stays under 2 MB: the **game** (1.5 MB) and its **Soundtrack** (1.3 MB). Tap either app in the folder to install it. Once the game is installed, tapping it locks the phone and opens the game; closing the game brings the phone back.
-- **Premium Game, free for now.** Legend of Varrowmere is listed as a Premium Game, but it is completely free until Torn Staff approve a subscription service. Only Legends games will be premium; every other game in Torn Arcade will remain free.
 - A one-time "What's new" notice explains all of this the first time you open the phone after updating.
 - **Legend of Varrowmere leaderboards**: Total playtime, Completion and Monsters defeated, in Leaderboards (My scores and 🌐 Global). Each board takes the best of your three save files. The game hands its numbers to the phone when you close it; the game itself never sends anything, and the global boards still need Online play.
   - **Completion** counts chests opened (50%), dungeon bosses beaten (30%) and gear owned (20%).
