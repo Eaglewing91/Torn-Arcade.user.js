@@ -801,7 +801,7 @@
     '.ta-dock .ta-applabel{display:none}',
     '.ta-artrow{margin-top:auto;padding-bottom:2px}',
     '.ta-root[data-app="lvGame"] .ta-main{padding:0;overflow:hidden;position:relative;background:#000}',
-    '.ta-appbar .ta-lv-padbtn{display:none}', '.ta-root[data-app="lvGame"] .ta-appbar .ta-lv-padbtn{display:grid}', '.ta-appbar .ta-lv-padbtn.ta-on{border-color:#e0843a;background:#5a3416}',
+    '.ta-appbar .ta-lv-padbtn{display:none}', '.ta-root[data-app="lvGame"] .ta-appbar .ta-lv-padbtn,.ta-root[data-app="laGame"] .ta-appbar .ta-lv-padbtn{display:grid}', '.ta-appbar .ta-lv-padbtn.ta-on{border-color:#e0843a;background:#5a3416}',
     '.ta-panel[data-game="lvGame"]{position:absolute;inset:0;min-height:0;gap:0;padding:0}', '#ta-lv-host{position:absolute;inset:0;overflow:hidden;background:#000}',
     '.ta-root[data-app="laGame"] .ta-main{padding:0;overflow:hidden;position:relative;background:#000}', '.ta-panel[data-game="laGame"]{position:absolute;inset:0;min-height:0;gap:0;padding:0}', '#ta-la-host{position:absolute;inset:0;overflow:hidden;background:#000}',
     /* The Legends folder */
@@ -1263,7 +1263,7 @@
   $(root, '.ta-appbar').insertBefore(lvPadBtn, muteBtn);
   lvPadBtn.addEventListener('click', function () {
     const on = !lvPadOn(); store.set('lvPad', on); lvPadBtn.classList.toggle('ta-on', on); sfx.click();
-    try { document.dispatchEvent(new CustomEvent('varrowmere:pad', { detail: JSON.stringify({ on: on }) })); } catch (e) {}
+    try { document.dispatchEvent(new CustomEvent('varrowmere:pad', { detail: JSON.stringify({ on: on }) })); document.dispatchEvent(new CustomEvent('aethra:pad', { detail: JSON.stringify({ on: on }) })); } catch (e) {}
   });
   // Legend of Varrowmere plays inside this panel: the game draws into #ta-lv-host when it gets 'varrowmere:open'
   const lvPanel = document.createElement('section'); lvPanel.className = 'ta-panel'; lvPanel.dataset.game = 'lvGame';
@@ -1277,7 +1277,7 @@
   const laPanel = document.createElement('section'); laPanel.className = 'ta-panel'; laPanel.dataset.game = 'laGame';
   laPanel.innerHTML = '<div id="ta-la-host"></div>'; main.appendChild(laPanel);
   games.laGame = {
-    enter: function () { try { document.dispatchEvent(new CustomEvent('aethra:open', { detail: JSON.stringify({ host: 'ta-la-host', muted: muted, volume: volume }) })); } catch (e) {} },
+    enter: function () { try { document.dispatchEvent(new CustomEvent('aethra:open', { detail: JSON.stringify({ host: 'ta-la-host', pad: lvPadOn(), muted: muted, volume: volume }) })); } catch (e) {} },
     leave: function () { try { document.dispatchEvent(new CustomEvent('aethra:close')); } catch (e) {} },
     onKey: function () { return false; }   // the game reads the keys itself
   };
@@ -1488,7 +1488,7 @@
       box.innerHTML = '<div class="ta-group"><div class="ta-list"><div class="ta-row">' + iconSmall(a) + '<div class="ta-rtext"><b>' + a.title + '</b><small>' +
         (on ? 'Installed · version ' + esc(LAS.ver) : 'Not installed · ' + a.size) + '</small></div>' + (on ? '<button type="button" class="ta-btn ta-mapbtn" data-la="play">Play</button>' : '') + '</div>' +
         '</div></div>' +
-        '<div class="ta-group"><h3>About</h3><div class="ta-list"><p class="ta-lvnote">A <strong>16-bit style role-playing game</strong> with active-time battles. A young Warden takes a contract to sneak rebels into a reactor, and falls into a story about stolen memories, four Crystals and a sky that is about to break. <strong>Five acts</strong>, a world map you can cross on foot, by talonbird, skimmer, boat, submersible and airship, <strong>Prisms</strong> to slot spells and skills, Surge Arts, Echo summons, the <strong>Arcana</strong> card game, talonbird races, an arena, side quests and super-bosses. Three save files plus a resume point when you close it.<br><br>Controls: <strong>Arrows/WASD</strong> move · <strong>Z</strong>, <strong>Enter</strong> or <strong>Space</strong> OK · <strong>X</strong> or <strong>Esc</strong> back · <strong>C</strong> menu · <strong>Shift</strong> run · <strong>M</strong> world map · hold <strong>Q+E</strong> to flee a battle. The ✕ in the corner returns to the phone.</p>' +
+        '<div class="ta-group"><h3>About</h3><div class="ta-list"><p class="ta-lvnote">A <strong>16-bit style role-playing game</strong> with active-time battles. A young Warden takes a contract to sneak rebels into a reactor, and falls into a story about stolen memories, four Crystals and a sky that is about to break. <strong>Five acts</strong>, a world map you can cross on foot, by talonbird, skimmer, boat, submersible and airship, <strong>Prisms</strong> to slot spells and skills, Surge Arts, Echo summons, the <strong>Arcana</strong> card game, talonbird races, an arena, side quests and super-bosses. Three save files plus a resume point when you close it.<br><br>Controls: <strong>Arrows/WASD</strong> move · <strong>Z</strong>, <strong>Enter</strong> or <strong>Space</strong> OK · <strong>X</strong> or <strong>Esc</strong> back · <strong>C</strong> menu · <strong>Shift</strong> run · <strong>M</strong> world map · hold <strong>Q+E</strong> to flee a battle. The ✕ in the corner returns to the phone. On a touch screen, use the touch pad (🎮 in the top bar).</p>' +
         (on ? '' : '<div class="ta-artinst"><a class="ta-btn" href="' + LA_URL.game + '" target="_blank" rel="noopener">Install Legend of Aethra</a><small>Opens the script on GitHub, where Tampermonkey shows its install screen. Once installed, reload the page. It makes no requests and needs no API key; your saves stay in Tampermonkey storage on this device.</small></div>') +
         '</div></div>';
       return;
