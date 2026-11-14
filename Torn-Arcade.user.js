@@ -115,7 +115,7 @@
  *   on the phone show their status and link to them on GitHub (the link only
  *   opens when you tap it).
  * - LEGENDS FOLDER (optional): Legend of Aethra is a separate game script
- *   (with an Art & Sound script and an optional Soundtrack script). This script talks to it only
+ *   (with an Art & Effects script and an optional Soundtrack script). This script talks to it only
  *   through page events: 'aethra:ping' / 'aethra:here' (installed? version),
  *   'aethra:open' (sent only when you tap Play; it draws inside the phone),
  *   'aethra:close' (you left it) and 'aethra:closed' (it closed itself).
@@ -693,7 +693,7 @@
   const LEGEND_APPS = [
     { id: 'lvPlay', name: 'Varrowmere', title: 'Legend of Varrowmere', icon: '🗡️', bg: ['#6cc05a', '#1f5a2a'], size: '1.5 MB' },
     { id: 'lvMusic', name: 'Soundtrack', title: 'Varrowmere Soundtrack', icon: '🎵', bg: ['#f0b050', '#8a3a10'], size: '2 parts, about 1.8 MB each' },
-    { id: 'laPlay', name: 'Aethra', title: 'Legend of Aethra', icon: '💎', bg: ['#6a8aff', '#1a2050'], size: '0.7 MB, plus the Art & Sound script' },
+    { id: 'laPlay', name: 'Aethra', title: 'Legend of Aethra', icon: '💎', bg: ['#6a8aff', '#1a2050'], size: '0.7 MB, plus the Art & Effects script' },
     { id: 'laMusic', name: 'Aethra Music', title: 'Aethra Soundtrack', icon: '🎶', bg: ['#c07aff', '#3a1a6a'], size: '9 MB' }
   ];
   // Legend of Aethra (a separate script, like Varrowmere): a 16-bit style RPG that plays inside the phone
@@ -1488,7 +1488,7 @@
     if (id === 'laPlay') {
       box.innerHTML = '<div class="ta-group"><div class="ta-list"><div class="ta-row">' + iconSmall(a) + '<div class="ta-rtext"><b>' + a.title + '</b><small>' +
         (on ? 'Installed · version ' + esc(LAS.ver) : 'Not installed · ' + a.size) + '</small></div>' + (on && LAS.art ? '<button type="button" class="ta-btn ta-mapbtn" data-la="play">Play</button>' : '') + '</div>' +
-        '<div class="ta-row"><span class="ta-ricon" style="background:' + (LAS.art ? '#3a9a5a' : '#5a6676') + '">🎨</span><div class="ta-rtext"><b>Art &amp; Sound</b><small>Needed to play: every picture and sound in the game. ' + (LAS.art ? 'Installed · version ' + esc(LAS.art) : 'Not installed · about 1.1 MB') + '</small></div>' +
+        '<div class="ta-row"><span class="ta-ricon" style="background:' + (LAS.art ? '#3a9a5a' : '#5a6676') + '">🎨</span><div class="ta-rtext"><b>Art &amp; Effects</b><small>Needed to play: every picture and sound effect in the game. ' + (LAS.art ? 'Installed · version ' + esc(LAS.art) : 'Not installed · about 1.1 MB') + '</small></div>' +
         (LAS.art ? '' : '<a class="ta-btn ta-mapbtn" href="' + LA_URL.art + '" target="_blank" rel="noopener">Install</a>') + '</div></div></div>' +
         '<div class="ta-group"><h3>About</h3><div class="ta-list"><p class="ta-lvnote">A <strong>16-bit style role-playing game</strong> with active-time battles. A young Warden takes a contract to sneak rebels into a reactor, and falls into a story about stolen memories, four Crystals and a sky that is about to break. <strong>Five acts</strong>, a world map you can cross on foot, by talonbird, skimmer, boat, submersible and airship, <strong>Prisms</strong> to slot spells and skills, Surge Arts, Echo summons, the <strong>Arcana</strong> card game, talonbird races, an arena, side quests and super-bosses. Three save files plus a resume point when you close it.<br><br>Controls: <strong>Arrows/WASD</strong> move · <strong>Z</strong>, <strong>Enter</strong> or <strong>Space</strong> OK · <strong>X</strong> or <strong>Esc</strong> back · <strong>C</strong> menu · <strong>Shift</strong> run · <strong>M</strong> world map · hold <strong>Q+E</strong> to flee a battle. The ✕ in the corner returns to the phone.</p>' +
         (on ? '' : '<div class="ta-artinst"><a class="ta-btn" href="' + LA_URL.game + '" target="_blank" rel="noopener">Install Legend of Aethra</a><small>Opens the script on GitHub, where Tampermonkey shows its install screen. Once installed, reload the page. It makes no requests and needs no API key; your saves stay in Tampermonkey storage on this device.</small></div>') +
@@ -1498,7 +1498,7 @@
     const v = laMusicParts()[0];
     box.innerHTML = '<div class="ta-group"><div class="ta-list"><div class="ta-row"><span class="ta-ricon" style="background:' + (v ? '#3a9a5a' : '#5a6676') + '">🎶</span><div class="ta-rtext"><b>Aethra Soundtrack</b><small>All 37 tracks. ' + (v ? 'Installed · version ' + esc(v) : 'Not installed · about 9 MB') + '</small></div>' +
       (v ? '' : '<a class="ta-btn ta-mapbtn" href="' + LA_URL.music + '" target="_blank" rel="noopener">Install</a>') + '</div></div></div>' +
-      '<div class="ta-group"><h3>About</h3><div class="ta-list"><p class="ta-lvnote">The music for Legend of Aethra, in one optional script. Without it the game plays in silence. It makes no requests, needs no API key and stores nothing: it only hands its music to the game. Reload the page after installing.</p></div></div>';
+      '<div class="ta-group"><h3>About</h3><div class="ta-list"><p class="ta-lvnote">The background music for Legend of Aethra, in one optional script. Without it you still hear the sound effects (they come with the Art &amp; Effects script), but no music. It makes no requests, needs no API key and stores nothing: it only hands its music to the game. Reload the page after installing.</p></div></div>';
   }
   lvBox.laPlay.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('[data-la="play"]')) { sfx.click(); openApp('laGame'); } });
   lvBox.lvPlay.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('[data-lv="play"]')) { sfx.click(); if (!lvOld('lvPlay')) openApp('lvGame'); } });
