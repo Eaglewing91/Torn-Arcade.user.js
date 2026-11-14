@@ -10,7 +10,7 @@ Every Torn Arcade update since 2.2.0, newest first. Dates are in TCT (Torn City 
 
 ## 2.57.0 — 2026-11-14
 ### Added
-- **Legend of Aethra** in the Legends folder: a 16-bit style role-playing game with active-time battles, five acts, a world map with vehicles, the Arcana card game and more. It's a separate, optional script (about 0.7 MB) with its Art & Effects script (about 1.1 MB) and an optional Soundtrack script (about 9 MB), and it plays inside the phone, turned sideways. Like Varrowmere it talks to the phone only through page events, makes no requests and needs no API key.
+- **Legend of Aethra** in the Legends folder: a 16-bit style role-playing game with active-time battles, five acts, a world map with vehicles, the Arcana card game and more. It's a separate, optional script (about 1.8 MB) with an optional Soundtrack script (about 9 MB), and it plays inside the phone, turned sideways. Like Varrowmere it talks to the phone only through page events, makes no requests and needs no API key.
 
 ## 2.56.2 — 2026-11-12
 ### Changed
