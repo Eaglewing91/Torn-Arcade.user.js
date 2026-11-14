@@ -115,7 +115,7 @@
  *   on the phone show their status and link to them on GitHub (the link only
  *   opens when you tap it).
  * - LEGENDS FOLDER (optional): Legend of Aethra is a separate game script
- *   (with five optional Soundtrack scripts). This script talks to it only
+ *   (with an Art & Sound script and an optional Soundtrack script). This script talks to it only
  *   through page events: 'aethra:ping' / 'aethra:here' (installed? version),
  *   'aethra:open' (sent only when you tap Play; it draws inside the phone),
  *   'aethra:close' (you left it) and 'aethra:closed' (it closed itself).
@@ -694,14 +694,14 @@
     { id: 'lvPlay', name: 'Varrowmere', title: 'Legend of Varrowmere', icon: '🗡️', bg: ['#6cc05a', '#1f5a2a'], size: '1.5 MB' },
     { id: 'lvMusic', name: 'Soundtrack', title: 'Varrowmere Soundtrack', icon: '🎵', bg: ['#f0b050', '#8a3a10'], size: '2 parts, about 1.8 MB each' },
     { id: 'laPlay', name: 'Aethra', title: 'Legend of Aethra', icon: '💎', bg: ['#6a8aff', '#1a2050'], size: '0.7 MB, plus the Art & Sound script' },
-    { id: 'laMusic', name: 'Aethra Music', title: 'Aethra Soundtrack', icon: '🎶', bg: ['#c07aff', '#3a1a6a'], size: '5 parts, about 1.8 MB each' }
+    { id: 'laMusic', name: 'Aethra Music', title: 'Aethra Soundtrack', icon: '🎶', bg: ['#c07aff', '#3a1a6a'], size: '9 MB' }
   ];
   // Legend of Aethra (a separate script, like Varrowmere): a 16-bit style RPG that plays inside the phone
   const LA_GAME_APP = { id: 'laGame', name: 'Aethra', title: 'Legend of Aethra', icon: '💎', bg: ['#6a8aff', '#1a2050'] };
   const LA_URL = {
     game: 'https://github.com/Eaglewing91/Legend-of-Aethra/raw/main/build/Legend-of-Aethra.user.js',
     art: 'https://github.com/Eaglewing91/Legend-of-Aethra/raw/main/build/Legend-of-Aethra-Art.user.js',
-    music: [1, 2, 3, 4, 5].map(function (n) { return 'https://github.com/Eaglewing91/Legend-of-Aethra/raw/main/build/Legend-of-Aethra-Soundtrack-' + n + '.user.js'; })
+    music: 'https://github.com/Eaglewing91/Legend-of-Aethra/raw/main/build/Legend-of-Aethra-Soundtrack.user.js'
   };
   // the game itself, running inside the phone (Legend of Varrowmere 1.0.2 and later)
   const LV_GAME_APP = { id: 'lvGame', name: 'Varrowmere', title: 'Legend of Varrowmere', icon: '🗡️', bg: ['#6cc05a', '#1f5a2a'] };
@@ -1481,7 +1481,7 @@
   document.addEventListener('aethra:here', function (e) { try { const d = JSON.parse(e.detail); LAS.ver = String(d.version || '').slice(0, 20); LAS.art = String(d.art || document.documentElement.dataset.aethraArt || '').slice(0, 20); } catch (x) {} });
   document.addEventListener('aethra:closed', function () { if (isOpen && current === 'laGame') goHome(); });
   function laPing() { try { document.dispatchEvent(new CustomEvent('aethra:ping')); } catch (e) {} }
-  function laMusicParts() { const ds = document.documentElement.dataset; return [1, 2, 3, 4, 5].map(function (n) { return ds['aethraMusic' + n] || ''; }); }
+  function laMusicParts() { return [document.documentElement.dataset.aethraMusic1 || '']; }
   function renderAethra(id) {
     laPing();
     const a = appInfo(id), box = lvBox[id], on = !!LAS.ver;
@@ -1495,11 +1495,10 @@
         '</div></div>';
       return;
     }
-    const parts = laMusicParts(), what = ['The title, the world map and battles', 'Towns, dungeons, caves, reactors and temples', 'Forests, the sea and the desert', 'Story scenes and quiet places', 'The Citadel, ruins, the airship and the ending'];
-    box.innerHTML = '<div class="ta-group"><div class="ta-list">' + parts.map(function (v, i) {
-      return '<div class="ta-row"><span class="ta-ricon" style="background:' + (v ? '#3a9a5a' : '#5a6676') + '">🎶</span><div class="ta-rtext"><b>Soundtrack Part ' + (i + 1) + '</b><small>' + what[i] + '. ' + (v ? 'Installed · version ' + esc(v) : 'Not installed · about 1.8 MB') + '</small></div>' +
-        (v ? '' : '<a class="ta-btn ta-mapbtn" href="' + LA_URL.music[i] + '" target="_blank" rel="noopener">Install</a>') + '</div>';
-    }).join('') + '</div></div><div class="ta-group"><h3>About</h3><div class="ta-list"><p class="ta-lvnote">The music for Legend of Aethra, in five scripts so each stays under 2 MB. Install any or all of them; areas without their part play no music. They make no requests, need no API key and store nothing: they only hand their music to the game. Reload the page after installing.</p></div></div>';
+    const v = laMusicParts()[0];
+    box.innerHTML = '<div class="ta-group"><div class="ta-list"><div class="ta-row"><span class="ta-ricon" style="background:' + (v ? '#3a9a5a' : '#5a6676') + '">🎶</span><div class="ta-rtext"><b>Aethra Soundtrack</b><small>All 37 tracks. ' + (v ? 'Installed · version ' + esc(v) : 'Not installed · about 9 MB') + '</small></div>' +
+      (v ? '' : '<a class="ta-btn ta-mapbtn" href="' + LA_URL.music + '" target="_blank" rel="noopener">Install</a>') + '</div></div></div>' +
+      '<div class="ta-group"><h3>About</h3><div class="ta-list"><p class="ta-lvnote">The music for Legend of Aethra, in one optional script. Without it the game plays in silence. It makes no requests, needs no API key and stores nothing: it only hands its music to the game. Reload the page after installing.</p></div></div>';
   }
   lvBox.laPlay.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('[data-la="play"]')) { sfx.click(); openApp('laGame'); } });
   lvBox.lvPlay.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('[data-lv="play"]')) { sfx.click(); if (!lvOld('lvPlay')) openApp('lvGame'); } });
