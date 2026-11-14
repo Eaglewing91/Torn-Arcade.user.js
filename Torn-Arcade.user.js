@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
-// @version      2.56.2
-// @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with seven game apps and a Legends folder for Legend of Varrowmere (a separate, optional game script): Tornies (a creature-collecting RPG), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online) and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
+// @version      2.57.0
+// @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with seven game apps and a Legends folder for Legend of Varrowmere and Legend of Aethra (separate, optional game scripts): Tornies (a creature-collecting RPG), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online) and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
 // @license      All Rights Reserved - for use on Torn (torn.com) only; no copying, modifying, redistribution or use elsewhere (see LICENCE below)
@@ -114,6 +114,12 @@
  *   pixel-art versions are used. The "Tornies Art" and "Character Art" apps
  *   on the phone show their status and link to them on GitHub (the link only
  *   opens when you tap it).
+ * - LEGENDS FOLDER (optional): Legend of Aethra is a separate game script
+ *   (with five optional Soundtrack scripts). This script talks to it only
+ *   through page events: 'aethra:ping' / 'aethra:here' (installed? version),
+ *   'aethra:open' (sent only when you tap Play; it draws inside the phone),
+ *   'aethra:close' (you left it) and 'aethra:closed' (it closed itself).
+ *   No requests, no API key, nothing shared.
  * - LEGENDS FOLDER (optional): Legend of Varrowmere is a separate game
  *   script with an optional Soundtrack script, each under 2 MB. This script
  *   talks to it only through browser events on the page you are viewing:
@@ -686,8 +692,16 @@
   const LEGENDS = { id: 'legends', name: 'Legends', title: 'Legends', icon: '📁', bg: ['#4a3a7a', '#1a1030'] };
   const LEGEND_APPS = [
     { id: 'lvPlay', name: 'Varrowmere', title: 'Legend of Varrowmere', icon: '🗡️', bg: ['#6cc05a', '#1f5a2a'], size: '1.5 MB' },
-    { id: 'lvMusic', name: 'Soundtrack', title: 'Varrowmere Soundtrack', icon: '🎵', bg: ['#f0b050', '#8a3a10'], size: '2 parts, about 1.8 MB each' }
+    { id: 'lvMusic', name: 'Soundtrack', title: 'Varrowmere Soundtrack', icon: '🎵', bg: ['#f0b050', '#8a3a10'], size: '2 parts, about 1.8 MB each' },
+    { id: 'laPlay', name: 'Aethra', title: 'Legend of Aethra', icon: '💎', bg: ['#6a8aff', '#1a2050'], size: '2.9 MB' },
+    { id: 'laMusic', name: 'Aethra Music', title: 'Aethra Soundtrack', icon: '🎶', bg: ['#c07aff', '#3a1a6a'], size: '5 parts, about 1.8 MB each' }
   ];
+  // Legend of Aethra (a separate script, like Varrowmere): a 16-bit style RPG that plays inside the phone
+  const LA_GAME_APP = { id: 'laGame', name: 'Aethra', title: 'Legend of Aethra', icon: '💎', bg: ['#6a8aff', '#1a2050'] };
+  const LA_URL = {
+    game: 'https://github.com/Eaglewing91/Legend-of-Aethra/raw/main/build/Legend-of-Aethra.user.js',
+    music: [1, 2, 3, 4, 5].map(function (n) { return 'https://github.com/Eaglewing91/Legend-of-Aethra/raw/main/build/Legend-of-Aethra-Soundtrack-' + n + '.user.js'; })
+  };
   // the game itself, running inside the phone (Legend of Varrowmere 1.0.2 and later)
   const LV_GAME_APP = { id: 'lvGame', name: 'Varrowmere', title: 'Legend of Varrowmere', icon: '🗡️', bg: ['#6cc05a', '#1f5a2a'] };
   const LV_URL = {
@@ -696,8 +710,8 @@
     music2: 'https://github.com/Eaglewing91/Legend-of-Varrowmere/raw/main/build/Legend-of-Varrowmere-Soundtrack-2.user.js'
   };
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gifts and trades', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
-  const LAND_APPS = { lvGame: 1, pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
-  const VERSION = '2.56.2';
+  const LAND_APPS = { lvGame: 1, laGame: 1, pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
+  const VERSION = '2.57.0';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
   const UPDATE_URL = 'https://github.com/Eaglewing91/Torn-Arcade.user.js/raw/main/Torn-Arcade.user.js';
@@ -789,6 +803,7 @@
     '.ta-root[data-app="lvGame"] .ta-main{padding:0;overflow:hidden;position:relative;background:#000}',
     '.ta-appbar .ta-lv-padbtn{display:none}', '.ta-root[data-app="lvGame"] .ta-appbar .ta-lv-padbtn{display:grid}', '.ta-appbar .ta-lv-padbtn.ta-on{border-color:#e0843a;background:#5a3416}',
     '.ta-panel[data-game="lvGame"]{position:absolute;inset:0;min-height:0;gap:0;padding:0}', '#ta-lv-host{position:absolute;inset:0;overflow:hidden;background:#000}',
+    '.ta-root[data-app="laGame"] .ta-main{padding:0;overflow:hidden;position:relative;background:#000}', '.ta-panel[data-game="laGame"]{position:absolute;inset:0;min-height:0;gap:0;padding:0}', '#ta-la-host{position:absolute;inset:0;overflow:hidden;background:#000}',
     /* The Legends folder */
     '.ta-folderbtn .ta-appicon{background:rgba(255,255,255,.2)!important;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:grid;grid-template-columns:repeat(2,20px);grid-auto-rows:20px;gap:5px;place-content:center;font-size:12px}',
     '.ta-folderbtn .ta-mini{width:20px;height:20px;border-radius:6px;display:grid;place-items:center;font-size:12px;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,.35)}',
@@ -1241,7 +1256,7 @@
   }
   const scoresBox = sysPanel('scores'), settingsBox = sysPanel('settings');
   const artBox = { artT: sysPanel('artT'), artC: sysPanel('artC'), artR: sysPanel('artR') };
-  const lvBox = { lvPlay: sysPanel('lvPlay'), lvMusic: sysPanel('lvMusic') };
+  const lvBox = { lvPlay: sysPanel('lvPlay'), lvMusic: sysPanel('lvMusic'), laPlay: sysPanel('laPlay'), laMusic: sysPanel('laMusic') };
   // The touch pad switch for Legend of Varrowmere, in the app bar like Tornies' (on by default on touch screens)
   function lvPadOn() { return store.get('lvPad', (function () { try { return window.matchMedia('(pointer: coarse)').matches; } catch (e) { return false; } })()); }
   const lvPadBtn = document.createElement('button'); lvPadBtn.type = 'button'; lvPadBtn.className = 'ta-icon ta-lv-padbtn' + (lvPadOn() ? ' ta-on' : ''); lvPadBtn.innerHTML = '🎮'; lvPadBtn.title = 'Touch pad on/off';
@@ -1256,6 +1271,14 @@
   games.lvGame = {
     enter: function () { try { document.dispatchEvent(new CustomEvent('varrowmere:open', { detail: JSON.stringify({ host: 'ta-lv-host', pad: lvPadOn(), muted: muted, volume: volume }) })); } catch (e) {} },
     leave: function () { try { document.dispatchEvent(new CustomEvent('varrowmere:close')); } catch (e) {} },
+    onKey: function () { return false; }   // the game reads the keys itself
+  };
+  // Legend of Aethra plays inside its own panel: the game draws into #ta-la-host when it gets 'aethra:open'
+  const laPanel = document.createElement('section'); laPanel.className = 'ta-panel'; laPanel.dataset.game = 'laGame';
+  laPanel.innerHTML = '<div id="ta-la-host"></div>'; main.appendChild(laPanel);
+  games.laGame = {
+    enter: function () { try { document.dispatchEvent(new CustomEvent('aethra:open', { detail: JSON.stringify({ host: 'ta-la-host', muted: muted, volume: volume }) })); } catch (e) {} },
+    leave: function () { try { document.dispatchEvent(new CustomEvent('aethra:close')); } catch (e) {} },
     onKey: function () { return false; }   // the game reads the keys itself
   };
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
@@ -1394,11 +1417,12 @@
   function verAtLeast(ver, w) { const v = String(ver || '').split('.').map(Number); for (let i = 0; i < 3; i++) { if ((v[i] || 0) !== w[i]) return (v[i] || 0) > w[i]; } return true; }
   function lvAtLeast(a, b, c) { return verAtLeast(LVS.ver, [a, b, c]); }
   function lvOld(id) {
+    if (id === 'laPlay' || id === 'laMusic') return false;
     if (id === 'lvMusic') return !!((LVS.music && !verAtLeast(LVS.music, LV_NEED.music)) || (LVS.music2 && !verAtLeast(LVS.music2, LV_NEED.music)));
     return !!(LVS.ver && !verAtLeast(LVS.ver, LV_NEED.game));
   }
   function lvInPhone() { return lvAtLeast(1, 0, 2); }
-  function lvInstalled(id) { return id === 'lvMusic' ? !!(LVS.music && LVS.music2) : !!LVS.ver; }
+  function lvInstalled(id) { if (id === 'laPlay') return !!LAS.ver; if (id === 'laMusic') return laMusicParts().some(Boolean); return id === 'lvMusic' ? !!(LVS.music && LVS.music2) : !!LVS.ver; }
   function refreshLegendIcons() {
     LEGEND_APPS.forEach(function (a) {
       const b = $(folderEl, '[data-app="' + a.id + '"]'); if (!b) return;
@@ -1412,6 +1436,7 @@
     const fb = $(root, '.ta-folderbtn');
     if (fb) { const need = lvOld('lvPlay') || lvOld('lvMusic'); let u = $(fb, '.ta-dl'); if (need && !u) { u = document.createElement('span'); u.className = 'ta-dl ta-upd'; u.textContent = '↻'; fb.appendChild(u); } if (!need && u) u.remove(); }
     if (current === 'lvPlay' || current === 'lvMusic') renderLegend(current);
+    if (current === 'laPlay' || current === 'laMusic') renderAethra(current);
   }
   function lvLaunch() {
     folderEl.hidden = true; LVS.launched = true;
@@ -1449,6 +1474,31 @@
     }
     box.innerHTML = html;
   }
+  /* Legend of Aethra: the same kind of link as Varrowmere, through page events only ('aethra:ping' / 'aethra:here',
+     'aethra:open', 'aethra:close', 'aethra:closed'). Its Soundtrack parts mark the page when they load. */
+  const LAS = { ver: '' };
+  document.addEventListener('aethra:here', function (e) { try { const d = JSON.parse(e.detail); LAS.ver = String(d.version || '').slice(0, 20); } catch (x) {} });
+  document.addEventListener('aethra:closed', function () { if (isOpen && current === 'laGame') goHome(); });
+  function laPing() { try { document.dispatchEvent(new CustomEvent('aethra:ping')); } catch (e) {} }
+  function laMusicParts() { const ds = document.documentElement.dataset; return [1, 2, 3, 4, 5].map(function (n) { return ds['aethraMusic' + n] || ''; }); }
+  function renderAethra(id) {
+    laPing();
+    const a = appInfo(id), box = lvBox[id], on = !!LAS.ver;
+    if (id === 'laPlay') {
+      box.innerHTML = '<div class="ta-group"><div class="ta-list"><div class="ta-row">' + iconSmall(a) + '<div class="ta-rtext"><b>' + a.title + '</b><small>' +
+        (on ? 'Installed · version ' + esc(LAS.ver) : 'Not installed · ' + a.size) + '</small></div>' + (on ? '<button type="button" class="ta-btn ta-mapbtn" data-la="play">Play</button>' : '') + '</div></div></div>' +
+        '<div class="ta-group"><h3>About</h3><div class="ta-list"><p class="ta-lvnote">A <strong>16-bit style role-playing game</strong> with active-time battles. A young Warden takes a contract to sneak rebels into a reactor, and falls into a story about stolen memories, four Crystals and a sky that is about to break. <strong>Five acts</strong>, a world map you can cross on foot, by talonbird, skimmer, boat, submersible and airship, <strong>Prisms</strong> to slot spells and skills, Surge Arts, Echo summons, the <strong>Arcana</strong> card game, talonbird races, an arena, side quests and super-bosses. Three save files plus a resume point when you close it.<br><br>Controls: <strong>Arrows/WASD</strong> move · <strong>Z</strong>, <strong>Enter</strong> or <strong>Space</strong> OK · <strong>X</strong> or <strong>Esc</strong> back · <strong>C</strong> menu · <strong>Shift</strong> run · <strong>M</strong> world map · hold <strong>Q+E</strong> to flee a battle. The ✕ in the corner returns to the phone.</p>' +
+        (on ? '' : '<div class="ta-artinst"><a class="ta-btn" href="' + LA_URL.game + '" target="_blank" rel="noopener">Install Legend of Aethra</a><small>Opens the script on GitHub, where Tampermonkey shows its install screen. Once installed, reload the page. It makes no requests and needs no API key; your saves stay in Tampermonkey storage on this device.</small></div>') +
+        '</div></div>';
+      return;
+    }
+    const parts = laMusicParts(), what = ['The title, the world map and battles', 'Towns, dungeons, caves, reactors and temples', 'Forests, the sea and the desert', 'Story scenes and quiet places', 'The Citadel, ruins, the airship and the ending'];
+    box.innerHTML = '<div class="ta-group"><div class="ta-list">' + parts.map(function (v, i) {
+      return '<div class="ta-row"><span class="ta-ricon" style="background:' + (v ? '#3a9a5a' : '#5a6676') + '">🎶</span><div class="ta-rtext"><b>Soundtrack Part ' + (i + 1) + '</b><small>' + what[i] + '. ' + (v ? 'Installed · version ' + esc(v) : 'Not installed · about 1.8 MB') + '</small></div>' +
+        (v ? '' : '<a class="ta-btn ta-mapbtn" href="' + LA_URL.music[i] + '" target="_blank" rel="noopener">Install</a>') + '</div>';
+    }).join('') + '</div></div><div class="ta-group"><h3>About</h3><div class="ta-list"><p class="ta-lvnote">The music for Legend of Aethra, in five scripts so each stays under 2 MB. Install any or all of them; areas without their part play no music. They make no requests, need no API key and store nothing: they only hand their music to the game. Reload the page after installing.</p></div></div>';
+  }
+  lvBox.laPlay.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('[data-la="play"]')) { sfx.click(); openApp('laGame'); } });
   lvBox.lvPlay.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('[data-lv="play"]')) { sfx.click(); if (!lvOld('lvPlay')) openApp('lvGame'); } });
 
   /* ================= Dev app (Eaglewing [571041] only) =================
@@ -2287,13 +2337,14 @@
   /* Opening apps */
   function refreshNav() {
     refreshArtIcons();
-    lvPing(); refreshLegendIcons(); lvPreload();
+    lvPing(); laPing(); refreshLegendIcons(); lvPreload();
     if (current === 'scores') renderScores();
   }
-  function appInfo(id) { return GAMES.concat(SYS_APPS, ART_APPS, LEGEND_APPS, [LV_GAME_APP, DEV_APP]).find(function (a) { return a.id === id; }); }
+  function appInfo(id) { return GAMES.concat(SYS_APPS, ART_APPS, LEGEND_APPS, [LV_GAME_APP, LA_GAME_APP, DEV_APP]).find(function (a) { return a.id === id; }); }
   function openApp(id) {
     if (id === 'legends') { openFolder(); return; }
     if (id === 'lvPlay') { lvPing(); if (LVS.ver && !lvOld('lvPlay')) id = 'lvGame'; }
+    if (id === 'laPlay') { laPing(); if (LAS.ver) id = 'laGame'; }
     const a = appInfo(id);
     if (!a) return;
     folderEl.hidden = true;
@@ -2304,6 +2355,7 @@
     if (id === 'settings') renderSettings();
     if (id === 'artT' || id === 'artC' || id === 'artR') renderArt(id);
     if (id === 'lvPlay' || id === 'lvMusic') renderLegend(id);
+    if (id === 'laPlay' || id === 'laMusic') renderAethra(id);
     if (id === 'dev') renderDev();
     appTitle.textContent = a.title || a.name;
     main.querySelectorAll('.ta-panel').forEach(function (p) { p.classList.toggle('ta-on', p.dataset.game === id); });
