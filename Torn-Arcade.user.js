@@ -688,13 +688,13 @@
     { id: 'artC', pack: 'chars', name: 'Character Art', title: 'Character Art Pack', icon: '🖌️', bg: ['#c39bff', '#5a3ab8'], size: '1.4 MB', what: 'illustrated portraits for the gym leaders, story characters, trainers and your outfits, plus the Faction Defence maps and the Egg Dash and Torn Territories artwork' },
     { id: 'artR', pack: 'ravenport', addon: 1, name: 'Ravenport', title: 'Ravenport Expansion', icon: '⚓', bg: ['#5ac8e0', '#2a3a8a'], size: '0.8 MB', what: 'the Ravenport expansion for Tornies: a new region across the sea for Champions, with 78 new Tornies, the Dragon and Fairy types, three new Arenas and a new story' }
   ];
-  // The Legends folder: Legend of Varrowmere, a separate game script (plus its optional Soundtrack script). Free, like every game.
+  // The Legends folder: Legend of Varrowmere and Legend of Aethra, separate game scripts, each next to its optional Soundtrack. Free, like every game.
   const LEGENDS = { id: 'legends', name: 'Legends', title: 'Legends', icon: '📁', bg: ['#4a3a7a', '#1a1030'] };
   const LEGEND_APPS = [
     { id: 'lvPlay', name: 'Varrowmere', title: 'Legend of Varrowmere', icon: '🗡️', bg: ['#6cc05a', '#1f5a2a'], size: '1.5 MB' },
     { id: 'lvMusic', name: 'Soundtrack', title: 'Varrowmere Soundtrack', icon: '🎵', bg: ['#f0b050', '#8a3a10'], size: '2 parts, about 1.8 MB each' },
-    { id: 'laPlay', name: 'Aethra', title: 'Legend of Aethra', icon: '💎', bg: ['#6a8aff', '#1a2050'], size: '1.8 MB' },
-    { id: 'laMusic', name: 'Aethra Music', title: 'Aethra Soundtrack', icon: '🎶', bg: ['#c07aff', '#3a1a6a'], size: '9 MB' }
+    { id: 'laPlay', name: 'Aethra', title: 'Legend of Aethra', icon: '💎', bg: ['#6a8aff', '#1a2050'], size: 'about 2.2 MB' },
+    { id: 'laMusic', name: 'Aethra Music', title: 'Aethra Soundtrack', icon: '🎶', bg: ['#c07aff', '#3a1a6a'], size: 'about 9 MB' }
   ];
   // Legend of Aethra (a separate script, like Varrowmere): a 16-bit style RPG that plays inside the phone
   const LA_GAME_APP = { id: 'laGame', name: 'Aethra', title: 'Legend of Aethra', icon: '💎', bg: ['#6a8aff', '#1a2050'] };
@@ -997,7 +997,7 @@
           '<span class="ta-sicons"><span class="ta-bars"><i style="height:4px"></i><i style="height:6px"></i><i style="height:8.5px"></i><i style="height:11px"></i></span><span>TornTel</span><span class="ta-batt"><i></i></span></span></div>' +
         '<div class="ta-home">' +
           '<div class="ta-widget"><button type="button" class="ta-lock" data-act="close" title="Lock phone (closes it; your games are saved)">🔒 Lock</button><b class="ta-wclock">00:00</b><span class="ta-wdate"></span><em>Torn City Time</em></div>' +
-          '<div class="ta-note" hidden><span class="ta-noteicon">👋</span><div class="ta-notetext"><b>Welcome to Torn Arcade v' + VERSION + '!</b><small>Seven games in your pocket, plus Legend of Varrowmere in the Legends folder. Start with Tornies, and grab the free Art Packs on the bottom row for illustrated artwork. Bugs or ideas? Message Eaglewing [571041].</small></div><button type="button" class="ta-notex" title="Dismiss">✕</button></div>' +
+          '<div class="ta-note" hidden><span class="ta-noteicon">👋</span><div class="ta-notetext"><b>Welcome to Torn Arcade v' + VERSION + '!</b><small>Seven games in your pocket, plus Legend of Varrowmere and Legend of Aethra in the Legends folder. Start with Tornies, and grab the free Art Packs on the bottom row for illustrated artwork. Bugs or ideas? Message Eaglewing [571041].</small></div><button type="button" class="ta-notex" title="Dismiss">✕</button></div>' +
           '<div class="ta-grid">' + folderButton() + GAMES.map(appButton).join('') + '</div>' +
           '<div class="ta-grid ta-artrow">' + ART_APPS.map(appButton).join('') + '</div>' +
           '<div class="ta-dock">' + SYS_APPS.map(function (a) { return (a.id === 'settings' ? appButton(DEV_APP).replace('<button ', '<button hidden ') : '') + appButton(a); }).join('') + '</div>' +
@@ -1488,15 +1488,17 @@
       box.innerHTML = '<div class="ta-group"><div class="ta-list"><div class="ta-row">' + iconSmall(a) + '<div class="ta-rtext"><b>' + a.title + '</b><small>' +
         (on ? 'Installed · version ' + esc(LAS.ver) : 'Not installed · ' + a.size) + '</small></div>' + (on ? '<button type="button" class="ta-btn ta-mapbtn" data-la="play">Play</button>' : '') + '</div>' +
         '</div></div>' +
+        '<div class="ta-group"><div class="ta-list"><p class="ta-lvnote">⚠️ <strong>Large scripts:</strong> the game is about 2.2 MB and its Soundtrack about 9 MB, much bigger than a usual userscript. They can take a moment to install and load, and <strong>some mobile browsers and userscript managers may not be able to install or run scripts this size</strong>. If the Soundtrack won\'t install or slows your phone down, leave it out: the game still plays, without music. A PC or laptop is the most reliable way to play.</p></div></div>' +
         '<div class="ta-group"><h3>About</h3><div class="ta-list"><p class="ta-lvnote">A <strong>16-bit style role-playing game</strong> with active-time battles. A young Warden takes a contract to sneak rebels into a reactor, and falls into a story about stolen memories, four Crystals and a sky that is about to break. <strong>Five acts</strong>, a world map you can cross on foot, by talonbird, skimmer, boat, submersible and airship, <strong>Prisms</strong> to slot spells and skills, Surge Arts, Echo summons, the <strong>Arcana</strong> card game, talonbird races, an arena, side quests and super-bosses. Three save files plus a resume point when you close it.<br><br>Controls: <strong>Arrows/WASD</strong> move · <strong>Z</strong>, <strong>Enter</strong> or <strong>Space</strong> OK · <strong>X</strong> or <strong>Esc</strong> back · <strong>C</strong> menu · <strong>Shift</strong> run · <strong>M</strong> world map · hold <strong>Q+E</strong> to flee a battle. The ✕ in the corner returns to the phone. On a touch screen, use the touch pad (🎮 in the top bar).</p>' +
         (on ? '' : '<div class="ta-artinst"><a class="ta-btn" href="' + LA_URL.game + '" target="_blank" rel="noopener">Install Legend of Aethra</a><small>Opens the script on GitHub, where Tampermonkey shows its install screen. Once installed, reload the page. It makes no requests and needs no API key; your saves stay in Tampermonkey storage on this device.</small></div>') +
         '</div></div>';
       return;
     }
     const v = laMusicParts()[0];
-    box.innerHTML = '<div class="ta-group"><div class="ta-list"><div class="ta-row"><span class="ta-ricon" style="background:' + (v ? '#3a9a5a' : '#5a6676') + '">🎶</span><div class="ta-rtext"><b>Aethra Soundtrack</b><small>All 37 tracks. ' + (v ? 'Installed · version ' + esc(v) : 'Not installed · about 9 MB') + '</small></div>' +
+    box.innerHTML = '<div class="ta-group"><div class="ta-list"><div class="ta-row"><span class="ta-ricon" style="background:' + (v ? '#3a9a5a' : '#5a6676') + '">🎶</span><div class="ta-rtext"><b>Aethra Soundtrack</b><small>All 45 tracks. ' + (v ? 'Installed · version ' + esc(v) : 'Not installed · about 9 MB') + '</small></div>' +
       (v ? '' : '<a class="ta-btn ta-mapbtn" href="' + LA_URL.music + '" target="_blank" rel="noopener">Install</a>') + '</div></div></div>' +
-      '<div class="ta-group"><h3>About</h3><div class="ta-list"><p class="ta-lvnote">The background music for Legend of Aethra, in one optional script. Without it you still hear the sound effects (they are built into the game), but no music. It makes no requests, needs no API key and stores nothing: it only hands its music to the game. Reload the page after installing.</p></div></div>';
+      '<div class="ta-group"><div class="ta-list"><p class="ta-lvnote">⚠️ <strong>Large scripts:</strong> the game is about 2.2 MB and its Soundtrack about 9 MB, much bigger than a usual userscript. They can take a moment to install and load, and <strong>some mobile browsers and userscript managers may not be able to install or run scripts this size</strong>. If the Soundtrack won\'t install or slows your phone down, leave it out: the game still plays, without music. A PC or laptop is the most reliable way to play.</p></div></div>' +
+      '<div class="ta-group"><h3>About</h3><div class="ta-list"><p class="ta-lvnote">The background music for Legend of Aethra: an original orchestral score in the spirit of the classic 16-bit role-playing games, with a theme for every town, battle and character, in one optional script. Without it you still hear the sound effects (they are built into the game), but no music. It makes no requests, needs no API key and stores nothing: it only hands its music to the game. Reload the page after installing.</p></div></div>';
   }
   lvBox.laPlay.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('[data-la="play"]')) { sfx.click(); openApp('laGame'); } });
   lvBox.lvPlay.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('[data-lv="play"]')) { sfx.click(); if (!lvOld('lvPlay')) openApp('lvGame'); } });

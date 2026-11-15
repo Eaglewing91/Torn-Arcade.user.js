@@ -62,15 +62,19 @@ Install them like the main script, then reload Torn. The **Tornies Art** and **C
 How they link: the packs hand their pictures to Torn Arcade using browser events on the Torn page you're viewing. Torn Arcade checks every picture (known names, WebP images only) before using it. The packs make **no requests of any kind**, store nothing and need no API key.
 
 ### ⚔️ Legends
-The **Legends** folder on the home screen holds **Legend of Varrowmere**, a top-down action-adventure in the style of the 16-bit classics. It's a separate game with its own scripts, so each stays under 2 MB:
+The **Legends** folder on the home screen holds two larger games, each with its own scripts: **Legend of Varrowmere**, a top-down action-adventure in the style of the 16-bit classics, and **Legend of Aethra**, a 16-bit style role-playing game with an original orchestral soundtrack. Each game sits in the folder next to its soundtrack.
 
 | Script | What it adds | Size | Install |
 |---|---|---|---|
 | **Legend of Varrowmere** | The game | about 1.5 MB | [Install](https://github.com/Eaglewing91/Legend-of-Varrowmere/raw/main/build/Legend-of-Varrowmere.user.js) |
 | **Legend of Varrowmere - Soundtrack** | Its music, part 1: title, towns, fields and boss fights (optional) | about 1.7 MB | [Install](https://github.com/Eaglewing91/Legend-of-Varrowmere/raw/main/build/Legend-of-Varrowmere-Soundtrack.user.js) |
 | **Legend of Varrowmere - Soundtrack Part 2** | Its music, part 2: Shadow world, dungeons, caves and the ending (optional) | about 1.8 MB | [Install](https://github.com/Eaglewing91/Legend-of-Varrowmere/raw/main/build/Legend-of-Varrowmere-Soundtrack-2.user.js) |
+| **Legend of Aethra** | The game | about 2.2 MB | [Install](https://github.com/Eaglewing91/Legend-of-Aethra/raw/main/build/Legend-of-Aethra.user.js) |
+| **Legend of Aethra - Soundtrack** | Its music: the full original score, 45 tracks (optional) | about 9 MB | [Install](https://github.com/Eaglewing91/Legend-of-Aethra/raw/main/build/Legend-of-Aethra-Soundtrack.user.js) |
 
-Once installed, tap **Varrowmere** in the folder: the phone turns sideways and the game plays inside it, like Tornies. Tap Home (or press Esc) to go back; the game saves. It needs a keyboard, so it's best on a PC or laptop. Torn Arcade and the game talk only through browser events on the page you're viewing (`varrowmere:ping`, `varrowmere:here`, `varrowmere:open`, `varrowmere:closed`); neither makes any request for this, and no data is shared.
+> ⚠️ **Large scripts.** Legend of Aethra (about 2.2 MB) and its Soundtrack (about 9 MB) are much bigger than a usual userscript. They can take a moment to install and to load, and **some mobile browsers and userscript managers may not be able to install or run scripts this size**. If the Soundtrack won't install or slows your phone down, leave it out: the game still plays, with sound effects but no music. A PC or laptop is the most reliable way to play.
+
+Once installed, tap **Varrowmere** or **Aethra** in the folder: the game plays inside the phone. Tap Home (or press Esc) to go back; the game saves. Both play with a keyboard, or with the on-screen touch pad (🎮). Torn Arcade and the games talk only through browser events on the page you're viewing (`varrowmere:ping` / `aethra:ping`, `:here`, `:open`, `:closed`); none of them makes any request for this, and no data is shared.
 
 ### 🔄 Automatic updates
 From version 2.15.2, Tampermonkey checks this link for new versions (about once a day by default) and updates the script for you. If you installed an older version from somewhere else, reinstall once from the link above. After that, updates are automatic. This check is made by Tampermonkey to GitHub only. It isn't a request to Torn and sends no data.
