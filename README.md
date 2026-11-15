@@ -67,9 +67,9 @@ The **Legends** folder on the home screen holds **Legend of Aethra**, a 16-bit s
 | Script | What it adds | Size | Install |
 |---|---|---|---|
 | **Legend of Aethra** | The game | about 2.2 MB | [Install](https://github.com/Eaglewing91/Legend-of-Aethra/raw/main/build/Legend-of-Aethra.user.js) |
-| **Legend of Aethra - Soundtrack** | Its music: the full original score, 45 tracks (optional) | about 9 MB | [Install](https://github.com/Eaglewing91/Legend-of-Aethra/raw/main/build/Legend-of-Aethra-Soundtrack.user.js) |
+| **Legend of Aethra - Soundtrack** | Its music: the full original score, 45 tracks (optional) | about 16 MB | [Install](https://github.com/Eaglewing91/Legend-of-Aethra/raw/main/build/Legend-of-Aethra-Soundtrack.user.js) |
 
-> ⚠️ **Large scripts.** Legend of Aethra (about 2.2 MB) and its Soundtrack (about 9 MB) are much bigger than a usual userscript. They can take a moment to install and to load, and **some mobile browsers and userscript managers may not be able to install or run scripts this size**. If the Soundtrack won't install or slows your phone down, leave it out: the game still plays, with sound effects but no music. A PC or laptop is the most reliable way to play.
+> ⚠️ **Large scripts.** Legend of Aethra (about 2.2 MB) and its Soundtrack (about 16 MB) are much bigger than a usual userscript. They can take a moment to install and to load, and **some mobile browsers and userscript managers may not be able to install or run scripts this size**. If the Soundtrack won't install or slows your phone down, leave it out: the game still plays, with sound effects but no music. A PC or laptop is the most reliable way to play.
 
 Once installed, tap **Aethra** in the folder: the game plays inside the phone. Tap Home (or press Esc) to go back; the game saves. It plays with a keyboard, or with the on-screen touch pad (🎮). Torn Arcade and the game talk only through browser events on the page you're viewing (`aethra:ping`, `aethra:here`, `aethra:open`, `aethra:close`, `aethra:closed`, plus `aethra:pad`, `aethra:mute` and `aethra:volume` for the touch pad, speaker and volume buttons); neither makes any request for this, and no data is shared.
 
