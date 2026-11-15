@@ -8,9 +8,13 @@ Every Torn Arcade update since 2.2.0, newest first. Dates are in TCT (Torn City 
 
 ---
 
+## 2.57.1 — 2026-11-15
+### Changed
+- New illustrated app icons for Legend of Aethra (four Crystals around a sword) and the Aethra Soundtrack (a crystal harp), on the home screen's Legends folder too.
+
 ## 2.57.0 — 2026-11-14
 ### Added
-- **Legend of Aethra** in the Legends folder: a 16-bit style role-playing game with active-time battles, five acts, a world map with vehicles, the Arcana card game and more. It's a separate, optional script (about 2.2 MB) with an optional Soundtrack script (an original 45-track score, about 16 MB), and it sits in the folder next to its Soundtrack, like Varrowmere. It plays inside the phone and talks to it only through page events; it makes no requests and needs no API key.
+- **Legend of Aethra** in the Legends folder: a 16-bit style role-playing game with turn-based battles, five acts, a world map with vehicles, the Arcana card game and more. It's a separate, optional script (about 2.2 MB) with an optional Soundtrack script (an original 45-track score, about 16 MB), and it sits in the folder next to its Soundtrack, like Varrowmere. It plays inside the phone and talks to it only through page events; it makes no requests and needs no API key.
 - **A size warning** on Aethra's pages in the folder and in the README: the game and Soundtrack are large scripts, and some mobile browsers and userscript managers may not be able to install or run them. The game still plays without the Soundtrack.
 ### Changed
 - The phone's **speaker button, volume slider and 🎮 touch pad** now control Legend of Aethra.

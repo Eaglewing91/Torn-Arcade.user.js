@@ -6,7 +6,7 @@
 
 Torn Arcade is a Tampermonkey userscript that adds a **Mobile Phone** link to Torn's sidebar. Click it and a phone opens on top of the page with seven games, the Legends folder, leaderboards and settings. Everything runs inside the phone, and every image, sound and piece of music is built into the script or its two optional Art Packs.
 
-> 💎 **2.57: Legend of Aethra.** A 16-bit style role-playing game in the **Legends** folder on the home screen: five acts, active-time battles, a world map with an airship, and an original orchestral soundtrack. It's completely free, like every game in Torn Arcade. See [Legends](#-legends).
+> 💎 **2.57: Legend of Aethra.** A 16-bit style role-playing game in the **Legends** folder on the home screen: five acts, turn-based battles, a world map with an airship, and an original orchestral soundtrack. It's completely free, like every game in Torn Arcade. See [Legends](#-legends).
 
 > 🧩 **2.47: Puzzle Arenas.** Each Tornies Arena now has its own puzzle (fuse boxes, bridges, a hedge maze, crates, a quiz, teleport pads and ice), and the Docks Warehouse and TornTech Factory each gain a second floor.
 
