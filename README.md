@@ -6,7 +6,7 @@
 
 Torn Arcade is a Tampermonkey userscript that adds a **Mobile Phone** link to Torn's sidebar. Click it and a phone opens on top of the page with seven games, the Legends folder, leaderboards and settings. Everything runs inside the phone, and every image, sound and piece of music is built into the script or its two optional Art Packs.
 
-> ⚔️ **2.54: Legend of Varrowmere.** A new top-down action-adventure in the new **Legends** folder on the home screen: explore the kingdom of Varrowmere and fight through 19 dungeons. It's completely free, like every game in Torn Arcade. See [Legends](#-legends).
+> 💎 **2.57: Legend of Aethra.** A 16-bit style role-playing game in the **Legends** folder on the home screen: five acts, active-time battles, a world map with an airship, and an original orchestral soundtrack. It's completely free, like every game in Torn Arcade. See [Legends](#-legends).
 
 > 🧩 **2.47: Puzzle Arenas.** Each Tornies Arena now has its own puzzle (fuse boxes, bridges, a hedge maze, crates, a quiz, teleport pads and ice), and the Docks Warehouse and TornTech Factory each gain a second floor.
 
@@ -62,19 +62,16 @@ Install them like the main script, then reload Torn. The **Tornies Art** and **C
 How they link: the packs hand their pictures to Torn Arcade using browser events on the Torn page you're viewing. Torn Arcade checks every picture (known names, WebP images only) before using it. The packs make **no requests of any kind**, store nothing and need no API key.
 
 ### ⚔️ Legends
-The **Legends** folder on the home screen holds two larger games, each with its own scripts: **Legend of Varrowmere**, a top-down action-adventure in the style of the 16-bit classics, and **Legend of Aethra**, a 16-bit style role-playing game with an original orchestral soundtrack. Each game sits in the folder next to its soundtrack.
+The **Legends** folder on the home screen holds **Legend of Aethra**, a 16-bit style role-playing game with an original orchestral soundtrack. It's a separate game with its own scripts, and it sits in the folder next to its Soundtrack.
 
 | Script | What it adds | Size | Install |
 |---|---|---|---|
-| **Legend of Varrowmere** | The game | about 1.5 MB | [Install](https://github.com/Eaglewing91/Legend-of-Varrowmere/raw/main/build/Legend-of-Varrowmere.user.js) |
-| **Legend of Varrowmere - Soundtrack** | Its music, part 1: title, towns, fields and boss fights (optional) | about 1.7 MB | [Install](https://github.com/Eaglewing91/Legend-of-Varrowmere/raw/main/build/Legend-of-Varrowmere-Soundtrack.user.js) |
-| **Legend of Varrowmere - Soundtrack Part 2** | Its music, part 2: Shadow world, dungeons, caves and the ending (optional) | about 1.8 MB | [Install](https://github.com/Eaglewing91/Legend-of-Varrowmere/raw/main/build/Legend-of-Varrowmere-Soundtrack-2.user.js) |
 | **Legend of Aethra** | The game | about 2.2 MB | [Install](https://github.com/Eaglewing91/Legend-of-Aethra/raw/main/build/Legend-of-Aethra.user.js) |
 | **Legend of Aethra - Soundtrack** | Its music: the full original score, 45 tracks (optional) | about 9 MB | [Install](https://github.com/Eaglewing91/Legend-of-Aethra/raw/main/build/Legend-of-Aethra-Soundtrack.user.js) |
 
 > ⚠️ **Large scripts.** Legend of Aethra (about 2.2 MB) and its Soundtrack (about 9 MB) are much bigger than a usual userscript. They can take a moment to install and to load, and **some mobile browsers and userscript managers may not be able to install or run scripts this size**. If the Soundtrack won't install or slows your phone down, leave it out: the game still plays, with sound effects but no music. A PC or laptop is the most reliable way to play.
 
-Once installed, tap **Varrowmere** or **Aethra** in the folder: the game plays inside the phone. Tap Home (or press Esc) to go back; the game saves. Both play with a keyboard, or with the on-screen touch pad (🎮). Torn Arcade and the games talk only through browser events on the page you're viewing (`varrowmere:ping` / `aethra:ping`, `:here`, `:open`, `:closed`); none of them makes any request for this, and no data is shared.
+Once installed, tap **Aethra** in the folder: the game plays inside the phone. Tap Home (or press Esc) to go back; the game saves. It plays with a keyboard, or with the on-screen touch pad (🎮). Torn Arcade and the game talk only through browser events on the page you're viewing (`aethra:ping`, `aethra:here`, `aethra:open`, `aethra:close`, `aethra:closed`, plus `aethra:pad`, `aethra:mute` and `aethra:volume` for the touch pad, speaker and volume buttons); neither makes any request for this, and no data is shared.
 
 ### 🔄 Automatic updates
 From version 2.15.2, Tampermonkey checks this link for new versions (about once a day by default) and updates the script for you. If you installed an older version from somewhere else, reinstall once from the link above. After that, updates are automatic. This check is made by Tampermonkey to GitHub only. It isn't a request to Torn and sends no data.

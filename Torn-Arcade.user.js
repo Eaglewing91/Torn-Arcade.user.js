@@ -2,7 +2,7 @@
 // @name         Torn Arcade
 // @namespace    https://github.com/Eaglewing91
 // @version      2.57.0
-// @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with seven game apps and a Legends folder for Legend of Varrowmere and Legend of Aethra (separate, optional game scripts): Tornies (a creature-collecting RPG), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online) and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
+// @description  Adds a Mobile Phone link to Torn's sidebar that opens a mobile phone with seven game apps and a Legends folder for Legend of Aethra (a separate, optional game script): Tornies (a creature-collecting RPG), Angry Bogies (a slingshot physics game), Faction Defence (a tower defence game), Anton's Egg Dash (an endless rooftop runner), Torn Territories (a district-building board game), Chess (against the computer or online) and Flappy Torn. Illustrated Tornie and character art (and the Faction Defence maps, Egg Dash and Torn Territories artwork) comes from two optional companion scripts (Torn Arcade - Tornies Art, Torn Arcade - Character Art). Optional event notifications use the official Torn API (api.torn.com) with your own key; no other requests are made.
 // @author       Eaglewing [571041]
 // @copyright    2026, Eaglewing [571041]. All rights reserved.
 // @license      All Rights Reserved - for use on Torn (torn.com) only; no copying, modifying, redistribution or use elsewhere (see LICENCE below)
@@ -118,26 +118,10 @@
  *   (with an optional Soundtrack script). This script talks to it only
  *   through page events: 'aethra:ping' / 'aethra:here' (installed? version),
  *   'aethra:open' (sent only when you tap Play; it draws inside the phone),
- *   'aethra:close' (you left it) and 'aethra:closed' (it closed itself).
+ *   'aethra:close' (you left it), 'aethra:closed' (it closed itself), and
+ *   'aethra:pad', 'aethra:mute' and 'aethra:volume' (the touch pad button,
+ *   the speaker button and the volume slider).
  *   No requests, no API key, nothing shared.
- * - LEGENDS FOLDER (optional): Legend of Varrowmere is a separate game
- *   script with an optional Soundtrack script, each under 2 MB. This script
- *   talks to it only through browser events on the page you are viewing:
- *   'varrowmere:ping' (is it installed? the game answers 'varrowmere:here'
- *   with its version and the Soundtrack's), 'varrowmere:open' (sent only when
- *   you tap Play; the game opens inside the phone, in a box this script
- *   provides; older game versions open in their own window),
- *   'varrowmere:close' (you left the game), 'varrowmere:pad' (the 🎮 touch pad
- *   button), 'varrowmere:mute' (the speaker button), 'varrowmere:volume' (the
- *   volume slider) and 'varrowmere:closed' (the game
- *   closed itself, so the phone goes back to its home screen). With "Preload Legend" on
- *   (Settings, off by default) it also sends 'varrowmere:preload' once per page
- *   when the phone opens, so the game can unpack itself ahead of time. When the game closes
- *   it also sends 'varrowmere:scores' (total playtime, completion, monsters
- *   defeated: the best of its three save files), kept with your other best
- *   scores and, only with Online play on, sent to the global leaderboards
- *   like every other game's. The game makes no requests. The Install buttons
- *   are ordinary links to GitHub. Like every game in Torn Arcade, it is free.
  * - EVENT NOTIFICATIONS (optional, off until you add an API key in
  *   Settings): while the phone is open, it asks the official Torn API
  *   (api.torn.com, /v2/user/events) for your new events every 5 seconds
@@ -436,7 +420,7 @@
   function setVolume(v, save) {
     volume = Math.max(0, Math.min(100, Math.round(Number(v) || 0)));
     volOuts.forEach(function (g) { try { g.gain.setTargetAtTime(volGain(volume), g.context.currentTime, 0.03); } catch (e) {} });
-    try { document.dispatchEvent(new CustomEvent('varrowmere:volume', { detail: JSON.stringify({ volume: volume }) })); } catch (e) {}   // Legend of Varrowmere follows the slider
+    try { document.dispatchEvent(new CustomEvent('aethra:volume', { detail: JSON.stringify({ volume: volume }) })); } catch (e) {}   // Legend of Aethra follows the slider
     if (save) store.set('volume', volume);
   }
   function tone(freq, dur, type, gain, slideTo) {
@@ -688,29 +672,20 @@
     { id: 'artC', pack: 'chars', name: 'Character Art', title: 'Character Art Pack', icon: '🖌️', bg: ['#c39bff', '#5a3ab8'], size: '1.4 MB', what: 'illustrated portraits for the gym leaders, story characters, trainers and your outfits, plus the Faction Defence maps and the Egg Dash and Torn Territories artwork' },
     { id: 'artR', pack: 'ravenport', addon: 1, name: 'Ravenport', title: 'Ravenport Expansion', icon: '⚓', bg: ['#5ac8e0', '#2a3a8a'], size: '0.8 MB', what: 'the Ravenport expansion for Tornies: a new region across the sea for Champions, with 78 new Tornies, the Dragon and Fairy types, three new Arenas and a new story' }
   ];
-  // The Legends folder: Legend of Varrowmere and Legend of Aethra, separate game scripts, each next to its optional Soundtrack. Free, like every game.
+  // The Legends folder: Legend of Aethra, a separate game script, next to its optional Soundtrack. Free, like every game.
   const LEGENDS = { id: 'legends', name: 'Legends', title: 'Legends', icon: '📁', bg: ['#4a3a7a', '#1a1030'] };
   const LEGEND_APPS = [
-    { id: 'lvPlay', name: 'Varrowmere', title: 'Legend of Varrowmere', icon: '🗡️', bg: ['#6cc05a', '#1f5a2a'], size: '1.5 MB' },
-    { id: 'lvMusic', name: 'Soundtrack', title: 'Varrowmere Soundtrack', icon: '🎵', bg: ['#f0b050', '#8a3a10'], size: '2 parts, about 1.8 MB each' },
     { id: 'laPlay', name: 'Aethra', title: 'Legend of Aethra', icon: '💎', bg: ['#6a8aff', '#1a2050'], size: 'about 2.2 MB' },
     { id: 'laMusic', name: 'Aethra Music', title: 'Aethra Soundtrack', icon: '🎶', bg: ['#c07aff', '#3a1a6a'], size: 'about 9 MB' }
   ];
-  // Legend of Aethra (a separate script, like Varrowmere): a 16-bit style RPG that plays inside the phone
+  // Legend of Aethra (a separate script): a 16-bit style RPG that plays inside the phone
   const LA_GAME_APP = { id: 'laGame', name: 'Aethra', title: 'Legend of Aethra', icon: '💎', bg: ['#6a8aff', '#1a2050'] };
   const LA_URL = {
     game: 'https://github.com/Eaglewing91/Legend-of-Aethra/raw/main/build/Legend-of-Aethra.user.js',
     music: 'https://github.com/Eaglewing91/Legend-of-Aethra/raw/main/build/Legend-of-Aethra-Soundtrack.user.js'
   };
-  // the game itself, running inside the phone (Legend of Varrowmere 1.0.2 and later)
-  const LV_GAME_APP = { id: 'lvGame', name: 'Varrowmere', title: 'Legend of Varrowmere', icon: '🗡️', bg: ['#6cc05a', '#1f5a2a'] };
-  const LV_URL = {
-    game: 'https://github.com/Eaglewing91/Legend-of-Varrowmere/raw/main/build/Legend-of-Varrowmere.user.js',
-    music: 'https://github.com/Eaglewing91/Legend-of-Varrowmere/raw/main/build/Legend-of-Varrowmere-Soundtrack.user.js',
-    music2: 'https://github.com/Eaglewing91/Legend-of-Varrowmere/raw/main/build/Legend-of-Varrowmere-Soundtrack-2.user.js'
-  };
   const DEV_APP = { id: 'dev', name: 'Dev', title: 'Dev · Gifts and trades', icon: '🛠️', bg: ['#5a6676', '#2a323e'] };   // shown only to the developer
-  const LAND_APPS = { lvGame: 1, laGame: 1, pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
+  const LAND_APPS = { laGame: 1, pocket: 1, flappy: 1, bogies: 1, defence: 1, eggdash: 1, territories: 1 };   // apps that turn the phone sideways
   const VERSION = '2.57.0';
   // Check for updates just opens the install link in a new tab. Tampermonkey compares versions and offers Update or Reinstall;
   // the script itself makes no request.
@@ -800,9 +775,7 @@
     '.ta-dock{position:relative;margin:auto 12px 22px;padding:12px 10px;border-radius:30px;display:flex;justify-content:space-around;background:rgba(255,255,255,.16);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.14)}',
     '.ta-dock .ta-applabel{display:none}',
     '.ta-artrow{margin-top:auto;padding-bottom:2px}',
-    '.ta-root[data-app="lvGame"] .ta-main{padding:0;overflow:hidden;position:relative;background:#000}',
-    '.ta-appbar .ta-lv-padbtn{display:none}', '.ta-root[data-app="lvGame"] .ta-appbar .ta-lv-padbtn,.ta-root[data-app="laGame"] .ta-appbar .ta-lv-padbtn{display:grid}', '.ta-appbar .ta-lv-padbtn.ta-on{border-color:#e0843a;background:#5a3416}',
-    '.ta-panel[data-game="lvGame"]{position:absolute;inset:0;min-height:0;gap:0;padding:0}', '#ta-lv-host{position:absolute;inset:0;overflow:hidden;background:#000}',
+    '.ta-appbar .ta-lv-padbtn{display:none}', '.ta-root[data-app="laGame"] .ta-appbar .ta-lv-padbtn{display:grid}', '.ta-appbar .ta-lv-padbtn.ta-on{border-color:#e0843a;background:#5a3416}',
     '.ta-root[data-app="laGame"] .ta-main{padding:0;overflow:hidden;position:relative;background:#000}', '.ta-panel[data-game="laGame"]{position:absolute;inset:0;min-height:0;gap:0;padding:0}', '#ta-la-host{position:absolute;inset:0;overflow:hidden;background:#000}',
     /* The Legends folder */
     '.ta-folderbtn .ta-appicon{background:rgba(255,255,255,.2)!important;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:grid;grid-template-columns:repeat(2,20px);grid-auto-rows:20px;gap:5px;place-content:center;font-size:12px}',
@@ -997,7 +970,7 @@
           '<span class="ta-sicons"><span class="ta-bars"><i style="height:4px"></i><i style="height:6px"></i><i style="height:8.5px"></i><i style="height:11px"></i></span><span>TornTel</span><span class="ta-batt"><i></i></span></span></div>' +
         '<div class="ta-home">' +
           '<div class="ta-widget"><button type="button" class="ta-lock" data-act="close" title="Lock phone (closes it; your games are saved)">🔒 Lock</button><b class="ta-wclock">00:00</b><span class="ta-wdate"></span><em>Torn City Time</em></div>' +
-          '<div class="ta-note" hidden><span class="ta-noteicon">👋</span><div class="ta-notetext"><b>Welcome to Torn Arcade v' + VERSION + '!</b><small>Seven games in your pocket, plus Legend of Varrowmere and Legend of Aethra in the Legends folder. Start with Tornies, and grab the free Art Packs on the bottom row for illustrated artwork. Bugs or ideas? Message Eaglewing [571041].</small></div><button type="button" class="ta-notex" title="Dismiss">✕</button></div>' +
+          '<div class="ta-note" hidden><span class="ta-noteicon">👋</span><div class="ta-notetext"><b>Welcome to Torn Arcade v' + VERSION + '!</b><small>Seven games in your pocket, plus Legend of Aethra in the Legends folder. Start with Tornies, and grab the free Art Packs on the bottom row for illustrated artwork. Bugs or ideas? Message Eaglewing [571041].</small></div><button type="button" class="ta-notex" title="Dismiss">✕</button></div>' +
           '<div class="ta-grid">' + folderButton() + GAMES.map(appButton).join('') + '</div>' +
           '<div class="ta-grid ta-artrow">' + ART_APPS.map(appButton).join('') + '</div>' +
           '<div class="ta-dock">' + SYS_APPS.map(function (a) { return (a.id === 'settings' ? appButton(DEV_APP).replace('<button ', '<button hidden ') : '') + appButton(a); }).join('') + '</div>' +
@@ -1026,24 +999,8 @@
     '<button type="button" class="ta-btn" data-news="online"><span>Set up Online play</span><small>Opens Settings → Online</small></button>' +
     '<button type="button" class="ta-btn ta-btn2" data-news="later"><span>Maybe later</span><small>You can turn it on any time in Settings</small></button></div>';
   $(root, '.ta-screen').appendChild(newsEl);
-  // What's new in 2.54 (shown once to everyone, after the 2.40 notice if that one is still waiting): Legend of Varrowmere.
-  const news254El = document.createElement('div');
-  news254El.className = 'ta-clash ta-news'; news254El.hidden = true;
-  news254El.innerHTML = '<div class="ta-clashbox"><b>⚔️ New in Torn Arcade 2.54: Legend of Varrowmere</b>' +
-    '<p>A brand-new <strong>top-down action-adventure</strong> in the style of the 16-bit classics. Explore the kingdom of Varrowmere and its Shadow twin: towns, forests, mountains, swamps and deserts. Fight through <strong>19 dungeons</strong> full of keys, switches, puzzles and unique bosses, take on <strong>15 side quests</strong>, find new gear and tools, and visit shops, secret caves and Great Fairies. Create up to <strong>three heroes</strong>, each with their own name, tunic and save. Your progress saves as you play.</p>' +
-    '<p>It lives in the new <strong>Legends</strong> folder on your home screen. The <strong>game</strong> (1.5 MB) and its optional <strong>Soundtrack</strong> (two parts) are separate scripts. Install them from inside the folder, then reload the page. It plays inside the phone with a keyboard and mouse, or the touch pad. Your playtime, completion and monsters defeated appear in <strong>Leaderboards</strong>.</p>' +
-    '<p><strong>Completely free</strong>, like every game in Torn Arcade.</p>' +
-    '<button type="button" class="ta-btn" data-news="legends"><span>Open the Legends folder</span><small>Install the game and the Soundtrack</small></button>' +
-    '<button type="button" class="ta-btn ta-btn2" data-news="later"><span>Maybe later</span><small>The folder is on your home screen</small></button></div>';
-  $(root, '.ta-screen').appendChild(news254El);
-  news254El.addEventListener('click', function (e) {
-    const b = e.target.closest('[data-news]'); if (!b) return;
-    store.set('news254', 1); news254El.hidden = true; sfx.click();
-    if (b.dataset.news === 'legends') openFolder();
-  });
   function showNews() {
     if (store.get('news240', 0) === 1) { newsEl.hidden = false; return; }
-    if (!store.get('news254', 0)) news254El.hidden = false;
   }
   // The Legends folder (opens over the home screen; tap outside it to close)
   const folderEl = document.createElement('div');
@@ -1052,7 +1009,7 @@
     '<div class="ta-grid">' + LEGEND_APPS.map(appButton).join('') + '</div></div>';
   $(root, '.ta-screen').appendChild(folderEl);
   folderEl.addEventListener('click', function (e) { if (e.target === folderEl) { folderEl.hidden = true; sfx.click(); } });
-  function openFolder() { lvPing(); refreshLegendIcons(); folderEl.hidden = false; }
+  function openFolder() { laPing(); refreshLegendIcons(); folderEl.hidden = false; }
   newsEl.addEventListener('click', function (e) {
     const b = e.target.closest('[data-news]'); if (!b) return;
     store.set('news240', 2); newsEl.hidden = true; sfx.click(); showNews();
@@ -1256,23 +1213,15 @@
   }
   const scoresBox = sysPanel('scores'), settingsBox = sysPanel('settings');
   const artBox = { artT: sysPanel('artT'), artC: sysPanel('artC'), artR: sysPanel('artR') };
-  const lvBox = { lvPlay: sysPanel('lvPlay'), lvMusic: sysPanel('lvMusic'), laPlay: sysPanel('laPlay'), laMusic: sysPanel('laMusic') };
-  // The touch pad switch for Legend of Varrowmere, in the app bar like Tornies' (on by default on touch screens)
+  const lvBox = { laPlay: sysPanel('laPlay'), laMusic: sysPanel('laMusic') };
+  // The touch pad switch for Legend of Aethra, in the app bar like Tornies' (on by default on touch screens)
   function lvPadOn() { return store.get('lvPad', (function () { try { return window.matchMedia('(pointer: coarse)').matches; } catch (e) { return false; } })()); }
   const lvPadBtn = document.createElement('button'); lvPadBtn.type = 'button'; lvPadBtn.className = 'ta-icon ta-lv-padbtn' + (lvPadOn() ? ' ta-on' : ''); lvPadBtn.innerHTML = '🎮'; lvPadBtn.title = 'Touch pad on/off';
   $(root, '.ta-appbar').insertBefore(lvPadBtn, muteBtn);
   lvPadBtn.addEventListener('click', function () {
     const on = !lvPadOn(); store.set('lvPad', on); lvPadBtn.classList.toggle('ta-on', on); sfx.click();
-    try { document.dispatchEvent(new CustomEvent('varrowmere:pad', { detail: JSON.stringify({ on: on }) })); document.dispatchEvent(new CustomEvent('aethra:pad', { detail: JSON.stringify({ on: on }) })); } catch (e) {}
+    try { document.dispatchEvent(new CustomEvent('aethra:pad', { detail: JSON.stringify({ on: on }) })); } catch (e) {}
   });
-  // Legend of Varrowmere plays inside this panel: the game draws into #ta-lv-host when it gets 'varrowmere:open'
-  const lvPanel = document.createElement('section'); lvPanel.className = 'ta-panel'; lvPanel.dataset.game = 'lvGame';
-  lvPanel.innerHTML = '<div id="ta-lv-host"></div>'; main.appendChild(lvPanel);
-  games.lvGame = {
-    enter: function () { try { document.dispatchEvent(new CustomEvent('varrowmere:open', { detail: JSON.stringify({ host: 'ta-lv-host', pad: lvPadOn(), muted: muted, volume: volume }) })); } catch (e) {} },
-    leave: function () { try { document.dispatchEvent(new CustomEvent('varrowmere:close')); } catch (e) {} },
-    onKey: function () { return false; }   // the game reads the keys itself
-  };
   // Legend of Aethra plays inside its own panel: the game draws into #ta-la-host when it gets 'aethra:open'
   const laPanel = document.createElement('section'); laPanel.className = 'ta-panel'; laPanel.dataset.game = 'laGame';
   laPanel.innerHTML = '<div id="ta-la-host"></div>'; main.appendChild(laPanel);
@@ -1319,10 +1268,6 @@
       }).join('');
       rows += '<div class="ta-row">' + iconSmall(a) + '<div class="ta-rtext"><b>' + a.name + '</b>' + (chips ? '<div class="ta-chips">' + chips + '</div>' : '<small>No scores yet</small>') + '</div></div>';
     });
-    // Legend of Varrowmere (a separate script; its numbers arrive when the game closes)
-    const lvA = LEGEND_APPS[0], lvC = [['varrowmere:time', 'Playtime'], ['varrowmere:completion', 'Completion'], ['varrowmere:kills', 'Monsters']].filter(function (c) { return best[c[0]]; })
-      .map(function (c) { return '<span class="ta-chip">' + c[1] + ' <b>' + esc(lbFmt(c[0], best[c[0]])) + '</b></span>'; }).join('');
-    rows += '<div class="ta-row">' + iconSmall(lvA) + '<div class="ta-rtext"><b>' + lvA.title + '</b>' + (lvC ? '<div class="ta-chips">' + lvC + '</div>' : '<small>No scores yet</small>') + '</div></div>';
     html += '<div class="ta-group"><h3>Best scores</h3><div class="ta-list">' + rows + '</div></div>';
     scoresBox.innerHTML = html;
   }
@@ -1376,105 +1321,20 @@
     });
   });
 
-  /* Legends folder: Legend of Varrowmere is its own script (and its music another). The two scripts talk only through
-     page events, with no requests: this phone sends 'varrowmere:ping' and the game answers 'varrowmere:here' with its
-     version and the Soundtrack's; tapping Play locks the phone and sends 'varrowmere:open'; when the game window closes,
-     'varrowmere:closed' comes back and the phone opens again. Install buttons are ordinary links to GitHub. */
-  const LVS = { ver: '', music: '', music2: '', launched: false };
-  document.addEventListener('varrowmere:here', function (e) {
-    try { const d = JSON.parse(e.detail); LVS.ver = String(d.version || '').slice(0, 20); lvMusicSeen(d.music, d.music2); lvScores(d.scores); } catch (x) {}
-  });
-  // Leaderboard numbers from the game (best of its three save files): sent when its window closes, and kept by the game
-  // so the next ping brings them too. Checked here before they're saved: whole numbers in range only.
-  const LV_BOARDS = { time: [60, 10 * 365 * 86400], completion: [1, 1000], kills: [1, 10000000] };
-  function lvScores(sc) {
-    if (!sc || typeof sc !== 'object') return;
-    Object.keys(LV_BOARDS).forEach(function (k) {
-      const v = Math.floor(Number(sc[k])), r = LV_BOARDS[k];
-      if (v >= r[0] && v <= r[1]) record('varrowmere:' + k, v);
-    });
-  }
-  document.addEventListener('varrowmere:scores', function (e) { try { lvScores(JSON.parse(e.detail)); } catch (x) {} });
-  document.addEventListener('varrowmere:closed', function () {
-    if (!LVS.launched) { if (isOpen && current === 'lvGame') goHome(); return; }   // closed from inside the phone: back to the home screen
-    LVS.launched = false;
-    // back to the phone, at the Legends folder (after this key press, so Esc doesn't also act on the phone)
-    setTimeout(function () { openArcade(); if (!current) openFolder(); }, 0);
-  });
-  // each Soundtrack part also marks the page when it loads, so it shows as installed even if the game is an older copy
-  function lvMusicSeen(m1, m2) {
-    const ds = document.documentElement.dataset;
-    LVS.music = String(m1 || ds.varrowmereMusic || '').slice(0, 20); LVS.music2 = String(m2 || ds.varrowmereMusic2 || '').slice(0, 20);
-  }
-  function lvPing() { try { lvMusicSeen(); document.dispatchEvent(new CustomEvent('varrowmere:ping')); } catch (e) {} }
-  // Preload Legend (Settings, off by default): asks the game to unpack itself in the background on this page, so Play is
-  // instant. One page event, once per page; the game does the work itself and makes no requests.
-  let lvPreloaded = false;
-  function lvPreload() { lvPing(); if (lvPreloaded || !LVS.ver || !store.get('lvPreload', false)) return; lvPreloaded = true; try { document.dispatchEvent(new CustomEvent('varrowmere:preload')); } catch (e) {} }
-  // 1.0.2 and later can play inside the phone; older copies open in their own window
-  // The versions this phone needs. Older copies are shown as needing an update (and the game can't be played) until updated.
-  const LV_NEED = { game: [1, 0, 7], music: [1, 0, 3] };
-  function verAtLeast(ver, w) { const v = String(ver || '').split('.').map(Number); for (let i = 0; i < 3; i++) { if ((v[i] || 0) !== w[i]) return (v[i] || 0) > w[i]; } return true; }
-  function lvAtLeast(a, b, c) { return verAtLeast(LVS.ver, [a, b, c]); }
-  function lvOld(id) {
-    if (id === 'laPlay' || id === 'laMusic') return false;
-    if (id === 'lvMusic') return !!((LVS.music && !verAtLeast(LVS.music, LV_NEED.music)) || (LVS.music2 && !verAtLeast(LVS.music2, LV_NEED.music)));
-    return !!(LVS.ver && !verAtLeast(LVS.ver, LV_NEED.game));
-  }
-  function lvInPhone() { return lvAtLeast(1, 0, 2); }
-  function lvInstalled(id) { if (id === 'laPlay') return !!LAS.ver; if (id === 'laMusic') return laMusicParts().some(Boolean); return id === 'lvMusic' ? !!(LVS.music && LVS.music2) : !!LVS.ver; }
+  /* Legends folder: which games are installed (the Install buttons are ordinary links to GitHub) */
+  function lvInstalled(id) { if (id === 'laPlay') return !!LAS.ver; if (id === 'laMusic') return laMusicParts().some(Boolean); return false; }
   function refreshLegendIcons() {
     LEGEND_APPS.forEach(function (a) {
       const b = $(folderEl, '[data-app="' + a.id + '"]'); if (!b) return;
-      const on = lvInstalled(a.id), old = on && lvOld(a.id);
-      $(b, '.ta-appicon').classList.toggle('ta-dim', !on || old);
+      const on = lvInstalled(a.id);
+      $(b, '.ta-appicon').classList.toggle('ta-dim', !on);
       let dl = $(b, '.ta-dl');
-      const badge = !on ? '⬇️' : old ? '↻' : '';
-      if (badge && !dl) { dl = document.createElement('span'); dl.className = 'ta-dl'; b.appendChild(dl); }
-      if (dl) { if (!badge) dl.remove(); else { dl.textContent = badge; dl.classList.toggle('ta-upd', badge === '↻'); } }
+      if (!on && !dl) { dl = document.createElement('span'); dl.className = 'ta-dl'; dl.textContent = '⬇️'; b.appendChild(dl); }
+      if (on && dl) dl.remove();
     });
-    const fb = $(root, '.ta-folderbtn');
-    if (fb) { const need = lvOld('lvPlay') || lvOld('lvMusic'); let u = $(fb, '.ta-dl'); if (need && !u) { u = document.createElement('span'); u.className = 'ta-dl ta-upd'; u.textContent = '↻'; fb.appendChild(u); } if (!need && u) u.remove(); }
-    if (current === 'lvPlay' || current === 'lvMusic') renderLegend(current);
     if (current === 'laPlay' || current === 'laMusic') renderAethra(current);
   }
-  function lvLaunch() {
-    folderEl.hidden = true; LVS.launched = true;
-    closeArcade();
-    document.dispatchEvent(new CustomEvent('varrowmere:open'));
-  }
-  function renderLegend(id) {
-    lvPing();
-    const a = appInfo(id), box = lvBox[id], on = lvInstalled(id), game = id === 'lvPlay';
-    let html;
-    if (game) {
-      html = '<div class="ta-group"><div class="ta-list"><div class="ta-row">' + iconSmall(a) + '<div class="ta-rtext"><b>' + a.title + '</b><small>' +
-        (on ? 'Installed · version ' + esc(LVS.ver) : 'Not installed · ' + a.size) + '</small></div>' +
-        (on && !lvOld('lvPlay') ? '<button type="button" class="ta-btn ta-mapbtn" data-lv="play">Play</button>' : '') + '</div>' +
-        (lvOld('lvPlay') ? '<div class="ta-row"><span class="ta-ricon" style="background:#e08a1e">↻</span><div class="ta-rtext"><b>Update available</b><small>A newer version (' + LV_NEED.game.join('.') + ' or later) is out. Update to keep playing: tap Update, install, then reload the page. Your saves are kept.</small></div><a class="ta-btn ta-mapbtn" href="' + LV_URL.game + '" target="_blank" rel="noopener">Update</a></div>' : '') +
-        '</div></div>' +
-        '<div class="ta-group"><h3>About</h3><div class="ta-list">' +
-        '<p class="ta-lvnote">A top-down action-adventure in the style of the 16-bit classics. Explore the kingdom of Varrowmere, fight through <strong>19 dungeons</strong> with keys, switches, puzzles and unique bosses, take on 15 side quests, and find new gear, shops, secret caves and Great Fairies. Three save files, each with its own named hero. It plays inside the phone, turned sideways, and saves as you play.<br><br>Controls: <strong>Arrows/WASD</strong> move · <strong>Z</strong> or <strong>click</strong> sword (hold for a spin) · <strong>Space</strong> or <strong>X</strong> item (dice, bow, bombs) · <strong>F</strong> lift, talk, open · <strong>Enter</strong> items · <strong>M</strong> map · <strong>Esc</strong> back to the phone. On a touch screen, use the touch pad (🎮 in the top bar).</p>' +
-        (on ? '' : '<div class="ta-artinst"><a class="ta-btn" href="' + LV_URL.game + '" target="_blank" rel="noopener">Install Legend of Varrowmere</a>' +
-          '<small>Opens the script on GitHub, where Tampermonkey shows its install screen. Once installed, reload the page. It is a separate script so it stays under 2 MB. It makes no requests and needs no API key; your saves stay in Tampermonkey storage on this device.</small></div>') +
-        '</div></div>';
-    } else {
-      const part = function (n, ver, url) {
-        const old = ver && !verAtLeast(ver, LV_NEED.music);
-        return '<div class="ta-row"><span class="ta-ricon" style="background:' + (!ver ? '#5a6676' : old ? '#e08a1e' : '#3a9a5a') + '">🎵</span><div class="ta-rtext"><b>Soundtrack Part ' + n + '</b><small>' +
-          (n === 1 ? 'Title, towns, fields and boss fights. ' : 'Shadow world, dungeons, caves and the ending. ') + (!ver ? 'Not installed · about 1.8 MB' : old ? 'Version ' + esc(ver) + ': update available' : 'Installed · version ' + esc(ver)) + '</small></div>' +
-          (!ver || old ? '<a class="ta-btn ta-mapbtn" href="' + url + '" target="_blank" rel="noopener">' + (old ? 'Update' : 'Install') + '</a>' : '') + '</div>';
-      };
-      html = '<div class="ta-group"><div class="ta-list">' + part(1, LVS.music, LV_URL.music) + part(2, LVS.music2, LV_URL.music2) +
-        '<div class="ta-row"><span class="ta-ricon" style="background:' + (!LVS.ver ? '#5a6676' : !lvOld('lvPlay') ? '#3a9a5a' : '#e08a1e') + '">🗡️</span><div class="ta-rtext"><b>Legend of Varrowmere</b><small>' +
-          (!LVS.ver ? 'Install the game too: the Soundtrack only adds its music.' : !lvOld('lvPlay') ? 'Installed: the music plays the next time you start the game.' : 'Version ' + esc(LVS.ver) + ': update available. Update the game too, then reload the page.') + '</small></div>' +
-          (lvOld('lvPlay') ? '<a class="ta-btn ta-mapbtn" href="' + LV_URL.game + '" target="_blank" rel="noopener">Update</a>' : '') + '</div>' +
-        '</div></div>' +
-        '<div class="ta-group"><h3>About</h3><div class="ta-list"><p class="ta-lvnote">The music for Legend of Varrowmere, in two scripts so each stays under 2 MB. Install both for the full soundtrack; with only one, the other areas play simple built-in tunes. The install buttons open the scripts on GitHub, where Tampermonkey shows its install screen; reload the page afterwards. They make no requests, need no API key and store nothing: they only hand their music to the game.</p></div></div>';
-    }
-    box.innerHTML = html;
-  }
-  /* Legend of Aethra: the same kind of link as Varrowmere, through page events only ('aethra:ping' / 'aethra:here',
+  /* Legend of Aethra: a separate script, linked through page events only ('aethra:ping' / 'aethra:here',
      'aethra:open', 'aethra:close', 'aethra:closed'). Its Soundtrack parts mark the page when they load. */
   const LAS = { ver: '', art: '' };
   document.addEventListener('aethra:here', function (e) { try { const d = JSON.parse(e.detail); LAS.ver = String(d.version || '').slice(0, 20); LAS.art = String(d.art || document.documentElement.dataset.aethraArt || '').slice(0, 20); } catch (x) {} });
@@ -1501,7 +1361,6 @@
       '<div class="ta-group"><h3>About</h3><div class="ta-list"><p class="ta-lvnote">The background music for Legend of Aethra: an original orchestral score in the spirit of the classic 16-bit role-playing games, with a theme for every town, battle and character, in one optional script. Without it you still hear the sound effects (they are built into the game), but no music. It makes no requests, needs no API key and stores nothing: it only hands its music to the game. Reload the page after installing.</p></div></div>';
   }
   lvBox.laPlay.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('[data-la="play"]')) { sfx.click(); openApp('laGame'); } });
-  lvBox.lvPlay.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('[data-lv="play"]')) { sfx.click(); if (!lvOld('lvPlay')) openApp('lvGame'); } });
 
   /* ================= Dev app (Eaglewing [571041] only) =================
      Makes signed gift codes for Tornies. It only shows when the Torn ID on the page you're viewing is the developer's
@@ -1789,9 +1648,6 @@
         '<div class="ta-row"><span class="ta-ricon" style="background:#1c9a8a">🔑</span><div class="ta-rtext"><b>Redeem code</b><small class="ta-cheatmsg">Got a code from Eaglewing, or know a secret word? Enter it here.</small>' +
           '<div class="ta-cheat"><input type="text" class="ta-cheatin" autocomplete="off" spellcheck="false" maxlength="600" placeholder="Enter code"><button type="button" class="ta-btn" data-set="cheat">Redeem</button></div></div></div>' +
       '</div></div>' +
-      '<div class="ta-group"><h3>Legends</h3><div class="ta-list">' +
-        '<div class="ta-row"><span class="ta-ricon" style="background:linear-gradient(160deg,#6cc05a,#1f5a2a)">⚔️</span><div class="ta-rtext"><b>Preload Legend</b><small>' + (LVS.ver ? 'Gets Legend of Varrowmere ready in the background whenever you open the phone, so it starts straight away. Uses some extra memory on that page while it\'s open; nothing is downloaded or saved.' : 'Install Legend of Varrowmere (in the Legends folder) to use this.') + '</small></div><button type="button" class="ta-switch' + (store.get('lvPreload', false) ? ' ta-on' : '') + '" data-set="lvPreload"></button></div>' +
-      '</div></div>' +
       '<div class="ta-group"><h3>Data</h3><div class="ta-list">' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#d08a10">🏆</span><div class="ta-rtext"><b>Reset best scores</b><small>Clears the scores for every mini-game</small></div><button type="button" class="ta-danger" data-set="resetBest">Reset</button></div>' +
         '<div class="ta-row"><span class="ta-ricon" style="background:#1c9a8a">🐾</span><div class="ta-rtext"><b>Delete Tornies save</b><small>Your team, medals and Tornie Log</small></div><button type="button" class="ta-danger" data-set="resetPocket">Delete</button></div>' +
@@ -1865,7 +1721,6 @@
     if (k && k.indexOf('onl') === 0) { onlAction(k, t); return; }
     if (k === 'keyDel') { store.set('apiKey', ''); evState = { msg: 'Key removed. Event notifications are off.' }; evStop(); rmStop(); rmAllowed = null; sfx.click(); renderSettings(); return; }
     if (k === 'saveMaps') { const on = !store.get('saveMaps', true); store.set('saveMaps', on); t.classList.toggle('ta-on', on); sfx.click(); if (on && games.pocket && games.pocket.maps) games.pocket.maps.open(); else if (games.pocket && games.pocket.maps) games.pocket.maps.stop(); mapProgress(); return; }
-    if (k === 'lvPreload') { const on = !store.get('lvPreload', false); store.set('lvPreload', on); t.classList.toggle('ta-on', on); sfx.click(); if (on) lvPreload(); return; }
     if (k === 'mapPrep') {
       const mp = games.pocket && games.pocket.maps; if (!mp) return;
       const i = mp.info();
@@ -2210,8 +2065,7 @@
     { id: 'bogies', boards: [['bogies:total', 'Total score']] },
     { id: 'defence', boards: [['defence:total', 'Total score'], ['defence:wave', 'Highest wave']] },
     { id: 'eggdash', boards: [['eggdash:endless', 'Best score']] },
-    { id: 'flappy', boards: [['flappy:hard', 'Best score']] },
-    { id: 'lvPlay', boards: [['varrowmere:time', 'Total playtime'], ['varrowmere:completion', 'Completion'], ['varrowmere:kills', 'Monsters defeated']] }
+    { id: 'flappy', boards: [['flappy:hard', 'Best score']] }
   ];
   const lbCache = {};
   let lbTab = 'mine', lbGame = 'territories', lbBoard = 'territories', syncT = 0, lbSynced = 0;
@@ -2223,8 +2077,7 @@
     if (board.indexOf('defence:') === 0) return 'Wave ' + v;
     if (board === 'tornies:caught') return v + '/179';
     if (board === 'tornies:medals') return v + '/8';
-    if (board === 'varrowmere:completion') return (v / 10).toFixed(1) + '%';
-    if (board === 'tornies:time' || board === 'varrowmere:time') { const h = Math.floor(v / 3600), m = Math.floor(v / 60) % 60; return h + 'h ' + (m < 10 ? '0' : '') + m + 'm'; }
+    if (board === 'tornies:time') { const h = Math.floor(v / 3600), m = Math.floor(v / 60) % 60; return h + 'h ' + (m < 10 ? '0' : '') + m + 'm'; }
     return Number(v).toLocaleString('en-GB');
   }
   // Your bests on this device, in the server's board names.
@@ -2234,7 +2087,7 @@
     Object.keys(best).forEach(function (k) {
       const v = Math.floor(Number(best[k])), g = k.split(':');
       if (!(v > 0)) return;
-      if (k === 'flappy:hard' || k === 'eggdash:endless' || g[0] === 'defence' || g[0] === 'varrowmere') out[k] = v;
+      if (k === 'flappy:hard' || k === 'eggdash:endless' || g[0] === 'defence') out[k] = v;
       else if (g[0] === 'bogies') bog += v;
     });
     if (bog) out['bogies:total'] = bog;
@@ -2339,13 +2192,12 @@
   /* Opening apps */
   function refreshNav() {
     refreshArtIcons();
-    lvPing(); laPing(); refreshLegendIcons(); lvPreload();
+    laPing(); refreshLegendIcons();
     if (current === 'scores') renderScores();
   }
-  function appInfo(id) { return GAMES.concat(SYS_APPS, ART_APPS, LEGEND_APPS, [LV_GAME_APP, LA_GAME_APP, DEV_APP]).find(function (a) { return a.id === id; }); }
+  function appInfo(id) { return GAMES.concat(SYS_APPS, ART_APPS, LEGEND_APPS, [LA_GAME_APP, DEV_APP]).find(function (a) { return a.id === id; }); }
   function openApp(id) {
     if (id === 'legends') { openFolder(); return; }
-    if (id === 'lvPlay') { lvPing(); if (LVS.ver && !lvOld('lvPlay')) id = 'lvGame'; }
     if (id === 'laPlay') { laPing(); if (LAS.ver) id = 'laGame'; }
     const a = appInfo(id);
     if (!a) return;
@@ -2356,7 +2208,6 @@
     if (id === 'scores') { renderScores(); if (lbTab === 'global') lbLoad(lbBoard); }
     if (id === 'settings') renderSettings();
     if (id === 'artT' || id === 'artC' || id === 'artR') renderArt(id);
-    if (id === 'lvPlay' || id === 'lvMusic') renderLegend(id);
     if (id === 'laPlay' || id === 'laMusic') renderAethra(id);
     if (id === 'dev') renderDev();
     appTitle.textContent = a.title || a.name;
@@ -2409,7 +2260,7 @@
   function setMuted(m) {
     muted = !!m; store.set('muted', muted);
     if (games.territories && games.territories.mute) games.territories.mute(muted);
-    try { document.dispatchEvent(new CustomEvent('varrowmere:mute', { detail: JSON.stringify({ muted: muted }) })); } catch (e) {}   // Legend of Varrowmere follows the phone's mute
+    try { document.dispatchEvent(new CustomEvent('aethra:mute', { detail: JSON.stringify({ muted: muted }) })); } catch (e) {}   // Legend of Aethra follows the phone's mute
     muteBtn.textContent = muted ? '🔇' : '🔊';
     muteBtn.title = muted ? 'Sound off (click to turn on)' : 'Sound on (click to mute)';
   }

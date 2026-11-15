@@ -12,6 +12,10 @@ Every Torn Arcade update since 2.2.0, newest first. Dates are in TCT (Torn City 
 ### Added
 - **Legend of Aethra** in the Legends folder: a 16-bit style role-playing game with active-time battles, five acts, a world map with vehicles, the Arcana card game and more. It's a separate, optional script (about 2.2 MB) with an optional Soundtrack script (an original 45-track score, about 9 MB), and it sits in the folder next to its Soundtrack, like Varrowmere. It plays inside the phone and talks to it only through page events; it makes no requests and needs no API key.
 - **A size warning** on Aethra's pages in the folder and in the README: the game and Soundtrack are large scripts, and some mobile browsers and userscript managers may not be able to install or run them. The game still plays without the Soundtrack.
+### Changed
+- The phone's **speaker button, volume slider and 🎮 touch pad** now control Legend of Aethra.
+### Removed (for now)
+- **Legend of Varrowmere is taken out of the Legends folder for the time being.** Torn Arcade no longer links to it: no Varrowmere icons, Soundtrack page, Settings → Preload Legend, 2.54 notice or Varrowmere leaderboards, and the phone sends it no page events. Your Varrowmere saves are kept by the game itself, on your device.
 
 ## 2.56.2 — 2026-11-12
 ### Changed
